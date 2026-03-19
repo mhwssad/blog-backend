@@ -1,0 +1,38 @@
+package com.cybzacg.blogbackend.module.auth.model.admin;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+
+import java.util.Date;
+import java.util.List;
+
+@Data
+@Schema(description = "后台通知信息")
+public class SysNoticeAdminVO {
+    @Schema(description = "通知ID")
+    private Long id;
+    @Schema(description = "通知标题")
+    private String title;
+    @Schema(description = "通知内容")
+    private String content;
+    @Schema(description = "通知类型")
+    private Integer type;
+    @Schema(description = "通知等级")
+    private String level;
+    @Schema(description = "目标类型")
+    private Integer targetType;
+    @Schema(description = "目标用户ID列表")
+    private List<Long> targetUserIds;
+    @Schema(description = "发布人ID")
+    private Long publisherId;
+    @Schema(description = "发布状态")
+    private Integer publishStatus;
+    @Schema(description = "发布时间")
+    private Date publishTime;
+    @Schema(description = "撤回时间")
+    private Date revokeTime;
+    @Schema(description = "创建时间")
+    private Date createTime;
+    @Schema(description = "更新时间")
+    private Date updateTime;
+}
