@@ -26,6 +26,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * 系统通知后台管理服务实现。
+ *
+ * <p>负责通知草稿维护、发布撤回，以及指定用户通知的投递关系生成。
+ */
 @Service
 @RequiredArgsConstructor
 public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
@@ -116,6 +121,9 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         sysNoticeService.updateById(notice);
     }
 
+    /**
+     * 按目标用户生成通知投递关系，确保指定用户通知在发布后可进入收件箱。
+     */
     private void deliverNotice(SysNotice notice, Date now) {
         sysUserNoticeService.lambdaUpdate()
                 .eq(SysUserNotice::getNoticeId, notice.getId())
@@ -143,6 +151,9 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         sysUserNoticeService.saveBatch(records);
     }
 
+    /**
+     * 将通知请求字段统一回填到实体，并处理目标用户 ID 的持久化格式。
+     */
     private void applyFields(SysNotice notice, SysNoticeSaveRequest request, List<Long> targetUserIds) {
         notice.setTitle(normalize(request.getTitle()));
         notice.setContent(request.getContent());
@@ -154,6 +165,9 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
                 : targetUserIds.stream().map(String::valueOf).reduce((left, right) -> left + "," + right).orElse(null));
     }
 
+    /**
+     * 校验通知目标用户范围是否合法，并返回去重后的目标用户列表。
+     */
     private List<Long> validateTargetUsers(SysNoticeSaveRequest request) {
         Integer targetType = request.getTargetType();
         if (!Objects.equals(NoticeConstants.TARGET_ALL, targetType)
@@ -180,6 +194,9 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         return distinctUserIds;
     }
 
+    /**
+     * 获取允许编辑的通知，仅草稿状态通知可修改。
+     */
     private SysNotice getEditableNotice(Long id) {
         SysNotice notice = getAvailableNotice(id);
         if (!Objects.equals(NoticeConstants.PUBLISH_STATUS_DRAFT, notice.getPublishStatus())) {
@@ -188,6 +205,9 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         return notice;
     }
 
+    /**
+     * 获取有效通知，不存在或已删除时抛出统一业务异常。
+     */
     private SysNotice getAvailableNotice(Long id) {
         SysNotice notice = sysNoticeService.getById(id);
         if (notice == null || Integer.valueOf(1).equals(notice.getIsDeleted())) {

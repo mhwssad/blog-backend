@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cybzacg.blogbackend.mapper.SysTagMapper">
+
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.SysTag">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="color" column="color" jdbcType="VARCHAR"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        t.id, t.name, t.color, t.created_at
+    </sql>
+
+    <select id="selectByTargetType" resultMap="BaseResultMap">
+        select distinct
+        <include refid="Base_Column_List"/>
+        from sys_tag t
+        inner join sys_tag_relation r on r.tag_id = t.id
+        where r.target_type = #{targetType}
+        order by t.id desc
+    </select>
+</mapper>

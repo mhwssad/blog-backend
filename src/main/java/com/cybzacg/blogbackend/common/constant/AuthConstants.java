@@ -1,0 +1,27 @@
+package com.cybzacg.blogbackend.common.constant;
+
+import java.time.Duration;
+
+/**
+ * 认证相关常量
+ */
+public final class AuthConstants {
+    public static final String BEARER = "Bearer";
+    public static final String TOKEN_TYPE = "tokenType";
+    public static final String TOKEN_TYPE_ACCESS = "access";
+    public static final String TOKEN_TYPE_REFRESH = "refresh";
+    public static final String AUTHORITIES = "authorities";
+    public static final String USER_ID = "userId";
+
+    public static final String REDIS_AUTH_TOKEN_PREFIX = "auth:token";
+    public static final String REDIS_USER = "user";
+    public static final String REDIS_USERNAME = "username";
+    public static final String REDIS_SESSIONS = "sessions";
+
+    public static final String EMAIL_LOGIN_CODE_PREFIX = "auth:email-login-code";
+    public static final Duration EMAIL_LOGIN_CODE_TTL = Duration.ofMinutes(5);
+    public static final String EMAIL_LOGIN_SUBJECT = "登录验证码";
+
+    private AuthConstants() {
+    }
+}

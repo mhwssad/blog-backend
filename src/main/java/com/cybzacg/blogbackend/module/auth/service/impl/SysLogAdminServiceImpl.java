@@ -18,6 +18,11 @@ import org.springframework.util.StringUtils;
 
 import java.util.List;
 
+/**
+ * 系统日志后台管理服务实现。
+ *
+ * <p>负责日志分页查询、详情查看、单条删除和按条件批量清理。
+ */
 @Service
 @RequiredArgsConstructor
 public class SysLogAdminServiceImpl implements SysLogAdminService {
@@ -86,6 +91,9 @@ public class SysLogAdminServiceImpl implements SysLogAdminService {
         return count;
     }
 
+    /**
+     * 判断清理请求是否至少包含一个过滤条件，避免误删全部日志。
+     */
     private boolean hasAnyCondition(SysLogCleanRequest request) {
         return StringUtils.hasText(request.getModule())
                 || StringUtils.hasText(request.getRequestMethod())
@@ -96,6 +104,9 @@ public class SysLogAdminServiceImpl implements SysLogAdminService {
                 || request.getCreateTimeEnd() != null;
     }
 
+    /**
+     * 按 ID 获取日志，不存在时抛出统一业务异常。
+     */
     private SysLog getLogOrThrow(Long id) {
         SysLog log = sysLogService.getById(id);
         if (log == null) {

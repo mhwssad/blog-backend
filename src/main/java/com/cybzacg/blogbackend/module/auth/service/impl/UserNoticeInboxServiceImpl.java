@@ -25,6 +25,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * 用户通知收件箱服务实现。
+ *
+ * <p>负责用户收件箱分页、通知详情读取、未读统计以及已读状态维护。
+ */
 @Service
 @RequiredArgsConstructor
 public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
@@ -199,6 +204,9 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
         sysUserNoticeService.saveBatch(newRecords);
     }
 
+    /**
+     * 读取用户与通知的关联记录，作为已读状态和指定通知可见性的基础数据。
+     */
     private List<SysUserNotice> listUserNoticeRelations(Long userId) {
         return sysUserNoticeService.lambdaQuery()
                 .eq(SysUserNotice::getUserId, userId)
@@ -206,6 +214,9 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
                 .list();
     }
 
+    /**
+     * 将关联记录转换为以通知 ID 为键的映射，便于分页结果快速回填已读状态。
+     */
     private Map<Long, SysUserNotice> buildRelationMap(List<SysUserNotice> relations) {
         Map<Long, SysUserNotice> relationMap = new LinkedHashMap<>();
         for (SysUserNotice relation : relations) {
@@ -214,6 +225,9 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
         return relationMap;
     }
 
+    /**
+     * 校验当前用户是否有权访问通知，兼容全员通知与指定用户通知两种场景。
+     */
     private SysNotice getAccessibleNotice(Long userId, Long noticeId) {
         SysNotice notice = sysNoticeService.getById(noticeId);
         if (notice == null
@@ -235,6 +249,9 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
         return notice;
     }
 
+    /**
+     * 将通知标记为已读；若是首次读取全员通知，则自动补建用户通知关系记录。
+     */
     private SysUserNotice markReadInternal(Long userId, SysNotice notice) {
         Date now = new Date();
         SysUserNotice relation = sysUserNoticeService.lambdaQuery()

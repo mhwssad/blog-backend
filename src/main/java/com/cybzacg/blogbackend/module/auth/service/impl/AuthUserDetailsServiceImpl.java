@@ -17,6 +17,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * 认证用户详情服务实现。
+ *
+ * <p>负责根据用户名装配认证用户信息，并聚合角色与权限生成 Spring Security 权限集。
+ */
 @Service
 @RequiredArgsConstructor
 public class AuthUserDetailsServiceImpl implements AuthUserDetailsService {
@@ -42,6 +47,9 @@ public class AuthUserDetailsServiceImpl implements AuthUserDetailsService {
         return loadAuthUserByUsername(username);
     }
 
+    /**
+     * 将角色编码和菜单权限合并为去重后的授权集合，供认证上下文直接使用。
+     */
     private List<GrantedAuthority> buildAuthorities(List<String> roleCodes, List<String> permissions) {
         Set<String> authorityValues = new LinkedHashSet<>();
         if (roleCodes != null) {
@@ -61,6 +69,9 @@ public class AuthUserDetailsServiceImpl implements AuthUserDetailsService {
                 .toList();
     }
 
+    /**
+     * 将角色编码统一转换为 Spring Security 约定的 ROLE_ 前缀格式。
+     */
     private String toRoleAuthority(String roleCode) {
         return roleCode.startsWith("ROLE_") ? roleCode : "ROLE_" + roleCode;
     }

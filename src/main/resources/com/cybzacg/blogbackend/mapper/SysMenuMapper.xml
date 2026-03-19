@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cybzacg.blogbackend.mapper.SysMenuMapper">
+
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.SysMenu">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="parentId" column="parent_id" jdbcType="BIGINT"/>
+            <result property="treePath" column="tree_path" jdbcType="VARCHAR"/>
+            <result property="name" column="name" jdbcType="VARCHAR"/>
+            <result property="type" column="type" jdbcType="CHAR"/>
+            <result property="routeName" column="route_name" jdbcType="VARCHAR"/>
+            <result property="routePath" column="route_path" jdbcType="VARCHAR"/>
+            <result property="component" column="component" jdbcType="VARCHAR"/>
+            <result property="perm" column="perm" jdbcType="VARCHAR"/>
+            <result property="alwaysShow" column="always_show" jdbcType="TINYINT"/>
+            <result property="keepAlive" column="keep_alive" jdbcType="TINYINT"/>
+            <result property="visible" column="visible" jdbcType="TINYINT"/>
+            <result property="sort" column="sort" jdbcType="INTEGER"/>
+            <result property="icon" column="icon" jdbcType="VARCHAR"/>
+            <result property="redirect" column="redirect" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="params" column="params" jdbcType="OTHER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        m.id,m.parent_id,m.tree_path,
+        m.name,m.type,m.route_name,
+        m.route_path,m.component,m.perm,
+        m.always_show,m.keep_alive,m.visible,
+        m.sort,m.icon,m.redirect,
+        m.create_time,m.update_time,m.params
+    </sql>
+
+    <select id="selectPermissionsByUserId" resultType="java.lang.String">
+        select m.perm
+        from sys_menu m
+                 inner join sys_role_menu rm on rm.menu_id = m.id
+                 inner join sys_role r on r.id = rm.role_id
+                 inner join sys_user_role ur on ur.role_id = r.id
+        where ur.user_id = #{userId}
+          and r.status = 1
+          and r.is_deleted = 0
+          and m.perm is not null
+          and m.perm != ''
+        group by m.id, m.perm
+        order by min(m.sort) asc, m.id asc
+    </select>
+
+    <select id="selectMenusByUserId" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from sys_menu m
+                 inner join sys_role_menu rm on rm.menu_id = m.id
+                 inner join sys_role r on r.id = rm.role_id
+                 inner join sys_user_role ur on ur.role_id = r.id
+        where ur.user_id = #{userId}
+          and r.status = 1
+          and r.is_deleted = 0
+        group by m.id
+        order by m.sort asc, m.id asc
+    </select>
+</mapper>
