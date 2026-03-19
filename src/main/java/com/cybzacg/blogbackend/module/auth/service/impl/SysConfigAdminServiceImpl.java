@@ -18,6 +18,11 @@ import org.springframework.util.StringUtils;
 
 import java.util.List;
 
+/**
+ * 系统配置后台管理服务实现。
+ *
+ * <p>负责系统配置分页查询、增删改，以及配置缓存失效处理。
+ */
 @Service
 @RequiredArgsConstructor
 public class SysConfigAdminServiceImpl implements SysConfigAdminService {
@@ -86,6 +91,9 @@ public class SysConfigAdminServiceImpl implements SysConfigAdminService {
         return sysConfigService.getValueByKey(configKey);
     }
 
+    /**
+     * 将请求中的配置字段统一回填到实体，复用新增和更新流程。
+     */
     private void applyFields(SysConfig config, SysConfigSaveRequest request) {
         config.setConfigName(normalize(request.getConfigName()));
         config.setConfigKey(normalize(request.getConfigKey()));
@@ -93,6 +101,9 @@ public class SysConfigAdminServiceImpl implements SysConfigAdminService {
         config.setRemark(request.getRemark());
     }
 
+    /**
+     * 校验配置键在未删除配置中保持唯一。
+     */
     private void validateConfigKeyUnique(Long currentId, String configKey) {
         if (sysConfigService.lambdaQuery()
                 .eq(SysConfig::getConfigKey, normalize(configKey))
@@ -103,6 +114,9 @@ public class SysConfigAdminServiceImpl implements SysConfigAdminService {
         }
     }
 
+    /**
+     * 获取有效配置，不存在或已删除时抛出统一业务异常。
+     */
     private SysConfig getAvailableConfig(Long id) {
         SysConfig config = sysConfigService.getById(id);
         if (config == null || Integer.valueOf(1).equals(config.getIsDeleted())) {
