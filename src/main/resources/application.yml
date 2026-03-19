@@ -1,0 +1,33 @@
+spring:
+  application.name: blog-backend
+  profiles:
+    active: dev
+security:
+  ignore-urls:
+    - /error
+    - /favicon.ico
+  unsecured-urls:
+    - /api/auth/login
+    - /api/auth/register
+    - /api/auth/email-code
+    - /api/auth/email-login
+    - /api/auth/refresh
+    - /api/articles
+    - /api/articles/**
+    - /api/categories/tree
+    - /api/tags
+    - /api/comments
+    - /doc.html
+    - /swagger-ui/**
+    - /swagger-resources/**
+    - /v3/api-docs/**
+    - /webjars/**
+  session:
+    type: jwt
+    access-token-time-to-live: 3600
+    refresh-token-time-to-live: 604800
+    jwt:
+      secret-key: SecretKey012345678901234567890123456789
+    redis-token:
+      allow-multi-login: true
+
