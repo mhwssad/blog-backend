@@ -24,6 +24,7 @@ import com.cybzacg.blogbackend.module.auth.service.SysRoleService;
 import com.cybzacg.blogbackend.module.auth.service.SysUserService;
 import com.cybzacg.blogbackend.module.auth.token.TokenManager;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.mail.autoconfigure.MailProperties;
 import org.springframework.mail.SimpleMailMessage;
@@ -65,7 +66,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AuthenticationToken login(AuthLoginRequest request, String loginIp) {
-        String account = request.getUsername() == null ? null : request.getUsername().trim();
+        String account = StrUtils.trim(request.getUsername());
         Authentication authentication = authenticationManager.authenticate(
                 UsernamePasswordAuthenticationToken.unauthenticated(account, request.getPassword())
         );
@@ -80,9 +81,9 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AuthenticationToken register(AuthRegisterRequest request, String loginIp) {
-        String username = normalizeValue(request.getUsername());
-        String email = normalizeEmail(request.getEmail());
-        String phone = normalizeValue(request.getPhone());
+        String username = StrUtils.trimToNull(request.getUsername());
+        String email = StrUtils.trimToLowerCase(request.getEmail());
+        String phone = StrUtils.trimToNull(request.getPhone());
         validateRegisterIdentity(username, "用户名已存在");
         validateRegisterIdentity(email, "邮箱已存在");
         validateRegisterIdentity(phone, "手机号已存在");
@@ -90,7 +91,7 @@ public class AuthServiceImpl implements AuthService {
         SysUser user = new SysUser();
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setNickname(StringUtils.hasText(request.getNickname()) ? request.getNickname().trim() : username);
+        user.setNickname(StrUtils.hasText(request.getNickname()) ? StrUtils.trim(request.getNickname()) : username);
         user.setEmail(email);
         user.setPhone(phone);
         user.setStatus(1);
@@ -139,7 +140,7 @@ public class AuthServiceImpl implements AuthService {
     public AuthenticationToken emailLogin(AuthEmailLoginRequest request, String loginIp) {
         String email = normalizeEmail(request.getEmail());
         Authentication authentication = authenticationManager.authenticate(
-                EmailCodeAuthenticationToken.unauthenticated(email, request.getCode().trim())
+                EmailCodeAuthenticationToken.unauthenticated(email, StrUtils.trim(request.getCode()))
         );
         Long userId = SecurityUtils.getUserId(authentication);
         if (userId != null) {
@@ -231,13 +232,6 @@ public class AuthServiceImpl implements AuthService {
         return roots;
     }
 
-    private String normalizeEmail(String value) {
-        return value == null ? null : value.trim().toLowerCase();
-    }
-
-    private String normalizeValue(String value) {
-        return StringUtils.hasText(value) ? value.trim() : null;
-    }
 
     private String generateEmailCode() {
         int number = secureRandom.nextInt(900000) + 100000;

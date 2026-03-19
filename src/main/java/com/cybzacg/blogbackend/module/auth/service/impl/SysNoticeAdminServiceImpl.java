@@ -17,6 +17,7 @@ import com.cybzacg.blogbackend.module.auth.service.SysNoticeService;
 import com.cybzacg.blogbackend.module.auth.service.SysUserNoticeService;
 import com.cybzacg.blogbackend.module.auth.service.SysUserService;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -155,10 +156,10 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
      * 将通知请求字段统一回填到实体，并处理目标用户 ID 的持久化格式。
      */
     private void applyFields(SysNotice notice, SysNoticeSaveRequest request, List<Long> targetUserIds) {
-        notice.setTitle(normalize(request.getTitle()));
+        notice.setTitle(StrUtils.normalize(request.getTitle()));
         notice.setContent(request.getContent());
         notice.setType(request.getType());
-        notice.setLevel(normalize(request.getLevel()));
+        notice.setLevel(StrUtils.normalize(request.getLevel()));
         notice.setTargetType(request.getTargetType());
         notice.setTargetUserIds(targetUserIds.isEmpty()
                 ? null
@@ -216,7 +217,5 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         return notice;
     }
 
-    private String normalize(String value) {
-        return StringUtils.hasText(value) ? value.trim() : value;
-    }
 }
+

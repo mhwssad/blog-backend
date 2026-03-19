@@ -13,6 +13,7 @@ import com.cybzacg.blogbackend.module.content.service.SysInteractionService;
 import com.cybzacg.blogbackend.module.content.service.UserCommentService;
 import com.cybzacg.blogbackend.utils.JsonUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -95,7 +96,7 @@ public class UserCommentServiceImpl implements UserCommentService {
         SysComment comment = new SysComment();
         comment.setTargetType("article");
         comment.setTargetId(request.getTargetId());
-        comment.setContent(request.getContent().trim());
+        comment.setContent(StrUtils.trim(request.getContent()));
         comment.setImages(request.getImages() == null || request.getImages().isEmpty() ? null : JsonUtils.toJson(request.getImages()));
         comment.setUserId(userId);
         comment.setRootId(request.getRootId() == null ? 0L : request.getRootId());

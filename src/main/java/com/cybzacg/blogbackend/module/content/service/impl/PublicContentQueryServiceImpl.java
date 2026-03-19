@@ -18,6 +18,7 @@ import com.cybzacg.blogbackend.module.content.service.SysCommentService;
 import com.cybzacg.blogbackend.module.content.service.SysInteractionService;
 import com.cybzacg.blogbackend.module.content.service.SysTagService;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -75,7 +76,7 @@ public class PublicContentQueryServiceImpl implements PublicContentQueryService 
 
     @Override
     public List<PublicTagVO> listTags(String targetType) {
-        String actualTargetType = (targetType == null || targetType.isBlank()) ? ARTICLE_TYPE : targetType.trim();
+        String actualTargetType = StrUtils.trimToDefault(targetType, ARTICLE_TYPE);
         if (!ARTICLE_TYPE.equals(actualTargetType)) {
             return List.of();
         }

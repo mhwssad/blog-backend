@@ -10,6 +10,7 @@ import com.cybzacg.blogbackend.module.auth.model.admin.SysMenuSaveRequest;
 import com.cybzacg.blogbackend.module.auth.service.SysMenuAdminService;
 import com.cybzacg.blogbackend.module.auth.service.SysMenuService;
 import com.cybzacg.blogbackend.module.auth.service.SysRoleMenuService;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -93,18 +94,18 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
      */
     private void applyMenuFields(SysMenu menu, SysMenuSaveRequest request) {
         menu.setParentId(request.getParentId());
-        menu.setName(normalize(request.getName()));
-        menu.setType(normalize(request.getType()));
-        menu.setRouteName(normalize(request.getRouteName()));
-        menu.setRoutePath(normalize(request.getRoutePath()));
-        menu.setComponent(normalize(request.getComponent()));
-        menu.setPerm(normalize(request.getPerm()));
+        menu.setName(StrUtils.normalize(request.getName()));
+        menu.setType(StrUtils.normalize(request.getType()));
+        menu.setRouteName(StrUtils.normalize(request.getRouteName()));
+        menu.setRoutePath(StrUtils.normalize(request.getRoutePath()));
+        menu.setComponent(StrUtils.normalize(request.getComponent()));
+        menu.setPerm(StrUtils.normalize(request.getPerm()));
         menu.setAlwaysShow(request.getAlwaysShow() != null ? request.getAlwaysShow() : 0);
         menu.setKeepAlive(request.getKeepAlive() != null ? request.getKeepAlive() : 0);
         menu.setVisible(request.getVisible() != null ? request.getVisible() : 1);
         menu.setSort(request.getSort() != null ? request.getSort() : 0);
-        menu.setIcon(normalize(request.getIcon()));
-        menu.setRedirect(normalize(request.getRedirect()));
+        menu.setIcon(StrUtils.normalize(request.getIcon()));
+        menu.setRedirect(StrUtils.normalize(request.getRedirect()));
         menu.setParams(request.getParams());
     }
 
@@ -138,7 +139,7 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
         }
         String[] segments = menu.getTreePath().split(",");
         for (String segment : segments) {
-            if (String.valueOf(currentMenuId).equals(segment.trim())) {
+            if (String.valueOf(currentMenuId).equals(StrUtils.trim(segment))) {
                 return true;
             }
         }
@@ -146,7 +147,7 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
     }
 
     private void validateMenuType(String type) {
-        String normalizedType = normalize(type);
+        String normalizedType = StrUtils.normalize(type);
         if (!MenuConstants.TYPE_CATALOG.equalsIgnoreCase(normalizedType)
                 && !MenuConstants.TYPE_MENU.equalsIgnoreCase(normalizedType)
                 && !MenuConstants.TYPE_BUTTON.equalsIgnoreCase(normalizedType)) {
@@ -212,9 +213,5 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
             parent.getChildren().add(menu);
         }
         return roots;
-    }
-
-    private String normalize(String value) {
-        return StringUtils.hasText(value) ? value.trim() : value;
     }
 }

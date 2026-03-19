@@ -31,6 +31,7 @@ import com.cybzacg.blogbackend.module.content.service.SysInteractionService;
 import com.cybzacg.blogbackend.module.content.service.SysTagRelationService;
 import com.cybzacg.blogbackend.module.content.service.SysTagService;
 import com.cybzacg.blogbackend.module.content.service.SysUserFootprintService;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -212,18 +213,18 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
      * 将请求对象中的可编辑字段统一回填到文章实体，确保创建和更新流程复用同一套规则。
      */
     private void applyArticleFields(BlogArticle article, ArticleSaveRequest request, boolean creating) {
-        article.setTitle(trim(request.getTitle()));
-        article.setSummary(trim(request.getSummary()));
+        article.setTitle(StrUtils.normalize(request.getTitle()));
+        article.setSummary(StrUtils.normalize(request.getSummary()));
         article.setContent(request.getContent());
-        article.setCoverImage(trim(request.getCoverImage()));
+        article.setCoverImage(StrUtils.normalize(request.getCoverImage()));
         article.setAuthorId(request.getAuthorId());
         article.setIsTop(defaultIfNull(request.getIsTop(), 0));
         article.setIsOriginal(defaultIfNull(request.getIsOriginal(), 1));
-        article.setSourceUrl(trim(request.getSourceUrl()));
+        article.setSourceUrl(StrUtils.normalize(request.getSourceUrl()));
         article.setStatus(defaultIfNull(request.getStatus(), 0));
         article.setPublishTime(resolvePublishTime(request.getStatus(), request.getPublishTime(), article.getPublishTime()));
         article.setAccessLevel(defaultIfNull(request.getAccessLevel(), 0));
-        article.setRemark(trim(request.getRemark()));
+        article.setRemark(StrUtils.normalize(request.getRemark()));
         if (creating && article.getPublishTime() == null && Integer.valueOf(1).equals(article.getStatus())) {
             article.setPublishTime(new Date());
         }
@@ -408,7 +409,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
                     access.setAccessType(defaultIfNull(item.getAccessType(), 1));
                     access.setGrantTime(now);
                     access.setExpireTime(item.getExpireTime());
-                    access.setGrantReason(trim(item.getGrantReason()));
+                    access.setGrantReason(StrUtils.normalize(item.getGrantReason()));
                     return access;
                 })
                 .toList();
@@ -527,7 +528,5 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         return value == null ? defaultValue : value;
     }
 
-    private String trim(String value) {
-        return StringUtils.hasText(value) ? value.trim() : value;
-    }
 }
+

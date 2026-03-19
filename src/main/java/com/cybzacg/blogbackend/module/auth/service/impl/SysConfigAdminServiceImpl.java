@@ -11,6 +11,7 @@ import com.cybzacg.blogbackend.module.auth.model.admin.SysConfigPageQuery;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysConfigSaveRequest;
 import com.cybzacg.blogbackend.module.auth.service.SysConfigAdminService;
 import com.cybzacg.blogbackend.module.auth.service.SysConfigService;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -95,8 +96,8 @@ public class SysConfigAdminServiceImpl implements SysConfigAdminService {
      * 将请求中的配置字段统一回填到实体，复用新增和更新流程。
      */
     private void applyFields(SysConfig config, SysConfigSaveRequest request) {
-        config.setConfigName(normalize(request.getConfigName()));
-        config.setConfigKey(normalize(request.getConfigKey()));
+        config.setConfigName(StrUtils.normalize(request.getConfigName()));
+        config.setConfigKey(StrUtils.normalize(request.getConfigKey()));
         config.setConfigValue(request.getConfigValue());
         config.setRemark(request.getRemark());
     }
@@ -106,7 +107,7 @@ public class SysConfigAdminServiceImpl implements SysConfigAdminService {
      */
     private void validateConfigKeyUnique(Long currentId, String configKey) {
         if (sysConfigService.lambdaQuery()
-                .eq(SysConfig::getConfigKey, normalize(configKey))
+                .eq(SysConfig::getConfigKey, StrUtils.normalize(configKey))
                 .eq(SysConfig::getIsDeleted, 0)
                 .ne(currentId != null, SysConfig::getId, currentId)
                 .exists()) {
@@ -125,7 +126,5 @@ public class SysConfigAdminServiceImpl implements SysConfigAdminService {
         return config;
     }
 
-    private String normalize(String value) {
-        return StringUtils.hasText(value) ? value.trim() : value;
-    }
 }
+

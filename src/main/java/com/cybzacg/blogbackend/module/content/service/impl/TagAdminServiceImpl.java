@@ -10,10 +10,10 @@ import com.cybzacg.blogbackend.module.content.model.admin.TagVO;
 import com.cybzacg.blogbackend.module.content.service.SysTagRelationService;
 import com.cybzacg.blogbackend.module.content.service.SysTagService;
 import com.cybzacg.blogbackend.module.content.service.TagAdminService;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -49,8 +49,8 @@ public class TagAdminServiceImpl implements TagAdminService {
     public TagVO createTag(TagSaveRequest request) {
         validateNameUnique(null, request.getName());
         SysTag tag = new SysTag();
-        tag.setName(request.getName().trim());
-        tag.setColor(trim(request.getColor()));
+        tag.setName(StrUtils.trim(request.getName()));
+        tag.setColor(StrUtils.normalize(request.getColor()));
         sysTagService.save(tag);
         return contentModelMapper.toTagVO(tag);
     }
@@ -60,8 +60,8 @@ public class TagAdminServiceImpl implements TagAdminService {
     public TagVO updateTag(Long id, TagSaveRequest request) {
         SysTag tag = getTagOrThrow(id);
         validateNameUnique(id, request.getName());
-        tag.setName(request.getName().trim());
-        tag.setColor(trim(request.getColor()));
+        tag.setName(StrUtils.trim(request.getName()));
+        tag.setColor(StrUtils.normalize(request.getColor()));
         sysTagService.updateById(tag);
         return contentModelMapper.toTagVO(tag);
     }
@@ -82,7 +82,7 @@ public class TagAdminServiceImpl implements TagAdminService {
      */
     private void validateNameUnique(Long currentId, String name) {
         boolean exists = sysTagService.lambdaQuery()
-                .eq(SysTag::getName, name.trim())
+                .eq(SysTag::getName, StrUtils.trim(name))
                 .ne(currentId != null, SysTag::getId, currentId)
                 .exists();
         if (exists) {
@@ -101,7 +101,5 @@ public class TagAdminServiceImpl implements TagAdminService {
         return tag;
     }
 
-    private String trim(String value) {
-        return StringUtils.hasText(value) ? value.trim() : value;
-    }
 }
+

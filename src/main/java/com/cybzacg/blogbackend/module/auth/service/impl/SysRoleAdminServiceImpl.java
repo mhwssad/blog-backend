@@ -15,6 +15,7 @@ import com.cybzacg.blogbackend.module.auth.service.SysRoleMenuService;
 import com.cybzacg.blogbackend.module.auth.service.SysMenuService;
 import com.cybzacg.blogbackend.module.auth.service.SysRoleService;
 import com.cybzacg.blogbackend.module.auth.service.SysUserRoleService;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -116,8 +117,8 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
      * 将角色请求字段统一回填到实体，复用新增和更新流程。
      */
     private void applyRoleFields(SysRole role, SysRoleSaveRequest request) {
-        role.setName(normalize(request.getName()));
-        role.setCode(normalize(request.getCode()));
+        role.setName(StrUtils.normalize(request.getName()));
+        role.setCode(StrUtils.normalize(request.getCode()));
         role.setSort(request.getSort());
         role.setStatus(request.getStatus() != null ? request.getStatus() : 1);
         role.setDataScope(request.getDataScope());
@@ -129,14 +130,14 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
     private void validateRoleUniqueness(Long currentRoleId, SysRoleSaveRequest request) {
         if (sysRoleService.lambdaQuery()
                 .eq(SysRole::getIsDeleted, 0)
-                .eq(SysRole::getName, normalize(request.getName()))
+                .eq(SysRole::getName, StrUtils.normalize(request.getName()))
                 .ne(currentRoleId != null, SysRole::getId, currentRoleId)
                 .exists()) {
             throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "角色名称已存在");
         }
         if (sysRoleService.lambdaQuery()
                 .eq(SysRole::getIsDeleted, 0)
-                .eq(SysRole::getCode, normalize(request.getCode()))
+                .eq(SysRole::getCode, StrUtils.normalize(request.getCode()))
                 .ne(currentRoleId != null, SysRole::getId, currentRoleId)
                 .exists()) {
             throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "角色编码已存在");
@@ -173,9 +174,5 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
             throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "角色不存在");
         }
         return role;
-    }
-
-    private String normalize(String value) {
-        return StringUtils.hasText(value) ? value.trim() : value;
     }
 }

@@ -7,6 +7,7 @@ import com.cybzacg.blogbackend.common.redis.RedisOperator;
 import com.cybzacg.blogbackend.domain.SysConfig;
 import com.cybzacg.blogbackend.mapper.SysConfigMapper;
 import com.cybzacg.blogbackend.module.auth.service.SysConfigService;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -24,13 +25,13 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
 
     @Override
     public SysConfig getByConfigKey(String configKey) {
-        String normalizedKey = normalize(configKey);
+        String normalizedKey = StrUtils.normalize(configKey);
         return StringUtils.hasText(normalizedKey) ? baseMapper.selectByConfigKey(normalizedKey) : null;
     }
 
     @Override
     public String getValueByKey(String configKey) {
-        String normalizedKey = normalize(configKey);
+        String normalizedKey = StrUtils.normalize(configKey);
         if (!StringUtils.hasText(normalizedKey)) {
             return null;
         }
@@ -55,7 +56,7 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
 
     @Override
     public void evictConfigCache(String configKey) {
-        String normalizedKey = normalize(configKey);
+        String normalizedKey = StrUtils.normalize(configKey);
         if (!StringUtils.hasText(normalizedKey)) {
             return;
         }
@@ -66,7 +67,5 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
         return RedisKeyUtils.build(ConfigConstants.CACHE_KEY_PREFIX, configKey);
     }
 
-    private String normalize(String value) {
-        return StringUtils.hasText(value) ? value.trim() : value;
-    }
 }
+

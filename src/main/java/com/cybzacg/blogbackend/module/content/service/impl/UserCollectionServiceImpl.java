@@ -19,10 +19,10 @@ import com.cybzacg.blogbackend.module.content.service.SysCollectionFolderService
 import com.cybzacg.blogbackend.module.content.service.SysCollectionService;
 import com.cybzacg.blogbackend.module.content.service.UserCollectionService;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -61,9 +61,9 @@ public class UserCollectionServiceImpl implements UserCollectionService {
         Long userId = SecurityUtils.requireUserId();
         SysCollectionFolder folder = new SysCollectionFolder();
         folder.setUserId(userId);
-        folder.setFolderName(request.getFolderName().trim());
+        folder.setFolderName(StrUtils.trim(request.getFolderName()));
         folder.setFolderType(resolveFolderType(request.getFolderType()));
-        folder.setDescription(trim(request.getDescription()));
+        folder.setDescription(StrUtils.normalize(request.getDescription()));
         folder.setIsPublic(defaultInt(request.getIsPublic(), 0));
         folder.setIsDefault(defaultInt(request.getIsDefault(), 0));
         folder.setSortOrder(defaultInt(request.getSortOrder(), 0));
@@ -80,9 +80,9 @@ public class UserCollectionServiceImpl implements UserCollectionService {
     public CollectionFolderVO updateFolder(Long id, CollectionFolderSaveRequest request) {
         Long userId = SecurityUtils.requireUserId();
         SysCollectionFolder folder = getFolderOrThrow(id, userId);
-        folder.setFolderName(request.getFolderName().trim());
+        folder.setFolderName(StrUtils.trim(request.getFolderName()));
         folder.setFolderType(resolveFolderType(request.getFolderType()));
-        folder.setDescription(trim(request.getDescription()));
+        folder.setDescription(StrUtils.normalize(request.getDescription()));
         folder.setIsPublic(defaultInt(request.getIsPublic(), 0));
         folder.setIsDefault(defaultInt(request.getIsDefault(), 0));
         folder.setSortOrder(defaultInt(request.getSortOrder(), 0));
@@ -151,7 +151,7 @@ public class UserCollectionServiceImpl implements UserCollectionService {
         collection.setFolderId(folder.getId());
         collection.setTargetId(article.getId());
         collection.setTargetType(ARTICLE_TYPE);
-        collection.setRemark(trim(request.getRemark()));
+        collection.setRemark(StrUtils.normalize(request.getRemark()));
         collection.setTargetTitle(article.getTitle());
         collection.setTargetUrl("/article/" + article.getId());
         sysCollectionService.save(collection);
@@ -245,14 +245,12 @@ public class UserCollectionServiceImpl implements UserCollectionService {
     }
 
     private String resolveFolderType(String folderType) {
-        return StringUtils.hasText(folderType) ? folderType.trim() : ARTICLE_TYPE;
+        return StrUtils.trimToDefault(folderType, ARTICLE_TYPE);
     }
 
     private Integer defaultInt(Integer value, Integer defaultValue) {
         return value == null ? defaultValue : value;
     }
 
-    private String trim(String value) {
-        return StringUtils.hasText(value) ? value.trim() : value;
-    }
 }
+

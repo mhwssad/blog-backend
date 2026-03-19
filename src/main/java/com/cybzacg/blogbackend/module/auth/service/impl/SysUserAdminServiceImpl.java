@@ -14,6 +14,7 @@ import com.cybzacg.blogbackend.module.auth.service.SysRoleService;
 import com.cybzacg.blogbackend.module.auth.service.SysUserAdminService;
 import com.cybzacg.blogbackend.module.auth.service.SysUserRoleService;
 import com.cybzacg.blogbackend.module.auth.service.SysUserService;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -131,10 +132,10 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
      * 将请求中的可编辑字段统一回填到用户实体，复用新增与更新流程。
      */
     private void applyUserFields(SysUser user, SysUserSaveRequest request, boolean includePassword) {
-        user.setUsername(normalize(request.getUsername()));
+        user.setUsername(StrUtils.normalize(request.getUsername()));
         user.setNickname(request.getNickname());
-        user.setEmail(normalize(request.getEmail()));
-        user.setPhone(normalize(request.getPhone()));
+        user.setEmail(StrUtils.normalize(request.getEmail()));
+        user.setPhone(StrUtils.normalize(request.getPhone()));
         user.setAvatar(request.getAvatar());
         user.setGender(request.getGender());
         user.setBirthday(request.getBirthday());
@@ -151,21 +152,21 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
     private void validateUserUniqueness(Long currentUserId, SysUserSaveRequest request) {
         if (sysUserService.lambdaQuery()
                 .eq(SysUser::getDeletedFlag, 0)
-                .eq(SysUser::getUsername, normalize(request.getUsername()))
+                .eq(SysUser::getUsername, StrUtils.normalize(request.getUsername()))
                 .ne(currentUserId != null, SysUser::getId, currentUserId)
                 .exists()) {
             throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "用户名已存在");
         }
         if (StringUtils.hasText(request.getEmail()) && sysUserService.lambdaQuery()
                 .eq(SysUser::getDeletedFlag, 0)
-                .eq(SysUser::getEmail, normalize(request.getEmail()))
+                .eq(SysUser::getEmail, StrUtils.normalize(request.getEmail()))
                 .ne(currentUserId != null, SysUser::getId, currentUserId)
                 .exists()) {
             throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "邮箱已存在");
         }
         if (StringUtils.hasText(request.getPhone()) && sysUserService.lambdaQuery()
                 .eq(SysUser::getDeletedFlag, 0)
-                .eq(SysUser::getPhone, normalize(request.getPhone()))
+                .eq(SysUser::getPhone, StrUtils.normalize(request.getPhone()))
                 .ne(currentUserId != null, SysUser::getId, currentUserId)
                 .exists()) {
             throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "手机号已存在");
@@ -203,9 +204,5 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
             throw new BusinessException(ResultErrorCode.USER_NOT_FOUND);
         }
         return user;
-    }
-
-    private String normalize(String value) {
-        return StringUtils.hasText(value) ? value.trim() : value;
     }
 }

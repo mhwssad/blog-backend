@@ -11,6 +11,7 @@ import com.cybzacg.blogbackend.module.content.model.admin.CategoryTreeVO;
 import com.cybzacg.blogbackend.module.content.service.CategoryAdminService;
 import com.cybzacg.blogbackend.module.content.service.SysCategoryService;
 import com.cybzacg.blogbackend.module.article.service.BlogArticleCategoryService;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -101,12 +102,12 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
      * 校验分类请求是否合法，目前仅允许维护文章分类，且分类编码需唯一。
      */
     private void validateRequest(CategorySaveRequest request, Long currentId) {
-        if (!StringUtils.hasText(request.getType()) || !ARTICLE_TYPE.equals(request.getType().trim())) {
+        if (!StringUtils.hasText(request.getType()) || !ARTICLE_TYPE.equals(StrUtils.trim(request.getType()))) {
             throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "当前仅支持文章分类");
         }
         boolean duplicated = sysCategoryService.lambdaQuery()
-                .eq(SysCategory::getType, request.getType().trim())
-                .eq(SysCategory::getCode, request.getCode().trim())
+                .eq(SysCategory::getType, StrUtils.trim(request.getType()))
+                .eq(SysCategory::getCode, StrUtils.trim(request.getCode()))
                 .ne(currentId != null, SysCategory::getId, currentId)
                 .exists();
         if (duplicated) {
@@ -140,7 +141,7 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
         }
         String[] segments = parent.getAncestors().split(",");
         for (String segment : segments) {
-            if (String.valueOf(currentId).equals(segment.trim())) {
+            if (String.valueOf(currentId).equals(StrUtils.trim(segment))) {
                 return true;
             }
         }
@@ -152,12 +153,12 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
      */
     private void applyFields(SysCategory category, CategorySaveRequest request, SysCategory parent) {
         category.setParentId(request.getParentId());
-        category.setName(request.getName().trim());
-        category.setCode(request.getCode().trim());
-        category.setType(request.getType().trim());
+        category.setName(StrUtils.trim(request.getName()));
+        category.setCode(StrUtils.trim(request.getCode()));
+        category.setType(StrUtils.trim(request.getType()));
         category.setSortOrder(request.getSortOrder() == null ? 0 : request.getSortOrder());
-        category.setIcon(trim(request.getIcon()));
-        category.setDescription(trim(request.getDescription()));
+        category.setIcon(StrUtils.normalize(request.getIcon()));
+        category.setDescription(StrUtils.normalize(request.getDescription()));
         category.setStatus(request.getStatus() == null ? 1 : request.getStatus());
         category.setLevel(parent == null ? 1 : parent.getLevel() + 1);
         category.setAncestors(parent == null ? "0" : buildAncestors(parent));
@@ -216,7 +217,5 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
         return category;
     }
 
-    private String trim(String value) {
-        return StringUtils.hasText(value) ? value.trim() : value;
-    }
 }
+
