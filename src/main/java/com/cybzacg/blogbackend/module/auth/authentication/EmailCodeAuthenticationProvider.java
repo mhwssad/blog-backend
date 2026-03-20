@@ -7,6 +7,7 @@ import com.cybzacg.blogbackend.enums.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserDetails;
 import com.cybzacg.blogbackend.module.auth.service.AuthUserDetailsService;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.DisabledException;
@@ -26,8 +27,8 @@ public class EmailCodeAuthenticationProvider implements AuthenticationProvider {
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        String email = normalizeEmail(authentication.getName());
-        String code = authentication.getCredentials() == null ? null : authentication.getCredentials().toString().trim();
+        String email = StrUtils.trimToLowerCase(authentication.getName());
+        String code = authentication.getCredentials() == null ? null : StrUtils.trim(authentication.getCredentials().toString());
 
         String cachedCode = redisOperator.get(emailLoginCodeKey(email), String.class);
         if (!StringUtils.hasText(cachedCode)) {
@@ -54,9 +55,6 @@ public class EmailCodeAuthenticationProvider implements AuthenticationProvider {
         return EmailCodeAuthenticationToken.class.isAssignableFrom(authentication);
     }
 
-    private String normalizeEmail(String value) {
-        return value == null ? null : value.trim().toLowerCase();
-    }
 
     private String emailLoginCodeKey(String email) {
         return RedisKeyUtils.build(AuthConstants.EMAIL_LOGIN_CODE_PREFIX, email);

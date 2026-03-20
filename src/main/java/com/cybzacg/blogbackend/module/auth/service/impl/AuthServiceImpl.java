@@ -110,7 +110,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void sendEmailLoginCode(AuthEmailCodeRequest request) {
-        String email = normalizeEmail(request.getEmail());
+        String email = StrUtils.trimToLowerCase(request.getEmail());
         SysUser user = sysUserService.getByEmail(email);
         if (user == null) {
             throw new BusinessException(ResultErrorCode.USER_NOT_FOUND);
@@ -138,7 +138,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AuthenticationToken emailLogin(AuthEmailLoginRequest request, String loginIp) {
-        String email = normalizeEmail(request.getEmail());
+        String email = StrUtils.trimToLowerCase(request.getEmail());
         Authentication authentication = authenticationManager.authenticate(
                 EmailCodeAuthenticationToken.unauthenticated(email, StrUtils.trim(request.getCode()))
         );

@@ -6,6 +6,7 @@ import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.model.AuthenticationToken;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserDetails;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserPrincipal;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -189,7 +190,7 @@ public class JwtTokenManager implements TokenManager {
     }
 
     private String normalizeToken(String token) {
-        String value = token.trim();
+        String value = StrUtils.trim(token);
         if (value.regionMatches(true, 0, AuthConstants.BEARER + " ", 0, AuthConstants.BEARER.length() + 1)) {
             return value.substring(AuthConstants.BEARER.length() + 1);
         }
