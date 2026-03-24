@@ -1,0 +1,87 @@
+package com.cybzacg.blogbackend.module.file.controller;
+import com.cybzacg.blogbackend.core.web.PageResult;
+import com.cybzacg.blogbackend.core.web.Result;
+import com.cybzacg.blogbackend.module.file.model.user.ChunkUploadVO;
+import com.cybzacg.blogbackend.module.file.model.user.FileUploadInitRequest;
+import com.cybzacg.blogbackend.module.file.model.user.FileUploadInitVO;
+import com.cybzacg.blogbackend.module.file.model.user.FileUploadResultVO;
+import com.cybzacg.blogbackend.module.file.model.user.UserFilePageQuery;
+import com.cybzacg.blogbackend.module.file.model.user.UserFileTaskPageQuery;
+import com.cybzacg.blogbackend.module.file.model.user.UserFileTaskVO;
+import com.cybzacg.blogbackend.module.file.model.user.UserFileVO;
+import com.cybzacg.blogbackend.module.file.service.UserFileService;
+import com.cybzacg.blogbackend.utils.IPUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+/**
+ * 用户侧文件接口。
+ * 负责暴露上传任务、文件查询和文件引用删除能力。
+ */
+@RestController
+@Tag(name = "用户文件")
+@RequiredArgsConstructor
+public class UserFileController {
+    private final UserFileService userFileService;
+    @PostMapping("/api/user/files/upload-tasks/init")
+    @Operation(summary = "初始化上传任务")
+    public Result<FileUploadInitVO> initUploadTask(@Valid @RequestBody FileUploadInitRequest request,
+                                                   HttpServletRequest httpServletRequest) {
+        return Result.success(userFileService.initUploadTask(request, IPUtils.getIpAddr(httpServletRequest)));
+    }
+    @PostMapping("/api/user/files/upload-tasks/{uploadId}/quick-check")
+    @Operation(summary = "秒传检测")
+    public Result<FileUploadResultVO> quickCheck(@PathVariable String uploadId,
+                                                 HttpServletRequest httpServletRequest) {
+        return Result.success(userFileService.quickCheck(uploadId, IPUtils.getIpAddr(httpServletRequest)));
+    }
+    @PostMapping("/api/user/files/upload-tasks/{uploadId}/file")
+    @Operation(summary = "普通上传")
+    public Result<FileUploadResultVO> uploadFile(@PathVariable String uploadId,
+                                                 @RequestParam("file") MultipartFile file,
+                                                 HttpServletRequest httpServletRequest) {
+        return Result.success(userFileService.uploadFile(uploadId, file, IPUtils.getIpAddr(httpServletRequest)));
+    }
+    @PostMapping("/api/user/files/upload-tasks/{uploadId}/chunks/{chunkNumber}")
+    @Operation(summary = "上传分片")
+    public Result<ChunkUploadVO> uploadChunk(@PathVariable String uploadId,
+                                             @PathVariable Integer chunkNumber,
+                                             @RequestParam("file") MultipartFile file,
+                                             @RequestParam(value = "chunkMd5", required = false) String chunkMd5,
+                                             HttpServletRequest httpServletRequest) {
+        return Result.success(userFileService.uploadChunk(uploadId, chunkNumber, file, chunkMd5, IPUtils.getIpAddr(httpServletRequest)));
+    }
+    @PostMapping("/api/user/files/upload-tasks/{uploadId}/complete")
+    @Operation(summary = "完成上传")
+    public Result<FileUploadResultVO> completeUpload(@PathVariable String uploadId,
+                                                     HttpServletRequest httpServletRequest) {
+        return Result.success(userFileService.completeUpload(uploadId, IPUtils.getIpAddr(httpServletRequest)));
+    }
+    @GetMapping("/api/user/files")
+    @Operation(summary = "查询我的文件")
+    public Result<PageResult<UserFileVO>> pageMyFiles(UserFilePageQuery query) {
+        return Result.success(userFileService.pageMyFiles(query));
+    }
+    @GetMapping("/api/user/files/upload-tasks")
+    @Operation(summary = "查询我的上传任务")
+    public Result<PageResult<UserFileTaskVO>> pageMyUploadTasks(UserFileTaskPageQuery query) {
+        return Result.success(userFileService.pageMyUploadTasks(query));
+    }
+    @DeleteMapping("/api/user/files/{businessId}")
+    @Operation(summary = "删除我的文件引用")
+    public Result<Void> deleteMyFile(@PathVariable Long businessId) {
+        userFileService.deleteMyFile(businessId);
+        return Result.success();
+    }
+}
