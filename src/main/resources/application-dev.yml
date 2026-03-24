@@ -51,6 +51,26 @@ spring:
     # 邮件发送者
     from: youlaitech@163.com
 
+storage:
+  storage-type: local
+  storage:
+    - key: local-default
+      type: local
+      base-url:
+      bucket-name: target/storage
+  manager:
+    strategy: DEFAULT
+    enable-health-check: false
+    enable-load-balancing: false
+
+file-upload:
+  chunk-size: 5242880
+  chunk-size-threshold: 6291456
+  task-expire-days: 2
+  max-file-size: 104857600
+  temp-dir-prefix: temp
+  enable-md5-check: true
+
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
   global-config:

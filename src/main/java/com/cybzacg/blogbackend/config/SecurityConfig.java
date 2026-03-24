@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.config;
 import com.cybzacg.blogbackend.config.property.SecurityProperties;
 import com.cybzacg.blogbackend.core.filter.TokenAuthenticationFilter;
 import com.cybzacg.blogbackend.module.auth.authentication.EmailCodeAuthenticationProvider;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.auth.service.AuthUserDetailsService;
 import com.cybzacg.blogbackend.utils.HttpServletResponseUtils;
 import jakarta.servlet.http.HttpServletResponse;

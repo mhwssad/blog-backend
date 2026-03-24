@@ -5,8 +5,8 @@ import com.cybzacg.blogbackend.common.constant.NoticeConstants;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.SysNotice;
 import com.cybzacg.blogbackend.domain.SysUserNotice;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.module.auth.convert.SysNoticeModelMapper;
 import com.cybzacg.blogbackend.module.auth.model.admin.UserNoticePageQuery;
 import com.cybzacg.blogbackend.module.auth.model.admin.UserNoticeVO;
@@ -37,6 +37,9 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
     private final SysUserNoticeService sysUserNoticeService;
     private final SysNoticeModelMapper sysNoticeModelMapper;
 
+    /**
+     * 分页查询当前用户收件箱，统一处理全员通知与指定通知的已读过滤逻辑。
+     */
     @Override
     public PageResult<UserNoticeVO> pageMyNotices(UserNoticePageQuery query) {
         Long userId = SecurityUtils.requireUserId();
@@ -119,6 +122,9 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
         return sysNoticeModelMapper.toUserNoticeVO(notice, true, relation.getReadTime());
     }
 
+    /**
+     * 统计当前用户未读通知数量，并合并全员通知与指定通知两类来源。
+     */
     @Override
     public long countUnreadNotices() {
         Long userId = SecurityUtils.requireUserId();
@@ -159,6 +165,9 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
         markReadInternal(userId, notice);
     }
 
+    /**
+     * 将当前用户可见的通知批量标记为已读，必要时为全员通知补建关系记录。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void markAllRead() {
@@ -230,11 +239,7 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
      */
     private SysNotice getAccessibleNotice(Long userId, Long noticeId) {
         SysNotice notice = sysNoticeService.getById(noticeId);
-        if (notice == null
-                || Integer.valueOf(1).equals(notice.getIsDeleted())
-                || !Objects.equals(NoticeConstants.PUBLISH_STATUS_PUBLISHED, notice.getPublishStatus())) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "通知不存在");
-        }
+        ExceptionThrowerCore.throwBusinessIf(notice == null || Integer.valueOf(1).equals(notice.getIsDeleted()) || !Objects.equals(NoticeConstants.PUBLISH_STATUS_PUBLISHED, notice.getPublishStatus()), ResultErrorCode.ILLEGAL_ARGUMENT, "通知不存在");
         if (Objects.equals(NoticeConstants.TARGET_ALL, notice.getTargetType())) {
             return notice;
         }
@@ -243,9 +248,7 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
                 .eq(SysUserNotice::getUserId, userId)
                 .eq(SysUserNotice::getIsDeleted, 0)
                 .exists();
-        if (!exists) {
-            throw new BusinessException(ResultErrorCode.FORBIDDEN);
-        }
+        ExceptionThrowerCore.throwBusinessIfNot(exists, ResultErrorCode.FORBIDDEN);
         return notice;
     }
 
@@ -280,3 +283,6 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
         return relation;
     }
 }
+
+
+

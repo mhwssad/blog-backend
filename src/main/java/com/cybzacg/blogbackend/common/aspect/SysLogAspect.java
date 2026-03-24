@@ -12,7 +12,8 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -46,9 +47,9 @@ import java.util.Set;
  */
 @Aspect
 @Component
-@Slf4j
 @RequiredArgsConstructor
 public class SysLogAspect {
+    private static final Logger log = LoggerFactory.getLogger(SysLogAspect.class);
     /** 请求参数日志最大长度，避免超长文本撑爆数据库字段。 */
     private static final int MAX_REQUEST_LENGTH = 8000;
 
@@ -67,6 +68,9 @@ public class SysLogAspect {
 
     /**
      * 拦截所有 RestController 的公开方法，再在运行时按 URI 和注解进一步筛选。
+     */
+    /**
+     * 包装控制器调用，确保业务成功或异常退出时都能补记系统操作日志。
      */
     @Around("within(@org.springframework.web.bind.annotation.RestController *) && execution(public * com.cybzacg.blogbackend..controller..*(..))")
     public Object recordSysLog(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -237,6 +241,9 @@ public class SysLogAspect {
         sysLog.setOs(resolveOs(lower));
     }
 
+    /**
+     * 根据 User-Agent 关键字推断浏览器类型。
+     */
     private String resolveBrowser(String lowerUserAgent) {
         if (lowerUserAgent.contains("edg/")) {
             return "Edge";
@@ -259,6 +266,9 @@ public class SysLogAspect {
         return "Unknown";
     }
 
+    /**
+     * 按不同浏览器标识提取版本号，避免统一规则误判。
+     */
     private String resolveBrowserVersion(String userAgent, String lowerUserAgent) {
         if (lowerUserAgent.contains("edg/")) {
             return extractVersion(userAgent, "Edg/");
@@ -302,6 +312,9 @@ public class SysLogAspect {
         return start == end ? null : userAgent.substring(start, end);
     }
 
+    /**
+     * 根据 User-Agent 关键字归类操作系统名称。
+     */
     private String resolveOs(String lowerUserAgent) {
         if (lowerUserAgent.contains("windows")) {
             return "Windows";
@@ -453,3 +466,7 @@ public class SysLogAspect {
         return true;
     }
 }
+
+
+
+

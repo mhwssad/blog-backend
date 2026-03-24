@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.SysRole;
 import com.cybzacg.blogbackend.domain.SysUser;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.module.auth.convert.RbacAdminModelMapper;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysUserAdminVO;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysUserPageQuery;
@@ -65,12 +65,10 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public SysUserAdminVO createUser(SysUserSaveRequest request) {
-        if (!StringUtils.hasText(request.getPassword())) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "新增用户时密码不能为空");
-        }
+        ExceptionThrowerCore.throwBusinessIfBlank(request.getPassword(), ResultErrorCode.ILLEGAL_ARGUMENT, "新增用户时密码不能为空");
         validateUserUniqueness(null, request);
 
-        SysUser user = new SysUser();
+        SysUser user = rbacAdminModelMapper.toUser(request);
         applyUserFields(user, request, true);
         sysUserService.save(user);
         return rbacAdminModelMapper.toUserVO(user, List.of());
@@ -97,9 +95,7 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void resetPassword(Long id, String password) {
-        if (!StringUtils.hasText(password)) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "新密码不能为空");
-        }
+        ExceptionThrowerCore.throwBusinessIfBlank(password, ResultErrorCode.ILLEGAL_ARGUMENT, "新密码不能为空");
         SysUser user = getAvailableUser(id);
         user.setPassword(passwordEncoder.encode(password));
         sysUserService.updateById(user);
@@ -132,15 +128,7 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
      * 将请求中的可编辑字段统一回填到用户实体，复用新增与更新流程。
      */
     private void applyUserFields(SysUser user, SysUserSaveRequest request, boolean includePassword) {
-        user.setUsername(StrUtils.normalize(request.getUsername()));
-        user.setNickname(request.getNickname());
-        user.setEmail(StrUtils.normalize(request.getEmail()));
-        user.setPhone(StrUtils.normalize(request.getPhone()));
-        user.setAvatar(request.getAvatar());
-        user.setGender(request.getGender());
-        user.setBirthday(request.getBirthday());
-        user.setStatus(request.getStatus() != null ? request.getStatus() : 1);
-        user.setRemark(request.getRemark());
+        rbacAdminModelMapper.updateUser(request, user);
         if (includePassword) {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
@@ -150,27 +138,9 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
      * 校验用户名、邮箱和手机号在未删除用户中是否唯一。
      */
     private void validateUserUniqueness(Long currentUserId, SysUserSaveRequest request) {
-        if (sysUserService.lambdaQuery()
-                .eq(SysUser::getDeletedFlag, 0)
-                .eq(SysUser::getUsername, StrUtils.normalize(request.getUsername()))
-                .ne(currentUserId != null, SysUser::getId, currentUserId)
-                .exists()) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "用户名已存在");
-        }
-        if (StringUtils.hasText(request.getEmail()) && sysUserService.lambdaQuery()
-                .eq(SysUser::getDeletedFlag, 0)
-                .eq(SysUser::getEmail, StrUtils.normalize(request.getEmail()))
-                .ne(currentUserId != null, SysUser::getId, currentUserId)
-                .exists()) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "邮箱已存在");
-        }
-        if (StringUtils.hasText(request.getPhone()) && sysUserService.lambdaQuery()
-                .eq(SysUser::getDeletedFlag, 0)
-                .eq(SysUser::getPhone, StrUtils.normalize(request.getPhone()))
-                .ne(currentUserId != null, SysUser::getId, currentUserId)
-                .exists()) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "手机号已存在");
-        }
+        ExceptionThrowerCore.throwBusinessIf(sysUserService.lambdaQuery().eq(SysUser::getDeletedFlag, 0).eq(SysUser::getUsername, StrUtils.normalize(request.getUsername())).ne(currentUserId != null, SysUser::getId, currentUserId).exists(), ResultErrorCode.ILLEGAL_ARGUMENT, "用户名已存在");
+        ExceptionThrowerCore.throwBusinessIf(StringUtils.hasText(request.getEmail()) && sysUserService.lambdaQuery().eq(SysUser::getDeletedFlag, 0).eq(SysUser::getEmail, StrUtils.normalize(request.getEmail())).ne(currentUserId != null, SysUser::getId, currentUserId).exists(), ResultErrorCode.ILLEGAL_ARGUMENT, "邮箱已存在");
+        ExceptionThrowerCore.throwBusinessIf(StringUtils.hasText(request.getPhone()) && sysUserService.lambdaQuery().eq(SysUser::getDeletedFlag, 0).eq(SysUser::getPhone, StrUtils.normalize(request.getPhone())).ne(currentUserId != null, SysUser::getId, currentUserId).exists(), ResultErrorCode.ILLEGAL_ARGUMENT, "手机号已存在");
     }
 
     /**
@@ -180,9 +150,7 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
         if (roleIds == null || roleIds.isEmpty()) {
             return;
         }
-        if (roleIds.stream().anyMatch(Objects::isNull)) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "角色ID不能为空");
-        }
+        ExceptionThrowerCore.throwBusinessIf(roleIds.stream().anyMatch(Objects::isNull), ResultErrorCode.ILLEGAL_ARGUMENT, "角色ID不能为空");
         List<Long> distinctRoleIds = roleIds.stream()
                 .distinct()
                 .toList();
@@ -190,9 +158,7 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
                 .in(SysRole::getId, distinctRoleIds)
                 .eq(SysRole::getIsDeleted, 0)
                 .count();
-        if (count != distinctRoleIds.size()) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "存在无效角色");
-        }
+        ExceptionThrowerCore.throwBusinessIf(count != distinctRoleIds.size(), ResultErrorCode.ILLEGAL_ARGUMENT, "存在无效角色");
     }
 
     /**
@@ -200,9 +166,17 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
      */
     private SysUser getAvailableUser(Long id) {
         SysUser user = sysUserService.getById(id);
-        if (user == null || Integer.valueOf(1).equals(user.getDeletedFlag())) {
-            throw new BusinessException(ResultErrorCode.USER_NOT_FOUND);
-        }
+        ExceptionThrowerCore.throwBusinessIf(user == null || Integer.valueOf(1).equals(user.getDeletedFlag()), ResultErrorCode.USER_NOT_FOUND);
         return user;
     }
 }
+
+
+
+
+
+
+
+
+
+

@@ -5,8 +5,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.SysUserFootprint;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.mapper.SysUserFootprintMapper;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
 import com.cybzacg.blogbackend.module.article.service.BlogArticleService;
@@ -50,9 +50,7 @@ public class UserFootprintServiceImpl implements UserFootprintService {
     public void deleteFootprint(Long id) {
         Long userId = SecurityUtils.requireUserId();
         SysUserFootprint footprint = sysUserFootprintService.getById(id);
-        if (footprint == null || !userId.equals(footprint.getUserId())) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "足迹不存在");
-        }
+        ExceptionThrowerCore.throwBusinessIf(footprint == null || !userId.equals(footprint.getUserId()), ResultErrorCode.ILLEGAL_ARGUMENT, "足迹不存在");
         sysUserFootprintService.removeById(id);
     }
 
@@ -76,15 +74,15 @@ public class UserFootprintServiceImpl implements UserFootprintService {
         }
         articleAccessControlService.validateArticleAccess(article, userId);
 
-        SysUserFootprint footprint = new SysUserFootprint();
-        footprint.setUserId(userId);
-        footprint.setTargetId(articleId);
-        footprint.setTargetType("article");
-        footprint.setTitle(article.getTitle());
-        footprint.setUrl("/article/" + articleId);
-        footprint.setIpAddress(IPUtils.getIpAddr(request));
-        footprint.setUserAgent(request != null ? request.getHeader("User-Agent") : null);
-        footprint.setVisitedAt(new java.util.Date());
+        SysUserFootprint footprint = contentModelMapper.toArticleFootprint(
+                userId,
+                article,
+                IPUtils.getIpAddr(request),
+                request != null ? request.getHeader("User-Agent") : null,
+                new java.util.Date());
         sysUserFootprintMapper.upsertFootprint(footprint);
     }
 }
+
+
+

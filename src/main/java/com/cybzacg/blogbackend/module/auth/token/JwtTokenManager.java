@@ -50,6 +50,9 @@ public class JwtTokenManager implements TokenManager {
         this.secretKey = Keys.hmacShaKeyFor(jwtConfig.getSecretKey().getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * 生成一组访问令牌与刷新令牌，并把用户身份与权限写入 JWT 载荷。
+     */
     @Override
     public AuthenticationToken generateToken(Authentication authentication) {
         String username = resolveUsername(authentication);
@@ -109,6 +112,9 @@ public class JwtTokenManager implements TokenManager {
         }
     }
 
+    /**
+     * 统一解析并校验 JWT 声明，失败时转换为业务异常。
+     */
     private Claims parseClaims(String token) {
         if (!StringUtils.hasText(token)) {
             throw new BusinessException("Token不能为空");
@@ -170,6 +176,9 @@ public class JwtTokenManager implements TokenManager {
                 .toList();
     }
 
+    /**
+     * 将 Spring Security 权限集合压平为可写入 Token 的字符串列表。
+     */
     private List<String> extractAuthorities(Collection<? extends GrantedAuthority> authorities) {
         if (authorities == null || authorities.isEmpty()) {
             return List.of();
@@ -204,6 +213,9 @@ public class JwtTokenManager implements TokenManager {
         return securityProperties.getSession();
     }
 
+    /**
+     * 从不同认证主体中提取用户名，兼容用户详情对象与简化主体对象。
+     */
     private String resolveUsername(Authentication authentication) {
         if (authentication == null) {
             return null;
@@ -218,6 +230,9 @@ public class JwtTokenManager implements TokenManager {
         return authentication.getName();
     }
 
+    /**
+     * 从不同认证主体中提取用户 ID，供 Token 载荷回填。
+     */
     private Long resolveUserId(Authentication authentication) {
         if (authentication == null) {
             return null;

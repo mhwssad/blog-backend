@@ -1,6 +1,6 @@
 # blog-backend
 
-`blog-backend` 是一个基于 Spring Boot 4、Spring Security、MyBatis-Plus、MySQL、Redis 的博客后端项目，当前仓库重点已经落地认证鉴权、RBAC 后台管理、通知中心和内容域基础设施，文章内容域仍在继续补齐接口与测试。
+`blog-backend` 是一个基于 Spring Boot 4、Spring Security、MyBatis-Plus、MySQL、Redis 的博客后端项目，当前仓库重点已经落地认证鉴权、RBAC 后台管理、通知中心、内容域接口以及文件上传管理能力。
 
 ## 项目情况
 
@@ -9,11 +9,10 @@
 - 当前已落地的业务主线：
   - 认证与会话：账号登录、注册、邮箱验证码登录、刷新令牌、退出登录。
   - RBAC 管理：用户、角色、菜单、系统配置、通知、日志后台接口。
-  - 用户侧能力：当前用户信息、当前用户菜单、用户通知中心。
+  - 内容域：文章、分类、标签、评论、收藏、互动、足迹接口。
+  - 文件域：用户上传、秒传/分片上传、文件后台管理。
 - 当前在建部分：
-  - `module/article` 已有 domain、mapper、service 以及 SQL 脚本。
-  - `docs/tasks/content-domain/` 已拆出内容域实施任务，但控制器层尚未完整落地。
-  - `module/file` 目录已预留，当前没有实际实现。
+  - 继续补齐测试、文档和边界场景验证。
 
 ## 架构概览
 
@@ -29,8 +28,9 @@ src/main/java/com/cybzacg/blogbackend
 ├─ mapper           MyBatis-Plus Mapper 接口
 ├─ module
 │  ├─ auth          认证、RBAC、通知中心
-│  ├─ article       文章内容域基础服务
-│  └─ file          预留模块
+│  ├─ article       文章内容域
+│  ├─ content       分类/标签/评论/收藏/互动/足迹
+│  └─ file          文件上传与后台管理
 └─ utils            通用工具类
 ```
 
@@ -101,9 +101,12 @@ mvn -q -DskipTests compile
 
 ## 怎么样测试
 
-当前仓库的测试入口很少，只有一个 Spring 上下文加载测试：
+当前仓库已经不止一个测试文件，现有测试覆盖：
 
-- `src/test/java/com/cybzacg/blogbackend/BlogBackendApplicationTests.java`
+- Spring 上下文加载测试：`src/test/java/com/cybzacg/blogbackend/BlogBackendApplicationTests.java`
+- `article` 模块控制器与访问控制测试
+- `content` 模块安全与服务测试
+- `file` 模块控制器与服务测试（已覆盖秒传收口、引用删除）
 
 运行命令：
 
@@ -119,21 +122,24 @@ mvn test
 
 测试注意点：
 
-- 这是 `@SpringBootTest` 集成测试，不是纯单元测试。
-- 由于仓库目前没有单独的 `test` profile，测试默认会吃当前应用配置。
-- 如果本地 MySQL/Redis 配置不通，`contextLoads` 大概率会在启动阶段失败。
-- 目前测试覆盖率很低，更多验证仍依赖接口联调、SQL 初始化和手工回归。
+- `BlogBackendApplicationTests` 已切换到独立 `test` profile。
+- `test` profile 使用 H2 内存数据库、本地测试存储目录，并排除了会在启动期强依赖 Redis 的 Redisson 自动配置。
+- 这意味着基础上下文测试不再依赖开发环境 MySQL/Redis 才能启动。
+- 当前其余测试仍以轻量单测和 MockMvc 为主，后续还需要继续扩大对高风险链路的自动化覆盖。
 
 如果只是想先做一轮基础自检，建议顺序是：
 
 1. `.\mvnw.cmd -q -DskipTests compile`
-2. `.\mvnw.cmd spring-boot:run`
-3. 打开 `http://localhost:8000/doc.html` 或 `http://localhost:8000/swagger-ui.html`
-4. 再执行 `.\mvnw.cmd test`
+2. `.\mvnw.cmd -Dtest=BlogBackendApplicationTests test`
+3. `.\mvnw.cmd spring-boot:run`
+4. 打开 `http://localhost:8000/doc.html` 或 `http://localhost:8000/swagger-ui.html`
+5. 视改动范围再执行 `.\mvnw.cmd test`
 
 ## 接口与文档
 
-- 认证与 RBAC 接口说明：`docs/auth-api.md`
+- 认证与系统管理接口说明：`docs/api文档/auth-api.md`
+- 内容域接口说明：`docs/api文档/content-api.md`
+- 文件模块接口说明：`docs/api文档/file-api.md`
 - 内容域任务拆分：`docs/tasks/content-domain/`
 - Swagger / Knife4j：
   - `http://localhost:8000/doc.html`
@@ -141,6 +147,8 @@ mvn test
 
 ## 当前维护建议
 
-- 先补 `test` profile，把测试与开发数据库/Redis 配置解耦。
+- 在已有 `test` profile 基础上，继续把更多集成测试接入隔离环境。
 - 为 `module/article` 补控制器与集成测试，尽快让内容域从“任务拆分完成”进入“接口可验收”。
 - 将 `HELP.md` 的模板内容逐步淘汰，统一以本 README 作为项目入口说明。
+
+

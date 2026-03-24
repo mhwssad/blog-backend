@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.SysMenu;
 import com.cybzacg.blogbackend.domain.SysRole;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.module.auth.convert.RbacAdminModelMapper;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysRoleAdminVO;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysRolePageQuery;
@@ -65,7 +65,7 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
     @Transactional(rollbackFor = Exception.class)
     public SysRoleAdminVO createRole(SysRoleSaveRequest request) {
         validateRoleUniqueness(null, request);
-        SysRole role = new SysRole();
+        SysRole role = rbacAdminModelMapper.toRole(request);
         applyRoleFields(role, request);
         role.setIsDeleted(0);
         sysRoleService.save(role);
@@ -117,31 +117,15 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
      * 将角色请求字段统一回填到实体，复用新增和更新流程。
      */
     private void applyRoleFields(SysRole role, SysRoleSaveRequest request) {
-        role.setName(StrUtils.normalize(request.getName()));
-        role.setCode(StrUtils.normalize(request.getCode()));
-        role.setSort(request.getSort());
-        role.setStatus(request.getStatus() != null ? request.getStatus() : 1);
-        role.setDataScope(request.getDataScope());
+        rbacAdminModelMapper.updateRole(request, role);
     }
 
     /**
      * 校验角色名称和编码在未删除角色中保持唯一。
      */
     private void validateRoleUniqueness(Long currentRoleId, SysRoleSaveRequest request) {
-        if (sysRoleService.lambdaQuery()
-                .eq(SysRole::getIsDeleted, 0)
-                .eq(SysRole::getName, StrUtils.normalize(request.getName()))
-                .ne(currentRoleId != null, SysRole::getId, currentRoleId)
-                .exists()) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "角色名称已存在");
-        }
-        if (sysRoleService.lambdaQuery()
-                .eq(SysRole::getIsDeleted, 0)
-                .eq(SysRole::getCode, StrUtils.normalize(request.getCode()))
-                .ne(currentRoleId != null, SysRole::getId, currentRoleId)
-                .exists()) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "角色编码已存在");
-        }
+        ExceptionThrowerCore.throwBusinessIf(sysRoleService.lambdaQuery().eq(SysRole::getIsDeleted, 0).eq(SysRole::getName, StrUtils.normalize(request.getName())).ne(currentRoleId != null, SysRole::getId, currentRoleId).exists(), ResultErrorCode.ILLEGAL_ARGUMENT, "角色名称已存在");
+        ExceptionThrowerCore.throwBusinessIf(sysRoleService.lambdaQuery().eq(SysRole::getIsDeleted, 0).eq(SysRole::getCode, StrUtils.normalize(request.getCode())).ne(currentRoleId != null, SysRole::getId, currentRoleId).exists(), ResultErrorCode.ILLEGAL_ARGUMENT, "角色编码已存在");
     }
 
     /**
@@ -151,18 +135,14 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
         if (menuIds == null || menuIds.isEmpty()) {
             return;
         }
-        if (menuIds.stream().anyMatch(Objects::isNull)) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "菜单ID不能为空");
-        }
+        ExceptionThrowerCore.throwBusinessIf(menuIds.stream().anyMatch(Objects::isNull), ResultErrorCode.ILLEGAL_ARGUMENT, "菜单ID不能为空");
         List<Long> distinctMenuIds = menuIds.stream()
                 .distinct()
                 .toList();
         long count = sysMenuService.lambdaQuery()
                 .in(SysMenu::getId, distinctMenuIds)
                 .count();
-        if (count != distinctMenuIds.size()) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "存在无效菜单");
-        }
+        ExceptionThrowerCore.throwBusinessIf(count != distinctMenuIds.size(), ResultErrorCode.ILLEGAL_ARGUMENT, "存在无效菜单");
     }
 
     /**
@@ -170,9 +150,14 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
      */
     private SysRole getAvailableRole(Long id) {
         SysRole role = sysRoleService.getById(id);
-        if (role == null || Integer.valueOf(1).equals(role.getIsDeleted())) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "角色不存在");
-        }
+        ExceptionThrowerCore.throwBusinessIf(role == null || Integer.valueOf(1).equals(role.getIsDeleted()), ResultErrorCode.ILLEGAL_ARGUMENT, "角色不存在");
         return role;
     }
 }
+
+
+
+
+
+
+

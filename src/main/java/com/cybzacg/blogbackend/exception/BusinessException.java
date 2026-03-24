@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.exception;
 
-import com.cybzacg.blogbackend.enums.ResultCode;
+import com.cybzacg.blogbackend.enums.error.ResultCode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.core.web;
 
-import com.cybzacg.blogbackend.enums.ResultCode;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
+import com.cybzacg.blogbackend.enums.error.ResultCode;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

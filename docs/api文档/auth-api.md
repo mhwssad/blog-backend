@@ -1,534 +1,286 @@
-# Auth模块接口文档
+# Auth 模块接口文档
 
-## 基础信息
+本文档面向前端联调，覆盖认证、后台系统管理和用户通知中心接口。
 
-- **Base URL**: `/api`
-- **认证方式**: Bearer Token (JWT)
-- **响应格式**: JSON
-- **文档覆盖范围**:
-  - 认证接口：`/api/auth/**`
-  - 后台用户、角色、菜单、配置、通知、日志接口：`/api/sys/**`
-  - 用户通知中心：`/api/user/notices/**`
+## 1. 联调约定
 
-## 通用响应结构
+### 1.1 Base URL
 
-所有接口响应遵循以下格式：
+- 统一前缀：`/api`
 
-```json
-{
-  "code": 200,
-  "data": {},
-  "message": "成功",
-  "timestamp": 1742371200000
-}
+### 1.2 认证方式
+
+- 匿名接口：`/api/auth/login`、`/api/auth/register`、`/api/auth/email-code`、`/api/auth/email-login`、`/api/auth/refresh`
+- 登录后接口：其余 `auth`、`sys`、`user/notices` 接口
+- Bearer Token 请求头：
+
+```http
+Authorization: Bearer <accessToken>
 ```
 
-- `code`: 状态码，200表示成功
-- `data`: 响应数据
-- `message`: 响应消息，默认成功文案为 `成功`
-- `timestamp`: 服务端返回时间戳（毫秒）
+### 1.3 统一响应结构
 
-分页查询响应：
+所有接口统一返回 `Result<T>`：
 
 ```json
 {
   "code": 200,
   "message": "成功",
-  "timestamp": 1742371200000,
-  "data": {
-    "total": 100,
-    "current": 1,
-    "size": 10,
-    "records": []
-  }
+  "timestamp": 1774310400000,
+  "data": {}
 }
 ```
 
-- 分页结构对应 [`PageResult`](/e:/project/blog/blog-backend/src/main/java/com/cybzacg/blogbackend/core/web/PageResult.java)，固定字段为 `total`、`current`、`size`、`records`，没有 `pages` 字段
+字段说明：
 
----
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| code | Integer | 业务状态码，`200` 表示成功 |
+| message | String | 业务消息 |
+| timestamp | Long | 服务端响应时间戳，毫秒 |
+| data | Any | 响应数据，可能为对象、数组、分页对象或 `null` |
 
-## 1. 认证管理 (/api/auth)
-
-### 1.1 账号登录
-
-**接口描述**: 使用用户名/邮箱/手机号和密码进行登录
-
-**请求方式**: `POST /api/auth/login`
-
-**请求参数**:
-
-| 参数名      | 类型     | 必填 | 说明                | 示例     |
-|----------|--------|----|-------------------|--------|
-| username | String | 是  | 登录账号，支持用户名/邮箱/手机号 | admin  |
-| password | String | 是  | 密码                | 123456 |
-
-**请求示例**:
+分页接口 `data` 结构固定为：
 
 ```json
 {
-  "username": "admin",
-  "password": "123456"
+  "total": 1,
+  "current": 1,
+  "size": 10,
+  "records": []
 }
 ```
 
-**响应数据** (AuthenticationToken):
+### 1.4 常见前端处理建议
 
-| 参数名          | 类型      | 说明             |
-|--------------|---------|----------------|
-| tokenType    | String  | 令牌类型，如"Bearer" |
-| accessToken  | String  | 访问令牌           |
-| refreshToken | String  | 刷新令牌           |
-| expiresIn    | Integer | 过期时间(单位：秒)     |
+- `401`：未登录、Token 失效、Token 过期，前端应跳转登录或尝试刷新令牌。
+- `403`：已登录但无权限访问，前端应提示无权限。
+- `Result.code != 200`：属于业务失败，优先展示 `message`。
+- 时间字段默认按后端序列化结果返回，前端统一按本地格式化处理。
 
-**响应示例**:
+## 2. 认证接口
+
+### 2.1 账号登录
+
+- **POST** `/api/auth/login`
+- **是否鉴权**: 否
+- **请求体**: `AuthLoginRequest`
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| username | String | 是 | 登录账号，支持用户名/邮箱/手机号 |
+| password | String | 是 | 登录密码 |
+
+- **响应**: `AuthenticationToken`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| tokenType | String | 令牌类型，固定为 `Bearer` |
+| accessToken | String | 访问令牌 |
+| refreshToken | String | 刷新令牌 |
+| expiresIn | Integer | accessToken 过期时间，单位秒 |
+
+- **响应示例**:
 
 ```json
 {
   "code": 200,
   "message": "成功",
+  "timestamp": 1774310400000,
   "data": {
     "tokenType": "Bearer",
-    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "accessToken": "eyJ...",
+    "refreshToken": "eyJ...",
     "expiresIn": 7200
   }
 }
 ```
 
----
-
-### 1.2 账号注册
-
-**接口描述**: 使用用户名和密码注册新账号
-
-**请求方式**: `POST /api/auth/register`
-
-**请求参数**:
-
-| 参数名      | 类型     | 必填 | 说明    | 示例            |
-|----------|--------|----|-------|---------------|
-| username | String | 是  | 用户名   | new_user      |
-| password | String | 是  | 密码    | 123456        |
-| nickname | String | 否  | 昵称    | 新用户           |
-| email    | String | 否  | 邮箱地址  | user@example.com |
-| phone    | String | 否  | 手机号   | 13800138000    |
-
-**请求示例**:
-
-```json
-{
-  "username": "new_user",
-  "password": "123456",
-  "nickname": "新用户",
-  "email": "user@example.com"
-}
-```
-
-**响应数据**: 同"账号登录"接口
-
----
-
-### 1.3 发送邮箱登录验证码
-
-**接口描述**: 向指定邮箱发送登录验证码
-
-**请求方式**: `POST /api/auth/email-code`
-
-**请求参数**:
-
-| 参数名   | 类型     | 必填 | 说明   | 示例               |
-|-------|--------|----|------|------------------|
-| email | String | 是  | 邮箱地址 | user@example.com |
-
-**请求示例**:
-
-```json
-{
-  "email": "user@example.com"
-}
-```
-
-**响应示例**:
-
-```json
-{
-  "code": 200,
-  "message": "成功",
-  "data": null
-}
-```
-
----
-
-### 1.4 邮箱验证码登录
-
-**接口描述**: 使用邮箱和验证码进行登录
-
-**请求方式**: `POST /api/auth/email-login`
-
-**请求参数**:
-
-| 参数名   | 类型     | 必填 | 说明   | 示例               |
-|-------|--------|----|------|------------------|
-| email | String | 是  | 邮箱地址 | user@example.com |
-| code  | String | 是  | 验证码  | 123456           |
-
-**请求示例**:
-
-```json
-{
-  "email": "user@example.com",
-  "code": "123456"
-}
-```
-
-**响应数据**: 同"账号登录"接口
-
----
-
-### 1.5 刷新令牌
-
-**接口描述**: 使用刷新令牌获取新的访问令牌
-
-**请求方式**: `POST /api/auth/refresh`
-
-**请求参数**:
-
-| 参数名          | 类型     | 必填 | 说明   | 示例          |
-|--------------|--------|----|------|-------------|
-| refreshToken | String | 是  | 刷新令牌 | eyJhbGci... |
-
-**请求示例**:
-
-```json
-{
-  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-
-**响应数据**: 同"账号登录"接口
-
----
-
-### 1.6 退出登录
-
-**接口描述**: 退出当前登录状态，使令牌失效
-
-**请求方式**: `POST /api/auth/logout`
-
-**请求头**:
-
-| 参数名           | 类型     | 必填 | 说明       | 示例                 |
-|---------------|--------|----|----------|--------------------|
-| Authorization | String | 是  | Bearer令牌 | Bearer eyJhbGci... |
-
-**请求参数** (Body):
-
-| 参数名         | 类型     | 必填 | 说明                  | 示例          |
-|-------------|--------|----|---------------------|-------------|
-| accessToken | String | 否  | 访问令牌（如不传则从Header获取） | eyJhbGci... |
-
-**响应示例**:
-
-```json
-{
-  "code": 200,
-  "message": "成功",
-  "data": null
-}
-```
-
----
-
-### 1.7 获取当前登录用户
-
-**接口描述**: 获取当前登录用户的详细信息
-
-**请求方式**: `GET /api/auth/current-user`
-
-**请求头**: 需要Bearer令牌
-
-**响应数据** (AuthUserInfo):
-
-| 参数名         | 类型           | 说明     |
-|-------------|--------------|--------|
-| id          | Long         | 用户ID   |
-| username    | String       | 用户名    |
-| nickname    | String       | 昵称     |
-| avatar      | String       | 头像URL  |
-| email       | String       | 邮箱     |
-| phone       | String       | 手机号    |
-| status      | Integer      | 状态     |
-| roles       | List[String] | 角色编码列表 |
-| permissions | List[String] | 权限标识列表 |
-
-**响应示例**:
-
-```json
-{
-  "code": 200,
-  "message": "成功",
-  "data": {
-    "id": 1,
-    "username": "admin",
-    "nickname": "管理员",
-    "avatar": "https://example.com/avatar.jpg",
-    "email": "admin@example.com",
-    "phone": "13800138000",
-    "status": 1,
-    "roles": [
-      "ROLE_ADMIN"
-    ],
-    "permissions": [
-      "sys:user:create",
-      "sys:user:update"
-    ]
-  }
-}
-```
-
----
-
-### 1.8 获取当前用户菜单
-
-**接口描述**: 获取当前用户有权访问的菜单列表
-
-**请求方式**: `GET /api/auth/current-user-menus`
-
-**请求头**: 需要Bearer令牌
-
-**响应数据** (List[AuthMenuInfo]):
-
-| 参数名       | 类型      | 说明             |
-|-----------|---------|----------------|
-| id        | Long    | 菜单ID           |
-| parentId  | Long    | 父菜单ID          |
-| routeName | String  | 路由名称          |
-| routePath | String  | 路由路径          |
-| name      | String  | 菜单名称           |
-| component | String  | 组件路径           |
-| perm      | String  | 权限标识          |
-| redirect  | String  | 跳转地址          |
-| alwaysShow | Integer | 始终显示         |
-| keepAlive | Integer | 页面缓存          |
-| icon      | String  | 图标             |
-| type      | String  | 类型：`C`目录 `M`菜单 `B`按钮 |
-| sort      | Integer | 排序号            |
-| visible   | Integer | 是否可见           |
-| params    | Object  | 路由参数          |
-| children  | List    | 子菜单            |
-
-**响应示例**:
-
-```json
-{
-  "code": 200,
-  "message": "成功",
-  "data": [
-    {
-      "id": 1,
-      "parentId": 0,
-      "name": "系统管理",
-      "routeName": "System",
-      "routePath": "/system",
-      "component": "layouts/RouteView",
-      "perm": null,
-      "redirect": "/system/users",
-      "alwaysShow": 1,
-      "keepAlive": 0,
-      "icon": "system",
-      "type": "C",
-      "sort": 1,
-      "visible": 1,
-      "params": null,
-      "children": [
-        {
-          "id": 2,
-          "parentId": 1,
-          "name": "用户管理",
-          "routeName": "SysUser",
-          "routePath": "/system/users",
-          "component": "system/users/index",
-          "perm": "sys:user:query",
-          "redirect": null,
-          "alwaysShow": 0,
-          "keepAlive": 1,
-          "icon": "user",
-          "type": "M",
-          "sort": 1,
-          "visible": 1,
-          "params": null
-        }
-      ]
-    }
-  ]
-}
-```
-
----
-
-## 2. 后台用户管理 (/api/sys/users)
-
-> 需要相应权限才能访问
-
-### 2.1 分页查询用户
-
-**接口描述**: 分页查询系统用户列表
-
-**请求方式**: `GET /api/sys/users`
-
-**权限**: `sys:user:query`
-
-**请求参数** (Query):
-
-| 参数名      | 类型      | 必填 | 说明        | 示例           |
-|----------|---------|----|-----------|--------------|
-| current  | Integer | 否  | 当前页，默认1   | 1            |
-| size     | Integer | 否  | 每页数量，默认10 | 10           |
-| username | String  | 否  | 用户名（模糊查询） | admin        |
-| nickname | String  | 否  | 昵称（模糊查询）  | 管理员          |
-| email    | String  | 否  | 邮箱（模糊查询）  | @example.com |
-| status   | Integer | 否  | 状态        | 1            |
-
-**响应示例**:
-
-```json
-{
-  "code": 200,
-  "message": "成功",
-  "data": {
-    "total": 100,
-    "current": 1,
-    "size": 10,
-    "records": [
-      {
-        "id": 1,
-        "username": "admin",
-        "nickname": "管理员",
-        "email": "admin@example.com",
-        "phone": "13800138000",
-        "avatar": "https://example.com/avatar.jpg",
-        "gender": 1,
-        "status": 1,
-        "createTime": "2024-01-01T00:00:00",
-        "remark": "系统管理员"
-      }
-    ]
-  }
-}
-```
-
----
-
-### 2.2 查询用户详情
-
-**接口描述**: 根据ID查询用户详细信息
-
-**请求方式**: `GET /api/sys/users/{id}`
-
-**权限**: `sys:user:query`
-
-**路径参数**:
-
-| 参数名 | 类型   | 必填 | 说明   | 示例 |
-|-----|------|----|------|----|
-| id  | Long | 是  | 用户ID | 1  |
-
-**响应数据** (SysUserAdminVO):
-
-| 参数名        | 类型      | 说明   |
-|------------|---------|------|
-| id         | Long    | 用户ID |
-| username   | String  | 用户名  |
-| nickname   | String  | 昵称   |
-| email      | String  | 邮箱   |
-| phone      | String  | 手机号  |
-| avatar     | String  | 头像   |
-| gender     | Integer | 性别   |
-| birthday   | Date    | 生日   |
-| status     | Integer | 状态   |
-| remark     | String  | 备注   |
-| createTime | Date    | 创建时间 |
-| updateTime | Date    | 更新时间 |
-
----
-
-### 2.3 新增用户
-
-**接口描述**: 创建新用户
-
-**请求方式**: `POST /api/sys/users`
-
-**权限**: `sys:user:create`
-
-**请求参数** (SysUserSaveRequest):
-
-| 参数名      | 类型      | 必填 | 说明    | 示例               |
-|----------|---------|----|-------|------------------|
-| username | String  | 是  | 用户名   | testuser         |
-| password | String  | 否  | 密码    | 123456           |
-| nickname | String  | 否  | 昵称    | 测试用户             |
-| email    | String  | 否  | 邮箱    | test@example.com |
-| phone    | String  | 否  | 手机号   | 13900139000      |
-| avatar   | String  | 否  | 头像URL | https://...      |
-| gender   | Integer | 否  | 性别    | 1                |
-| birthday | Date    | 否  | 生日    | 1990-01-01       |
-| status   | Integer | 否  | 状态    | 1                |
-| remark   | String  | 否  | 备注    | 测试账号             |
-
-**请求示例**:
-
-```json
-{
-  "username": "testuser",
-  "password": "123456",
-  "nickname": "测试用户",
-  "email": "test@example.com"
-}
-```
-
----
-
-### 2.4 修改用户
-
-**接口描述**: 更新用户信息
-
-**请求方式**: `PUT /api/sys/users/{id}`
-
-**权限**: `sys:user:update`
-
-**路径参数**:
-
-| 参数名 | 类型   | 必填 | 说明   | 示例 |
-|-----|------|----|------|----|
-| id  | Long | 是  | 用户ID | 1  |
-
-**请求参数**: 同"新增用户"
-
----
-
-### 2.5 修改用户状态
-
-**接口描述**: 启用/禁用用户
-
-**请求方式**: `PUT /api/sys/users/{id}/status`
-
-**权限**: `sys:user:update`
-
-**路径参数**:
-
-| 参数名 | 类型   | 必填 | 说明   | 示例 |
-|-----|------|----|------|----|
-| id  | Long | 是  | 用户ID | 1  |
-
-**请求参数** (StatusUpdateRequest):
-
-| 参数名    | 类型      | 必填 | 说明         | 示例 |
-|--------|---------|----|------------|----|
-| status | Integer | 是  | 状态：0禁用 1启用 | 1  |
-
-**请求示例**:
+### 2.2 账号注册
+
+- **POST** `/api/auth/register`
+- **是否鉴权**: 否
+- **请求体**: `AuthRegisterRequest`
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| username | String | 是 | 用户名 |
+| password | String | 是 | 密码 |
+| nickname | String | 否 | 昵称，未传时默认使用用户名 |
+| email | String | 否 | 邮箱 |
+| phone | String | 否 | 手机号 |
+
+- **响应**: 同登录接口 `AuthenticationToken`
+
+### 2.3 发送邮箱登录验证码
+
+- **POST** `/api/auth/email-code`
+- **是否鉴权**: 否
+- **请求体**: `AuthEmailCodeRequest`
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| email | String | 是 | 邮箱地址 |
+
+- **响应**: `data = null`
+
+### 2.4 邮箱验证码登录
+
+- **POST** `/api/auth/email-login`
+- **是否鉴权**: 否
+- **请求体**: `AuthEmailLoginRequest`
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| email | String | 是 | 邮箱地址 |
+| code | String | 是 | 6 位验证码 |
+
+- **响应**: 同登录接口 `AuthenticationToken`
+
+### 2.5 刷新令牌
+
+- **POST** `/api/auth/refresh`
+- **是否鉴权**: 否
+- **请求体**: `AuthRefreshRequest`
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| refreshToken | String | 是 | 刷新令牌 |
+
+- **响应**: `AuthenticationToken`
+
+### 2.6 退出登录
+
+- **POST** `/api/auth/logout`
+- **是否鉴权**: 建议传 Bearer Token
+- **请求体**: `LogoutRequest`，可为空
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| accessToken | String | 否 | 不传时默认读取 `Authorization` 请求头 |
+
+- **说明**:
+  - 前端通常只需要带上 `Authorization` 请求头即可。
+  - 成功后前端应清理本地登录态和缓存用户信息。
+
+### 2.7 获取当前登录用户
+
+- **GET** `/api/auth/current-user`
+- **是否鉴权**: 是
+- **响应**: `AuthUserInfo`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| id | Long | 用户 ID |
+| username | String | 用户名 |
+| nickname | String | 昵称 |
+| avatar | String | 头像 |
+| email | String | 邮箱 |
+| phone | String | 手机号 |
+| status | Integer | 用户状态，`0` 禁用，`1` 正常 |
+| roles | List<String> | 角色编码列表 |
+| permissions | List<String> | 权限标识列表 |
+
+### 2.8 获取当前用户菜单
+
+- **GET** `/api/auth/current-user-menus`
+- **是否鉴权**: 是
+- **响应**: `List<AuthMenuInfo>`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| id | Long | 菜单 ID |
+| parentId | Long | 父菜单 ID |
+| name | String | 菜单名称 |
+| type | String | 菜单类型：`C` 目录、`M` 菜单、`B` 按钮 |
+| routeName | String | 路由名称 |
+| routePath | String | 路由路径 |
+| component | String | 前端组件路径 |
+| perm | String | 权限标识 |
+| visible | Integer | 是否显示，`0/1` |
+| sort | Integer | 排序 |
+| icon | String | 图标 |
+| redirect | String | 重定向路径 |
+| alwaysShow | Integer | 是否始终显示 |
+| keepAlive | Integer | 是否缓存 |
+| params | Object | 路由参数 |
+| children | List<AuthMenuInfo> | 子菜单 |
+
+## 3. 后台用户管理
+
+### 3.1 分页查询用户
+
+- **GET** `/api/sys/users`
+- **权限**: `sys:user:query`
+- **查询参数**: `SysUserPageQuery`
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| current | Long | 页码，默认 `1` |
+| size | Long | 每页条数，默认 `10` |
+| username | String | 用户名 |
+| nickname | String | 昵称 |
+| email | String | 邮箱 |
+| phone | String | 手机号 |
+| status | Integer | 状态 |
+
+- **响应项**: `SysUserAdminVO`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| id | Long | 用户 ID |
+| username | String | 用户名 |
+| nickname | String | 昵称 |
+| email | String | 邮箱 |
+| phone | String | 手机号 |
+| avatar | String | 头像 |
+| gender | Integer | 性别 |
+| birthday | DateTime | 生日 |
+| status | Integer | 状态 |
+| lastLoginTime | DateTime | 最后登录时间 |
+| lastLoginIp | String | 最后登录 IP |
+| remark | String | 备注 |
+| roleIds | List<Long> | 角色 ID 列表 |
+
+### 3.2 查询用户详情
+
+- **GET** `/api/sys/users/{id}`
+- **权限**: `sys:user:query`
+- **响应**: `SysUserAdminVO`
+
+### 3.3 新增用户
+
+- **POST** `/api/sys/users`
+- **权限**: `sys:user:create`
+- **请求体**: `SysUserSaveRequest`
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| username | String | 是 | 用户名 |
+| password | String | 是 | 新增时必填 |
+| nickname | String | 否 | 昵称 |
+| email | String | 否 | 邮箱 |
+| phone | String | 否 | 手机号 |
+| avatar | String | 否 | 头像 |
+| gender | Integer | 否 | 性别 |
+| birthday | DateTime | 否 | 生日 |
+| status | Integer | 否 | 状态，默认 `1` |
+| remark | String | 否 | 备注 |
+
+- **响应**: `SysUserAdminVO`
+
+### 3.4 修改用户
+
+- **PUT** `/api/sys/users/{id}`
+- **权限**: `sys:user:update`
+- **请求体**: `SysUserSaveRequest`
+- **说明**: 修改用户时 `password` 不生效，重置密码请走单独接口。
+
+### 3.5 修改用户状态
+
+- **PUT** `/api/sys/users/{id}/status`
+- **权限**: `sys:user:update`
+- **请求体**: `StatusUpdateRequest`
 
 ```json
 {
@@ -536,925 +288,485 @@
 }
 ```
 
----
+### 3.6 重置用户密码
 
-### 2.6 重置用户密码
-
-**接口描述**: 重置指定用户的密码
-
-**请求方式**: `PUT /api/sys/users/{id}/password/reset`
-
-**权限**: `sys:user:reset-password`
-
-**路径参数**:
-
-| 参数名 | 类型   | 必填 | 说明   | 示例 |
-|-----|------|----|------|----|
-| id  | Long | 是  | 用户ID | 1  |
-
-**请求参数** (PasswordResetRequest):
-
-| 参数名      | 类型     | 必填 | 说明  | 示例     |
-|----------|--------|----|-----|--------|
-| password | String | 是  | 新密码 | 123456 |
-
----
-
-### 2.7 删除用户
-
-**接口描述**: 删除指定用户
-
-**请求方式**: `DELETE /api/sys/users/{id}`
-
-**权限**: `sys:user:delete`
-
-**路径参数**:
-
-| 参数名 | 类型   | 必填 | 说明   | 示例 |
-|-----|------|----|------|----|
-| id  | Long | 是  | 用户ID | 1  |
-
----
-
-### 2.8 查询用户角色
-
-**接口描述**: 获取用户已分配的角色ID列表
-
-**请求方式**: `GET /api/sys/users/{id}/roles`
-
-**权限**: `sys:user:query`
-
-**路径参数**:
-
-| 参数名 | 类型   | 必填 | 说明   | 示例 |
-|-----|------|----|------|----|
-| id  | Long | 是  | 用户ID | 1  |
-
-**响应示例**:
+- **PUT** `/api/sys/users/{id}/password/reset`
+- **权限**: `sys:user:reset-password`
+- **请求体**: `PasswordResetRequest`
 
 ```json
 {
-  "code": 200,
-  "message": "成功",
-  "data": [
-    1,
-    2,
-    3
-  ]
+  "password": "123456"
 }
 ```
 
----
+### 3.7 删除用户
 
-### 2.9 分配用户角色
+- **DELETE** `/api/sys/users/{id}`
+- **权限**: `sys:user:delete`
 
-**接口描述**: 为用户分配角色
+### 3.8 查询用户角色
 
-**请求方式**: `PUT /api/sys/users/{id}/roles`
+- **GET** `/api/sys/users/{id}/roles`
+- **权限**: `sys:user:query`
+- **响应**: `List<Long>`
 
-**权限**: `sys:user:assign-role`
+### 3.9 分配用户角色
 
-**路径参数**:
-
-| 参数名 | 类型   | 必填 | 说明   | 示例 |
-|-----|------|----|------|----|
-| id  | Long | 是  | 用户ID | 1  |
-
-**请求参数** (UserRoleAssignRequest):
-
-| 参数名     | 类型         | 必填 | 说明     | 示例     |
-|---------|------------|----|--------|--------|
-| roleIds | List[Long] | 是  | 角色ID列表 | [1, 2] |
-
-**请求示例**:
+- **PUT** `/api/sys/users/{id}/roles`
+- **权限**: `sys:user:assign-role`
+- **请求体**: `UserRoleAssignRequest`
 
 ```json
 {
-  "roleIds": [
-    1,
-    2
-  ]
+  "roleIds": [1, 2]
 }
 ```
 
----
+## 4. 后台角色管理
 
-## 3. 后台角色管理 (/api/sys/roles)
+### 4.1 分页查询角色
 
-> 需要相应权限才能访问
+- **GET** `/api/sys/roles`
+- **权限**: `sys:role:query`
+- **查询参数**: `SysRolePageQuery`
 
-### 3.1 分页查询角色
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| current | Long | 页码 |
+| size | Long | 每页条数 |
+| name | String | 角色名称 |
+| code | String | 角色编码 |
+| status | Integer | 角色状态 |
 
-**接口描述**: 分页查询系统角色列表
+- **响应项**: `SysRoleAdminVO`
 
-**请求方式**: `GET /api/sys/roles`
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| id | Long | 角色 ID |
+| name | String | 角色名称 |
+| code | String | 角色编码 |
+| sort | Integer | 显示顺序 |
+| status | Integer | 状态 |
+| dataScope | Integer | 数据权限 |
+| menuIds | List<Long> | 菜单 ID 列表 |
 
-**权限**: `sys:role:query`
+### 4.2 查询角色详情
 
-**请求参数** (Query):
+- **GET** `/api/sys/roles/{id}`
+- **权限**: `sys:role:query`
+- **响应**: `SysRoleAdminVO`
 
-| 参数名     | 类型      | 必填 | 说明         | 示例    |
-|---------|---------|----|------------|-------|
-| current | Integer | 否  | 当前页，默认1    | 1     |
-| size    | Integer | 否  | 每页数量，默认10  | 10    |
-| name    | String  | 否  | 角色名称（模糊查询） | 管理员   |
-| code    | String  | 否  | 角色编码（模糊查询） | ADMIN |
-| status  | Integer | 否  | 状态         | 1     |
+### 4.3 新增角色
 
-**响应数据** (PageResult[SysRoleAdminVO]):
+- **POST** `/api/sys/roles`
+- **权限**: `sys:role:create`
+- **请求体**: `SysRoleSaveRequest`
 
-| 参数名        | 类型      | 说明   |
-|------------|---------|------|
-| id         | Long    | 角色ID |
-| name       | String  | 角色名称 |
-| code       | String  | 角色编码 |
-| sort       | Integer | 排序号  |
-| status     | Integer | 状态   |
-| remark     | String  | 备注   |
-| createTime | Date    | 创建时间 |
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| name | String | 是 | 角色名称 |
+| code | String | 是 | 角色编码 |
+| sort | Integer | 否 | 显示顺序 |
+| status | Integer | 否 | 状态，默认 `1` |
+| dataScope | Integer | 否 | 数据权限 |
 
----
+### 4.4 修改角色
 
-### 3.2 查询角色详情
+- **PUT** `/api/sys/roles/{id}`
+- **权限**: `sys:role:update`
+- **请求体**: `SysRoleSaveRequest`
 
-**接口描述**: 根据ID查询角色详细信息
+### 4.5 修改角色状态
 
-**请求方式**: `GET /api/sys/roles/{id}`
+- **PUT** `/api/sys/roles/{id}/status`
+- **权限**: `sys:role:update`
+- **请求体**: `StatusUpdateRequest`
 
-**权限**: `sys:role:query`
+### 4.6 删除角色
 
-**路径参数**:
+- **DELETE** `/api/sys/roles/{id}`
+- **权限**: `sys:role:delete`
 
-| 参数名 | 类型   | 必填 | 说明   | 示例 |
-|-----|------|----|------|----|
-| id  | Long | 是  | 角色ID | 1  |
+### 4.7 查询角色菜单
 
----
+- **GET** `/api/sys/roles/{id}/menus`
+- **权限**: `sys:role:query`
+- **响应**: `List<Long>`
 
-### 3.3 新增角色
+### 4.8 分配角色菜单
 
-**接口描述**: 创建新角色
-
-**请求方式**: `POST /api/sys/roles`
-
-**权限**: `sys:role:create`
-
-**请求参数** (SysRoleSaveRequest):
-
-| 参数名    | 类型      | 必填 | 说明   | 示例     |
-|--------|---------|----|------|--------|
-| name   | String  | 是  | 角色名称 | 编辑     |
-| code   | String  | 是  | 角色编码 | EDITOR |
-| sort   | Integer | 否  | 排序号  | 1      |
-| status | Integer | 否  | 状态   | 1      |
-| remark | String  | 否  | 备注   | 内容编辑角色 |
-
-**请求示例**:
+- **PUT** `/api/sys/roles/{id}/menus`
+- **权限**: `sys:role:assign-menu`
+- **请求体**: `RoleMenuAssignRequest`
 
 ```json
 {
-  "name": "编辑",
-  "code": "EDITOR",
-  "sort": 1,
-  "status": 1
+  "menuIds": [1, 2, 3]
 }
 ```
 
----
+## 5. 后台菜单管理
 
-### 3.4 修改角色
+### 5.1 查询菜单树
 
-**接口描述**: 更新角色信息
+- **GET** `/api/sys/menus/tree`
+- **权限**: `sys:menu:query`
+- **响应**: `List<SysMenuAdminVO>`
 
-**请求方式**: `PUT /api/sys/roles/{id}`
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| id | Long | 菜单 ID |
+| parentId | Long | 父菜单 ID |
+| treePath | String | 树路径 |
+| name | String | 菜单名称 |
+| type | String | 菜单类型 |
+| routeName | String | 路由名称 |
+| routePath | String | 路由路径 |
+| component | String | 组件路径 |
+| perm | String | 权限标识 |
+| alwaysShow | Integer | 是否始终显示 |
+| keepAlive | Integer | 是否缓存 |
+| visible | Integer | 是否显示 |
+| sort | Integer | 排序 |
+| icon | String | 图标 |
+| redirect | String | 跳转地址 |
+| params | Object | 路由参数 |
+| children | List<SysMenuAdminVO> | 子菜单 |
 
-**权限**: `sys:role:update`
+### 5.2 查询菜单详情
 
-**路径参数**:
+- **GET** `/api/sys/menus/{id}`
+- **权限**: `sys:menu:query`
+- **响应**: `SysMenuAdminVO`
 
-| 参数名 | 类型   | 必填 | 说明   | 示例 |
-|-----|------|----|------|----|
-| id  | Long | 是  | 角色ID | 1  |
+### 5.3 新增菜单
 
-**请求参数**: 同"新增角色"
+- **POST** `/api/sys/menus`
+- **权限**: `sys:menu:create`
+- **请求体**: `SysMenuSaveRequest`
 
----
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| parentId | Long | 是 | 父菜单 ID，根节点传 `0` |
+| treePath | String | 否 | 前端通常无需传，后端会重新计算 |
+| name | String | 是 | 菜单名称 |
+| type | String | 是 | `C` / `M` / `B` |
+| routeName | String | 否 | 路由名称 |
+| routePath | String | 否 | 路由路径 |
+| component | String | 否 | 组件路径 |
+| perm | String | 否 | 权限标识 |
+| alwaysShow | Integer | 否 | 是否始终显示 |
+| keepAlive | Integer | 否 | 是否缓存 |
+| visible | Integer | 否 | 是否显示 |
+| sort | Integer | 否 | 排序 |
+| icon | String | 否 | 图标 |
+| redirect | String | 否 | 跳转地址 |
+| params | Object | 否 | 路由参数 |
 
-### 3.5 修改角色状态
+### 5.4 修改菜单
 
-**接口描述**: 启用/禁用角色
+- **PUT** `/api/sys/menus/{id}`
+- **权限**: `sys:menu:update`
+- **请求体**: `SysMenuSaveRequest`
 
-**请求方式**: `PUT /api/sys/roles/{id}/status`
+### 5.5 删除菜单
 
-**权限**: `sys:role:update`
+- **DELETE** `/api/sys/menus/{id}`
+- **权限**: `sys:menu:delete`
 
-**路径参数**:
+## 6. 系统配置管理
 
-| 参数名 | 类型   | 必填 | 说明   | 示例 |
-|-----|------|----|------|----|
-| id  | Long | 是  | 角色ID | 1  |
+### 6.1 分页查询配置
 
-**请求参数**: 同"修改用户状态"
+- **GET** `/api/sys/configs`
+- **权限**: `sys:config:query`
+- **查询参数**: `SysConfigPageQuery`
 
----
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| current | Long | 页码 |
+| size | Long | 每页条数 |
+| configName | String | 配置名称 |
+| configKey | String | 配置键 |
+| createTimeStart | DateTime | 创建开始时间，格式 `yyyy-MM-dd HH:mm:ss` |
+| createTimeEnd | DateTime | 创建结束时间，格式 `yyyy-MM-dd HH:mm:ss` |
 
-### 3.6 删除角色
+- **响应项**: `SysConfigAdminVO`
 
-**接口描述**: 删除指定角色
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| id | Long | 配置 ID |
+| configName | String | 配置名称 |
+| configKey | String | 配置键 |
+| configValue | String | 配置值 |
+| remark | String | 备注 |
+| createTime | DateTime | 创建时间 |
+| updateTime | DateTime | 更新时间 |
 
-**请求方式**: `DELETE /api/sys/roles/{id}`
+### 6.2 查询配置详情
 
-**权限**: `sys:role:delete`
+- **GET** `/api/sys/configs/{id}`
+- **权限**: `sys:config:query`
 
-**路径参数**:
+### 6.3 新增配置
 
-| 参数名 | 类型   | 必填 | 说明   | 示例 |
-|-----|------|----|------|----|
-| id  | Long | 是  | 角色ID | 1  |
-
----
-
-### 3.7 查询角色菜单
-
-**接口描述**: 获取角色已分配的菜单ID列表
-
-**请求方式**: `GET /api/sys/roles/{id}/menus`
-
-**权限**: `sys:role:query`
-
-**路径参数**:
-
-| 参数名 | 类型   | 必填 | 说明   | 示例 |
-|-----|------|----|------|----|
-| id  | Long | 是  | 角色ID | 1  |
-
-**响应示例**:
+- **POST** `/api/sys/configs`
+- **权限**: `sys:config:create`
+- **请求体**: `SysConfigSaveRequest`
 
 ```json
 {
-  "code": 200,
-  "message": "成功",
-  "data": [
-    1,
-    2,
-    5,
-    10
-  ]
+  "configName": "站点标题",
+  "configKey": "site.title",
+  "configValue": "我的博客",
+  "remark": "前台站点标题"
 }
 ```
 
----
-
-### 3.8 分配角色菜单
-
-**接口描述**: 为角色分配菜单权限
-
-**请求方式**: `PUT /api/sys/roles/{id}/menus`
-
-**权限**: `sys:role:assign-menu`
-
-**路径参数**:
-
-| 参数名 | 类型   | 必填 | 说明   | 示例 |
-|-----|------|----|------|----|
-| id  | Long | 是  | 角色ID | 1  |
-
-**请求参数** (RoleMenuAssignRequest):
-
-| 参数名     | 类型         | 必填 | 说明     | 示例        |
-|---------|------------|----|--------|-----------|
-| menuIds | List[Long] | 是  | 菜单ID列表 | [1, 2, 5] |
+### 6.4 修改配置
 
-**请求示例**:
+- **PUT** `/api/sys/configs/{id}`
+- **权限**: `sys:config:update`
+- **请求体**: `SysConfigSaveRequest`
 
-```json
-{
-  "menuIds": [
-    1,
-    2,
-    5,
-    10
-  ]
-}
-```
+### 6.5 删除配置
 
----
+- **DELETE** `/api/sys/configs/{id}`
+- **权限**: `sys:config:delete`
 
-## 4. 后台菜单管理 (/api/sys/menus)
+### 6.6 按配置键查询配置值
 
-> 需要相应权限才能访问
+- **GET** `/api/sys/configs/key/{configKey}`
+- **权限**: `sys:config:query`
+- **响应**: `String`
 
-### 4.1 查询菜单树
-
-**接口描述**: 获取完整的菜单树结构
-
-**请求方式**: `GET /api/sys/menus/tree`
-
-**权限**: `sys:menu:query`
-
-**响应数据** (List[SysMenuAdminVO]):
-
-| 参数名       | 类型      | 说明             |
-|-----------|---------|----------------|
-| id        | Long    | 菜单ID           |
-| parentId  | Long    | 父菜单ID          |
-| treePath  | String  | 树路径            |
-| name      | String  | 菜单名称           |
-| routeName | String  | 路由名称           |
-| routePath | String  | 路由路径           |
-| component | String  | 组件路径           |
-| perm      | String  | 权限标识           |
-| alwaysShow | Integer | 始终显示          |
-| keepAlive | Integer | 页面缓存           |
-| icon      | String  | 图标             |
-| type      | String  | 类型：`C`目录 `M`菜单 `B`按钮 |
-| sort      | Integer | 排序号            |
-| visible   | Integer | 是否可见           |
-| redirect  | String  | 跳转路径           |
-| params    | Object  | 路由参数           |
-| children  | List    | 子菜单列表          |
-
-**响应示例**:
-
-```json
-{
-  "code": 200,
-  "message": "成功",
-  "data": [
-    {
-      "id": 1,
-      "parentId": 0,
-      "treePath": "0",
-      "name": "系统管理",
-      "routeName": "System",
-      "routePath": "/system",
-      "component": "layouts/RouteView",
-      "perm": null,
-      "alwaysShow": 1,
-      "keepAlive": 0,
-      "icon": "system",
-      "type": "C",
-      "sort": 1,
-      "visible": 1,
-      "redirect": "/system/users",
-      "params": null,
-      "children": []
-    }
-  ]
-}
-```
+## 7. 通知后台管理
 
----
+### 7.1 分页查询通知
 
-### 4.2 查询菜单详情
+- **GET** `/api/sys/notices`
+- **权限**: `sys:notice:query`
+- **查询参数**: `SysNoticePageQuery`
 
-**接口描述**: 根据ID查询菜单详细信息
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| current | Long | 页码 |
+| size | Long | 每页条数 |
+| title | String | 标题 |
+| publishStatus | Integer | 发布状态 |
+| targetType | Integer | 目标类型 |
 
-**请求方式**: `GET /api/sys/menus/{id}`
+- **响应项**: `SysNoticeAdminVO`
 
-**权限**: `sys:menu:query`
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| id | Long | 通知 ID |
+| title | String | 标题 |
+| content | String | 内容 |
+| type | Integer | 通知类型 |
+| level | String | 通知等级 |
+| targetType | Integer | 目标类型，`1` 全体，`2` 指定 |
+| targetUserIds | List<Long> | 目标用户 ID 列表 |
+| publisherId | Long | 发布人 ID |
+| publishStatus | Integer | 发布状态 |
+| publishTime | DateTime | 发布时间 |
+| revokeTime | DateTime | 撤回时间 |
+| createTime | DateTime | 创建时间 |
+| updateTime | DateTime | 更新时间 |
 
-**路径参数**:
+### 7.2 查询通知详情
 
-| 参数名 | 类型   | 必填 | 说明   | 示例 |
-|-----|------|----|------|----|
-| id  | Long | 是  | 菜单ID | 1  |
+- **GET** `/api/sys/notices/{id}`
+- **权限**: `sys:notice:query`
 
----
+### 7.3 新增通知
 
-### 4.3 新增菜单
+- **POST** `/api/sys/notices`
+- **权限**: `sys:notice:create`
+- **请求体**: `SysNoticeSaveRequest`
 
-**接口描述**: 创建新菜单
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| title | String | 是 | 通知标题 |
+| content | String | 是 | 通知内容 |
+| type | Integer | 是 | 通知类型 |
+| level | String | 是 | 通知等级 |
+| targetType | Integer | 是 | 目标类型，`1` 全体，`2` 指定 |
+| targetUserIds | List<Long> | 否 | 指定用户列表 |
 
-**请求方式**: `POST /api/sys/menus`
+### 7.4 修改通知
 
-**权限**: `sys:menu:create`
+- **PUT** `/api/sys/notices/{id}`
+- **权限**: `sys:notice:update`
+- **请求体**: `SysNoticeSaveRequest`
 
-**请求参数** (SysMenuSaveRequest):
-
-| 参数名       | 类型      | 必填 | 说明             | 示例                 |
-|-----------|---------|----|----------------|--------------------|
-| parentId  | Long    | 是  | 父菜单ID，根节点可传 `0` | 0                  |
-| treePath  | String  | 否  | 树路径            | 0                  |
-| name      | String  | 是  | 菜单名称           | 用户管理               |
-| type      | String  | 是  | 菜单类型：`C`目录 `M`菜单 `B`按钮 | M                  |
-| routeName | String  | 否  | 路由名称           | SysUser            |
-| routePath | String  | 否  | 路由路径           | /system/users      |
-| component | String  | 否  | 组件路径           | system/users/index |
-| perm      | String  | 否  | 权限标识           | sys:user:query     |
-| alwaysShow | Integer | 否  | 是否始终显示：1是 0否  | 0                  |
-| keepAlive | Integer | 否  | 是否缓存：1是 0否    | 1                  |
-| icon      | String  | 否  | 图标             | user               |
-| sort      | Integer | 否  | 排序号            | 1                  |
-| visible   | Integer | 否  | 是否可见：0隐藏 1显示   | 1                  |
-| redirect  | String  | 否  | 跳转路径           | /system/users      |
-| params    | Object  | 否  | 路由参数           | `{"id":"1"}`       |
-
-**请求示例**:
-
-```json
-{
-  "parentId": 1,
-  "treePath": "0",
-  "name": "用户管理",
-  "type": "M",
-  "routeName": "SysUser",
-  "routePath": "/system/users",
-  "component": "system/users/index",
-  "perm": "sys:user:query",
-  "alwaysShow": 0,
-  "keepAlive": 1,
-  "icon": "user",
-  "sort": 1,
-  "visible": 1
-}
-```
-
----
-
-### 4.4 修改菜单
-
-**接口描述**: 更新菜单信息
-
-**请求方式**: `PUT /api/sys/menus/{id}`
-
-**权限**: `sys:menu:update`
-
-**路径参数**:
-
-| 参数名 | 类型   | 必填 | 说明   | 示例 |
-|-----|------|----|------|----|
-| id  | Long | 是  | 菜单ID | 1  |
-
-**请求参数**: 同"新增菜单"
-
----
-
-### 4.5 删除菜单
-
-**接口描述**: 删除指定菜单
-
-**请求方式**: `DELETE /api/sys/menus/{id}`
-
-**权限**: `sys:menu:delete`
-
-**路径参数**:
-
-| 参数名 | 类型   | 必填 | 说明   | 示例 |
-|-----|------|----|------|----|
-| id  | Long | 是  | 菜单ID | 1  |
-
----
-
-## 5. 系统配置管理 (/api/sys/configs)
-
-> 需要相应权限才能访问
-
-### 5.1 分页查询配置
-
-**接口描述**: 分页查询系统配置列表
-
-**请求方式**: `GET /api/sys/configs`
-
-**权限**: `sys:config:query`
-
-**请求参数** (Query):
-
-| 参数名        | 类型      | 必填 | 说明         | 示例       |
-|------------|---------|----|------------|----------|
-| current    | Integer | 否  | 当前页，默认1    | 1        |
-| size       | Integer | 否  | 每页数量，默认10  | 10       |
-| configName | String  | 否  | 配置名称（模糊查询） | 系统名称     |
-| configKey  | String  | 否  | 配置键（模糊查询）  | sys.name |
-
-**响应数据** (PageResult[SysConfigAdminVO]):
-
-| 参数名         | 类型      | 说明     |
-|-------------|---------|--------|
-| id          | Long    | 配置ID   |
-| configName  | String  | 配置名称   |
-| configKey   | String  | 配置键    |
-| configValue | String  | 配置值    |
-| isSystem    | Integer | 是否系统配置 |
-| remark      | String  | 备注     |
-| createTime  | Date    | 创建时间   |
-
----
-
-### 5.2 查询配置详情
-
-**接口描述**: 根据ID查询配置详细信息
-
-**请求方式**: `GET /api/sys/configs/{id}`
-
-**权限**: `sys:config:query`
-
----
-
-### 5.3 新增配置
-
-**接口描述**: 创建新配置
-
-**请求方式**: `POST /api/sys/configs`
-
-**权限**: `sys:config:create`
-
-**请求参数** (SysConfigSaveRequest):
-
-| 参数名         | 类型     | 必填 | 说明   | 示例       |
-|-------------|--------|----|------|----------|
-| configName  | String | 是  | 配置名称 | 系统名称     |
-| configKey   | String | 是  | 配置键  | sys.name |
-| configValue | String | 是  | 配置值  | 博客系统     |
-| remark      | String | 否  | 备注   | 系统名称配置   |
-
----
-
-### 5.4 修改配置
-
-**接口描述**: 更新配置信息
-
-**请求方式**: `PUT /api/sys/configs/{id}`
-
-**权限**: `sys:config:update`
-
----
-
-### 5.5 删除配置
-
-**接口描述**: 删除指定配置
-
-**请求方式**: `DELETE /api/sys/configs/{id}`
-
-**权限**: `sys:config:delete`
-
----
-
-### 5.6 按配置键查询配置值
-
-**接口描述**: 根据配置键获取配置值
-
-**请求方式**: `GET /api/sys/configs/key/{configKey}`
-
-**权限**: `sys:config:query`
-
-**路径参数**:
-
-| 参数名       | 类型     | 必填 | 说明  | 示例       |
-|-----------|--------|----|-----|----------|
-| configKey | String | 是  | 配置键 | sys.name |
-
-**响应示例**:
-
-```json
-{
-  "code": 200,
-  "message": "成功",
-  "data": "博客系统"
-}
-```
-
----
-
-## 6. 通知后台管理 (/api/sys/notices)
-
-> 需要相应权限才能访问
-
-### 6.1 分页查询通知
-
-**接口描述**: 分页查询系统通知列表
-
-**请求方式**: `GET /api/sys/notices`
-
-**权限**: `sys:notice:query`
-
-**请求参数** (Query):
-
-| 参数名     | 类型      | 必填 | 说明        | 示例   |
-|---------|---------|----|-----------|------|
-| current | Integer | 否  | 当前页，默认1   | 1    |
-| size    | Integer | 否  | 每页数量，默认10 | 10   |
-| title   | String  | 否  | 标题（模糊查询）  | 维护通知 |
-| type    | Integer | 否  | 类型        | 1    |
-| status  | Integer | 否  | 状态        | 1    |
-
-**响应数据** (PageResult[SysNoticeAdminVO]):
-
-| 参数名         | 类型      | 说明   |
-|-------------|---------|------|
-| id          | Long    | 通知ID |
-| title       | String  | 标题   |
-| content     | String  | 内容   |
-| type        | Integer | 类型   |
-| status      | Integer | 状态   |
-| publishTime | Date    | 发布时间 |
-| createTime  | Date    | 创建时间 |
-
----
-
-### 6.2 查询通知详情
-
-**接口描述**: 根据ID查询通知详细信息
-
-**请求方式**: `GET /api/sys/notices/{id}`
-
-**权限**: `sys:notice:query`
-
----
-
-### 6.3 新增通知
-
-**接口描述**: 创建新通知
-
-**请求方式**: `POST /api/sys/notices`
-
-**权限**: `sys:notice:create`
-
-**请求参数** (SysNoticeSaveRequest):
-
-| 参数名     | 类型      | 必填 | 说明 | 示例        |
-|---------|---------|----|----|-----------|
-| title   | String  | 是  | 标题 | 系统维护通知    |
-| content | String  | 是  | 内容 | 系统将于今晚... |
-| type    | Integer | 否  | 类型 | 1         |
-
----
-
-### 6.4 修改通知
-
-**接口描述**: 更新通知信息
-
-**请求方式**: `PUT /api/sys/notices/{id}`
-
-**权限**: `sys:notice:update`
-
----
-
-### 6.5 发布通知
-
-**接口描述**: 发布指定通知
-
-**请求方式**: `POST /api/sys/notices/{id}/publish`
-
-**权限**: `sys:notice:publish`
-
----
-
-### 6.6 撤回通知
-
-**接口描述**: 撤回已发布的通知
-
-**请求方式**: `POST /api/sys/notices/{id}/revoke`
-
-**权限**: `sys:notice:revoke`
-
----
-
-### 6.7 删除通知
-
-**接口描述**: 删除指定通知
-
-**请求方式**: `DELETE /api/sys/notices/{id}`
-
-**权限**: `sys:notice:delete`
-
----
-
-## 7. 用户通知中心 (/api/user/notices)
-
-### 7.1 我的通知列表
-
-**接口描述**: 获取当前用户的通知列表
-
-**请求方式**: `GET /api/user/notices`
-
-**请求参数** (Query):
-
-| 参数名     | 类型      | 必填 | 说明        | 示例 |
-|---------|---------|----|-----------|----|
-| current | Integer | 否  | 当前页，默认1   | 1  |
-| size    | Integer | 否  | 每页数量，默认10 | 10 |
-| isRead  | Integer | 否  | 是否已读      | 0  |
-
-**响应数据** (PageResult[UserNoticeVO]):
-
-| 参数名        | 类型      | 说明    |
-|------------|---------|-------|
-| id         | Long    | 通知ID  |
-| noticeId   | Long    | 原通知ID |
-| title      | String  | 标题    |
-| content    | String  | 内容    |
-| isRead     | Integer | 是否已读  |
-| readTime   | Date    | 阅读时间  |
-| createTime | Date    | 创建时间  |
-
----
-
-### 7.2 我的通知详情
-
-**接口描述**: 获取通知详情（自动标记为已读）
-
-**请求方式**: `GET /api/user/notices/{id}`
-
----
-
-### 7.3 我的未读数
-
-**接口描述**: 获取当前用户的未读通知数量
-
-**请求方式**: `GET /api/user/notices/unread-count`
-
-**响应示例**:
-
-```json
-{
-  "code": 200,
-  "message": "成功",
-  "data": 5
-}
-```
-
----
-
-### 7.4 单条已读
-
-**接口描述**: 标记指定通知为已读
-
-**请求方式**: `POST /api/user/notices/{id}/read`
-
----
-
-### 7.5 全部已读
-
-**接口描述**: 标记所有通知为已读
-
-**请求方式**: `POST /api/user/notices/read-all`
-
----
-
-## 8. 系统日志管理 (/api/sys/logs)
-
-> 需要相应权限才能访问
-
-### 8.1 分页查询日志
-
-**接口描述**: 分页查询系统日志列表
-
-**请求方式**: `GET /api/sys/logs`
-
-**权限**: `sys:log:query`
-
-**请求参数** (Query):
-
-| 参数名       | 类型      | 必填 | 说明        | 示例         |
-|-----------|---------|----|-----------|------------|
-| current   | Integer | 否  | 当前页，默认1   | 1          |
-| size      | Integer | 否  | 每页数量，默认10 | 10         |
-| module    | String  | 否  | 模块名称      | auth       |
-| action    | String  | 否  | 操作类型      | LOGIN      |
-| username  | String  | 否  | 操作人       | admin      |
-| startTime | Date    | 否  | 开始时间      | 2024-01-01 |
-| endTime   | Date    | 否  | 结束时间      | 2024-12-31 |
-
-**响应数据** (PageResult[SysLogAdminVO]):
-
-| 参数名           | 类型      | 说明       |
-|---------------|---------|----------|
-| id            | Long    | 日志ID     |
-| module        | String  | 模块名称     |
-| action        | String  | 操作类型     |
-| description   | String  | 操作描述     |
-| username      | String  | 操作人      |
-| ip            | String  | IP地址     |
-| location      | String  | 地理位置     |
-| userAgent     | String  | 浏览器信息    |
-| requestMethod | String  | 请求方法     |
-| requestUrl    | String  | 请求URL    |
-| executeTime   | Long    | 执行时间(ms) |
-| status        | Integer | 状态       |
-| createTime    | Date    | 创建时间     |
-
----
-
-### 8.2 查询日志详情
-
-**接口描述**: 根据ID查询日志详细信息
-
-**请求方式**: `GET /api/sys/logs/{id}`
-
-**权限**: `sys:log:query`
-
----
-
-### 8.3 删除日志
-
-**接口描述**: 删除指定日志
-
-**请求方式**: `DELETE /api/sys/logs/{id}`
-
-**权限**: `sys:log:delete`
-
----
-
-### 8.4 按条件清理日志
-
-**接口描述**: 根据时间范围批量清理日志
-
-**请求方式**: `POST /api/sys/logs/clean`
-
-**权限**: `sys:log:clean`
-
-**请求参数** (SysLogCleanRequest):
-
-| 参数名       | 类型   | 必填 | 说明   | 示例         |
-|-----------|------|----|------|------------|
-| startTime | Date | 否  | 开始时间 | 2024-01-01 |
-| endTime   | Date | 否  | 结束时间 | 2024-12-31 |
-
-**响应数据**: 返回清理的日志数量
-
----
-
-## 附录
-
-### A. 状态码说明
-
-| 状态码 | 说明          |
-|-----|-------------|
-| 200 | 成功          |
-| 400 | 请求参数错误      |
-| 401 | 未授权/Token过期 |
-| 403 | 无权限访问       |
-| 404 | 资源不存在       |
-| 500 | 服务器内部错误     |
-
-### B. 通用状态说明
-
-**用户状态 (status)**:
-
-- 0: 禁用
-- 1: 正常
-
-**角色状态 (status)**:
-
-- 0: 禁用
-- 1: 启用
-
-**菜单类型 (type)**:
-
-- `C`: 目录
-- `M`: 菜单
-- `B`: 按钮
-
-**菜单可见 (visible)**:
-
-- 0: 隐藏
-- 1: 显示
-
-**通知类型 (type)**:
-
-- 1: 系统通知
-- 2: 活动通知
-
-**通知状态 (status)**:
-
-- 0: 草稿
-- 1: 已发布
-- 2: 已撤回
-
-### C. 权限标识列表
-
-| 模块 | 权限标识                    | 说明   |
-|----|-------------------------|------|
-| 用户 | sys:user:query          | 查询用户 |
-| 用户 | sys:user:create         | 新增用户 |
-| 用户 | sys:user:update         | 修改用户 |
-| 用户 | sys:user:delete         | 删除用户 |
-| 用户 | sys:user:reset-password | 重置密码 |
-| 用户 | sys:user:assign-role    | 分配角色 |
-| 角色 | sys:role:query          | 查询角色 |
-| 角色 | sys:role:create         | 新增角色 |
-| 角色 | sys:role:update         | 修改角色 |
-| 角色 | sys:role:delete         | 删除角色 |
-| 角色 | sys:role:assign-menu    | 分配菜单 |
-| 菜单 | sys:menu:query          | 查询菜单 |
-| 菜单 | sys:menu:create         | 新增菜单 |
-| 菜单 | sys:menu:update         | 修改菜单 |
-| 菜单 | sys:menu:delete         | 删除菜单 |
-| 配置 | sys:config:query        | 查询配置 |
-| 配置 | sys:config:create       | 新增配置 |
-| 配置 | sys:config:update       | 修改配置 |
-| 配置 | sys:config:delete       | 删除配置 |
-| 通知 | sys:notice:query        | 查询通知 |
-| 通知 | sys:notice:create       | 新增通知 |
-| 通知 | sys:notice:update       | 修改通知 |
-| 通知 | sys:notice:delete       | 删除通知 |
-| 通知 | sys:notice:publish      | 发布通知 |
-| 通知 | sys:notice:revoke       | 撤回通知 |
-| 日志 | sys:log:query           | 查询日志 |
-| 日志 | sys:log:delete          | 删除日志 |
-| 日志 | sys:log:clean           | 清理日志 |
-
----
-
-*文档更新时间: 2026-03-19*
+### 7.5 发布通知
+
+- **POST** `/api/sys/notices/{id}/publish`
+- **权限**: `sys:notice:publish`
+- **响应**: `data = null`
+
+### 7.6 撤回通知
+
+- **POST** `/api/sys/notices/{id}/revoke`
+- **权限**: `sys:notice:revoke`
+- **响应**: `data = null`
+
+### 7.7 删除通知
+
+- **DELETE** `/api/sys/notices/{id}`
+- **权限**: `sys:notice:delete`
+
+## 8. 用户通知中心
+
+### 8.1 我的通知列表
+
+- **GET** `/api/user/notices`
+- **是否鉴权**: 是
+- **查询参数**: `UserNoticePageQuery`
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| current | Long | 页码 |
+| size | Long | 每页条数 |
+| title | String | 标题 |
+| isRead | Integer | 已读状态，`0` 未读，`1` 已读 |
+
+- **响应项**: `UserNoticeVO`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| id | Long | 通知 ID |
+| title | String | 标题 |
+| content | String | 内容 |
+| type | Integer | 通知类型 |
+| level | String | 通知等级 |
+| publishTime | DateTime | 发布时间 |
+| isRead | Integer | 是否已读 |
+| readTime | DateTime | 阅读时间 |
+
+### 8.2 我的通知详情
+
+- **GET** `/api/user/notices/{id}`
+- **是否鉴权**: 是
+- **说明**: 获取详情时会按当前实现更新阅读状态。
+
+### 8.3 我的未读数
+
+- **GET** `/api/user/notices/unread-count`
+- **是否鉴权**: 是
+- **响应**: `Long`
+
+### 8.4 单条已读
+
+- **POST** `/api/user/notices/{id}/read`
+- **是否鉴权**: 是
+
+### 8.5 全部已读
+
+- **POST** `/api/user/notices/read-all`
+- **是否鉴权**: 是
+
+## 9. 系统日志管理
+
+### 9.1 分页查询日志
+
+- **GET** `/api/sys/logs`
+- **权限**: `sys:log:query`
+- **查询参数**: `SysLogPageQuery`
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| current | Long | 页码 |
+| size | Long | 每页条数 |
+| module | String | 日志模块 |
+| requestMethod | String | 请求方式 |
+| requestUri | String | 请求路径 |
+| ip | String | IP |
+| createBy | Long | 创建人 ID |
+| createTimeStart | DateTime | 创建开始时间 |
+| createTimeEnd | DateTime | 创建结束时间 |
+
+- **响应项**: `SysLogAdminVO`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| id | Long | 日志 ID |
+| module | String | 日志模块 |
+| requestMethod | String | 请求方式 |
+| requestParams | String | 请求参数 |
+| responseContent | String | 响应内容 |
+| content | String | 日志内容 |
+| requestUri | String | 请求路径 |
+| method | String | 处理方法 |
+| ip | String | IP 地址 |
+| province | String | 省份 |
+| city | String | 城市 |
+| executionTime | Long | 执行耗时（ms） |
+| browser | String | 浏览器 |
+| browserVersion | String | 浏览器版本 |
+| os | String | 操作系统 |
+| createBy | Long | 创建人 ID |
+| createTime | DateTime | 创建时间 |
+
+### 9.2 查询日志详情
+
+- **GET** `/api/sys/logs/{id}`
+- **权限**: `sys:log:query`
+
+### 9.3 删除日志
+
+- **DELETE** `/api/sys/logs/{id}`
+- **权限**: `sys:log:delete`
+
+### 9.4 按条件清理日志
+
+- **POST** `/api/sys/logs/clean`
+- **权限**: `sys:log:clean`
+- **请求体**: `SysLogCleanRequest`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| module | String | 日志模块 |
+| requestMethod | String | 请求方式 |
+| requestUri | String | 请求路径 |
+| ip | String | IP |
+| createBy | Long | 创建人 ID |
+| createTimeStart | DateTime | 创建开始时间 |
+| createTimeEnd | DateTime | 创建结束时间 |
+
+- **响应**: `Long`，表示清理数量。
+
+## 10. 权限标识速查
+
+| 权限 | 说明 |
+| --- | --- |
+| `sys:user:query` | 查询用户 |
+| `sys:user:create` | 新增用户 |
+| `sys:user:update` | 修改用户、修改状态 |
+| `sys:user:delete` | 删除用户 |
+| `sys:user:reset-password` | 重置用户密码 |
+| `sys:user:assign-role` | 分配用户角色 |
+| `sys:role:query` | 查询角色 |
+| `sys:role:create` | 新增角色 |
+| `sys:role:update` | 修改角色、修改状态 |
+| `sys:role:delete` | 删除角色 |
+| `sys:role:assign-menu` | 分配角色菜单 |
+| `sys:menu:query` | 查询菜单 |
+| `sys:menu:create` | 新增菜单 |
+| `sys:menu:update` | 修改菜单 |
+| `sys:menu:delete` | 删除菜单 |
+| `sys:config:query` | 查询配置 |
+| `sys:config:create` | 新增配置 |
+| `sys:config:update` | 修改配置 |
+| `sys:config:delete` | 删除配置 |
+| `sys:notice:query` | 查询通知 |
+| `sys:notice:create` | 新增通知 |
+| `sys:notice:update` | 修改通知 |
+| `sys:notice:publish` | 发布通知 |
+| `sys:notice:revoke` | 撤回通知 |
+| `sys:notice:delete` | 删除通知 |
+| `sys:log:query` | 查询日志 |
+| `sys:log:delete` | 删除日志 |
+| `sys:log:clean` | 清理日志 |

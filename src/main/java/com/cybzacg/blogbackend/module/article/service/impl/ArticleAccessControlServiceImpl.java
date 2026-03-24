@@ -2,8 +2,8 @@ package com.cybzacg.blogbackend.module.article.service.impl;
 
 import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.BlogArticleAccess;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.module.article.service.BlogArticleAccessService;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
@@ -70,9 +70,7 @@ public class ArticleAccessControlServiceImpl implements ArticleAccessControlServ
 
     @Override
     public void validateArticleAccess(BlogArticle article, Long userId) {
-        if (!canAccessArticle(article, userId)) {
-            throw new BusinessException(ResultErrorCode.FORBIDDEN.getCode(), "当前用户无权访问该文章");
-        }
+        ExceptionThrowerCore.throwBusinessIfNot(canAccessArticle(article, userId), ResultErrorCode.FORBIDDEN, "当前用户无权访问该文章");
     }
 
     @Override
@@ -103,3 +101,5 @@ public class ArticleAccessControlServiceImpl implements ArticleAccessControlServ
                 .list();
     }
 }
+
+

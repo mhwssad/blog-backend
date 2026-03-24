@@ -1,4 +1,4 @@
-package com.cybzacg.blogbackend.enums;
+package com.cybzacg.blogbackend.enums.error;
 
 import lombok.AllArgsConstructor;
 

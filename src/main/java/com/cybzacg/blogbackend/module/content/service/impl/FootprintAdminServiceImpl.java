@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.SysUserFootprint;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.admin.FootprintPageQuery;
 import com.cybzacg.blogbackend.module.content.model.admin.FootprintVO;
@@ -39,9 +39,7 @@ public class FootprintAdminServiceImpl implements FootprintAdminService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteFootprint(Long id) {
         SysUserFootprint footprint = sysUserFootprintService.getById(id);
-        if (footprint == null) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "足迹不存在");
-        }
+        ExceptionThrowerCore.throwBusinessIfNull(footprint, ResultErrorCode.ILLEGAL_ARGUMENT, "足迹不存在");
         sysUserFootprintService.removeById(id);
     }
 
@@ -60,3 +58,5 @@ public class FootprintAdminServiceImpl implements FootprintAdminService {
                 .le(query.getVisitedAtEnd() != null, SysUserFootprint::getVisitedAt, query.getVisitedAtEnd());
     }
 }
+
+

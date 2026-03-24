@@ -10,8 +10,7 @@ import com.cybzacg.blogbackend.domain.SysCategory;
 import com.cybzacg.blogbackend.domain.SysTag;
 import com.cybzacg.blogbackend.domain.SysTagRelation;
 import com.cybzacg.blogbackend.domain.SysUser;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.convert.ArticleModelMapper;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleAccessItem;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleAdminPageQuery;
@@ -31,6 +30,7 @@ import com.cybzacg.blogbackend.module.content.service.SysInteractionService;
 import com.cybzacg.blogbackend.module.content.service.SysTagRelationService;
 import com.cybzacg.blogbackend.module.content.service.SysTagService;
 import com.cybzacg.blogbackend.module.content.service.SysUserFootprintService;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -72,6 +72,9 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
     private final ArticleModelMapper articleModelMapper;
     private final ArticleAccessControlService articleAccessControlService;
 
+    /**
+     * 按作者、状态、授权级别及分类标签等条件分页查询后台文章。
+     */
     @Override
     public PageResult<ArticleAdminVO> pageArticles(ArticleAdminPageQuery query) {
         Set<Long> filteredArticleIds = resolveArticleIdsByRelations(query);
@@ -123,7 +126,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
     @Transactional(rollbackFor = Exception.class)
     public ArticleDetailVO createArticle(ArticleSaveRequest request) {
         validateSaveRequest(request);
-        BlogArticle article = new BlogArticle();
+        BlogArticle article = articleModelMapper.toArticle(request);
         applyArticleFields(article, request, true);
         initializeCounters(article);
         blogArticleService.save(article);
@@ -162,13 +165,15 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
     @Transactional(rollbackFor = Exception.class)
     public void assignAccess(Long id, List<ArticleAccessItem> accessList) {
         BlogArticle article = getArticleOrThrow(id);
-        if (!Integer.valueOf(4).equals(article.getAccessLevel())) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "当前文章访问级别不是指定用户可见");
-        }
+        ExceptionThrowerCore.throwBusinessIfNot(Integer.valueOf(4).equals(article.getAccessLevel()),
+                ResultErrorCode.ILLEGAL_ARGUMENT, "当前文章访问级别不是指定用户可见");
         validateAccessItems(accessList);
         rebuildAccessBindings(id, accessList);
     }
 
+    /**
+     * 删除文章及其分类、标签、评论、收藏、交互和足迹等全部关联数据。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteArticle(Long id) {
@@ -213,18 +218,13 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
      * 将请求对象中的可编辑字段统一回填到文章实体，确保创建和更新流程复用同一套规则。
      */
     private void applyArticleFields(BlogArticle article, ArticleSaveRequest request, boolean creating) {
-        article.setTitle(StrUtils.normalize(request.getTitle()));
-        article.setSummary(StrUtils.normalize(request.getSummary()));
-        article.setContent(request.getContent());
-        article.setCoverImage(StrUtils.normalize(request.getCoverImage()));
-        article.setAuthorId(request.getAuthorId());
-        article.setIsTop(defaultIfNull(request.getIsTop(), 0));
-        article.setIsOriginal(defaultIfNull(request.getIsOriginal(), 1));
-        article.setSourceUrl(StrUtils.normalize(request.getSourceUrl()));
-        article.setStatus(defaultIfNull(request.getStatus(), 0));
-        article.setPublishTime(resolvePublishTime(request.getStatus(), request.getPublishTime(), article.getPublishTime()));
-        article.setAccessLevel(defaultIfNull(request.getAccessLevel(), 0));
-        article.setRemark(StrUtils.normalize(request.getRemark()));
+        Date existingPublishTime = article.getPublishTime();
+        articleModelMapper.updateArticle(request, article);
+        article.setIsTop(defaultIfNull(article.getIsTop(), 0));
+        article.setIsOriginal(defaultIfNull(article.getIsOriginal(), 1));
+        article.setStatus(defaultIfNull(article.getStatus(), 0));
+        article.setPublishTime(resolvePublishTime(article.getStatus(), request.getPublishTime(), existingPublishTime));
+        article.setAccessLevel(defaultIfNull(article.getAccessLevel(), 0));
         if (creating && article.getPublishTime() == null && Integer.valueOf(1).equals(article.getStatus())) {
             article.setPublishTime(new Date());
         }
@@ -253,9 +253,11 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         validateAccessLevel(defaultIfNull(request.getAccessLevel(), 0));
         validateAuthor(request.getAuthorId());
 
-        if (Integer.valueOf(0).equals(defaultIfNull(request.getIsOriginal(), 1)) && !StringUtils.hasText(request.getSourceUrl())) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "转载文章必须提供原文链接");
-        }
+        ExceptionThrowerCore.throwBusinessIf(
+                Integer.valueOf(0).equals(defaultIfNull(request.getIsOriginal(), 1))
+                        && !StringUtils.hasText(request.getSourceUrl()),
+                ResultErrorCode.ILLEGAL_ARGUMENT,
+                "转载文章必须提供原文链接");
 
         List<Long> categoryIds = uniqueIds(request.getCategoryIds(), "分类ID");
         List<Long> tagIds = uniqueIds(request.getTagIds(), "标签ID");
@@ -267,13 +269,10 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
     }
 
     private void validateAuthor(Long authorId) {
-        if (authorId == null) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "作者不能为空");
-        }
+        ExceptionThrowerCore.throwBusinessIfNull(authorId, ResultErrorCode.ILLEGAL_ARGUMENT, "作者不能为空");
         SysUser author = sysUserService.getById(authorId);
-        if (author == null || Integer.valueOf(1).equals(author.getDeletedFlag())) {
-            throw new BusinessException(ResultErrorCode.USER_NOT_FOUND.getCode(), "作者不存在");
-        }
+        ExceptionThrowerCore.throwBusinessIf(author == null || Integer.valueOf(1).equals(author.getDeletedFlag()),
+                ResultErrorCode.USER_NOT_FOUND, "作者不存在");
     }
 
     private void validateCategories(List<Long> categoryIds) {
@@ -284,9 +283,8 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
                 .in(SysCategory::getId, categoryIds)
                 .eq(SysCategory::getType, TARGET_TYPE_ARTICLE)
                 .list();
-        if (categories.size() != categoryIds.size()) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "分类不存在或不属于文章分类");
-        }
+        ExceptionThrowerCore.throwBusinessIf(categories.size() != categoryIds.size(),
+                ResultErrorCode.ILLEGAL_ARGUMENT, "分类不存在或不属于文章分类");
     }
 
     private void validateTags(List<Long> tagIds) {
@@ -294,11 +292,12 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
             return;
         }
         List<SysTag> tags = sysTagService.listByIds(tagIds);
-        if (tags.size() != tagIds.size()) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "标签不存在");
-        }
+        ExceptionThrowerCore.throwBusinessIf(tags.size() != tagIds.size(), ResultErrorCode.ILLEGAL_ARGUMENT, "标签不存在");
     }
 
+    /**
+     * 校验指定用户授权项，确保用户存在且授权组合不重复。
+     */
     private void validateAccessItems(List<ArticleAccessItem> accessList) {
         if (accessList == null || accessList.isEmpty()) {
             return;
@@ -306,39 +305,32 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         Set<String> keys = new LinkedHashSet<>();
         Set<Long> userIds = new LinkedHashSet<>();
         for (ArticleAccessItem item : accessList) {
-            if (item.getUserId() == null) {
-                throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "授权用户不能为空");
-            }
+            ExceptionThrowerCore.throwBusinessIfNull(item.getUserId(), ResultErrorCode.ILLEGAL_ARGUMENT, "授权用户不能为空");
             Integer accessType = defaultIfNull(item.getAccessType(), 1);
-            if (!Integer.valueOf(1).equals(accessType) && !Integer.valueOf(2).equals(accessType)) {
-                throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "访问类型非法");
-            }
+            ExceptionThrowerCore.throwBusinessIf(!Integer.valueOf(1).equals(accessType) && !Integer.valueOf(2).equals(accessType),
+                    ResultErrorCode.ILLEGAL_ARGUMENT, "访问类型非法");
             item.setAccessType(accessType);
             String key = item.getUserId() + ":" + accessType;
-            if (!keys.add(key)) {
-                throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "存在重复的访问授权记录");
-            }
+            ExceptionThrowerCore.throwBusinessIf(!keys.add(key), ResultErrorCode.ILLEGAL_ARGUMENT, "存在重复的访问授权记录");
             userIds.add(item.getUserId());
         }
         List<SysUser> users = sysUserService.listByIds(userIds);
         long availableUsers = users.stream()
                 .filter(user -> !Integer.valueOf(1).equals(user.getDeletedFlag()))
                 .count();
-        if (availableUsers != userIds.size()) {
-            throw new BusinessException(ResultErrorCode.USER_NOT_FOUND.getCode(), "授权用户不存在");
-        }
+        ExceptionThrowerCore.throwBusinessIf(availableUsers != userIds.size(), ResultErrorCode.USER_NOT_FOUND, "授权用户不存在");
     }
 
     private void validateStatus(Integer status) {
-        if (!Integer.valueOf(0).equals(status) && !Integer.valueOf(1).equals(status) && !Integer.valueOf(2).equals(status)) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "文章状态非法");
-        }
+        ExceptionThrowerCore.throwBusinessIf(
+                !Integer.valueOf(0).equals(status) && !Integer.valueOf(1).equals(status) && !Integer.valueOf(2).equals(status),
+                ResultErrorCode.ILLEGAL_ARGUMENT,
+                "文章状态非法");
     }
 
     private void validateAccessLevel(Integer accessLevel) {
-        if (accessLevel < 0 || accessLevel > 4) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "文章访问级别非法");
-        }
+        ExceptionThrowerCore.throwBusinessIf(accessLevel < 0 || accessLevel > 4,
+                ResultErrorCode.ILLEGAL_ARGUMENT, "文章访问级别非法");
     }
 
     /**
@@ -352,11 +344,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         }
         List<BlogArticleCategory> relations = new ArrayList<>();
         for (int i = 0; i < categoryIds.size(); i++) {
-            BlogArticleCategory relation = new BlogArticleCategory();
-            relation.setArticleId(articleId);
-            relation.setCategoryId(categoryIds.get(i));
-            relation.setSortOrder(i + 1);
-            relations.add(relation);
+            relations.add(articleModelMapper.toArticleCategory(articleId, categoryIds.get(i), i + 1));
         }
         blogArticleCategoryService.saveBatch(relations);
     }
@@ -373,11 +361,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         }
         List<SysTagRelation> relations = new ArrayList<>();
         for (Long tagId : tagIds) {
-            SysTagRelation relation = new SysTagRelation();
-            relation.setTagId(tagId);
-            relation.setTargetId(articleId);
-            relation.setTargetType(TARGET_TYPE_ARTICLE);
-            relations.add(relation);
+            relations.add(articleModelMapper.toTagRelation(tagId, articleId, TARGET_TYPE_ARTICLE));
         }
         sysTagRelationService.saveBatch(relations);
     }
@@ -394,6 +378,9 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         rebuildAccessBindings(articleId, accessList);
     }
 
+    /**
+     * 先清空后重建文章的指定用户授权记录，保持授权结果与请求完全一致。
+     */
     private void rebuildAccessBindings(Long articleId, List<ArticleAccessItem> accessList) {
         blogArticleAccessService.remove(new LambdaQueryWrapper<BlogArticleAccess>()
                 .eq(BlogArticleAccess::getArticleId, articleId));
@@ -402,16 +389,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         }
         Date now = new Date();
         List<BlogArticleAccess> records = accessList.stream()
-                .map(item -> {
-                    BlogArticleAccess access = new BlogArticleAccess();
-                    access.setArticleId(articleId);
-                    access.setUserId(item.getUserId());
-                    access.setAccessType(defaultIfNull(item.getAccessType(), 1));
-                    access.setGrantTime(now);
-                    access.setExpireTime(item.getExpireTime());
-                    access.setGrantReason(StrUtils.normalize(item.getGrantReason()));
-                    return access;
-                })
+                .map(item -> articleModelMapper.toArticleAccess(articleId, item, now))
                 .toList();
         blogArticleAccessService.saveBatch(records);
     }
@@ -478,9 +456,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
      */
     private BlogArticle getArticleOrThrow(Long id) {
         BlogArticle article = blogArticleService.getById(id);
-        if (article == null) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "文章不存在");
-        }
+        ExceptionThrowerCore.throwBusinessIfNull(article, ResultErrorCode.ILLEGAL_ARGUMENT, "文章不存在");
         return article;
     }
 
@@ -514,12 +490,8 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         }
         LinkedHashSet<Long> uniqueIds = new LinkedHashSet<>();
         for (Long id : ids) {
-            if (id == null) {
-                throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), label + "不能为空");
-            }
-            if (!uniqueIds.add(id)) {
-                throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), label + "存在重复值");
-            }
+            ExceptionThrowerCore.throwBusinessIfNull(id, ResultErrorCode.ILLEGAL_ARGUMENT, label + "不能为空");
+            ExceptionThrowerCore.throwBusinessIf(!uniqueIds.add(id), ResultErrorCode.ILLEGAL_ARGUMENT, label + "存在重复值");
         }
         return new ArrayList<>(uniqueIds);
     }
@@ -529,4 +501,5 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
     }
 
 }
+
 

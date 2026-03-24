@@ -2,8 +2,8 @@ package com.cybzacg.blogbackend.module.content.service.impl;
 
 import com.cybzacg.blogbackend.domain.SysTag;
 import com.cybzacg.blogbackend.domain.SysTagRelation;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.admin.TagSaveRequest;
 import com.cybzacg.blogbackend.module.content.model.admin.TagVO;
@@ -48,9 +48,7 @@ public class TagAdminServiceImpl implements TagAdminService {
     @Transactional(rollbackFor = Exception.class)
     public TagVO createTag(TagSaveRequest request) {
         validateNameUnique(null, request.getName());
-        SysTag tag = new SysTag();
-        tag.setName(StrUtils.trim(request.getName()));
-        tag.setColor(StrUtils.normalize(request.getColor()));
+        SysTag tag = contentModelMapper.toTag(request);
         sysTagService.save(tag);
         return contentModelMapper.toTagVO(tag);
     }
@@ -60,8 +58,7 @@ public class TagAdminServiceImpl implements TagAdminService {
     public TagVO updateTag(Long id, TagSaveRequest request) {
         SysTag tag = getTagOrThrow(id);
         validateNameUnique(id, request.getName());
-        tag.setName(StrUtils.trim(request.getName()));
-        tag.setColor(StrUtils.normalize(request.getColor()));
+        contentModelMapper.updateTag(request, tag);
         sysTagService.updateById(tag);
         return contentModelMapper.toTagVO(tag);
     }
@@ -71,9 +68,7 @@ public class TagAdminServiceImpl implements TagAdminService {
     public void deleteTag(Long id) {
         getTagOrThrow(id);
         boolean bound = sysTagRelationService.lambdaQuery().eq(SysTagRelation::getTagId, id).exists();
-        if (bound) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "当前标签已绑定目标，无法删除");
-        }
+        ExceptionThrowerCore.throwBusinessIf(bound, ResultErrorCode.ILLEGAL_ARGUMENT, "当前标签已绑定目标，无法删除");
         sysTagService.removeById(id);
     }
 
@@ -85,9 +80,7 @@ public class TagAdminServiceImpl implements TagAdminService {
                 .eq(SysTag::getName, StrUtils.trim(name))
                 .ne(currentId != null, SysTag::getId, currentId)
                 .exists();
-        if (exists) {
-            throw new BusinessException(ResultErrorCode.DATA_ALREADY_EXISTS.getCode(), "标签名称已存在");
-        }
+        ExceptionThrowerCore.throwBusinessIf(exists, ResultErrorCode.DATA_ALREADY_EXISTS, "标签名称已存在");
     }
 
     /**
@@ -95,11 +88,14 @@ public class TagAdminServiceImpl implements TagAdminService {
      */
     private SysTag getTagOrThrow(Long id) {
         SysTag tag = sysTagService.getById(id);
-        if (tag == null) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "标签不存在");
-        }
+        ExceptionThrowerCore.throwBusinessIfNull(tag, ResultErrorCode.ILLEGAL_ARGUMENT, "标签不存在");
         return tag;
     }
 
 }
+
+
+
+
+
 

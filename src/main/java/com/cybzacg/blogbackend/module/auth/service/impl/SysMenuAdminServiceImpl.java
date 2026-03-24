@@ -2,8 +2,8 @@ package com.cybzacg.blogbackend.module.auth.service.impl;
 
 import com.cybzacg.blogbackend.common.constant.MenuConstants;
 import com.cybzacg.blogbackend.domain.SysMenu;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.module.auth.convert.RbacAdminModelMapper;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysMenuAdminVO;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysMenuSaveRequest;
@@ -54,7 +54,7 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
         SysMenu parent = validateParent(request.getParentId(), null);
         validateMenuType(request.getType());
 
-        SysMenu menu = new SysMenu();
+        SysMenu menu = rbacAdminModelMapper.toMenu(request);
         applyMenuFields(menu, request);
         menu.setTreePath(buildTreePath(parent));
         sysMenuService.save(menu);
@@ -82,9 +82,7 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
         boolean hasChildren = sysMenuService.lambdaQuery()
                 .eq(SysMenu::getParentId, id)
                 .exists();
-        if (hasChildren) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "当前菜单存在子菜单，无法删除");
-        }
+        ExceptionThrowerCore.throwBusinessIf(hasChildren, ResultErrorCode.ILLEGAL_ARGUMENT, "当前菜单存在子菜单，无法删除");
         sysRoleMenuService.removeByMenuId(id);
         sysMenuService.removeById(id);
     }
@@ -93,40 +91,21 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
      * 将请求中的菜单字段统一写回实体，保持新增和更新逻辑一致。
      */
     private void applyMenuFields(SysMenu menu, SysMenuSaveRequest request) {
-        menu.setParentId(request.getParentId());
-        menu.setName(StrUtils.normalize(request.getName()));
-        menu.setType(StrUtils.normalize(request.getType()));
-        menu.setRouteName(StrUtils.normalize(request.getRouteName()));
-        menu.setRoutePath(StrUtils.normalize(request.getRoutePath()));
-        menu.setComponent(StrUtils.normalize(request.getComponent()));
-        menu.setPerm(StrUtils.normalize(request.getPerm()));
-        menu.setAlwaysShow(request.getAlwaysShow() != null ? request.getAlwaysShow() : 0);
-        menu.setKeepAlive(request.getKeepAlive() != null ? request.getKeepAlive() : 0);
-        menu.setVisible(request.getVisible() != null ? request.getVisible() : 1);
-        menu.setSort(request.getSort() != null ? request.getSort() : 0);
-        menu.setIcon(StrUtils.normalize(request.getIcon()));
-        menu.setRedirect(StrUtils.normalize(request.getRedirect()));
-        menu.setParams(request.getParams());
+        rbacAdminModelMapper.updateMenu(request, menu);
     }
 
     /**
      * 校验父菜单是否合法，避免出现自关联或挂载到子孙节点的情况。
      */
     private SysMenu validateParent(Long parentId, Long currentMenuId) {
-        if (parentId == null) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "父菜单ID不能为空");
-        }
+        ExceptionThrowerCore.throwBusinessIfNull(parentId, ResultErrorCode.ILLEGAL_ARGUMENT, "父菜单ID不能为空");
         if (MenuConstants.ROOT_PARENT_ID.equals(parentId)) {
             return null;
         }
-        if (currentMenuId != null && currentMenuId.equals(parentId)) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "父菜单不能为自身");
-        }
+        ExceptionThrowerCore.throwBusinessIf(currentMenuId != null && currentMenuId.equals(parentId), ResultErrorCode.ILLEGAL_ARGUMENT, "父菜单不能为自身");
 
         SysMenu parent = getMenuOrThrow(parentId);
-        if (currentMenuId != null && isDescendant(parent, currentMenuId)) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "父菜单不能选择当前菜单的子节点");
-        }
+        ExceptionThrowerCore.throwBusinessIf(currentMenuId != null && isDescendant(parent, currentMenuId), ResultErrorCode.ILLEGAL_ARGUMENT, "父菜单不能选择当前菜单的子节点");
         return parent;
     }
 
@@ -148,18 +127,12 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
 
     private void validateMenuType(String type) {
         String normalizedType = StrUtils.normalize(type);
-        if (!MenuConstants.TYPE_CATALOG.equalsIgnoreCase(normalizedType)
-                && !MenuConstants.TYPE_MENU.equalsIgnoreCase(normalizedType)
-                && !MenuConstants.TYPE_BUTTON.equalsIgnoreCase(normalizedType)) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "菜单类型非法");
-        }
+        ExceptionThrowerCore.throwBusinessIf(!MenuConstants.TYPE_CATALOG.equalsIgnoreCase(normalizedType) && !MenuConstants.TYPE_MENU.equalsIgnoreCase(normalizedType) && !MenuConstants.TYPE_BUTTON.equalsIgnoreCase(normalizedType), ResultErrorCode.ILLEGAL_ARGUMENT, "菜单类型非法");
     }
 
     private SysMenu getMenuOrThrow(Long id) {
         SysMenu menu = sysMenuService.getById(id);
-        if (menu == null) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "菜单不存在");
-        }
+        ExceptionThrowerCore.throwBusinessIfNull(menu, ResultErrorCode.ILLEGAL_ARGUMENT, "菜单不存在");
         return menu;
     }
 
@@ -215,3 +188,11 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
         return roots;
     }
 }
+
+
+
+
+
+
+
+

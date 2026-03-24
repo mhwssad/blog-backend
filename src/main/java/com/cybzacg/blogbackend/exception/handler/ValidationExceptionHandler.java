@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.exception.handler;
 
 import com.cybzacg.blogbackend.core.web.Result;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;

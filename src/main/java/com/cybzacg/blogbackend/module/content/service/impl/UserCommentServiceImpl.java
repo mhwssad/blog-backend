@@ -3,10 +3,11 @@ package com.cybzacg.blogbackend.module.content.service.impl;
 import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.SysComment;
 import com.cybzacg.blogbackend.domain.SysInteraction;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
 import com.cybzacg.blogbackend.module.article.service.BlogArticleService;
+import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.user.CommentSaveRequest;
 import com.cybzacg.blogbackend.module.content.service.SysCommentService;
 import com.cybzacg.blogbackend.module.content.service.SysInteractionService;
@@ -36,7 +37,11 @@ public class UserCommentServiceImpl implements UserCommentService {
     private final SysInteractionService sysInteractionService;
     private final BlogArticleService blogArticleService;
     private final ArticleAccessControlService articleAccessControlService;
+    private final ContentModelMapper contentModelMapper;
 
+    /**
+     * 为评论新增点赞关系，并同步递增评论点赞数。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void likeComment(Long commentId) {
@@ -51,16 +56,15 @@ public class UserCommentServiceImpl implements UserCommentService {
         if (exists) {
             return;
         }
-        SysInteraction interaction = new SysInteraction();
-        interaction.setUserId(userId);
-        interaction.setTargetId(commentId);
-        interaction.setTargetType("comment");
-        interaction.setActionType("like");
+        SysInteraction interaction = contentModelMapper.toInteraction(userId, commentId, "comment", "like");
         sysInteractionService.save(interaction);
         comment.setLikeCount((comment.getLikeCount() == null ? 0 : comment.getLikeCount()) + 1);
         sysCommentService.updateById(comment);
     }
 
+    /**
+     * 取消评论点赞，并同步回退评论点赞数。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void unlikeComment(Long commentId) {
@@ -80,24 +84,20 @@ public class UserCommentServiceImpl implements UserCommentService {
         sysCommentService.updateById(comment);
     }
 
+    /**
+     * 创建文章评论，并维护父评论回复数与文章评论总数。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void createComment(CommentSaveRequest request) {
         Long userId = SecurityUtils.requireUserId();
-        if (!"article".equals(request.getTargetType())) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "当前仅支持文章评论");
-        }
+        ExceptionThrowerCore.throwBusinessIf(!"article".equals(request.getTargetType()), ResultErrorCode.ILLEGAL_ARGUMENT, "当前仅支持文章评论");
         BlogArticle article = blogArticleService.getById(request.getTargetId());
-        if (article == null || !Integer.valueOf(1).equals(article.getStatus())) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "文章不存在");
-        }
+        ExceptionThrowerCore.throwBusinessIf(article == null || !Integer.valueOf(1).equals(article.getStatus()), ResultErrorCode.ILLEGAL_ARGUMENT, "文章不存在");
         articleAccessControlService.validateArticleAccess(article, userId);
 
-        SysComment comment = new SysComment();
+        SysComment comment = contentModelMapper.toComment(request);
         comment.setTargetType("article");
-        comment.setTargetId(request.getTargetId());
-        comment.setContent(StrUtils.trim(request.getContent()));
-        comment.setImages(request.getImages() == null || request.getImages().isEmpty() ? null : JsonUtils.toJson(request.getImages()));
         comment.setUserId(userId);
         comment.setRootId(request.getRootId() == null ? 0L : request.getRootId());
         comment.setParentId(request.getParentId() == null ? 0L : request.getParentId());
@@ -107,9 +107,7 @@ public class UserCommentServiceImpl implements UserCommentService {
 
         if (comment.getParentId() != null && comment.getParentId() > 0) {
             SysComment parent = getCommentOrThrow(comment.getParentId());
-            if (!parent.getTargetId().equals(request.getTargetId()) || !"article".equals(parent.getTargetType())) {
-                throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "父评论与目标不匹配");
-            }
+            ExceptionThrowerCore.throwBusinessIf(!parent.getTargetId().equals(request.getTargetId()) || !"article".equals(parent.getTargetType()), ResultErrorCode.ILLEGAL_ARGUMENT, "父评论与目标不匹配");
             if (comment.getRootId() == null || comment.getRootId() == 0L) {
                 comment.setRootId(parent.getRootId() == null || parent.getRootId() == 0L ? parent.getId() : parent.getRootId());
             }
@@ -125,14 +123,15 @@ public class UserCommentServiceImpl implements UserCommentService {
         blogArticleService.updateById(article);
     }
 
+    /**
+     * 删除评论子树及其交互记录，并同步回退文章评论统计。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteComment(Long commentId) {
         Long userId = SecurityUtils.requireUserId();
         SysComment comment = getCommentOrThrow(commentId);
-        if (!userId.equals(comment.getUserId())) {
-            throw new BusinessException(ResultErrorCode.FORBIDDEN.getCode(), "只能删除自己的评论");
-        }
+        ExceptionThrowerCore.throwBusinessIfNot(userId.equals(comment.getUserId()), ResultErrorCode.FORBIDDEN, "只能删除自己的评论");
         List<SysComment> subtree = collectSubtree(comment);
         sysCommentService.removeByIds(subtree.stream().map(SysComment::getId).toList());
         sysInteractionService.remove(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<SysInteraction>()
@@ -184,9 +183,14 @@ public class UserCommentServiceImpl implements UserCommentService {
      */
     private SysComment getCommentOrThrow(Long commentId) {
         SysComment comment = sysCommentService.getById(commentId);
-        if (comment == null) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "评论不存在");
-        }
+        ExceptionThrowerCore.throwBusinessIfNull(comment, ResultErrorCode.ILLEGAL_ARGUMENT, "评论不存在");
         return comment;
     }
 }
+
+
+
+
+
+
+

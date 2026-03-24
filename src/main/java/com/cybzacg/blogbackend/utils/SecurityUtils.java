@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.utils;
 
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserDetails;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserPrincipal;

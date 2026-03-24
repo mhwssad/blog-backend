@@ -3,8 +3,8 @@ package com.cybzacg.blogbackend.module.auth.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.SysConfig;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.module.auth.convert.SysConfigModelMapper;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysConfigAdminVO;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysConfigPageQuery;
@@ -111,7 +111,7 @@ public class SysConfigAdminServiceImpl implements SysConfigAdminService {
                 .eq(SysConfig::getIsDeleted, 0)
                 .ne(currentId != null, SysConfig::getId, currentId)
                 .exists()) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "配置键已存在");
+            ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.ILLEGAL_ARGUMENT, "配置键已存在");
         }
     }
 
@@ -120,11 +120,12 @@ public class SysConfigAdminServiceImpl implements SysConfigAdminService {
      */
     private SysConfig getAvailableConfig(Long id) {
         SysConfig config = sysConfigService.getById(id);
-        if (config == null || Integer.valueOf(1).equals(config.getIsDeleted())) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "配置不存在");
-        }
+        ExceptionThrowerCore.throwBusinessIf(config == null || Integer.valueOf(1).equals(config.getIsDeleted()), ResultErrorCode.ILLEGAL_ARGUMENT, "配置不存在");
         return config;
     }
 
 }
+
+
+
 

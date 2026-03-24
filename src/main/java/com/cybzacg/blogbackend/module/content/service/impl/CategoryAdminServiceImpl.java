@@ -2,8 +2,8 @@ package com.cybzacg.blogbackend.module.content.service.impl;
 
 import com.cybzacg.blogbackend.domain.BlogArticleCategory;
 import com.cybzacg.blogbackend.domain.SysCategory;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.admin.CategoryAdminVO;
 import com.cybzacg.blogbackend.module.content.model.admin.CategorySaveRequest;
@@ -57,7 +57,7 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
     public CategoryAdminVO createCategory(CategorySaveRequest request) {
         validateRequest(request, null);
         SysCategory parent = validateParent(request.getParentId(), null);
-        SysCategory category = new SysCategory();
+        SysCategory category = contentModelMapper.toCategory(request);
         applyFields(category, request, parent);
         sysCategoryService.save(category);
         return contentModelMapper.toCategoryAdminVO(category);
@@ -88,13 +88,9 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
     public void deleteCategory(Long id) {
         getCategoryOrThrow(id);
         boolean hasChildren = sysCategoryService.lambdaQuery().eq(SysCategory::getParentId, id).exists();
-        if (hasChildren) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "当前分类存在子分类，无法删除");
-        }
+        ExceptionThrowerCore.throwBusinessIf(hasChildren, ResultErrorCode.ILLEGAL_ARGUMENT, "当前分类存在子分类，无法删除");
         boolean boundArticle = blogArticleCategoryService.lambdaQuery().eq(BlogArticleCategory::getCategoryId, id).exists();
-        if (boundArticle) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "当前分类已绑定文章，无法删除");
-        }
+        ExceptionThrowerCore.throwBusinessIf(boundArticle, ResultErrorCode.ILLEGAL_ARGUMENT, "当前分类已绑定文章，无法删除");
         sysCategoryService.removeById(id);
     }
 
@@ -102,17 +98,13 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
      * 校验分类请求是否合法，目前仅允许维护文章分类，且分类编码需唯一。
      */
     private void validateRequest(CategorySaveRequest request, Long currentId) {
-        if (!StringUtils.hasText(request.getType()) || !ARTICLE_TYPE.equals(StrUtils.trim(request.getType()))) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "当前仅支持文章分类");
-        }
+        ExceptionThrowerCore.throwBusinessIf(!StringUtils.hasText(request.getType()) || !ARTICLE_TYPE.equals(StrUtils.trim(request.getType())), ResultErrorCode.ILLEGAL_ARGUMENT, "当前仅支持文章分类");
         boolean duplicated = sysCategoryService.lambdaQuery()
                 .eq(SysCategory::getType, StrUtils.trim(request.getType()))
                 .eq(SysCategory::getCode, StrUtils.trim(request.getCode()))
                 .ne(currentId != null, SysCategory::getId, currentId)
                 .exists();
-        if (duplicated) {
-            throw new BusinessException(ResultErrorCode.DATA_ALREADY_EXISTS.getCode(), "分类编码已存在");
-        }
+        ExceptionThrowerCore.throwBusinessIf(duplicated, ResultErrorCode.DATA_ALREADY_EXISTS, "分类编码已存在");
     }
 
     /**
@@ -122,13 +114,9 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
         if (parentId == null || ROOT_PARENT_ID == parentId) {
             return null;
         }
-        if (currentId != null && currentId.equals(parentId)) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "父分类不能为自身");
-        }
+        ExceptionThrowerCore.throwBusinessIf(currentId != null && currentId.equals(parentId), ResultErrorCode.ILLEGAL_ARGUMENT, "父分类不能为自身");
         SysCategory parent = getCategoryOrThrow(parentId);
-        if (currentId != null && isDescendant(parent, currentId)) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "父分类不能选择当前分类的子节点");
-        }
+        ExceptionThrowerCore.throwBusinessIf(currentId != null && isDescendant(parent, currentId), ResultErrorCode.ILLEGAL_ARGUMENT, "父分类不能选择当前分类的子节点");
         return parent;
     }
 
@@ -152,14 +140,9 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
      * 将请求字段和层级信息回填到分类实体，统一维护层级与祖先链。
      */
     private void applyFields(SysCategory category, CategorySaveRequest request, SysCategory parent) {
-        category.setParentId(request.getParentId());
-        category.setName(StrUtils.trim(request.getName()));
-        category.setCode(StrUtils.trim(request.getCode()));
-        category.setType(StrUtils.trim(request.getType()));
-        category.setSortOrder(request.getSortOrder() == null ? 0 : request.getSortOrder());
-        category.setIcon(StrUtils.normalize(request.getIcon()));
-        category.setDescription(StrUtils.normalize(request.getDescription()));
-        category.setStatus(request.getStatus() == null ? 1 : request.getStatus());
+        contentModelMapper.updateCategory(request, category);
+        category.setSortOrder(category.getSortOrder() == null ? 0 : category.getSortOrder());
+        category.setStatus(category.getStatus() == null ? 1 : category.getStatus());
         category.setLevel(parent == null ? 1 : parent.getLevel() + 1);
         category.setAncestors(parent == null ? "0" : buildAncestors(parent));
     }
@@ -211,11 +194,20 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
      */
     private SysCategory getCategoryOrThrow(Long id) {
         SysCategory category = sysCategoryService.getById(id);
-        if (category == null) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "分类不存在");
-        }
+        ExceptionThrowerCore.throwBusinessIfNull(category, ResultErrorCode.ILLEGAL_ARGUMENT, "分类不存在");
         return category;
     }
 
 }
+
+
+
+
+
+
+
+
+
+
+
 

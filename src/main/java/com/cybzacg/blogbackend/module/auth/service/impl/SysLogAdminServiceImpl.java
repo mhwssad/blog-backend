@@ -3,8 +3,8 @@ package com.cybzacg.blogbackend.module.auth.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.SysLog;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.module.auth.convert.SysLogModelMapper;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysLogAdminVO;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysLogCleanRequest;
@@ -64,9 +64,7 @@ public class SysLogAdminServiceImpl implements SysLogAdminService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public long cleanLogs(SysLogCleanRequest request) {
-        if (!hasAnyCondition(request)) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "清理日志必须至少指定一个条件");
-        }
+        ExceptionThrowerCore.throwBusinessIfNot(hasAnyCondition(request), ResultErrorCode.ILLEGAL_ARGUMENT, "清理日志必须至少指定一个条件");
         long count = sysLogService.lambdaQuery()
                 .like(StringUtils.hasText(request.getModule()), SysLog::getModule, request.getModule())
                 .like(StringUtils.hasText(request.getRequestMethod()), SysLog::getRequestMethod, request.getRequestMethod())
@@ -109,9 +107,10 @@ public class SysLogAdminServiceImpl implements SysLogAdminService {
      */
     private SysLog getLogOrThrow(Long id) {
         SysLog log = sysLogService.getById(id);
-        if (log == null) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "日志不存在");
-        }
+        ExceptionThrowerCore.throwBusinessIfNull(log, ResultErrorCode.ILLEGAL_ARGUMENT, "日志不存在");
         return log;
     }
 }
+
+
+

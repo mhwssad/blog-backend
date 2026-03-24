@@ -9,8 +9,8 @@ import com.cybzacg.blogbackend.domain.SysInteraction;
 import com.cybzacg.blogbackend.domain.SysTag;
 import com.cybzacg.blogbackend.domain.SysTagRelation;
 import com.cybzacg.blogbackend.domain.SysUser;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.module.article.convert.ArticleModelMapper;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleCardVO;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleDetailVO;
@@ -107,18 +107,12 @@ public class PublicArticleServiceImpl implements PublicArticleService {
     @Override
     public PublicArticleDetailVO getArticle(Long id, HttpServletRequest request) {
         BlogArticle article = blogArticleService.getById(id);
-        if (article == null || !Integer.valueOf(1).equals(article.getStatus())) {
-            throw new BusinessException(ResultErrorCode.NO_HANDLER_FOUND.getCode(), "文章不存在");
-        }
+        ExceptionThrowerCore.throwBusinessIf(article == null || !Integer.valueOf(1).equals(article.getStatus()), ResultErrorCode.NO_HANDLER_FOUND, "文章不存在");
 
         Long userId = SecurityUtils.getUserId();
         Integer accessLevel = article.getAccessLevel() == null ? 0 : article.getAccessLevel();
-        if (Integer.valueOf(1).equals(accessLevel) && userId == null) {
-            throw new BusinessException(ResultErrorCode.LOGIN_REQUIRED);
-        }
-        if (Integer.valueOf(2).equals(accessLevel) || Integer.valueOf(3).equals(accessLevel)) {
-            throw new BusinessException(ResultErrorCode.FORBIDDEN.getCode(), "当前版本未开放该访问级别");
-        }
+        ExceptionThrowerCore.throwBusinessIf(Integer.valueOf(1).equals(accessLevel) && userId == null, ResultErrorCode.LOGIN_REQUIRED);
+        ExceptionThrowerCore.throwBusinessIf(Integer.valueOf(2).equals(accessLevel) || Integer.valueOf(3).equals(accessLevel), ResultErrorCode.FORBIDDEN, "当前版本未开放该访问级别");
         articleAccessControlService.validateArticleAccess(article, userId);
 
         PublicArticleDetailVO detailVO = articleModelMapper.toPublicDetailVO(article);
@@ -294,3 +288,7 @@ public class PublicArticleServiceImpl implements PublicArticleService {
         return value == null ? 0 : value;
     }
 }
+
+
+
+

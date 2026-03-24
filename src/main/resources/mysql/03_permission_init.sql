@@ -195,6 +195,14 @@ VALUES
 (1771, 1770, '0,1700,1770', '足迹查询', 'B', NULL, NULL, NULL, 'content:footprint:query', 0, 0, 1, 1, NULL, NULL, NOW(), NOW(), NULL),
 (1772, 1770, '0,1700,1770', '足迹删除', 'B', NULL, NULL, NULL, 'content:footprint:delete', 0, 0, 1, 2, NULL, NULL, NOW(), NOW(), NULL);
 
+-- 文件管理
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`, `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`, `update_time`, `params`)
+VALUES
+(1780, 1700, '0,1700', '文件管理', 'M', 'ContentFile', 'files', 'content/file/index', NULL, 0, 1, 1, 8, 'folder', NULL, NOW(), NOW(), NULL),
+(1781, 1780, '0,1700,1780', '文件查询', 'B', NULL, NULL, NULL, 'content:file:query', 0, 0, 1, 1, NULL, NULL, NOW(), NOW(), NULL),
+(1782, 1780, '0,1700,1780', '文件修改', 'B', NULL, NULL, NULL, 'content:file:update', 0, 0, 1, 2, NULL, NULL, NOW(), NOW(), NULL),
+(1783, 1780, '0,1700,1780', '文件删除', 'B', NULL, NULL, NULL, 'content:file:delete', 0, 0, 1, 3, NULL, NULL, NOW(), NOW(), NULL);
+
 -- 超级管理员授权全部系统管理权限
 INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
 VALUES
@@ -212,7 +220,8 @@ VALUES
 (1, 1740), (1, 1741), (1, 1742), (1, 1743),
 (1, 1750), (1, 1751), (1, 1752),
 (1, 1760), (1, 1761), (1, 1762),
-(1, 1770), (1, 1771), (1, 1772);
+(1, 1770), (1, 1771), (1, 1772),
+(1, 1780), (1, 1781), (1, 1782), (1, 1783);
 
 -- 初始化用户角色关系
 INSERT INTO `sys_user_role` (`user_id`, `role_id`)

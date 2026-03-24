@@ -6,8 +6,8 @@ import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.SysCollection;
 import com.cybzacg.blogbackend.domain.SysCollectionFolder;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
 import com.cybzacg.blogbackend.module.article.service.BlogArticleService;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
@@ -18,6 +18,7 @@ import com.cybzacg.blogbackend.module.content.model.user.CollectionVO;
 import com.cybzacg.blogbackend.module.content.service.SysCollectionFolderService;
 import com.cybzacg.blogbackend.module.content.service.SysCollectionService;
 import com.cybzacg.blogbackend.module.content.service.UserCollectionService;
+import com.cybzacg.blogbackend.utils.BeanConverterUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
@@ -55,15 +56,16 @@ public class UserCollectionServiceImpl implements UserCollectionService {
         return PageResult.of(page, records);
     }
 
+    /**
+     * 创建收藏夹，并在需要时调整同类型默认收藏夹的唯一性。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public CollectionFolderVO createFolder(CollectionFolderSaveRequest request) {
         Long userId = SecurityUtils.requireUserId();
-        SysCollectionFolder folder = new SysCollectionFolder();
+        SysCollectionFolder folder = contentModelMapper.toCollectionFolder(request);
         folder.setUserId(userId);
-        folder.setFolderName(StrUtils.trim(request.getFolderName()));
         folder.setFolderType(resolveFolderType(request.getFolderType()));
-        folder.setDescription(StrUtils.normalize(request.getDescription()));
         folder.setIsPublic(defaultInt(request.getIsPublic(), 0));
         folder.setIsDefault(defaultInt(request.getIsDefault(), 0));
         folder.setSortOrder(defaultInt(request.getSortOrder(), 0));
@@ -75,14 +77,16 @@ public class UserCollectionServiceImpl implements UserCollectionService {
         return contentModelMapper.toCollectionFolderVO(folder);
     }
 
+    /**
+     * 更新收藏夹基本信息，并维护默认收藏夹标记的一致性。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public CollectionFolderVO updateFolder(Long id, CollectionFolderSaveRequest request) {
         Long userId = SecurityUtils.requireUserId();
         SysCollectionFolder folder = getFolderOrThrow(id, userId);
-        folder.setFolderName(StrUtils.trim(request.getFolderName()));
+        contentModelMapper.updateCollectionFolder(request, folder);
         folder.setFolderType(resolveFolderType(request.getFolderType()));
-        folder.setDescription(StrUtils.normalize(request.getDescription()));
         folder.setIsPublic(defaultInt(request.getIsPublic(), 0));
         folder.setIsDefault(defaultInt(request.getIsDefault(), 0));
         folder.setSortOrder(defaultInt(request.getSortOrder(), 0));
@@ -93,14 +97,15 @@ public class UserCollectionServiceImpl implements UserCollectionService {
         return contentModelMapper.toCollectionFolderVO(folder);
     }
 
+    /**
+     * 删除收藏夹及其下收藏记录，同时回退文章收藏计数。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteFolder(Long id) {
         Long userId = SecurityUtils.requireUserId();
         SysCollectionFolder folder = getFolderOrThrow(id, userId);
-        if (Integer.valueOf(1).equals(folder.getIsDefault())) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "默认收藏夹不可删除");
-        }
+        ExceptionThrowerCore.throwBusinessIf(Integer.valueOf(1).equals(folder.getIsDefault()), ResultErrorCode.ILLEGAL_ARGUMENT, "默认收藏夹不可删除");
         List<SysCollection> collections = sysCollectionService.lambdaQuery().eq(SysCollection::getFolderId, id).list();
         if (!collections.isEmpty()) {
             for (SysCollection collection : collections) {
@@ -123,17 +128,16 @@ public class UserCollectionServiceImpl implements UserCollectionService {
         return PageResult.of(page, records);
     }
 
+    /**
+     * 创建文章收藏记录，并同步更新收藏夹数量与文章收藏数。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void createCollection(CollectionSaveRequest request) {
         Long userId = SecurityUtils.requireUserId();
-        if (!ARTICLE_TYPE.equals(request.getTargetType())) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "当前仅支持文章收藏");
-        }
+        ExceptionThrowerCore.throwBusinessIf(!ARTICLE_TYPE.equals(request.getTargetType()), ResultErrorCode.ILLEGAL_ARGUMENT, "当前仅支持文章收藏");
         BlogArticle article = blogArticleService.getById(request.getTargetId());
-        if (article == null || !Integer.valueOf(1).equals(article.getStatus())) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "文章不存在");
-        }
+        ExceptionThrowerCore.throwBusinessIf(article == null || !Integer.valueOf(1).equals(article.getStatus()), ResultErrorCode.ILLEGAL_ARGUMENT, "文章不存在");
         articleAccessControlService.validateArticleAccess(article, userId);
         Long folderId = request.getFolderId();
         SysCollectionFolder folder = folderId == null ? getOrCreateDefaultFolder(userId, ARTICLE_TYPE) : getFolderOrThrow(folderId, userId);
@@ -146,7 +150,7 @@ public class UserCollectionServiceImpl implements UserCollectionService {
         if (exists) {
             return;
         }
-        SysCollection collection = new SysCollection();
+        SysCollection collection = BeanConverterUtils.convert(request, SysCollection::new);
         collection.setUserId(userId);
         collection.setFolderId(folder.getId());
         collection.setTargetId(article.getId());
@@ -161,14 +165,15 @@ public class UserCollectionServiceImpl implements UserCollectionService {
         blogArticleService.updateById(article);
     }
 
+    /**
+     * 删除单条收藏记录，并回退收藏夹与文章维度的统计值。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteCollection(Long id) {
         Long userId = SecurityUtils.requireUserId();
         SysCollection collection = sysCollectionService.getById(id);
-        if (collection == null || !userId.equals(collection.getUserId())) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "收藏记录不存在");
-        }
+        ExceptionThrowerCore.throwBusinessIf(collection == null || !userId.equals(collection.getUserId()), ResultErrorCode.ILLEGAL_ARGUMENT, "收藏记录不存在");
         SysCollectionFolder folder = sysCollectionFolderService.getById(collection.getFolderId());
         if (folder != null) {
             folder.setCollectionCount(Math.max(0, (folder.getCollectionCount() == null ? 0 : folder.getCollectionCount()) - 1));
@@ -224,9 +229,7 @@ public class UserCollectionServiceImpl implements UserCollectionService {
 
     private SysCollectionFolder getFolderOrThrow(Long id, Long userId) {
         SysCollectionFolder folder = sysCollectionFolderService.getById(id);
-        if (folder == null || !userId.equals(folder.getUserId())) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "收藏夹不存在");
-        }
+        ExceptionThrowerCore.throwBusinessIf(folder == null || !userId.equals(folder.getUserId()), ResultErrorCode.ILLEGAL_ARGUMENT, "收藏夹不存在");
         return folder;
     }
 
@@ -253,4 +256,11 @@ public class UserCollectionServiceImpl implements UserCollectionService {
     }
 
 }
+
+
+
+
+
+
+
 

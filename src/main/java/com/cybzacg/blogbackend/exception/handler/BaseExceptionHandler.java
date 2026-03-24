@@ -1,8 +1,8 @@
 package com.cybzacg.blogbackend.exception.handler;
 
 import com.cybzacg.blogbackend.core.web.Result;
-import com.cybzacg.blogbackend.enums.ResultCode;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
+import com.cybzacg.blogbackend.enums.error.ResultCode;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.utils.JsonUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

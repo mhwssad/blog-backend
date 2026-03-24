@@ -6,8 +6,8 @@ import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.SysCollection;
 import com.cybzacg.blogbackend.domain.SysCollectionFolder;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.module.article.service.BlogArticleService;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.admin.CollectionPageQuery;
@@ -64,9 +64,7 @@ public class CollectionAdminServiceImpl implements CollectionAdminService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteCollection(Long id) {
         SysCollection collection = sysCollectionService.getById(id);
-        if (collection == null) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "收藏记录不存在");
-        }
+        ExceptionThrowerCore.throwBusinessIfNull(collection, ResultErrorCode.ILLEGAL_ARGUMENT, "收藏记录不存在");
         SysCollectionFolder folder = sysCollectionFolderService.getById(collection.getFolderId());
         if (folder != null) {
             folder.setCollectionCount(Math.max(0, (folder.getCollectionCount() == null ? 0 : folder.getCollectionCount()) - 1));
@@ -82,3 +80,5 @@ public class CollectionAdminServiceImpl implements CollectionAdminService {
         sysCollectionService.removeById(id);
     }
 }
+
+

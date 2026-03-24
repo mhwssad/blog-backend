@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.core.filter;
 
 import com.cybzacg.blogbackend.common.constant.HttpHeaderConstants;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.token.TokenManager;
 import com.cybzacg.blogbackend.utils.HttpServletResponseUtils;
@@ -11,7 +11,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -38,7 +37,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             if (!tokenManager.validateToken(token)) {
-                writeUnauthorized(response, ResultErrorCode.INVALID_TOKEN);
+                writeUnauthorized(response);
                 return;
             }
 
@@ -53,8 +52,8 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
-    private void writeUnauthorized(HttpServletResponse response, ResultErrorCode errorCode) throws IOException {
-        HttpServletResponseUtils.writeJson(response, HttpServletResponse.SC_UNAUTHORIZED, errorCode);
+    private void writeUnauthorized(HttpServletResponse response) throws IOException {
+        HttpServletResponseUtils.writeJson(response, HttpServletResponse.SC_UNAUTHORIZED, ResultErrorCode.INVALID_TOKEN);
     }
 
     private void writeUnauthorized(HttpServletResponse response, Integer code, String message) throws IOException {

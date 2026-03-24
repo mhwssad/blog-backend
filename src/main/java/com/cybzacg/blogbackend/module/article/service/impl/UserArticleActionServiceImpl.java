@@ -2,11 +2,12 @@ package com.cybzacg.blogbackend.module.article.service.impl;
 
 import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.SysInteraction;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
 import com.cybzacg.blogbackend.module.article.service.BlogArticleService;
 import com.cybzacg.blogbackend.module.article.service.UserArticleActionService;
+import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.service.SysInteractionService;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ public class UserArticleActionServiceImpl implements UserArticleActionService {
     private final BlogArticleService blogArticleService;
     private final SysInteractionService sysInteractionService;
     private final ArticleAccessControlService articleAccessControlService;
+    private final ContentModelMapper contentModelMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -39,11 +41,7 @@ public class UserArticleActionServiceImpl implements UserArticleActionService {
         if (exists) {
             return;
         }
-        SysInteraction interaction = new SysInteraction();
-        interaction.setUserId(userId);
-        interaction.setTargetId(articleId);
-        interaction.setTargetType("article");
-        interaction.setActionType("like");
+        SysInteraction interaction = contentModelMapper.toInteraction(userId, articleId, "article", "like");
         sysInteractionService.save(interaction);
         article.setLikeCount((article.getLikeCount() == null ? 0 : article.getLikeCount()) + 1);
         blogArticleService.updateById(article);
@@ -73,10 +71,11 @@ public class UserArticleActionServiceImpl implements UserArticleActionService {
      */
     private BlogArticle getAccessibleArticle(Long articleId, Long userId) {
         BlogArticle article = blogArticleService.getById(articleId);
-        if (article == null || !Integer.valueOf(1).equals(article.getStatus())) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "文章不存在");
-        }
+        ExceptionThrowerCore.throwBusinessIf(article == null || !Integer.valueOf(1).equals(article.getStatus()), ResultErrorCode.ILLEGAL_ARGUMENT, "文章不存在");
         articleAccessControlService.validateArticleAccess(article, userId);
         return article;
     }
 }
+
+
+

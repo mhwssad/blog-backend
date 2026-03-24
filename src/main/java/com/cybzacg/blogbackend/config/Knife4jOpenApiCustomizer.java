@@ -14,6 +14,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.springdoc.core.customizers.GlobalOpenApiCustomizer;
 import org.springdoc.core.properties.SpringDocConfigProperties;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -34,11 +35,13 @@ import java.util.stream.Collectors;
 @Primary
 @Configuration
 @Slf4j
+@ConditionalOnBean(Knife4jProperties.class)
 public class Knife4jOpenApiCustomizer extends com.github.xiaoymin.knife4j.spring.extension.Knife4jOpenApiCustomizer implements GlobalOpenApiCustomizer {
     final Knife4jProperties knife4jProperties;
     final SpringDocConfigProperties properties;
+
     public Knife4jOpenApiCustomizer(Knife4jProperties knife4jProperties, SpringDocConfigProperties properties) {
-        super(knife4jProperties,properties);
+        super(knife4jProperties, properties);
         this.knife4jProperties = knife4jProperties;
         this.properties = properties;
     }
@@ -64,7 +67,6 @@ public class Knife4jOpenApiCustomizer extends com.github.xiaoymin.knife4j.spring
      *
      * @param openApi openApi
      */
-
     private void addOrderExtension(OpenAPI openApi) {
         if (CollectionUtils.isEmpty(properties.getGroupConfigs())) {
             return;

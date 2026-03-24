@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.article;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.exception.handler.BusinessExceptionHandler;
 import com.cybzacg.blogbackend.module.article.controller.PublicArticleController;

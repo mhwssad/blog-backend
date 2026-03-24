@@ -6,8 +6,8 @@ import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.SysComment;
 import com.cybzacg.blogbackend.domain.SysUser;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.module.article.service.BlogArticleService;
 import com.cybzacg.blogbackend.module.auth.service.SysUserService;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
@@ -154,9 +154,7 @@ public class CommentAdminServiceImpl implements CommentAdminService {
      * 校验评论状态是否在后台允许的取值范围内。
      */
     private void validateStatus(Integer status) {
-        if (!Integer.valueOf(0).equals(status) && !Integer.valueOf(1).equals(status) && !Integer.valueOf(2).equals(status)) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "评论状态非法");
-        }
+        ExceptionThrowerCore.throwBusinessIf(!Integer.valueOf(0).equals(status) && !Integer.valueOf(1).equals(status) && !Integer.valueOf(2).equals(status), ResultErrorCode.ILLEGAL_ARGUMENT, "评论状态非法");
     }
 
     /**
@@ -164,9 +162,10 @@ public class CommentAdminServiceImpl implements CommentAdminService {
      */
     private SysComment getCommentOrThrow(Long id) {
         SysComment comment = sysCommentService.getById(id);
-        if (comment == null) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "评论不存在");
-        }
+        ExceptionThrowerCore.throwBusinessIfNull(comment, ResultErrorCode.ILLEGAL_ARGUMENT, "评论不存在");
         return comment;
     }
 }
+
+
+

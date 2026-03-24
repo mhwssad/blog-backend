@@ -221,3 +221,27 @@ wx:
   miniapp:
     app-id: Your_AppId
     app-secret: Your_AppSecret
+
+# file module: new storage config (multi-node)
+storage:
+  storage-type: minio
+  storage:
+    - key: minio-default
+      type: minio
+      base-url: ${oss.minio.custom-domain:}
+      endpoint: ${oss.minio.endpoint:http://localhost:9000}
+      access-key: ${oss.minio.access-key:minioadmin}
+      access-key-secret: ${oss.minio.secret-key:minioadmin}
+      bucket-name: ${oss.minio.bucket-name:public}
+  manager:
+    strategy: DEFAULT
+    enable-health-check: true
+    enable-load-balancing: false
+
+file-upload:
+  chunk-size: 5242880
+  chunk-size-threshold: 6291456
+  task-expire-days: 2
+  max-file-size: 104857600
+  temp-dir-prefix: temp
+  enable-md5-check: true

@@ -6,8 +6,8 @@ import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.SysNotice;
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.domain.SysUserNotice;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.module.auth.convert.SysNoticeModelMapper;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysNoticeAdminVO;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysNoticePageQuery;
@@ -89,9 +89,7 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
     @Transactional(rollbackFor = Exception.class)
     public void publishNotice(Long id) {
         SysNotice notice = getAvailableNotice(id);
-        if (!Objects.equals(NoticeConstants.PUBLISH_STATUS_DRAFT, notice.getPublishStatus())) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "仅未发布通知允许发布");
-        }
+        ExceptionThrowerCore.throwBusinessIfNot(Objects.equals(NoticeConstants.PUBLISH_STATUS_DRAFT, notice.getPublishStatus()), ResultErrorCode.ILLEGAL_ARGUMENT, "仅未发布通知允许发布");
 
         Date now = new Date();
         notice.setPublishStatus(NoticeConstants.PUBLISH_STATUS_PUBLISHED);
@@ -106,9 +104,7 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
     @Transactional(rollbackFor = Exception.class)
     public void revokeNotice(Long id) {
         SysNotice notice = getAvailableNotice(id);
-        if (!Objects.equals(NoticeConstants.PUBLISH_STATUS_PUBLISHED, notice.getPublishStatus())) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "仅已发布通知允许撤回");
-        }
+        ExceptionThrowerCore.throwBusinessIfNot(Objects.equals(NoticeConstants.PUBLISH_STATUS_PUBLISHED, notice.getPublishStatus()), ResultErrorCode.ILLEGAL_ARGUMENT, "仅已发布通知允许撤回");
         notice.setPublishStatus(NoticeConstants.PUBLISH_STATUS_REVOKED);
         notice.setRevokeTime(new Date());
         sysNoticeService.updateById(notice);
@@ -133,9 +129,7 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
             return;
         }
         List<Long> targetUserIds = sysNoticeModelMapper.toIdList(notice.getTargetUserIds());
-        if (targetUserIds.isEmpty()) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "指定用户通知缺少目标用户");
-        }
+        ExceptionThrowerCore.throwBusinessIf(targetUserIds.isEmpty(), ResultErrorCode.ILLEGAL_ARGUMENT, "指定用户通知缺少目标用户");
         List<SysUserNotice> records = targetUserIds.stream()
                 .map(userId -> {
                     SysUserNotice userNotice = new SysUserNotice();
@@ -171,27 +165,18 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
      */
     private List<Long> validateTargetUsers(SysNoticeSaveRequest request) {
         Integer targetType = request.getTargetType();
-        if (!Objects.equals(NoticeConstants.TARGET_ALL, targetType)
-                && !Objects.equals(NoticeConstants.TARGET_SPECIFIED, targetType)) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "通知目标类型非法");
-        }
+        ExceptionThrowerCore.throwBusinessIf(!Objects.equals(NoticeConstants.TARGET_ALL, targetType) && !Objects.equals(NoticeConstants.TARGET_SPECIFIED, targetType), ResultErrorCode.ILLEGAL_ARGUMENT, "通知目标类型非法");
         if (Objects.equals(NoticeConstants.TARGET_ALL, targetType)) {
             return List.of();
         }
-        if (request.getTargetUserIds() == null || request.getTargetUserIds().isEmpty()) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "指定用户通知至少选择一个目标用户");
-        }
-        if (request.getTargetUserIds().stream().anyMatch(Objects::isNull)) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "目标用户ID不能为空");
-        }
+        ExceptionThrowerCore.throwBusinessIf(request.getTargetUserIds() == null || request.getTargetUserIds().isEmpty(), ResultErrorCode.ILLEGAL_ARGUMENT, "指定用户通知至少选择一个目标用户");
+        ExceptionThrowerCore.throwBusinessIf(request.getTargetUserIds().stream().anyMatch(Objects::isNull), ResultErrorCode.ILLEGAL_ARGUMENT, "目标用户ID不能为空");
         List<Long> distinctUserIds = request.getTargetUserIds().stream().distinct().toList();
         long count = sysUserService.lambdaQuery()
                 .in(SysUser::getId, distinctUserIds)
                 .eq(SysUser::getDeletedFlag, 0)
                 .count();
-        if (count != distinctUserIds.size()) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "存在无效目标用户");
-        }
+        ExceptionThrowerCore.throwBusinessIf(count != distinctUserIds.size(), ResultErrorCode.ILLEGAL_ARGUMENT, "存在无效目标用户");
         return distinctUserIds;
     }
 
@@ -200,9 +185,7 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
      */
     private SysNotice getEditableNotice(Long id) {
         SysNotice notice = getAvailableNotice(id);
-        if (!Objects.equals(NoticeConstants.PUBLISH_STATUS_DRAFT, notice.getPublishStatus())) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "已发布或已撤回通知不允许修改");
-        }
+        ExceptionThrowerCore.throwBusinessIfNot(Objects.equals(NoticeConstants.PUBLISH_STATUS_DRAFT, notice.getPublishStatus()), ResultErrorCode.ILLEGAL_ARGUMENT, "已发布或已撤回通知不允许修改");
         return notice;
     }
 
@@ -211,11 +194,19 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
      */
     private SysNotice getAvailableNotice(Long id) {
         SysNotice notice = sysNoticeService.getById(id);
-        if (notice == null || Integer.valueOf(1).equals(notice.getIsDeleted())) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "通知不存在");
-        }
+        ExceptionThrowerCore.throwBusinessIf(notice == null || Integer.valueOf(1).equals(notice.getIsDeleted()), ResultErrorCode.ILLEGAL_ARGUMENT, "通知不存在");
         return notice;
     }
 
 }
+
+
+
+
+
+
+
+
+
+
 

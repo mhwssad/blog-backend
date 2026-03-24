@@ -42,6 +42,9 @@ public class RedisTokenManager implements TokenManager {
     private final SecurityProperties securityProperties;
     private final SecureRandom secureRandom = new SecureRandom();
 
+    /**
+     * 生成不透明访问令牌与刷新令牌，并把会话状态落到 Redis。
+     */
     @Override
     public AuthenticationToken generateToken(Authentication authentication) {
         if (authentication == null || !StringUtils.hasText(authentication.getName())) {
@@ -112,6 +115,9 @@ public class RedisTokenManager implements TokenManager {
         return generateToken(authentication);
     }
 
+    /**
+     * 同时兼容访问令牌和刷新令牌的失效处理，尽量清理完整会话链路。
+     */
     @Override
     public void invalidateToken(String token) {
         String normalizedToken = normalizeToken(token);
@@ -257,6 +263,9 @@ public class RedisTokenManager implements TokenManager {
         return tryExtractUserId(authentication.getDetails());
     }
 
+    /**
+     * 尝试从多种主体对象结构中提取用户 ID，兼容 details、principal 和反射回退。
+     */
     private Long tryExtractUserId(Object source) {
         if (source == null) {
             return null;

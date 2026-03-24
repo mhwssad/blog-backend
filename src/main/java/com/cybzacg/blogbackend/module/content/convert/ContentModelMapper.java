@@ -1,5 +1,6 @@
 package com.cybzacg.blogbackend.module.content.convert;
 
+import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.SysCategory;
 import com.cybzacg.blogbackend.domain.SysCollection;
 import com.cybzacg.blogbackend.domain.SysCollectionFolder;
@@ -8,26 +9,33 @@ import com.cybzacg.blogbackend.domain.SysInteraction;
 import com.cybzacg.blogbackend.domain.SysTag;
 import com.cybzacg.blogbackend.domain.SysUserFootprint;
 import com.cybzacg.blogbackend.module.content.model.admin.CategoryAdminVO;
+import com.cybzacg.blogbackend.module.content.model.admin.CategorySaveRequest;
 import com.cybzacg.blogbackend.module.content.model.admin.CategoryTreeVO;
 import com.cybzacg.blogbackend.module.content.model.admin.CommentVO;
 import com.cybzacg.blogbackend.module.content.model.admin.FootprintVO;
 import com.cybzacg.blogbackend.module.content.model.admin.InteractionVO;
+import com.cybzacg.blogbackend.module.content.model.admin.TagSaveRequest;
 import com.cybzacg.blogbackend.module.content.model.admin.TagVO;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicCategoryTreeVO;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicCommentVO;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicTagVO;
+import com.cybzacg.blogbackend.module.content.model.user.CollectionFolderSaveRequest;
 import com.cybzacg.blogbackend.module.content.model.user.CollectionFolderVO;
+import com.cybzacg.blogbackend.module.content.model.user.CommentSaveRequest;
 import com.cybzacg.blogbackend.module.content.model.user.UserFootprintVO;
 import com.cybzacg.blogbackend.utils.JsonUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import org.mapstruct.AfterMapping;
+import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", imports = StrUtils.class)
 public interface ContentModelMapper {
     CategoryAdminVO toCategoryAdminVO(SysCategory category);
 
@@ -61,9 +69,90 @@ public interface ContentModelMapper {
     @Mapping(target = "targetUrl", source = "url")
     UserFootprintVO toUserFootprintVO(SysUserFootprint footprint);
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "parentId", source = "parentId")
+    @Mapping(target = "name", expression = "java(StrUtils.trim(request.getName()))")
+    @Mapping(target = "code", expression = "java(StrUtils.trim(request.getCode()))")
+    @Mapping(target = "type", expression = "java(StrUtils.trim(request.getType()))")
+    @Mapping(target = "ancestors", ignore = true)
+    @Mapping(target = "level", ignore = true)
+    @Mapping(target = "sortOrder", source = "sortOrder")
+    @Mapping(target = "icon", expression = "java(StrUtils.normalize(request.getIcon()))")
+    @Mapping(target = "description", expression = "java(StrUtils.normalize(request.getDescription()))")
+    @Mapping(target = "status", source = "status")
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    SysCategory toCategory(CategorySaveRequest request);
+
+    @InheritConfiguration(name = "toCategory")
+    void updateCategory(CategorySaveRequest request, @MappingTarget SysCategory category);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "name", expression = "java(StrUtils.trim(request.getName()))")
+    @Mapping(target = "color", expression = "java(StrUtils.normalize(request.getColor()))")
+    @Mapping(target = "createdAt", ignore = true)
+    SysTag toTag(TagSaveRequest request);
+
+    @InheritConfiguration(name = "toTag")
+    void updateTag(TagSaveRequest request, @MappingTarget SysTag tag);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "userId", ignore = true)
+    @Mapping(target = "folderName", expression = "java(StrUtils.trim(request.getFolderName()))")
+    @Mapping(target = "folderType", ignore = true)
+    @Mapping(target = "description", expression = "java(StrUtils.normalize(request.getDescription()))")
+    @Mapping(target = "isPublic", ignore = true)
+    @Mapping(target = "isDefault", ignore = true)
+    @Mapping(target = "sortOrder", ignore = true)
+    @Mapping(target = "collectionCount", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    SysCollectionFolder toCollectionFolder(CollectionFolderSaveRequest request);
+
+    @InheritConfiguration(name = "toCollectionFolder")
+    void updateCollectionFolder(CollectionFolderSaveRequest request, @MappingTarget SysCollectionFolder folder);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "targetId", source = "targetId")
+    @Mapping(target = "targetType", expression = "java(StrUtils.trim(request.getTargetType()))")
+    @Mapping(target = "content", expression = "java(StrUtils.trim(request.getContent()))")
+    @Mapping(target = "images", expression = "java(toJson(request.getImages()))")
+    @Mapping(target = "userId", ignore = true)
+    @Mapping(target = "rootId", source = "rootId")
+    @Mapping(target = "parentId", source = "parentId")
+    @Mapping(target = "likeCount", ignore = true)
+    @Mapping(target = "replyCount", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    SysComment toComment(CommentSaveRequest request);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "userId", source = "userId")
+    @Mapping(target = "targetId", source = "targetId")
+    @Mapping(target = "targetType", source = "targetType")
+    @Mapping(target = "actionType", source = "actionType")
+    @Mapping(target = "createdAt", ignore = true)
+    SysInteraction toInteraction(Long userId, Long targetId, String targetType, String actionType);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "userId", source = "userId")
+    @Mapping(target = "targetId", source = "article.id")
+    @Mapping(target = "targetType", constant = "article")
+    @Mapping(target = "title", source = "article.title")
+    @Mapping(target = "url", expression = "java(article == null ? null : \"/article/\" + article.getId())")
+    @Mapping(target = "ipAddress", source = "ipAddress")
+    @Mapping(target = "userAgent", source = "userAgent")
+    @Mapping(target = "visitedAt", source = "visitedAt")
+    SysUserFootprint toArticleFootprint(Long userId, BlogArticle article, String ipAddress, String userAgent, Date visitedAt);
+
     default List<String> toStringList(String json) {
         List<String> images = JsonUtils.fromJsonToList(json, String.class);
         return images == null ? new ArrayList<>() : images;
+    }
+
+    default String toJson(List<String> images) {
+        return images == null || images.isEmpty() ? null : JsonUtils.toJson(images);
     }
 
     @AfterMapping

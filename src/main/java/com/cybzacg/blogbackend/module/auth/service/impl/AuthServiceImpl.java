@@ -6,8 +6,7 @@ import com.cybzacg.blogbackend.common.redis.RedisKeyUtils;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
 import com.cybzacg.blogbackend.domain.SysMenu;
 import com.cybzacg.blogbackend.domain.SysUser;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.auth.authentication.EmailCodeAuthenticationToken;
 import com.cybzacg.blogbackend.module.auth.convert.AuthModelMapper;
 import com.cybzacg.blogbackend.module.auth.model.AuthEmailCodeRequest;
@@ -23,6 +22,7 @@ import com.cybzacg.blogbackend.module.auth.service.SysMenuService;
 import com.cybzacg.blogbackend.module.auth.service.SysRoleService;
 import com.cybzacg.blogbackend.module.auth.service.SysUserService;
 import com.cybzacg.blogbackend.module.auth.token.TokenManager;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
@@ -63,6 +63,9 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final SecureRandom secureRandom = new SecureRandom();
 
+    /**
+     * 执行账号密码登录，并在认证成功后刷新最后登录信息。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AuthenticationToken login(AuthLoginRequest request, String loginIp) {
@@ -78,6 +81,9 @@ public class AuthServiceImpl implements AuthService {
         return tokenManager.generateToken(authentication);
     }
 
+    /**
+     * 注册新用户并立即完成一次登录，返回首组访问令牌。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AuthenticationToken register(AuthRegisterRequest request, String loginIp) {
@@ -88,10 +94,10 @@ public class AuthServiceImpl implements AuthService {
         validateRegisterIdentity(email, "邮箱已存在");
         validateRegisterIdentity(phone, "手机号已存在");
 
-        SysUser user = new SysUser();
+        SysUser user = authModelMapper.toRegisterUser(request);
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setNickname(StrUtils.hasText(request.getNickname()) ? StrUtils.trim(request.getNickname()) : username);
+        user.setNickname(user.getNickname());
         user.setEmail(email);
         user.setPhone(phone);
         user.setStatus(1);
@@ -108,16 +114,15 @@ public class AuthServiceImpl implements AuthService {
         return tokenManager.generateToken(authentication);
     }
 
+    /**
+     * 发送邮箱登录验证码，并把验证码写入 Redis 供后续校验。
+     */
     @Override
     public void sendEmailLoginCode(AuthEmailCodeRequest request) {
         String email = StrUtils.trimToLowerCase(request.getEmail());
         SysUser user = sysUserService.getByEmail(email);
-        if (user == null) {
-            throw new BusinessException(ResultErrorCode.USER_NOT_FOUND);
-        }
-        if (!Integer.valueOf(1).equals(user.getStatus())) {
-            throw new BusinessException(ResultErrorCode.ACCOUNT_DISABLED);
-        }
+        ExceptionThrowerCore.throwBusinessIfNull(user, ResultErrorCode.USER_NOT_FOUND);
+        ExceptionThrowerCore.throwBusinessIfNot(Integer.valueOf(1).equals(user.getStatus()), ResultErrorCode.ACCOUNT_DISABLED);
 
         String code = generateEmailCode();
         try {
@@ -128,8 +133,7 @@ public class AuthServiceImpl implements AuthService {
             message.setText(buildEmailCodeContent(code));
             javaMailSender.send(message);
         } catch (Exception ex) {
-            throw new BusinessException(ResultErrorCode.EMAIL_CAPTCHA_SEND_FAILED.getCode(),
-                    ResultErrorCode.EMAIL_CAPTCHA_SEND_FAILED.getMessage(), ex);
+            ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.EMAIL_CAPTCHA_SEND_FAILED, ex);
         }
 
         redisOperator.set(emailLoginCodeKey(email), code, AuthConstants.EMAIL_LOGIN_CODE_TTL);
@@ -151,9 +155,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthenticationToken refresh(AuthRefreshRequest request) {
-        if (!tokenManager.validateRefreshToken(request.getRefreshToken())) {
-            throw new BusinessException(ResultErrorCode.INVALID_TOKEN);
-        }
+        ExceptionThrowerCore.throwBusinessIfNot(tokenManager.validateRefreshToken(request.getRefreshToken()),
+                ResultErrorCode.INVALID_TOKEN);
         return tokenManager.refreshToken(request.getRefreshToken());
     }
 
@@ -195,9 +198,9 @@ public class AuthServiceImpl implements AuthService {
         if (user == null) {
             user = sysUserService.getByUsername(SecurityUtils.getUsername(authentication));
         }
-        if (user == null || !Integer.valueOf(0).equals(user.getDeletedFlag()) && user.getDeletedFlag() != null) {
-            throw new BusinessException(ResultErrorCode.USER_NOT_FOUND);
-        }
+        ExceptionThrowerCore.throwBusinessIf(user == null
+                        || (!Integer.valueOf(0).equals(user.getDeletedFlag()) && user.getDeletedFlag() != null),
+                ResultErrorCode.USER_NOT_FOUND);
         return user;
     }
 
@@ -240,9 +243,7 @@ public class AuthServiceImpl implements AuthService {
 
     private String resolveMailFrom() {
         String from = mailProperties.getUsername();
-        if (!StringUtils.hasText(from)) {
-            throw new BusinessException(ResultErrorCode.EMAIL_CAPTCHA_SEND_FAILED);
-        }
+        ExceptionThrowerCore.throwBusinessIfBlank(from, ResultErrorCode.EMAIL_CAPTCHA_SEND_FAILED);
         return from;
     }
 
@@ -269,8 +270,8 @@ public class AuthServiceImpl implements AuthService {
                         .or()
                         .eq(SysUser::getPhone, identity))
                 .exists();
-        if (exists) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), message);
-        }
+        ExceptionThrowerCore.throwBusinessIf(exists, ResultErrorCode.ILLEGAL_ARGUMENT, message);
     }
 }
+
+

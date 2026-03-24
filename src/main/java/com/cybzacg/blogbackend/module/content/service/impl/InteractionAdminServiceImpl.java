@@ -6,8 +6,8 @@ import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.SysComment;
 import com.cybzacg.blogbackend.domain.SysInteraction;
-import com.cybzacg.blogbackend.enums.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.module.article.service.BlogArticleService;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.admin.InteractionPageQuery;
@@ -49,9 +49,7 @@ public class InteractionAdminServiceImpl implements InteractionAdminService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteInteraction(Long id) {
         SysInteraction interaction = sysInteractionService.getById(id);
-        if (interaction == null) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "互动记录不存在");
-        }
+        ExceptionThrowerCore.throwBusinessIfNull(interaction, ResultErrorCode.ILLEGAL_ARGUMENT, "互动记录不存在");
         if ("article".equals(interaction.getTargetType())) {
             BlogArticle article = blogArticleService.getById(interaction.getTargetId());
             if (article != null) {
@@ -68,3 +66,5 @@ public class InteractionAdminServiceImpl implements InteractionAdminService {
         sysInteractionService.removeById(id);
     }
 }
+
+
