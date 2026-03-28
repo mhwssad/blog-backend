@@ -293,6 +293,7 @@ public class StorageHealthCheckServiceImpl implements StorageHealthCheckService 
      * @param key 存储节点标识
      * @return 是否健康
      */
+    @Override
     public boolean isStorageHealthy(String key) {
         StorageHealthInfo healthInfo = healthStatusMap.get(key);
         if (healthInfo == null) {
@@ -306,6 +307,7 @@ public class StorageHealthCheckServiceImpl implements StorageHealthCheckService 
      *
      * @return 健康的存储节点标识列表
      */
+    @Override
     public List<String> getHealthyStorageKeys() {
         return healthStatusMap.entrySet().stream()
                 .filter(entry -> entry.getValue().getStatus() == StorageHealthStatus.HEALTHY)
@@ -319,6 +321,7 @@ public class StorageHealthCheckServiceImpl implements StorageHealthCheckService 
      * @param key          存储节点标识
      * @param errorMessage 错误信息
      */
+    @Override
     public void markStorageAsFailed(String key, String errorMessage) {
         updateHealthStatus(key, false, errorMessage);
     }
@@ -328,6 +331,7 @@ public class StorageHealthCheckServiceImpl implements StorageHealthCheckService 
      *
      * @param key 存储节点标识
      */
+    @Override
     public void markStorageAsSuccess(String key) {
         updateHealthStatus(key, true, null);
     }

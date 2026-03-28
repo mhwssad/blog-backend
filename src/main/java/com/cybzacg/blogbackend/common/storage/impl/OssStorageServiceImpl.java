@@ -15,10 +15,11 @@ import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -186,25 +187,16 @@ public class OssStorageServiceImpl implements StorageService {
     }
 
     /**
-     * 读取并拼接多个 OSS 分片对象，然后重新上传为目标文件。
+     * 将多个 OSS 分片顺序写入临时文件，再流式上传目标文件，避免把整份文件加载进内存。
      */
     @Override
     public boolean mergeFiles(List<String> sourceObjectNames, String targetObjectName) {
+        Path tempFile = null;
         try {
-            // 合并文件：读取所有分片并合并
-            StringBuilder mergedContent = new StringBuilder();
-
-            for (String sourceObjectName : sourceObjectNames) {
-                try (InputStream inputStream = download(sourceObjectName)) {
-                    byte[] bytes = InputStreamUtils.toByteArray(inputStream);
-                    mergedContent.append(new String(bytes, StandardCharsets.ISO_8859_1));
-                }
-            }
-
-            // 上传合并后的文件
-            byte[] mergedBytes = mergedContent.toString().getBytes(StandardCharsets.ISO_8859_1);
-            try (ByteArrayInputStream byteArrayInputStream = InputStreamUtils.fromByteArray(mergedBytes)) {
-                upload(byteArrayInputStream, targetObjectName);
+            tempFile = Files.createTempFile("oss-merge-", ".tmp");
+            mergeSourceFilesToTempFile(sourceObjectNames, tempFile);
+            try (InputStream mergedInputStream = Files.newInputStream(tempFile)) {
+                upload(mergedInputStream, targetObjectName);
             }
 
             log.info("文件合并成功: {} -> {}", sourceObjectNames, targetObjectName);
@@ -212,6 +204,8 @@ public class OssStorageServiceImpl implements StorageService {
         } catch (Exception e) {
             log.error("文件合并失败: {} -> {}", sourceObjectNames, targetObjectName, e);
             throw new StorageException(StorageResultCode.UPLOAD_MERGE_FILES);
+        } finally {
+            deleteTempMergeFile(tempFile);
         }
     }
 
@@ -227,27 +221,41 @@ public class OssStorageServiceImpl implements StorageService {
     @Override
     public boolean deleteTempFilesByPrefix(String prefix) {
         try {
-            // 列出所有匹配前缀的对象
-            ListObjectsRequest listObjectsRequest = new ListObjectsRequest(bucketName);
-            listObjectsRequest.setPrefix(prefix);
-            listObjectsRequest.setMaxKeys(1000);
+            String marker = null;
+            int totalCount = 0;
 
-            ObjectListing objectListing = ossClient.listObjects(listObjectsRequest);
+            do {
+                ListObjectsRequest listObjectsRequest = new ListObjectsRequest(bucketName);
+                listObjectsRequest.setPrefix(prefix);
+                listObjectsRequest.setMaxKeys(1000);
+                listObjectsRequest.setMarker(marker);
 
-            // 删除所有匹配的对象
-            if (!objectListing.getObjectSummaries().isEmpty()) {
+                ObjectListing objectListing = ossClient.listObjects(listObjectsRequest);
                 List<String> keys = new ArrayList<>();
                 for (OSSObjectSummary objectSummary : objectListing.getObjectSummaries()) {
                     keys.add(objectSummary.getKey());
                 }
 
-                DeleteObjectsRequest deleteObjectsRequest = new DeleteObjectsRequest(bucketName);
-                deleteObjectsRequest.setKeys(keys);
-                ossClient.deleteObjects(deleteObjectsRequest);
+                if (!keys.isEmpty()) {
+                    DeleteObjectsRequest deleteObjectsRequest = new DeleteObjectsRequest(bucketName);
+                    deleteObjectsRequest.setKeys(keys);
+                    DeleteObjectsResult deleteObjectsResult = ossClient.deleteObjects(deleteObjectsRequest);
+                    int deletedCount = deleteObjectsResult.getDeletedObjects().size();
+                    totalCount += deletedCount;
 
-                log.info("删除临时文件完成，共 {} 个", keys.size());
-            }
+                    if (deletedCount != keys.size()) {
+                        log.warn("删除临时文件存在未完成项，成功删除: {}/{}", deletedCount, keys.size());
+                        return false;
+                    }
+                }
 
+                marker = objectListing.getNextMarker();
+                if (!objectListing.isTruncated()) {
+                    break;
+                }
+            } while (true);
+
+            log.info("删除临时文件完成，共 {} 个", totalCount);
             return true;
         } catch (Exception e) {
             log.error("删除临时文件失败: {}", prefix, e);
@@ -263,6 +271,39 @@ public class OssStorageServiceImpl implements StorageService {
         if (ossClient != null) {
             ossClient.shutdown();
             log.info("OSS 客户端已关闭");
+        }
+    }
+
+    /**
+     * 将远端分片顺序写入本地临时文件，避免在 JVM 内存中拼接整个文件内容。
+     *
+     * @param sourceObjectNames 分片对象列表
+     * @param tempFile          临时合并文件
+     * @throws Exception 写入失败时抛出
+     */
+    private void mergeSourceFilesToTempFile(List<String> sourceObjectNames, Path tempFile) throws Exception {
+        try (OutputStream outputStream = Files.newOutputStream(tempFile)) {
+            for (String sourceObjectName : sourceObjectNames) {
+                try (InputStream inputStream = download(sourceObjectName)) {
+                    InputStreamUtils.copy(inputStream, outputStream);
+                }
+            }
+        }
+    }
+
+    /**
+     * 删除本地临时合并文件。
+     *
+     * @param tempFile 临时文件路径
+     */
+    private void deleteTempMergeFile(Path tempFile) {
+        if (tempFile == null) {
+            return;
+        }
+        try {
+            Files.deleteIfExists(tempFile);
+        } catch (Exception e) {
+            log.warn("删除临时合并文件失败: {}", tempFile, e);
         }
     }
 }

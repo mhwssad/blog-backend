@@ -1,6 +1,5 @@
 package com.cybzacg.blogbackend.common.storage.impl;
 
-
 import com.cybzacg.blogbackend.common.storage.StorageHealthCheckService;
 import com.cybzacg.blogbackend.common.storage.StorageHealthInfo;
 import com.cybzacg.blogbackend.common.storage.StorageManager;
@@ -12,11 +11,13 @@ import com.cybzacg.blogbackend.enums.storage.StorageType;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-
 
 /**
  * 存储管理器实现类
@@ -28,6 +29,7 @@ public class StorageManagerImpl implements StorageManager {
     private final StorageProperties storageProperties;
     private final StorageHealthCheckService healthCheckService;
     private final StorageManagerProperties managerProperties;
+    private final List<String> storageKeys;
 
     /**
      * 轮询计数器
@@ -45,7 +47,7 @@ public class StorageManagerImpl implements StorageManager {
     private volatile StorageStrategyEnum currentStrategy;
 
     /**
-     * 当前使用的存储节点标识（用于DEFAULT策略）
+     * 当前使用的存储节点标识
      */
     private volatile String currentStorageKey;
 
@@ -59,204 +61,183 @@ public class StorageManagerImpl implements StorageManager {
         this.healthCheckService = healthCheckService;
         this.managerProperties = managerProperties;
         this.currentStrategy = managerProperties.getStrategyEnum();
-
-        // 初始化当前存储节点
-        initializeCurrentStorage();
+        this.storageKeys = buildStorageKeys();
+        this.currentStorageKey = resolveDefaultStorageKey();
 
         log.info("存储管理器初始化完成，策略: {}, 当前存储节点: {}",
                 currentStrategy, currentStorageKey);
     }
 
-    /**
-     * 初始化当前存储节点
-     */
-    private void initializeCurrentStorage() {
-        // 如果是DEFAULT策略，使用配置的默认存储类型
-        if (currentStrategy == StorageStrategyEnum.DEFAULT) {
-            String defaultStorageType = storageProperties.getStorageType();
-
-            // 从存储列表中找到第一个匹配默认类型的节点
-            if (storageProperties.getStorage() != null) {
-                for (StorageProperties.Storage storage : storageProperties.getStorage()) {
-                    if (storage.getType().equalsIgnoreCase(defaultStorageType)) {
-                        currentStorageKey = storage.getKey();
-                        break;
-                    }
-                }
-            }
-
-            // 如果没找到，使用第一个节点
-            if (currentStorageKey == null && storageProperties.getStorage() != null
-                    && !storageProperties.getStorage().isEmpty()) {
-                currentStorageKey = storageProperties.getStorage().get(0).getKey();
-            }
-        }
-    }
-
-    // ========== StorageService 接口实现 ==========
-
     @Override
     public String upload(InputStream inputStream, String objectName) {
-        return executeWithFailover(service -> service.upload(inputStream, objectName));
+        return executeOnSelectedStorage(service -> service.upload(inputStream, objectName), false);
     }
 
     @Override
     public String upload(InputStream inputStream, String objectName, String contentType) {
-        return executeWithFailover(service -> service.upload(inputStream, objectName, contentType));
+        return executeOnSelectedStorage(service -> service.upload(inputStream, objectName, contentType), false);
     }
 
     @Override
     public InputStream download(String objectName) {
-        return executeWithFailover(new StorageOperation<InputStream>() {
-            @Override
-            public InputStream execute(StorageService service) {
-                return service.download(objectName);
-            }
-        });
+        return executeOnSelectedStorage(service -> service.download(objectName), true);
     }
 
     @Override
     public boolean delete(String objectName) {
-        return executeWithFailover(service -> service.delete(objectName));
+        return executeOnSelectedStorage(service -> service.delete(objectName), true);
     }
 
     @Override
     public int deleteBatch(List<String> objectNames) {
-        return executeWithFailover(service -> service.deleteBatch(objectNames));
+        return executeOnSelectedStorage(service -> service.deleteBatch(objectNames), true);
     }
 
     @Override
     public boolean exists(String objectName) {
-        return executeWithFailover(service -> service.exists(objectName));
+        return executeOnSelectedStorage(service -> service.exists(objectName), true);
     }
 
     @Override
     public String getUrl(String objectName) {
-        return executeWithFailover(service -> service.getUrl(objectName));
+        return executeOnSelectedStorage(service -> service.getUrl(objectName), true);
     }
 
     @Override
     public StorageType getStorageType() {
-        StorageService service = getStorageService();
-        return service != null ? service.getStorageType() : null;
+        SelectedStorage selectedStorage = selectStorageService();
+        return selectedStorage != null ? selectedStorage.service().getStorageType() : null;
     }
 
     @Override
     public String uploadToTemp(InputStream inputStream, String objectName) {
-        return executeWithFailover(service -> service.uploadToTemp(inputStream, objectName));
+        return executeOnSelectedStorage(service -> service.uploadToTemp(inputStream, objectName), false);
     }
 
     @Override
     public String uploadToTemp(InputStream inputStream, String objectName, String contentType) {
-        return executeWithFailover(service -> service.uploadToTemp(inputStream, objectName, contentType));
+        return executeOnSelectedStorage(service -> service.uploadToTemp(inputStream, objectName, contentType), false);
     }
 
     @Override
     public boolean mergeFiles(List<String> sourceObjectNames, String targetObjectName) {
-        return executeWithFailover(service -> service.mergeFiles(sourceObjectNames, targetObjectName));
+        return executeOnSelectedStorage(service -> service.mergeFiles(sourceObjectNames, targetObjectName), true);
     }
 
     @Override
     public boolean deleteTempFiles(String uploadId) {
-        return executeWithFailover(service -> service.deleteTempFiles(uploadId));
+        return executeOnSelectedStorage(service -> service.deleteTempFiles(uploadId), true);
     }
 
     @Override
     public boolean deleteTempFilesByPrefix(String prefix) {
-        return executeWithFailover(new StorageOperation<Boolean>() {
-            @Override
-            public Boolean execute(StorageService service) {
-                return service.deleteTempFilesByPrefix(prefix);
-            }
-        });
+        return executeOnSelectedStorage(service -> service.deleteTempFilesByPrefix(prefix), true);
     }
 
     /**
-     * 执行存储操作并支持故障转移
+     * 在选中的节点上执行一次存储操作，并按策略决定是否允许切换到其他节点重试。
+     * 上传类操作依赖单次消费输入流，因此只标记失败，不在管理器层复用同一个流做自动重试。
+     *
+     * @param operation      存储操作
+     * @param allowFailover  是否允许切换到其他节点重试
+     * @param <T>            返回值类型
+     * @return 操作结果
      */
-    private <T> T executeWithFailover(StorageOperation<T> operation) {
-        StorageService service = selectStorageServiceInstance();
-
-        if (service == null) {
+    private <T> T executeOnSelectedStorage(StorageOperation<T> operation, boolean allowFailover) {
+        SelectedStorage selectedStorage = selectStorageService();
+        if (selectedStorage == null) {
             throw new RuntimeException("没有可用的存储服务");
         }
 
         try {
-            // 执行操作
-            T result = operation.execute(service);
-
-            // 标记成功
-            if (currentStorageKey != null) {
-                ((StorageHealthCheckServiceImpl) healthCheckService).markStorageAsSuccess(currentStorageKey);
-            }
-
+            T result = operation.execute(selectedStorage.service());
+            healthCheckService.markStorageAsSuccess(selectedStorage.key());
             return result;
         } catch (Exception e) {
-            log.error("存储操作失败: {}", e.getMessage());
+            log.error("存储操作失败，节点: {}, 错误: {}", selectedStorage.key(), e.getMessage(), e);
+            healthCheckService.markStorageAsFailed(selectedStorage.key(), e.getMessage());
 
-            // 标记失败
-            if (currentStorageKey != null) {
-                ((StorageHealthCheckServiceImpl) healthCheckService).markStorageAsFailed(
-                        currentStorageKey, e.getMessage());
+            if (allowFailover && currentStrategy == StorageStrategyEnum.FAILOVER) {
+                return tryFailover(operation, selectedStorage.key());
             }
-
-            // 如果是FAILOVER策略，尝试故障转移
-            if (currentStrategy == StorageStrategyEnum.FAILOVER) {
-                return tryFailover(operation);
-            }
-
-            throw new RuntimeException("存储操作失败: " + e.getMessage(), e);
+            throw wrapStorageException(e);
         }
     }
 
     /**
-     * 尝试故障转移
+     * 在故障转移策略下尝试使用其他节点继续执行本次操作。
+     *
+     * @param operation  存储操作
+     * @param failedKey  已失败的节点标识
+     * @param <T>        返回值类型
+     * @return 操作结果
      */
-    private <T> T tryFailover(StorageOperation<T> operation) {
-        log.info("开始故障转移，尝试其他存储节点");
+    private <T> T tryFailover(StorageOperation<T> operation, String failedKey) {
+        log.info("开始故障转移，失败节点: {}", failedKey);
 
-        // 获取所有健康的存储节点
-        List<String> healthyKeys = ((StorageHealthCheckServiceImpl) healthCheckService).getHealthyStorageKeys();
-
-        // 尝试每个健康的存储节点
-        for (String key : healthyKeys) {
-            // 跳过当前失败的节点
-            if (key.equals(currentStorageKey)) {
-                continue;
-            }
-
-            StorageService service = storageServiceMap.get(key);
-            if (service == null) {
+        List<String> candidateKeys = buildFailoverCandidateKeys(failedKey);
+        for (String key : candidateKeys) {
+            StorageService storageService = storageServiceMap.get(key);
+            if (storageService == null) {
                 continue;
             }
 
             try {
-                log.info("尝试使用存储节点: {}", key);
-                T result = operation.execute(service);
-
-                // 成功，切换到新节点
+                log.info("尝试使用故障转移节点: {}", key);
+                T result = operation.execute(storageService);
+                healthCheckService.markStorageAsSuccess(key);
                 currentStorageKey = key;
                 log.info("故障转移成功，切换到存储节点: {}", key);
-
                 return result;
             } catch (Exception e) {
-                log.warn("存储节点操作失败: {}, 错误: {}", key, e.getMessage());
-                ((StorageHealthCheckServiceImpl) healthCheckService).markStorageAsFailed(
-                        key, e.getMessage());
+                log.warn("故障转移节点执行失败: {}, 错误: {}", key, e.getMessage(), e);
+                healthCheckService.markStorageAsFailed(key, e.getMessage());
             }
         }
 
-        // 所有节点都失败
         throw new RuntimeException("所有存储节点均不可用");
+    }
+
+    /**
+     * 组装故障转移候选节点列表。
+     * 优先尝试健康节点，随后再按配置顺序兜底其他节点，以避免健康检查关闭时直接无节点可用。
+     *
+     * @param failedKey 已失败节点
+     * @return 候选节点列表
+     */
+    private List<String> buildFailoverCandidateKeys(String failedKey) {
+        Set<String> candidateKeys = new LinkedHashSet<>();
+        for (String key : getHealthyStorageKeys()) {
+            if (!key.equals(failedKey)) {
+                candidateKeys.add(key);
+            }
+        }
+        for (String key : storageKeys) {
+            if (!key.equals(failedKey) && storageServiceMap.containsKey(key)) {
+                candidateKeys.add(key);
+            }
+        }
+        return new ArrayList<>(candidateKeys);
+    }
+
+    /**
+     * 将任意异常统一转换为运行时异常，同时保留已有业务异常类型。
+     *
+     * @param exception 原始异常
+     * @return 运行时异常
+     */
+    private RuntimeException wrapStorageException(Exception exception) {
+        if (exception instanceof RuntimeException runtimeException) {
+            return runtimeException;
+        }
+        return new RuntimeException("存储操作失败: " + exception.getMessage(), exception);
     }
 
     @Override
     public StorageService getStorageService() {
-        String key = selectStorageKey();
-        return key != null ? storageServiceMap.get(key) : null;
+        SelectedStorage selectedStorage = selectStorageService();
+        return selectedStorage != null ? selectedStorage.service() : null;
     }
-
-    // ========== StorageManager 接口实现 ==========
 
     @Override
     public StorageService getStorageService(String key) {
@@ -304,9 +285,9 @@ public class StorageManagerImpl implements StorageManager {
     }
 
     /**
-     * 根据当前策略选择存储节点标识
+     * 根据当前策略选择节点。
      *
-     * @return 存储节点标识
+     * @return 选中的节点标识
      */
     private String selectStorageKey() {
         return switch (currentStrategy) {
@@ -317,96 +298,143 @@ public class StorageManagerImpl implements StorageManager {
         };
     }
 
-    // ========== 内部方法 ==========
-
     /**
-     * 根据策略选择存储服务实例
+     * 选择本次调用实际使用的存储节点和服务实例。
      *
-     * @return 存储服务实例
+     * @return 节点与服务的组合，不存在返回 null
      */
-    private StorageService selectStorageServiceInstance() {
+    private SelectedStorage selectStorageService() {
         String key = selectStorageKey();
-        return key != null ? storageServiceMap.get(key) : null;
+        if (key != null && storageServiceMap.containsKey(key)) {
+            currentStorageKey = key;
+            return new SelectedStorage(key, storageServiceMap.get(key));
+        }
+
+        for (String fallbackKey : storageKeys) {
+            StorageService storageService = storageServiceMap.get(fallbackKey);
+            if (storageService != null) {
+                currentStorageKey = fallbackKey;
+                return new SelectedStorage(fallbackKey, storageService);
+            }
+        }
+        return null;
     }
 
     /**
-     * DEFAULT策略：使用配置的默认存储节点
+     * DEFAULT 策略优先使用当前节点，否则回退到配置中的默认节点。
      *
-     * @return 存储节点标识
+     * @return 默认节点标识
      */
     private String selectStorageServiceByDefault() {
-        if (currentStorageKey != null) {
+        if (currentStorageKey != null && storageServiceMap.containsKey(currentStorageKey)) {
             return currentStorageKey;
         }
 
-        // 如果没有当前节点，初始化
-        initializeCurrentStorage();
-        return currentStorageKey;
+        String defaultKey = resolveDefaultStorageKey();
+        if (defaultKey != null) {
+            currentStorageKey = defaultKey;
+        }
+        return defaultKey;
     }
 
     /**
-     * FAILOVER策略：选择第一个健康的存储节点
+     * FAILOVER 策略优先使用健康的当前节点，否则切换到首个健康节点，最后兜底默认节点。
      *
-     * @return 存储节点标识
+     * @return 故障转移策略下的节点标识
      */
     private String selectStorageServiceWithFailover() {
-        List<String> healthyKeys = ((StorageHealthCheckServiceImpl) healthCheckService).getHealthyStorageKeys();
-
+        List<String> healthyKeys = getHealthyStorageKeys();
         if (!healthyKeys.isEmpty()) {
-            // 返回第一个健康的节点
-            String key = healthyKeys.get(0);
-            currentStorageKey = key;
-            return key;
+            if (currentStorageKey != null && healthyKeys.contains(currentStorageKey)) {
+                return currentStorageKey;
+            }
+            return healthyKeys.get(0);
         }
-
-        // 如果没有健康的节点，使用当前节点（可能不健康）
-        return currentStorageKey;
+        return selectStorageServiceByDefault();
     }
 
     /**
-     * ROUND_ROBIN策略：轮询选择存储节点
+     * ROUND_ROBIN 策略在健康节点列表中轮询。
      *
-     * @return 存储节点标识
+     * @return 轮询选中的节点标识
      */
     private String selectStorageServiceByRoundRobin() {
-        if (!managerProperties.getEnableLoadBalancing()) {
+        if (!Boolean.TRUE.equals(managerProperties.getEnableLoadBalancing())) {
             return selectStorageServiceByDefault();
         }
 
-        List<String> healthyKeys = ((StorageHealthCheckServiceImpl) healthCheckService).getHealthyStorageKeys();
-
+        List<String> healthyKeys = getHealthyStorageKeys();
         if (healthyKeys.isEmpty()) {
-            return currentStorageKey;
+            return selectStorageServiceByDefault();
         }
 
-        // 轮询选择
-        int index = roundRobinCounter.getAndIncrement() % healthyKeys.size();
-        String key = healthyKeys.get(index);
-        currentStorageKey = key;
-        return key;
+        int index = Math.floorMod(roundRobinCounter.getAndIncrement(), healthyKeys.size());
+        return healthyKeys.get(index);
     }
 
     /**
-     * RANDOM策略：随机选择存储节点
+     * RANDOM 策略在健康节点列表中随机选择。
      *
-     * @return 存储节点标识
+     * @return 随机选中的节点标识
      */
     private String selectStorageServiceByRandom() {
-        if (!managerProperties.getEnableLoadBalancing()) {
+        if (!Boolean.TRUE.equals(managerProperties.getEnableLoadBalancing())) {
             return selectStorageServiceByDefault();
         }
 
-        List<String> healthyKeys = ((StorageHealthCheckServiceImpl) healthCheckService).getHealthyStorageKeys();
-
+        List<String> healthyKeys = getHealthyStorageKeys();
         if (healthyKeys.isEmpty()) {
-            return currentStorageKey;
+            return selectStorageServiceByDefault();
         }
 
-        // 随机选择
-        int index = random.nextInt(healthyKeys.size());
-        String key = healthyKeys.get(index);
-        currentStorageKey = key;
-        return key;
+        return healthyKeys.get(random.nextInt(healthyKeys.size()));
+    }
+
+    /**
+     * 构建稳定的节点顺序，优先沿用配置顺序，避免直接依赖 HashMap 的遍历结果。
+     *
+     * @return 节点顺序列表
+     */
+    private List<String> buildStorageKeys() {
+        Set<String> orderedKeys = new LinkedHashSet<>();
+        if (storageProperties.getStorage() != null) {
+            for (StorageProperties.Storage storage : storageProperties.getStorage()) {
+                if (storageServiceMap.containsKey(storage.getKey())) {
+                    orderedKeys.add(storage.getKey());
+                }
+            }
+        }
+        orderedKeys.addAll(storageServiceMap.keySet());
+        return new ArrayList<>(orderedKeys);
+    }
+
+    /**
+     * 解析配置中的默认节点，用于健康节点不可用时兜底。
+     *
+     * @return 默认节点标识
+     */
+    private String resolveDefaultStorageKey() {
+        String defaultStorageType = storageProperties.getStorageType();
+        if (storageProperties.getStorage() != null) {
+            for (StorageProperties.Storage storage : storageProperties.getStorage()) {
+                if (storageServiceMap.containsKey(storage.getKey())
+                        && storage.getType().equalsIgnoreCase(defaultStorageType)) {
+                    return storage.getKey();
+                }
+            }
+        }
+        return storageKeys.isEmpty() ? null : storageKeys.get(0);
+    }
+
+    /**
+     * 读取当前健康节点列表，并过滤掉未注册的节点标识。
+     *
+     * @return 健康节点列表
+     */
+    private List<String> getHealthyStorageKeys() {
+        return healthCheckService.getHealthyStorageKeys().stream()
+                .filter(storageServiceMap::containsKey)
+                .toList();
     }
 
     /**
@@ -415,5 +443,13 @@ public class StorageManagerImpl implements StorageManager {
     private interface StorageOperation<T> {
         T execute(StorageService service);
     }
-}
 
+    /**
+     * 单次调用选择出的节点与服务实例。
+     *
+     * @param key     节点标识
+     * @param service 存储服务
+     */
+    private record SelectedStorage(String key, StorageService service) {
+    }
+}

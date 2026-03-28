@@ -17,9 +17,10 @@ import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -154,6 +155,10 @@ public class MinioStorageServiceImpl implements StorageService {
      */
     @Override
     public int deleteBatch(List<String> objectNames) {
+        if (objectNames == null || objectNames.isEmpty()) {
+            return 0;
+        }
+
         try {
             List<DeleteObject> deleteObjects = new ArrayList<>();
             for (String objectName : objectNames) {
@@ -167,17 +172,19 @@ public class MinioStorageServiceImpl implements StorageService {
                             .build()
             );
 
-            int successCount = 0;
+            int errorCount = 0;
             for (Result<DeleteError> result : results) {
                 try {
                     DeleteError error = result.get();
                     log.error("删除文件失败: {}, 错误: {}", error.objectName(), error.message());
+                    errorCount++;
                 } catch (Exception e) {
                     log.error("删除文件结果解析失败", e);
+                    errorCount++;
                 }
-                successCount++;
             }
 
+            int successCount = Math.max(0, objectNames.size() - errorCount);
             log.info("批量删除文件完成，成功删除: {}/{}", successCount, objectNames.size());
             return successCount;
         } catch (Exception e) {
@@ -282,25 +289,16 @@ public class MinioStorageServiceImpl implements StorageService {
     }
 
     /**
-     * 读取并拼接多个 MinIO 分片对象，然后重新上传为目标文件。
+     * 将多个 MinIO 分片顺序写入临时文件，再流式上传目标文件，避免把整份文件加载进内存。
      */
     @Override
     public boolean mergeFiles(List<String> sourceObjectNames, String targetObjectName) {
+        Path tempFile = null;
         try {
-            // 合并文件：读取所有分片并合并
-            StringBuilder mergedContent = new StringBuilder();
-
-            for (String sourceObjectName : sourceObjectNames) {
-                try (InputStream inputStream = download(sourceObjectName)) {
-                    byte[] bytes = InputStreamUtils.toByteArray(inputStream);
-                    mergedContent.append(new String(bytes, StandardCharsets.ISO_8859_1));
-                }
-            }
-
-            // 上传合并后的文件
-            byte[] mergedBytes = mergedContent.toString().getBytes(StandardCharsets.ISO_8859_1);
-            try (ByteArrayInputStream byteArrayInputStream = InputStreamUtils.fromByteArray(mergedBytes)) {
-                upload(byteArrayInputStream, targetObjectName);
+            tempFile = Files.createTempFile("minio-merge-", ".tmp");
+            mergeSourceFilesToTempFile(sourceObjectNames, tempFile);
+            try (InputStream mergedInputStream = Files.newInputStream(tempFile)) {
+                upload(mergedInputStream, targetObjectName);
             }
 
             log.info("文件合并成功: {} -> {}", sourceObjectNames, targetObjectName);
@@ -308,6 +306,8 @@ public class MinioStorageServiceImpl implements StorageService {
         } catch (Exception e) {
             log.error("文件合并失败: {} -> {}", sourceObjectNames, targetObjectName, e);
             throw new StorageException(StorageResultCode.UPLOAD_MERGE_FILES);
+        } finally {
+            deleteTempMergeFile(tempFile);
         }
     }
 
@@ -323,8 +323,7 @@ public class MinioStorageServiceImpl implements StorageService {
     @Override
     public boolean deleteTempFilesByPrefix(String prefix) {
         try {
-            // 列出所有匹配前缀的对象
-            List<DeleteObject> deleteObjects = new ArrayList<>();
+            List<String> objectNames = new ArrayList<>();
             Iterable<Result<Item>> results = minioClient.listObjects(
                     ListObjectsArgs.builder()
                             .bucket(bucketName)
@@ -334,24 +333,57 @@ public class MinioStorageServiceImpl implements StorageService {
 
             for (Result<Item> result : results) {
                 Item item = result.get();
-                deleteObjects.add(new DeleteObject(item.objectName()));
+                objectNames.add(item.objectName());
             }
 
-            // 批量删除
-            if (!deleteObjects.isEmpty()) {
-                minioClient.removeObjects(
-                        RemoveObjectsArgs.builder()
-                                .bucket(bucketName)
-                                .objects(deleteObjects)
-                                .build()
-                );
-                log.info("删除临时文件完成，共 {} 个", deleteObjects.size());
+            if (objectNames.isEmpty()) {
+                return true;
             }
 
+            int successCount = deleteBatch(objectNames);
+            if (successCount != objectNames.size()) {
+                log.warn("删除临时文件存在未完成项，成功删除: {}/{}", successCount, objectNames.size());
+                return false;
+            }
+
+            log.info("删除临时文件完成，共 {} 个", objectNames.size());
             return true;
         } catch (Exception e) {
             log.error("删除临时文件失败: {}", prefix, e);
             throw new StorageException(StorageResultCode.DELETE_FAILED);
+        }
+    }
+
+    /**
+     * 将远端分片顺序写入本地临时文件，避免在 JVM 内存中拼接整个文件内容。
+     *
+     * @param sourceObjectNames 分片对象列表
+     * @param tempFile          临时合并文件
+     * @throws Exception 写入失败时抛出
+     */
+    private void mergeSourceFilesToTempFile(List<String> sourceObjectNames, Path tempFile) throws Exception {
+        try (OutputStream outputStream = Files.newOutputStream(tempFile)) {
+            for (String sourceObjectName : sourceObjectNames) {
+                try (InputStream inputStream = download(sourceObjectName)) {
+                    InputStreamUtils.copy(inputStream, outputStream);
+                }
+            }
+        }
+    }
+
+    /**
+     * 删除本地临时合并文件。
+     *
+     * @param tempFile 临时文件路径
+     */
+    private void deleteTempMergeFile(Path tempFile) {
+        if (tempFile == null) {
+            return;
+        }
+        try {
+            Files.deleteIfExists(tempFile);
+        } catch (Exception e) {
+            log.warn("删除临时合并文件失败: {}", tempFile, e);
         }
     }
 }
