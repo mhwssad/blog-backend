@@ -14,6 +14,7 @@ import com.cybzacg.blogbackend.module.auth.service.SysRoleService;
 import com.cybzacg.blogbackend.module.auth.service.SysUserAdminService;
 import com.cybzacg.blogbackend.module.auth.service.SysUserRoleService;
 import com.cybzacg.blogbackend.module.auth.service.SysUserService;
+import com.cybzacg.blogbackend.utils.IdCollectionUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,8 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
-import java.util.Objects;
-
 /**
  * 用户后台管理服务实现。
  *
@@ -150,10 +149,10 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
         if (roleIds == null || roleIds.isEmpty()) {
             return;
         }
-        ExceptionThrowerCore.throwBusinessIf(roleIds.stream().anyMatch(Objects::isNull), ResultErrorCode.ILLEGAL_ARGUMENT, "角色ID不能为空");
-        List<Long> distinctRoleIds = roleIds.stream()
-                .distinct()
-                .toList();
+        List<Long> distinctRoleIds = IdCollectionUtils.distinctNonNullIds(
+                roleIds,
+                ResultErrorCode.ILLEGAL_ARGUMENT,
+                "角色ID不能为空");
         long count = sysRoleService.lambdaQuery()
                 .in(SysRole::getId, distinctRoleIds)
                 .eq(SysRole::getIsDeleted, 0)

@@ -139,6 +139,9 @@ public class AuthServiceImpl implements AuthService {
         redisOperator.set(emailLoginCodeKey(email), code, AuthConstants.EMAIL_LOGIN_CODE_TTL);
     }
 
+    /**
+     * 使用邮箱验证码完成登录，并在认证成功后同步刷新最后登录信息。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AuthenticationToken emailLogin(AuthEmailLoginRequest request, String loginIp) {
@@ -153,6 +156,9 @@ public class AuthServiceImpl implements AuthService {
         return tokenManager.generateToken(authentication);
     }
 
+    /**
+     * 校验刷新令牌有效性并换发新的访问令牌。
+     */
     @Override
     public AuthenticationToken refresh(AuthRefreshRequest request) {
         ExceptionThrowerCore.throwBusinessIfNot(tokenManager.validateRefreshToken(request.getRefreshToken()),
@@ -160,6 +166,9 @@ public class AuthServiceImpl implements AuthService {
         return tokenManager.refreshToken(request.getRefreshToken());
     }
 
+    /**
+     * 注销当前访问令牌；若未传令牌则直接忽略，兼容幂等退出。
+     */
     @Override
     public void logout(String token) {
         if (!StringUtils.hasText(token)) {
@@ -168,6 +177,9 @@ public class AuthServiceImpl implements AuthService {
         tokenManager.invalidateToken(token);
     }
 
+    /**
+     * 汇总当前登录用户的基础信息、角色编码与权限标识，供前端初始化登录态使用。
+     */
     @Override
     public AuthUserInfo getCurrentUser() {
         Authentication authentication = SecurityUtils.requireAuthentication();
@@ -177,6 +189,9 @@ public class AuthServiceImpl implements AuthService {
         return authModelMapper.toAuthUserInfo(user, roleCodes, permissions);
     }
 
+    /**
+     * 获取当前用户菜单树，必要时回退到用户名解析用户 ID，兼容不同认证上下文。
+     */
     @Override
     public List<AuthMenuInfo> getCurrentUserMenus() {
         Authentication authentication = SecurityUtils.requireAuthentication();
@@ -236,21 +251,33 @@ public class AuthServiceImpl implements AuthService {
     }
 
 
+    /**
+     * 生成 6 位数字邮箱验证码，供登录验证码链路复用。
+     */
     private String generateEmailCode() {
         int number = secureRandom.nextInt(900000) + 100000;
         return String.valueOf(number);
     }
 
+    /**
+     * 解析当前发件人地址；未配置时按统一业务异常收口。
+     */
     private String resolveMailFrom() {
         String from = mailProperties.getUsername();
         ExceptionThrowerCore.throwBusinessIfBlank(from, ResultErrorCode.EMAIL_CAPTCHA_SEND_FAILED);
         return from;
     }
 
+    /**
+     * 统一拼装邮箱验证码正文，避免邮件文案在服务内散落。
+     */
     private String buildEmailCodeContent(String code) {
         return "您的登录验证码为：" + code + "，5分钟内有效。";
     }
 
+    /**
+     * 生成邮箱验证码缓存键，保证发送与校验阶段使用同一口径。
+     */
     private String emailLoginCodeKey(String email) {
         return RedisKeyUtils.build(AuthConstants.EMAIL_LOGIN_CODE_PREFIX, email);
     }

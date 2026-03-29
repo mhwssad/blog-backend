@@ -16,6 +16,7 @@ import com.cybzacg.blogbackend.module.auth.service.SysNoticeAdminService;
 import com.cybzacg.blogbackend.module.auth.service.SysNoticeService;
 import com.cybzacg.blogbackend.module.auth.service.SysUserNoticeService;
 import com.cybzacg.blogbackend.module.auth.service.SysUserService;
+import com.cybzacg.blogbackend.utils.IdCollectionUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
@@ -85,6 +86,9 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         return sysNoticeModelMapper.toNoticeAdminVO(notice, targetUserIds);
     }
 
+    /**
+     * 发布草稿通知，并在指定用户通知场景下同步生成收件关系。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void publishNotice(Long id) {
@@ -100,6 +104,9 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         deliverNotice(notice, now);
     }
 
+    /**
+     * 撤回已发布通知，阻止后续继续作为有效通知对外可见。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void revokeNotice(Long id) {
@@ -110,6 +117,9 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         sysNoticeService.updateById(notice);
     }
 
+    /**
+     * 逻辑删除通知元数据，保留既有投递记录供后续排查使用。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteNotice(Long id) {
@@ -155,9 +165,7 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         notice.setType(request.getType());
         notice.setLevel(StrUtils.normalize(request.getLevel()));
         notice.setTargetType(request.getTargetType());
-        notice.setTargetUserIds(targetUserIds.isEmpty()
-                ? null
-                : targetUserIds.stream().map(String::valueOf).reduce((left, right) -> left + "," + right).orElse(null));
+        notice.setTargetUserIds(IdCollectionUtils.toCommaSeparatedIds(targetUserIds));
     }
 
     /**
@@ -170,8 +178,10 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
             return List.of();
         }
         ExceptionThrowerCore.throwBusinessIf(request.getTargetUserIds() == null || request.getTargetUserIds().isEmpty(), ResultErrorCode.ILLEGAL_ARGUMENT, "指定用户通知至少选择一个目标用户");
-        ExceptionThrowerCore.throwBusinessIf(request.getTargetUserIds().stream().anyMatch(Objects::isNull), ResultErrorCode.ILLEGAL_ARGUMENT, "目标用户ID不能为空");
-        List<Long> distinctUserIds = request.getTargetUserIds().stream().distinct().toList();
+        List<Long> distinctUserIds = IdCollectionUtils.distinctNonNullIds(
+                request.getTargetUserIds(),
+                ResultErrorCode.ILLEGAL_ARGUMENT,
+                "目标用户ID不能为空");
         long count = sysUserService.lambdaQuery()
                 .in(SysUser::getId, distinctUserIds)
                 .eq(SysUser::getDeletedFlag, 0)
@@ -199,8 +209,6 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
     }
 
 }
-
-
 
 
 

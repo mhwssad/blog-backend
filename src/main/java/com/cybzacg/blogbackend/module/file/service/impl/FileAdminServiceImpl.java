@@ -9,9 +9,11 @@ import com.cybzacg.blogbackend.domain.FileChunk;
 import com.cybzacg.blogbackend.domain.FileInfo;
 import com.cybzacg.blogbackend.domain.FileUploadTask;
 import com.cybzacg.blogbackend.enums.file.FileCategoryEnum;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.enums.file.FileReferenceTypeEnum;
 import com.cybzacg.blogbackend.enums.file.FileResultCode;
 import com.cybzacg.blogbackend.enums.file.FileStatusEnum;
+import com.cybzacg.blogbackend.enums.storage.TaskStatusEnum;
 import com.cybzacg.blogbackend.module.file.model.admin.FileAdminPageQuery;
 import com.cybzacg.blogbackend.module.file.model.admin.FileAdminVO;
 import com.cybzacg.blogbackend.module.file.model.admin.FileDetailVO;
@@ -46,6 +48,7 @@ public class FileAdminServiceImpl implements FileAdminService {
      */
     @Override
     public PageResult<FileAdminVO> pageFiles(FileAdminPageQuery query) {
+        validatePageFilesQuery(query);
         long current = query.getCurrent() == null ? 1L : query.getCurrent();
         long size = query.getSize() == null ? 10L : query.getSize();
         LambdaQueryWrapper<FileInfo> wrapper = new LambdaQueryWrapper<FileInfo>()
@@ -102,6 +105,7 @@ public class FileAdminServiceImpl implements FileAdminService {
      */
     @Override
     public PageResult<FileTaskAdminVO> pageTasks(FileTaskPageQuery query) {
+        validateTaskPageQuery(query);
         long current = query.getCurrent() == null ? 1L : query.getCurrent();
         long size = query.getSize() == null ? 10L : query.getSize();
         LambdaQueryWrapper<FileUploadTask> wrapper = new LambdaQueryWrapper<FileUploadTask>()
@@ -119,8 +123,14 @@ public class FileAdminServiceImpl implements FileAdminService {
     @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, Integer status) {
         ExceptionThrowerCore.throwBusinessIfNot(FileStatusEnum.contains(status), FileResultCode.FILE_STATUS_INVALID);
+        ExceptionThrowerCore.throwBusinessIf(
+                FileStatusEnum.DELETED.getValue().equals(status),
+                FileResultCode.FILE_STATUS_INVALID,
+                "文件删除请使用删除接口，状态更新接口不支持设置为已删除"
+        );
         FileInfo file = fileInfoService.getById(id);
         ExceptionThrowerCore.throwBusinessIfNull(file, FileResultCode.FILE_NOT_FOUND);
+        ExceptionThrowerCore.throwBusinessIf(FileStatusEnum.DELETED.getValue().equals(file.getStatus()), FileResultCode.FILE_STATUS_INVALID);
         file.setStatus(status);
         fileInfoService.updateById(file);
     }
@@ -226,4 +236,25 @@ public class FileAdminServiceImpl implements FileAdminService {
         vo.setCompleteTime(task.getCompleteTime());
         return vo;
     }
+    private void validatePageFilesQuery(FileAdminPageQuery query) {
+        ExceptionThrowerCore.throwBusinessIf(
+                StringUtils.hasText(query.getCategory()) && !FileCategoryEnum.contains(query.getCategory()),
+                ResultErrorCode.ILLEGAL_ARGUMENT
+        );
+        ExceptionThrowerCore.throwBusinessIf(
+                StringUtils.hasText(query.getReferenceType()) && !FileReferenceTypeEnum.contains(query.getReferenceType()),
+                ResultErrorCode.ILLEGAL_ARGUMENT
+        );
+        ExceptionThrowerCore.throwBusinessIf(
+                query.getStatus() != null && !FileStatusEnum.contains(query.getStatus()),
+                FileResultCode.FILE_STATUS_INVALID
+        );
+    }
+    private void validateTaskPageQuery(FileTaskPageQuery query) {
+        ExceptionThrowerCore.throwBusinessIf(
+                query.getTaskStatus() != null && TaskStatusEnum.getByCode(query.getTaskStatus()) == null,
+                FileResultCode.UPLOAD_TASK_STATUS_INVALID
+        );
+    }
 }
+

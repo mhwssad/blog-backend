@@ -18,7 +18,6 @@ import com.cybzacg.blogbackend.module.content.model.user.CollectionVO;
 import com.cybzacg.blogbackend.module.content.service.SysCollectionFolderService;
 import com.cybzacg.blogbackend.module.content.service.SysCollectionService;
 import com.cybzacg.blogbackend.module.content.service.UserCollectionService;
-import com.cybzacg.blogbackend.utils.BeanConverterUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
@@ -150,14 +149,7 @@ public class UserCollectionServiceImpl implements UserCollectionService {
         if (exists) {
             return;
         }
-        SysCollection collection = BeanConverterUtils.convert(request, SysCollection::new);
-        collection.setUserId(userId);
-        collection.setFolderId(folder.getId());
-        collection.setTargetId(article.getId());
-        collection.setTargetType(ARTICLE_TYPE);
-        collection.setRemark(StrUtils.normalize(request.getRemark()));
-        collection.setTargetTitle(article.getTitle());
-        collection.setTargetUrl("/article/" + article.getId());
+        SysCollection collection = contentModelMapper.toCollection(request, userId, folder.getId(), article);
         sysCollectionService.save(collection);
         folder.setCollectionCount((folder.getCollectionCount() == null ? 0 : folder.getCollectionCount()) + 1);
         sysCollectionFolderService.updateById(folder);
@@ -195,15 +187,7 @@ public class UserCollectionServiceImpl implements UserCollectionService {
         if (folder != null) {
             return folder;
         }
-        SysCollectionFolder created = new SysCollectionFolder();
-        created.setUserId(userId);
-        created.setFolderName("默认收藏夹");
-        created.setFolderType(folderType);
-        created.setDescription("系统自动创建的默认收藏夹");
-        created.setIsPublic(0);
-        created.setIsDefault(1);
-        created.setSortOrder(0);
-        created.setCollectionCount(0);
+        SysCollectionFolder created = contentModelMapper.toDefaultCollectionFolder(userId, folderType);
         unsetDefaultFolder(userId, folderType, null);
         sysCollectionFolderService.save(created);
         return created;

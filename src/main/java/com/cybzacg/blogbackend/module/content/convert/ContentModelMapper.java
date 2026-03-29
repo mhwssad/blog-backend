@@ -21,6 +21,7 @@ import com.cybzacg.blogbackend.module.content.model.publics.PublicCommentVO;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicTagVO;
 import com.cybzacg.blogbackend.module.content.model.user.CollectionFolderSaveRequest;
 import com.cybzacg.blogbackend.module.content.model.user.CollectionFolderVO;
+import com.cybzacg.blogbackend.module.content.model.user.CollectionSaveRequest;
 import com.cybzacg.blogbackend.module.content.model.user.CommentSaveRequest;
 import com.cybzacg.blogbackend.module.content.model.user.UserFootprintVO;
 import com.cybzacg.blogbackend.utils.JsonUtils;
@@ -111,6 +112,30 @@ public interface ContentModelMapper {
 
     @InheritConfiguration(name = "toCollectionFolder")
     void updateCollectionFolder(CollectionFolderSaveRequest request, @MappingTarget SysCollectionFolder folder);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "userId", source = "userId")
+    @Mapping(target = "folderName", constant = "默认收藏夹")
+    @Mapping(target = "folderType", source = "folderType")
+    @Mapping(target = "description", constant = "系统自动创建的默认收藏夹")
+    @Mapping(target = "isPublic", constant = "0")
+    @Mapping(target = "isDefault", constant = "1")
+    @Mapping(target = "sortOrder", constant = "0")
+    @Mapping(target = "collectionCount", constant = "0")
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    SysCollectionFolder toDefaultCollectionFolder(Long userId, String folderType);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "userId", source = "userId")
+    @Mapping(target = "folderId", source = "folderId")
+    @Mapping(target = "targetId", source = "article.id")
+    @Mapping(target = "targetType", constant = "article")
+    @Mapping(target = "remark", expression = "java(StrUtils.normalize(request.getRemark()))")
+    @Mapping(target = "targetTitle", source = "article.title")
+    @Mapping(target = "targetUrl", expression = "java(article == null ? null : \"/article/\" + article.getId())")
+    @Mapping(target = "createdAt", ignore = true)
+    SysCollection toCollection(CollectionSaveRequest request, Long userId, Long folderId, BlogArticle article);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "targetId", source = "targetId")

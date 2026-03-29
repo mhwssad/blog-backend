@@ -15,6 +15,7 @@ import com.cybzacg.blogbackend.module.auth.service.SysRoleMenuService;
 import com.cybzacg.blogbackend.module.auth.service.SysMenuService;
 import com.cybzacg.blogbackend.module.auth.service.SysRoleService;
 import com.cybzacg.blogbackend.module.auth.service.SysUserRoleService;
+import com.cybzacg.blogbackend.utils.IdCollectionUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,8 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
-import java.util.Objects;
-
 /**
  * 角色后台管理服务实现。
  *
@@ -135,10 +134,10 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
         if (menuIds == null || menuIds.isEmpty()) {
             return;
         }
-        ExceptionThrowerCore.throwBusinessIf(menuIds.stream().anyMatch(Objects::isNull), ResultErrorCode.ILLEGAL_ARGUMENT, "菜单ID不能为空");
-        List<Long> distinctMenuIds = menuIds.stream()
-                .distinct()
-                .toList();
+        List<Long> distinctMenuIds = IdCollectionUtils.distinctNonNullIds(
+                menuIds,
+                ResultErrorCode.ILLEGAL_ARGUMENT,
+                "菜单ID不能为空");
         long count = sysMenuService.lambdaQuery()
                 .in(SysMenu::getId, distinctMenuIds)
                 .count();

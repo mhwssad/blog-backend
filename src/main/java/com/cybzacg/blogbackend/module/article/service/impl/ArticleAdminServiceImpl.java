@@ -6,6 +6,7 @@ import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.BlogArticleAccess;
 import com.cybzacg.blogbackend.domain.BlogArticleCategory;
+import com.cybzacg.blogbackend.domain.FileBusinessInfo;
 import com.cybzacg.blogbackend.domain.SysCategory;
 import com.cybzacg.blogbackend.domain.SysTag;
 import com.cybzacg.blogbackend.domain.SysTagRelation;
@@ -24,15 +25,20 @@ import com.cybzacg.blogbackend.module.article.service.BlogArticleCategoryService
 import com.cybzacg.blogbackend.module.article.service.BlogArticleService;
 import com.cybzacg.blogbackend.module.auth.service.SysUserService;
 import com.cybzacg.blogbackend.module.content.service.SysCategoryService;
+import com.cybzacg.blogbackend.module.content.service.SysCollectionFolderService;
 import com.cybzacg.blogbackend.module.content.service.SysCollectionService;
 import com.cybzacg.blogbackend.module.content.service.SysCommentService;
 import com.cybzacg.blogbackend.module.content.service.SysInteractionService;
 import com.cybzacg.blogbackend.module.content.service.SysTagRelationService;
 import com.cybzacg.blogbackend.module.content.service.SysTagService;
 import com.cybzacg.blogbackend.module.content.service.SysUserFootprintService;
+import com.cybzacg.blogbackend.module.file.service.FileBusinessInfoService;
+import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
+import com.cybzacg.blogbackend.utils.IdCollectionUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.util.CollectionUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -65,9 +71,12 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
     private final SysCategoryService sysCategoryService;
     private final SysTagService sysTagService;
     private final SysCommentService sysCommentService;
+    private final SysCollectionFolderService sysCollectionFolderService;
     private final SysCollectionService sysCollectionService;
     private final SysInteractionService sysInteractionService;
     private final SysUserFootprintService sysUserFootprintService;
+    private final FileBusinessInfoService fileBusinessInfoService;
+    private final FileLifecycleService fileLifecycleService;
     private final SysUserService sysUserService;
     private final ArticleModelMapper articleModelMapper;
     private final ArticleAccessControlService articleAccessControlService;
@@ -178,6 +187,15 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteArticle(Long id) {
         getArticleOrThrow(id);
+        List<com.cybzacg.blogbackend.domain.SysComment> comments = sysCommentService.lambdaQuery()
+                .eq(com.cybzacg.blogbackend.domain.SysComment::getTargetType, TARGET_TYPE_ARTICLE)
+                .eq(com.cybzacg.blogbackend.domain.SysComment::getTargetId, id)
+                .list();
+        List<com.cybzacg.blogbackend.domain.SysCollection> collections = sysCollectionService.lambdaQuery()
+                .eq(com.cybzacg.blogbackend.domain.SysCollection::getTargetType, TARGET_TYPE_ARTICLE)
+                .eq(com.cybzacg.blogbackend.domain.SysCollection::getTargetId, id)
+                .list();
+
         blogArticleAccessService.remove(new LambdaQueryWrapper<BlogArticleAccess>()
                 .eq(BlogArticleAccess::getArticleId, id));
         blogArticleCategoryService.remove(new LambdaQueryWrapper<BlogArticleCategory>()
@@ -185,12 +203,15 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         sysTagRelationService.remove(new LambdaQueryWrapper<SysTagRelation>()
                 .eq(SysTagRelation::getTargetType, TARGET_TYPE_ARTICLE)
                 .eq(SysTagRelation::getTargetId, id));
+        cleanupArticleAttachments(id);
+        cleanupCommentRelations(comments);
         sysCommentService.remove(new LambdaQueryWrapper<com.cybzacg.blogbackend.domain.SysComment>()
                 .eq(com.cybzacg.blogbackend.domain.SysComment::getTargetType, TARGET_TYPE_ARTICLE)
                 .eq(com.cybzacg.blogbackend.domain.SysComment::getTargetId, id));
         sysCollectionService.remove(new LambdaQueryWrapper<com.cybzacg.blogbackend.domain.SysCollection>()
                 .eq(com.cybzacg.blogbackend.domain.SysCollection::getTargetType, TARGET_TYPE_ARTICLE)
                 .eq(com.cybzacg.blogbackend.domain.SysCollection::getTargetId, id));
+        refreshCollectionFolderCounts(collections);
         sysInteractionService.remove(new LambdaQueryWrapper<com.cybzacg.blogbackend.domain.SysInteraction>()
                 .eq(com.cybzacg.blogbackend.domain.SysInteraction::getTargetType, TARGET_TYPE_ARTICLE)
                 .eq(com.cybzacg.blogbackend.domain.SysInteraction::getTargetId, id));
@@ -259,8 +280,16 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
                 ResultErrorCode.ILLEGAL_ARGUMENT,
                 "转载文章必须提供原文链接");
 
-        List<Long> categoryIds = uniqueIds(request.getCategoryIds(), "分类ID");
-        List<Long> tagIds = uniqueIds(request.getTagIds(), "标签ID");
+        List<Long> categoryIds = IdCollectionUtils.requireUniqueNonNullIds(
+                request.getCategoryIds(),
+                ResultErrorCode.ILLEGAL_ARGUMENT,
+                "分类ID不能为空",
+                "分类ID存在重复值");
+        List<Long> tagIds = IdCollectionUtils.requireUniqueNonNullIds(
+                request.getTagIds(),
+                ResultErrorCode.ILLEGAL_ARGUMENT,
+                "标签ID不能为空",
+                "标签ID存在重复值");
         request.setCategoryIds(categoryIds);
         request.setTagIds(tagIds);
         validateCategories(categoryIds);
@@ -450,6 +479,71 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         current.retainAll(incoming);
         return current;
     }
+    /**
+     * 删除文章评论对应的互动记录，避免评论被删后仍残留点赞等关联数据。
+     */
+    private void cleanupCommentRelations(List<com.cybzacg.blogbackend.domain.SysComment> comments) {
+        if (CollectionUtils.isEmpty(comments)) {
+            return;
+        }
+        List<Long> commentIds = comments.stream()
+                .map(com.cybzacg.blogbackend.domain.SysComment::getId)
+                .filter(Objects::nonNull)
+                .toList();
+        if (commentIds.isEmpty()) {
+            return;
+        }
+        sysInteractionService.remove(new LambdaQueryWrapper<com.cybzacg.blogbackend.domain.SysInteraction>()
+                .eq(com.cybzacg.blogbackend.domain.SysInteraction::getTargetType, "comment")
+                .in(com.cybzacg.blogbackend.domain.SysInteraction::getTargetId, commentIds));
+    }
+
+    /**
+     * 根据本次删除涉及的收藏记录重算收藏夹数量，防止文章移除后收藏夹计数失真。
+     */
+    private void refreshCollectionFolderCounts(List<com.cybzacg.blogbackend.domain.SysCollection> collections) {
+        if (CollectionUtils.isEmpty(collections)) {
+            return;
+        }
+        Set<Long> folderIds = collections.stream()
+                .map(com.cybzacg.blogbackend.domain.SysCollection::getFolderId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        for (Long folderId : folderIds) {
+            com.cybzacg.blogbackend.domain.SysCollectionFolder folder = sysCollectionFolderService.getById(folderId);
+            if (folder == null) {
+                continue;
+            }
+            long count = sysCollectionService.lambdaQuery()
+                    .eq(com.cybzacg.blogbackend.domain.SysCollection::getFolderId, folderId)
+                    .count();
+            folder.setCollectionCount((int) count);
+            sysCollectionFolderService.updateById(folder);
+        }
+    }
+
+    /**
+     * 清理文章附件引用，并在引用归零时同步回收物理文件状态。
+     */
+    private void cleanupArticleAttachments(Long articleId) {
+        List<FileBusinessInfo> references = fileBusinessInfoService.lambdaQuery()
+                .eq(FileBusinessInfo::getReferenceType, "article_attachment")
+                .eq(FileBusinessInfo::getReferenceId, articleId)
+                .list();
+        if (CollectionUtils.isEmpty(references)) {
+            return;
+        }
+        Set<Long> fileIds = references.stream()
+                .map(FileBusinessInfo::getFileId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        fileBusinessInfoService.removeByIds(references.stream().map(FileBusinessInfo::getId).toList());
+        for (Long fileId : fileIds) {
+            fileLifecycleService.syncFileAfterReferenceRemoval(fileId);
+        }
+    }
+
+
 
     /**
      * 读取文章，不存在时统一抛出业务异常。
@@ -484,22 +578,13 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         return StringUtils.hasText(user.getNickname()) ? user.getNickname() : user.getUsername();
     }
 
-    private List<Long> uniqueIds(List<Long> ids, String label) {
-        if (ids == null || ids.isEmpty()) {
-            return List.of();
-        }
-        LinkedHashSet<Long> uniqueIds = new LinkedHashSet<>();
-        for (Long id : ids) {
-            ExceptionThrowerCore.throwBusinessIfNull(id, ResultErrorCode.ILLEGAL_ARGUMENT, label + "不能为空");
-            ExceptionThrowerCore.throwBusinessIf(!uniqueIds.add(id), ResultErrorCode.ILLEGAL_ARGUMENT, label + "存在重复值");
-        }
-        return new ArrayList<>(uniqueIds);
-    }
-
     private Integer defaultIfNull(Integer value, Integer defaultValue) {
         return value == null ? defaultValue : value;
     }
 
 }
+
+
+
 
 

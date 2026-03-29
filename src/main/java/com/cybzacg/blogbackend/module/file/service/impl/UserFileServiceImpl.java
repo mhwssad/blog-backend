@@ -28,6 +28,7 @@ import com.cybzacg.blogbackend.module.file.model.user.UserFileVO;
 import com.cybzacg.blogbackend.module.file.service.FileBusinessInfoService;
 import com.cybzacg.blogbackend.module.file.service.FileChunkService;
 import com.cybzacg.blogbackend.module.file.service.FileInfoService;
+import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
 import com.cybzacg.blogbackend.module.file.service.FileUploadTaskService;
 import com.cybzacg.blogbackend.module.file.service.UserFileService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
@@ -66,6 +67,7 @@ public class UserFileServiceImpl implements UserFileService {
     private final FileUploadTaskService fileUploadTaskService;
     private final FileChunkService fileChunkService;
     private final FileBusinessInfoService fileBusinessInfoService;
+    private final FileLifecycleService fileLifecycleService;
     private final StorageManager storageManager;
     private final FileUploadProperties fileUploadProperties;
     /**
@@ -141,9 +143,10 @@ public class UserFileServiceImpl implements UserFileService {
         // 已完成任务直接回放结果，避免重复创建业务引用。
         if (TaskStatusEnum.COMPLETED.getValue().equals(task.getTaskStatus()) && task.getFileId() != null) {
             FileInfo fileInfo = fileInfoService.getById(task.getFileId());
-            Long businessId = resolveBusinessId(task.getFileId(), task.getReferenceType(), task.getReferenceId());
+            Long businessId = resolveBusinessId(task.getFileId(), task.getUploadUserId(), task.getReferenceType(), task.getReferenceId());
             return toResultVO(task, fileInfo, businessId);
         }
+        assertTaskActionAllowed(task, TaskStatusEnum.INIT, TaskStatusEnum.UPLOADING, TaskStatusEnum.FAILED);
         // 秒传检测只依赖文件指纹与大小，不要求客户端重新上传文件体。
         FileInfo existing = tryFindExistingFile(normalizeMd5(task.getFileMd5()), task.getFileSize());
         if (existing == null) {
@@ -165,6 +168,7 @@ public class UserFileServiceImpl implements UserFileService {
         ExceptionThrowerCore.throwBusinessIf(file == null || file.isEmpty(), FileResultCode.UPLOAD_FILE_EMPTY);
         FileUploadTask task = getTaskOrThrow(uploadId);
         ExceptionThrowerCore.throwBusinessIf(Integer.valueOf(1).equals(task.getIsChunked()), FileResultCode.CHUNK_TASK_REQUIRED);
+        assertTaskActionAllowed(task, TaskStatusEnum.INIT, TaskStatusEnum.UPLOADING, TaskStatusEnum.FAILED);
         updateTaskStatusIfNeeded(task, TaskStatusEnum.UPLOADING);
         // 单文件上传在落存储前先补齐并校验 MD5，确保秒传判断与最终落库一致。
         String md5 = resolveAndValidateMd5(task, file);
@@ -181,8 +185,13 @@ public class UserFileServiceImpl implements UserFileService {
             markTaskFailed(task, FileResultCode.FILE_UPLOAD_FAILED, e.getMessage());
             throw new BusinessException(FileResultCode.FILE_UPLOAD_FAILED);
         }
-        FileInfo fileInfo = createFileInfo(task, objectName, url, md5);
-        return finalizeTaskWithReference(task, fileInfo, sourceIp, false);
+        try {
+            PersistedFileInfo persisted = createOrReuseFileInfo(task, objectName, url, md5);
+            return finalizeTaskWithReference(task, persisted.fileInfo(), sourceIp, persisted.reusedExisting());
+        } catch (RuntimeException e) {
+            cleanupUploadedObject(task.getStorageKey(), objectName);
+            throw e;
+        }
     }
     /**
      * 上传单个分片并更新分片进度，为断点续传和最终合并提供元数据基础。
@@ -195,6 +204,7 @@ public class UserFileServiceImpl implements UserFileService {
         FileUploadTask task = getTaskOrThrow(uploadId);
         ExceptionThrowerCore.throwBusinessIfNot(Integer.valueOf(1).equals(task.getIsChunked()), FileResultCode.NON_CHUNK_TASK);
         ExceptionThrowerCore.throwBusinessIf(task.getTotalChunks() == null || chunkNumber > task.getTotalChunks(), FileResultCode.CHUNK_NUMBER_EXCEEDED);
+        assertTaskActionAllowed(task, TaskStatusEnum.INIT, TaskStatusEnum.UPLOADING, TaskStatusEnum.FAILED);
         updateTaskStatusIfNeeded(task, TaskStatusEnum.UPLOADING);
         if (Boolean.TRUE.equals(fileUploadProperties.getEnableMd5Check()) && StringUtils.hasText(chunkMd5)) {
             String computed = md5Hex(file);
@@ -209,18 +219,23 @@ public class UserFileServiceImpl implements UserFileService {
             markTaskFailed(task, FileResultCode.CHUNK_UPLOAD_FAILED, e.getMessage());
             throw new BusinessException(FileResultCode.CHUNK_UPLOAD_FAILED);
         }
-        // 分片记录既用于断点续传，也用于最终合并前的完整性校验。
-        upsertChunkRecord(task.getId(), chunkNumber, file.getSize(), normalizeMd5(chunkMd5));
-        int uploadedChunks = countUploadedChunks(task.getId());
-        task.setUploadedChunks(uploadedChunks);
-        fileUploadTaskService.updateById(task);
-        ChunkUploadVO vo = new ChunkUploadVO();
-        vo.setUploadId(task.getUploadId());
-        vo.setChunkNumber(chunkNumber);
-        vo.setUploadedChunks(uploadedChunks);
-        vo.setTotalChunks(task.getTotalChunks());
-        vo.setTaskStatus(task.getTaskStatus());
-        return vo;
+        try {
+            // 分片记录既用于断点续传，也用于最终合并前的完整性校验。
+            upsertChunkRecord(task.getId(), chunkNumber, file.getSize(), normalizeMd5(chunkMd5));
+            int uploadedChunks = countUploadedChunks(task.getId());
+            task.setUploadedChunks(uploadedChunks);
+            fileUploadTaskService.updateById(task);
+            ChunkUploadVO vo = new ChunkUploadVO();
+            vo.setUploadId(task.getUploadId());
+            vo.setChunkNumber(chunkNumber);
+            vo.setUploadedChunks(uploadedChunks);
+            vo.setTotalChunks(task.getTotalChunks());
+            vo.setTaskStatus(task.getTaskStatus());
+            return vo;
+        } catch (RuntimeException e) {
+            cleanupUploadedObject(task.getStorageKey(), buildTempChunkObjectName(task.getUploadId(), chunkNumber));
+            throw e;
+        }
     }
     /**
      * 校验分片完整性并执行合并，必要时复用已存在的同指纹物理文件。
@@ -230,6 +245,7 @@ public class UserFileServiceImpl implements UserFileService {
     public FileUploadResultVO completeUpload(String uploadId, String sourceIp) {
         FileUploadTask task = getTaskOrThrow(uploadId);
         ExceptionThrowerCore.throwBusinessIfNot(Integer.valueOf(1).equals(task.getIsChunked()), FileResultCode.NON_CHUNK_TASK);
+        assertTaskActionAllowed(task, TaskStatusEnum.UPLOADING, TaskStatusEnum.MERGING, TaskStatusEnum.FAILED);
         int uploaded = countUploadedChunks(task.getId());
         ExceptionThrowerCore.throwBusinessIf(task.getTotalChunks() == null || uploaded < task.getTotalChunks(), FileResultCode.CHUNK_INCOMPLETE);
         updateTaskStatusIfNeeded(task, TaskStatusEnum.MERGING);
@@ -243,16 +259,19 @@ public class UserFileServiceImpl implements UserFileService {
         String targetObjectName = buildFinalObjectName(task.getCategory(), task.getOriginalName());
         List<String> sourceObjectNames = buildChunkObjectNames(task.getUploadId(), task.getTotalChunks());
         try {
-            // 先合并再清理临时文件，保证失败时仍可保留现场用于重试或排查。
             storageService.mergeFiles(sourceObjectNames, targetObjectName);
-            storageService.deleteTempFiles(task.getUploadId());
         } catch (Exception e) {
             markTaskFailed(task, FileResultCode.CHUNK_MERGE_FAILED, e.getMessage());
             throw new BusinessException(FileResultCode.CHUNK_MERGE_FAILED);
         }
-        String url = storageService.getUrl(targetObjectName);
-        FileInfo fileInfo = createFileInfo(task, targetObjectName, url, md5);
-        return finalizeTaskWithReference(task, fileInfo, sourceIp, false);
+        try {
+            String url = storageService.getUrl(targetObjectName);
+            PersistedFileInfo persisted = createOrReuseFileInfo(task, targetObjectName, url, md5);
+            return finalizeTaskWithReference(task, persisted.fileInfo(), sourceIp, persisted.reusedExisting());
+        } catch (RuntimeException e) {
+            cleanupUploadedObject(task.getStorageKey(), targetObjectName);
+            throw e;
+        }
     }
     /**
      * 分页查询当前用户的文件引用，并按关键字回填物理文件信息。
@@ -260,13 +279,15 @@ public class UserFileServiceImpl implements UserFileService {
     @Override
     public PageResult<UserFileVO> pageMyFiles(UserFilePageQuery query) {
         Long userId = SecurityUtils.requireUserId();
+        validateUserFileQuery(query);
         long current = query.getCurrent() == null ? 1L : query.getCurrent();
         long size = query.getSize() == null ? 10L : query.getSize();
         Set<Long> fileIds = null;
-        if (StringUtils.hasText(query.getKeyword())) {
+        if (StringUtils.hasText(query.getKeyword()) || query.getStatus() != null) {
             List<FileInfo> hits = fileInfoService.lambdaQuery()
                     .select(FileInfo::getId)
-                    .and(w -> w.like(FileInfo::getOriginalName, query.getKeyword())
+                    .eq(query.getStatus() != null, FileInfo::getStatus, query.getStatus())
+                    .and(StringUtils.hasText(query.getKeyword()), w -> w.like(FileInfo::getOriginalName, query.getKeyword())
                             .or()
                             .like(FileInfo::getFileName, query.getKeyword()))
                     .list();
@@ -296,6 +317,7 @@ public class UserFileServiceImpl implements UserFileService {
     @Override
     public PageResult<UserFileTaskVO> pageMyUploadTasks(UserFileTaskPageQuery query) {
         Long userId = SecurityUtils.requireUserId();
+        validateTaskPageQuery(query.getTaskStatus());
         long current = query.getCurrent() == null ? 1L : query.getCurrent();
         long size = query.getSize() == null ? 10L : query.getSize();
         LambdaQueryWrapper<FileUploadTask> wrapper = new LambdaQueryWrapper<FileUploadTask>()
@@ -320,22 +342,7 @@ public class UserFileServiceImpl implements UserFileService {
         ExceptionThrowerCore.throwBusinessIf(ref == null || !userId.equals(ref.getUserId()), FileResultCode.FILE_REFERENCE_NOT_FOUND);
         Long fileId = ref.getFileId();
         fileBusinessInfoService.removeById(businessId);
-        // 删除的是用户引用而不是直接硬删文件，只有最后一个引用移除后才回收物理文件。
-        long remaining = fileBusinessInfoService.lambdaQuery().eq(FileBusinessInfo::getFileId, fileId).count();
-        FileInfo fileInfo = fileInfoService.getById(fileId);
-        if (fileInfo == null) {
-            return;
-        }
-        fileInfo.setReferenceCount((int) remaining);
-        if (remaining <= 0) {
-            try {
-                StorageService storageService = requireStorageService(fileInfo.getStorageKey());
-                storageService.delete(fileInfo.getFilePath());
-            } catch (Exception ignored) {
-            }
-            fileInfo.setStatus(FileStatusEnum.DELETED.getValue());
-        }
-        fileInfoService.updateById(fileInfo);
+        fileLifecycleService.syncFileAfterReferenceRemoval(fileId);
     }
     /**
      * 校验上传初始化请求的尺寸、扩展名与指纹约束。
@@ -349,6 +356,44 @@ public class UserFileServiceImpl implements UserFileService {
         String ext = FileUtils.getExtension(request.getOriginalName());
         ExceptionThrowerCore.throwBusinessIfNot(isAllowedExtension(ext), FileResultCode.FILE_EXTENSION_NOT_ALLOWED);
         ExceptionThrowerCore.throwBusinessIf(Boolean.TRUE.equals(fileUploadProperties.getEnableMd5Check()) && !StringUtils.hasText(request.getFileMd5()), FileResultCode.FILE_MD5_REQUIRED);
+        validateVisibility(request.getIsPublic());
+        validateChunkRequest(request);
+        ExceptionThrowerCore.throwBusinessIf(
+                StringUtils.hasText(request.getReferenceType()) && !FileReferenceTypeEnum.contains(request.getReferenceType()),
+                ResultErrorCode.ILLEGAL_ARGUMENT,
+                "文件引用类型非法"
+        );
+        ExceptionThrowerCore.throwBusinessIf(
+                StringUtils.hasText(request.getCategory()) && !FileCategoryEnum.contains(request.getCategory()),
+                ResultErrorCode.ILLEGAL_ARGUMENT,
+                "文件分类非法"
+        );
+    }
+    /**
+     * 校验用户文件列表筛选参数，避免非法枚举值被静默归一化成默认值。
+     */
+    private void validateUserFileQuery(UserFilePageQuery query) {
+        ExceptionThrowerCore.throwBusinessIf(
+                StringUtils.hasText(query.getCategory()) && !FileCategoryEnum.contains(query.getCategory()),
+                ResultErrorCode.ILLEGAL_ARGUMENT
+        );
+        ExceptionThrowerCore.throwBusinessIf(
+                StringUtils.hasText(query.getReferenceType()) && !FileReferenceTypeEnum.contains(query.getReferenceType()),
+                ResultErrorCode.ILLEGAL_ARGUMENT
+        );
+        ExceptionThrowerCore.throwBusinessIf(
+                query.getStatus() != null && !FileStatusEnum.contains(query.getStatus()),
+                FileResultCode.FILE_STATUS_INVALID
+        );
+    }
+    /**
+     * 校验任务列表状态筛选值，避免无效状态被当成空结果吞掉。
+     */
+    private void validateTaskPageQuery(Integer taskStatus) {
+        ExceptionThrowerCore.throwBusinessIf(
+                taskStatus != null && TaskStatusEnum.getByCode(taskStatus) == null,
+                FileResultCode.UPLOAD_TASK_STATUS_INVALID
+        );
     }
     /**
      * 根据配置白名单判断扩展名是否允许上传；未配置白名单时默认放行。
@@ -392,10 +437,14 @@ public class UserFileServiceImpl implements UserFileService {
     private FileUploadTask getTaskOrThrow(String uploadId) {
         Long userId = SecurityUtils.requireUserId();
         ExceptionThrowerCore.throwBusinessIfBlank(uploadId, FileResultCode.UPLOAD_ID_REQUIRED);
-        return ExceptionThrowerCore.require(() -> fileUploadTaskService.lambdaQuery()
+        FileUploadTask task = ExceptionThrowerCore.require(() -> fileUploadTaskService.lambdaQuery()
                 .eq(FileUploadTask::getUploadId, uploadId)
                 .eq(FileUploadTask::getUploadUserId, userId)
                 .one(), FileResultCode.UPLOAD_TASK_NOT_FOUND);
+        if (fileLifecycleService.expireTaskIfNeeded(task)) {
+            throw new BusinessException(FileResultCode.UPLOAD_TASK_EXPIRED);
+        }
+        return task;
     }
     private StorageService requireStorageService(String storageKey) {
         StorageService storageService = storageManager.getStorageService(storageKey);
@@ -421,6 +470,25 @@ public class UserFileServiceImpl implements UserFileService {
         }
         return file;
     }
+    private FileInfo findFileByMd5(String md5) {
+        if (!StringUtils.hasText(md5)) {
+            return null;
+        }
+        return fileInfoService.lambdaQuery().eq(FileInfo::getMd5, md5).one();
+    }
+    /**
+     * 限制上传任务只在允许的生命周期节点执行当前动作，避免终态任务被重复消费。
+     */
+    private void assertTaskActionAllowed(FileUploadTask task, TaskStatusEnum... allowedStatuses) {
+        TaskStatusEnum current = TaskStatusEnum.getByCode(task.getTaskStatus());
+        ExceptionThrowerCore.throwBusinessIf(current == null, FileResultCode.UPLOAD_TASK_STATUS_INVALID);
+        for (TaskStatusEnum allowedStatus : allowedStatuses) {
+            if (current == allowedStatus) {
+                return;
+            }
+        }
+        ExceptionThrowerCore.throwBusinessEx(FileResultCode.UPLOAD_TASK_STATUS_INVALID);
+    }
     /**
      * 仅在状态机允许时推进任务状态，避免任务在异常重试时发生非法回退。
      */
@@ -441,12 +509,8 @@ public class UserFileServiceImpl implements UserFileService {
      */
     private FileUploadResultVO finalizeTaskWithReference(FileUploadTask task, FileInfo fileInfo, String sourceIp, boolean quick) {
         FileBusinessInfo ref = createOrGetBusinessReference(task, fileInfo.getId(), sourceIp);
-        long count = fileBusinessInfoService.lambdaQuery().eq(FileBusinessInfo::getFileId, fileInfo.getId()).count();
-        fileInfo.setReferenceCount((int) count);
-        if (Integer.valueOf(1).equals(task.getIsPublic())) {
-            fileInfo.setIsPublic(1);
-        }
-        fileInfoService.updateById(fileInfo);
+        fileLifecycleService.refreshReferenceMetadata(fileInfo.getId(), Integer.valueOf(1).equals(task.getIsPublic()));
+        fileInfo = fileInfoService.getById(fileInfo.getId());
         task.setIsQuickUpload(quick ? 1 : defaultInt(task.getIsQuickUpload(), 0));
         if (quick) {
             task.setReferencedFileId(fileInfo.getId());
@@ -456,12 +520,13 @@ public class UserFileServiceImpl implements UserFileService {
         task.setTaskStatus(TaskStatusEnum.COMPLETED.getValue());
         task.setCompleteTime(new Date());
         fileUploadTaskService.updateById(task);
+        cleanupChunkArtifacts(task);
         return toResultVO(task, fileInfo, ref == null ? null : ref.getId());
     }
     /**
      * 根据上传任务生成物理文件记录，统一补齐分类、公开性和来源信息。
      */
-    private FileInfo createFileInfo(FileUploadTask task, String objectName, String url, String md5) {
+    private PersistedFileInfo createOrReuseFileInfo(FileUploadTask task, String objectName, String url, String md5) {
         FileInfo fileInfo = new FileInfo();
         fileInfo.setUploadTaskId(task.getId());
         fileInfo.setFileName(extractFileName(objectName));
@@ -481,8 +546,60 @@ public class UserFileServiceImpl implements UserFileService {
         fileInfo.setUploadUserId(task.getUploadUserId());
         fileInfo.setRemark(task.getRemark());
         fileInfo.setStatus(FileStatusEnum.NORMAL.getValue());
-        fileInfoService.save(fileInfo);
-        return fileInfo;
+        try {
+            fileInfoService.save(fileInfo);
+            return new PersistedFileInfo(fileInfo, false);
+        } catch (DuplicateKeyException e) {
+            return handleFileInfoConflict(task, fileInfo, objectName, md5, e);
+        }
+    }
+    /**
+     * 处理 MD5 唯一键冲突，优先复用已存在记录，并尽力清理当前请求产生的多余对象。
+     */
+    private PersistedFileInfo handleFileInfoConflict(FileUploadTask task, FileInfo candidate, String objectName, String md5, DuplicateKeyException ex) {
+        FileInfo existing = findFileByMd5(md5);
+        if (existing == null || (task.getFileSize() != null && existing.getFileSize() != null && !task.getFileSize().equals(existing.getFileSize()))) {
+            cleanupUploadedObject(task.getStorageKey(), objectName);
+            throw ex;
+        }
+        if (FileStatusEnum.DELETED.getValue().equals(existing.getStatus())) {
+            existing.setUploadTaskId(task.getId());
+            existing.setFileName(candidate.getFileName());
+            existing.setOriginalName(candidate.getOriginalName());
+            existing.setFilePath(candidate.getFilePath());
+            existing.setStorageKey(candidate.getStorageKey());
+            existing.setFileUrl(candidate.getFileUrl());
+            existing.setFileSize(candidate.getFileSize());
+            existing.setFileType(candidate.getFileType());
+            existing.setMimeType(candidate.getMimeType());
+            existing.setFileExtension(candidate.getFileExtension());
+            existing.setReferenceCount(0);
+            existing.setIsPublic(candidate.getIsPublic());
+            existing.setCategory(candidate.getCategory());
+            existing.setDownloadCount(0);
+            existing.setUploadUserId(candidate.getUploadUserId());
+            existing.setRemark(candidate.getRemark());
+            existing.setStatus(FileStatusEnum.NORMAL.getValue());
+            fileInfoService.updateById(existing);
+            return new PersistedFileInfo(existing, false);
+        }
+        cleanupUploadedObject(task.getStorageKey(), objectName);
+        return new PersistedFileInfo(existing, true);
+    }
+    /**
+     * 去重冲突时回收本次请求多上传的对象，避免外部存储残留孤儿文件。
+     */
+    private void cleanupUploadedObject(String storageKey, String objectName) {
+        if (!StringUtils.hasText(storageKey) || !StringUtils.hasText(objectName)) {
+            return;
+        }
+        try {
+            StorageService storageService = storageManager.getStorageService(storageKey);
+            if (storageService != null) {
+                storageService.delete(objectName);
+            }
+        } catch (Exception ignored) {
+        }
     }
     /**
      * 按业务维度创建引用记录，遇到并发重复提交时复用已存在的引用。
@@ -490,8 +607,10 @@ public class UserFileServiceImpl implements UserFileService {
     private FileBusinessInfo createOrGetBusinessReference(FileUploadTask task, Long fileId, String sourceIp) {
         String referenceType = FileReferenceTypeEnum.normalize(task.getReferenceType());
         long referenceId = task.getReferenceId() == null ? 0L : task.getReferenceId();
+        Long userId = task.getUploadUserId();
         FileBusinessInfo existing = fileBusinessInfoService.lambdaQuery()
                 .eq(FileBusinessInfo::getFileId, fileId)
+                .eq(FileBusinessInfo::getUserId, userId)
                 .eq(FileBusinessInfo::getReferenceType, referenceType)
                 .eq(FileBusinessInfo::getReferenceId, referenceId)
                 .one();
@@ -512,6 +631,7 @@ public class UserFileServiceImpl implements UserFileService {
         } catch (DuplicateKeyException e) {
             return fileBusinessInfoService.lambdaQuery()
                     .eq(FileBusinessInfo::getFileId, fileId)
+                    .eq(FileBusinessInfo::getUserId, userId)
                     .eq(FileBusinessInfo::getReferenceType, referenceType)
                     .eq(FileBusinessInfo::getReferenceId, referenceId)
                     .one();
@@ -521,7 +641,7 @@ public class UserFileServiceImpl implements UserFileService {
     /**
      * 按任务绑定的业务维度回查引用记录 ID，用于已完成任务结果回放。
      */
-    private Long resolveBusinessId(Long fileId, String referenceType, Long referenceId) {
+    private Long resolveBusinessId(Long fileId, Long userId, String referenceType, Long referenceId) {
         if (fileId == null) {
             return null;
         }
@@ -529,6 +649,7 @@ public class UserFileServiceImpl implements UserFileService {
         long rid = referenceId == null ? 0L : referenceId;
         FileBusinessInfo ref = fileBusinessInfoService.lambdaQuery()
                 .eq(FileBusinessInfo::getFileId, fileId)
+                .eq(userId != null, FileBusinessInfo::getUserId, userId)
                 .eq(FileBusinessInfo::getReferenceType, type)
                 .eq(FileBusinessInfo::getReferenceId, rid)
                 .orderByDesc(FileBusinessInfo::getId)
@@ -541,6 +662,26 @@ public class UserFileServiceImpl implements UserFileService {
         task.setErrorCode(resultCode == null ? null : String.valueOf(resultCode.getCode()));
         task.setErrorMessage(truncate(StringUtils.hasText(message) ? message : (resultCode == null ? null : resultCode.getMessage()), 240));
         fileUploadTaskService.updateById(task);
+    }
+    /**
+     * 分片任务在完成后清理分片记录与临时文件，避免秒传复用和合并成功后残留临时资源。
+     * 外部存储清理仅做尽力而为，不阻塞已完成的元数据收口。
+     */
+    private void cleanupChunkArtifacts(FileUploadTask task) {
+        if (!Integer.valueOf(1).equals(task.getIsChunked()) || task.getId() == null) {
+            return;
+        }
+        fileChunkService.remove(new LambdaQueryWrapper<FileChunk>().eq(FileChunk::getUploadTaskId, task.getId()));
+        if (!StringUtils.hasText(task.getUploadId())) {
+            return;
+        }
+        try {
+            StorageService storageService = storageManager.getStorageService(task.getStorageKey());
+            if (storageService != null) {
+                storageService.deleteTempFiles(task.getUploadId());
+            }
+        } catch (Exception ignored) {
+        }
     }
     /**
      * 对单个分片执行插入或覆盖，保证重复上传同一分片时记录保持最新。
@@ -593,6 +734,37 @@ public class UserFileServiceImpl implements UserFileService {
         }
         return names;
     }
+    private void validateVisibility(Integer isPublic) {
+        ExceptionThrowerCore.throwBusinessIf(
+                isPublic != null && !Integer.valueOf(0).equals(isPublic) && !Integer.valueOf(1).equals(isPublic),
+                ResultErrorCode.ILLEGAL_ARGUMENT,
+                "文件可见性非法"
+        );
+    }
+
+    private void validateChunkRequest(FileUploadInitRequest request) {
+        boolean hasExplicitChunkConfig = request.getTotalChunks() != null || request.getChunkSize() != null;
+        ExceptionThrowerCore.throwBusinessIf(
+                request.getTotalChunks() != null && request.getTotalChunks() <= 1,
+                ResultErrorCode.ILLEGAL_ARGUMENT,
+                "分片总数必须大于1"
+        );
+        ExceptionThrowerCore.throwBusinessIf(
+                request.getChunkSize() != null && request.getChunkSize() <= 0,
+                ResultErrorCode.ILLEGAL_ARGUMENT,
+                "分片大小必须大于0"
+        );
+        ExceptionThrowerCore.throwBusinessIf(
+                hasExplicitChunkConfig && (request.getTotalChunks() == null || request.getChunkSize() == null),
+                ResultErrorCode.ILLEGAL_ARGUMENT,
+                "分片参数不完整"
+        );
+    }
+
+    private String buildTempChunkObjectName(String uploadId, Integer chunkNumber) {
+        return fileUploadProperties.getTempDirPrefix() + "/" + uploadId + "/chunk-" + chunkNumber + ".part";
+    }
+
     private Map<Long, FileInfo> loadFileInfoMap(Set<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return Map.of();
@@ -769,4 +941,29 @@ public class UserFileServiceImpl implements UserFileService {
     private Integer defaultInt(Integer value, Integer defaultValue) {
         return value == null ? defaultValue : value;
     }
+    private record PersistedFileInfo(FileInfo fileInfo, boolean reusedExisting) {
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
