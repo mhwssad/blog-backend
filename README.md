@@ -2,6 +2,8 @@
 
 `blog-backend` 是一个基于 Spring Boot 4、Spring Security、MyBatis-Plus、MySQL、Redis 的博客后端项目，当前仓库重点已经落地认证鉴权、RBAC 后台管理、通知中心、内容域接口以及文件上传管理能力。
 
+文档入口优先看 [`docs/README.md`](docs/README.md)。
+
 ## 项目情况
 
 - 技术栈：Java 17、Spring Boot 4.0.3、Spring Security、MyBatis-Plus、Druid、Redis、Knife4j/OpenAPI、MapStruct、Lombok。
@@ -11,8 +13,9 @@
   - RBAC 管理：用户、角色、菜单、系统配置、通知、日志后台接口。
   - 内容域：文章、分类、标签、评论、收藏、互动、足迹接口。
   - 文件域：用户上传、秒传/分片上传、文件后台管理。
-- 当前在建部分：
-  - 继续补齐测试、文档和边界场景验证。
+- 当前阶段重点：
+  - 继续整理公共能力、测试支撑、文档入口和历史结构问题。
+  - 聊天 / WebSocket 当前仅保留数据库与单机握手骨架，待主线能力继续稳定后再进入正式业务实现。
 
 ## 架构概览
 
@@ -30,7 +33,9 @@ src/main/java/com/cybzacg/blogbackend
 │  ├─ auth          认证、RBAC、通知中心
 │  ├─ article       文章内容域
 │  ├─ content       分类/标签/评论/收藏/互动/足迹
-│  └─ file          文件上传与后台管理
+│  ├─ file          文件上传与后台管理
+│  ├─ chat          聊天会话、消息与实时推送
+│  └─ follow        关注关系预留骨架
 └─ utils            通用工具类
 ```
 
@@ -50,6 +55,13 @@ src/main/java/com/cybzacg/blogbackend
 - `src/main/resources/mysql/1.sys.sql`：系统基础表结构。
 - `src/main/resources/mysql/02_article.sql`：文章内容域表结构。
 - `src/main/resources/mysql/03_permission_init.sql`：权限与菜单初始化脚本。
+- `src/main/resources/mysql/04_file.sql`：文件域表结构。
+- `src/main/resources/mysql/05_chat.sql`：聊天域表结构（单聊 / 群聊 / 全站群、消息、接收状态、已读游标）。
+- `src/main/resources/mysql/06_follow.sql`：粉丝关注关系表结构（关注、取关、粉丝列表、关注列表、互关判断）。
+- `src/main/resources/mysql/07_schema_repair.sql`：存量库修复脚本，用于补齐缺失表并修复系统表唯一约束、索引和引擎问题。
+- `src/main/java/com/cybzacg/blogbackend/config/WebSocketConfig.java`：WebSocket 入口配置，当前默认端点为 `/ws/chat`。
+- `docs/chat-implementation.md`：聊天模块实现说明。
+- `docs/api文档/chat-api.md`：聊天 HTTP 接口与 WebSocket 协议文档。
 
 ## 本地依赖
 
@@ -65,12 +77,14 @@ src/main/java/com/cybzacg/blogbackend
 - MySQL：`localhost:3306/blog_backend`
 - Redis：`localhost:6379`，数据库 `12`
 - 应用端口：`8000`
+- WebSocket：`ws://localhost:8000/ws/chat?accessToken=<accessToken>`
 
 首次启动前，至少要完成：
 
 1. 创建数据库 `blog_backend`。
-2. 按顺序执行 `1.sys.sql`、`02_article.sql`、`03_permission_init.sql`。
-3. 根据本机环境修改 `application-dev.yml` 中的数据库、Redis、邮件配置。
+2. 空库按顺序执行 `1.sys.sql`、`02_article.sql`、`04_file.sql`、`05_chat.sql`、`06_follow.sql`、`03_permission_init.sql`。
+3. 如果是历史库升级，不要直接把 `04_file.sql`、`05_chat.sql`、`06_follow.sql` 当增量脚本执行；应改为执行 `07_schema_repair.sql` 做存量库修复。
+4. 根据本机环境修改 `application-dev.yml` 中的数据库、Redis、邮件配置。
 
 ## 怎么样编译
 
@@ -104,9 +118,10 @@ mvn -q -DskipTests compile
 当前仓库已经不止一个测试文件，现有测试覆盖：
 
 - Spring 上下文加载测试：`src/test/java/com/cybzacg/blogbackend/BlogBackendApplicationTests.java`
+- `auth` 模块服务级与后台权限 WebMvc 测试
 - `article` 模块控制器与访问控制测试
 - `content` 模块安全与服务测试
-- `file` 模块控制器与服务测试（已覆盖秒传收口、引用删除）
+- `file` 模块控制器、权限与服务测试（已覆盖秒传收口、普通上传、分片校验、后台删除与权限边界）
 
 运行命令：
 
@@ -125,7 +140,7 @@ mvn test
 - `BlogBackendApplicationTests` 已切换到独立 `test` profile。
 - `test` profile 使用 H2 内存数据库、本地测试存储目录，并排除了会在启动期强依赖 Redis 的 Redisson 自动配置。
 - 这意味着基础上下文测试不再依赖开发环境 MySQL/Redis 才能启动。
-- 当前其余测试仍以轻量单测和 MockMvc 为主，后续还需要继续扩大对高风险链路的自动化覆盖。
+- 当前其余测试以轻量单测、隔离 WebMvc 与权限测试为主，已能在不依赖开发环境 MySQL/Redis 的前提下覆盖更多高风险链路。
 
 如果只是想先做一轮基础自检，建议顺序是：
 
@@ -137,9 +152,14 @@ mvn test
 
 ## 接口与文档
 
+- 文档总导航：`docs/README.md`
 - 认证与系统管理接口说明：`docs/api文档/auth-api.md`
 - 内容域接口说明：`docs/api文档/content-api.md`
 - 文件模块接口说明：`docs/api文档/file-api.md`
+- 聊天 / WebSocket 预留说明：`docs/api文档/chat-api.md`
+- 项目进度文档：`docs/项目进度文档.md`
+- 后续更新计划：`docs/后续更新计划.md`
+- 数据库修复说明：`docs/db-schema-repair.md`
 - 内容域任务拆分：`docs/tasks/content-domain/`
 - Swagger / Knife4j：
   - `http://localhost:8000/doc.html`
@@ -147,8 +167,11 @@ mvn test
 
 ## 当前维护建议
 
-- 在已有 `test` profile 基础上，继续把更多集成测试接入隔离环境。
-- 为 `module/article` 补控制器与集成测试，尽快让内容域从“任务拆分完成”进入“接口可验收”。
-- 将 `HELP.md` 的模板内容逐步淘汰，统一以本 README 作为项目入口说明。
+- 优先复用 `docs/README.md` 中的正式入口文档，不再在 README 外散落平行说明。
+- 继续把更多真正依赖 Spring 上下文的测试接入 `test` profile，并优先抽公共测试支撑，减少重复样板代码。
+- 在 `P2` 阶段保持“先整理公共能力与历史遗留，再进入聊天 / WebSocket 业务实现”的推进节奏。
+
+
+
 
 

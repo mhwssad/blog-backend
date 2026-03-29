@@ -1,26 +1,38 @@
-# Auth 模块接口文档
+# 认证与系统管理 API
 
-本文档面向前端联调，覆盖认证、后台系统管理和用户通知中心接口。
+这份文档给前端使用，覆盖三类场景：
 
-## 1. 联调约定
+- 登录、注册、刷新令牌、退出登录
+- 后台管理台初始化所需的当前用户与菜单接口
+- 后台系统管理页面，以及登录用户的通知中心
 
-### 1.1 Base URL
+## 1. 快速接入
 
-- 统一前缀：`/api`
+### 1.1 路由分组
 
-### 1.2 认证方式
+| 路由前缀 | 用途 | 是否需要登录 |
+| --- | --- | --- |
+| `/api/auth/**` | 登录、注册、刷新令牌、获取当前登录用户 | 部分需要 |
+| `/api/sys/**` | 后台管理接口 | 需要 |
+| `/api/user/notices/**` | 登录用户通知中心 | 需要 |
 
-- 匿名接口：`/api/auth/login`、`/api/auth/register`、`/api/auth/email-code`、`/api/auth/email-login`、`/api/auth/refresh`
-- 登录后接口：其余 `auth`、`sys`、`user/notices` 接口
-- Bearer Token 请求头：
+### 1.2 匿名可访问接口
+
+- `POST /api/auth/login`
+- `POST /api/auth/register`
+- `POST /api/auth/email-code`
+- `POST /api/auth/email-login`
+- `POST /api/auth/refresh`
+
+其余接口默认都要带：
 
 ```http
 Authorization: Bearer <accessToken>
 ```
 
-### 1.3 统一响应结构
+### 1.3 统一响应
 
-所有接口统一返回 `Result<T>`：
+所有接口返回 `Result<T>`：
 
 ```json
 {
@@ -31,16 +43,7 @@ Authorization: Bearer <accessToken>
 }
 ```
 
-字段说明：
-
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| code | Integer | 业务状态码，`200` 表示成功 |
-| message | String | 业务消息 |
-| timestamp | Long | 服务端响应时间戳，毫秒 |
-| data | Any | 响应数据，可能为对象、数组、分页对象或 `null` |
-
-分页接口 `data` 结构固定为：
+分页 `data` 固定为：
 
 ```json
 {
@@ -51,36 +54,63 @@ Authorization: Bearer <accessToken>
 }
 ```
 
-### 1.4 常见前端处理建议
+### 1.4 前端处理建议
 
-- `401`：未登录、Token 失效、Token 过期，前端应跳转登录或尝试刷新令牌。
-- `403`：已登录但无权限访问，前端应提示无权限。
-- `Result.code != 200`：属于业务失败，优先展示 `message`。
-- 时间字段默认按后端序列化结果返回，前端统一按本地格式化处理。
+| 场景 | 建议 |
+| --- | --- |
+| HTTP `401` | 尝试刷新令牌；刷新失败后回到登录页 |
+| HTTP `403` | 已登录但无权限，提示无权限或跳到 403 页面 |
+| `Result.code != 200` | 按业务失败处理，优先展示 `message` |
+| 刷新接口成功 | 同时替换 `accessToken` 和 `refreshToken` |
 
-## 2. 认证接口
+## 2. 登录态接入流程
 
-### 2.1 账号登录
+### 2.1 登录页 / 注册页
 
-- **POST** `/api/auth/login`
-- **是否鉴权**: 否
-- **请求体**: `AuthLoginRequest`
+常用调用顺序：
+
+1. 账号密码登录：`POST /api/auth/login`
+2. 邮箱验证码登录：先发验证码，再调 `POST /api/auth/email-login`
+3. 注册完成后，接口直接返回登录态，无需再调登录接口
+
+### 2.2 应用启动恢复登录态
+
+推荐顺序：
+
+1. 本地存在 `accessToken` 时，先调 `GET /api/auth/current-user`
+2. 成功后再调 `GET /api/auth/current-user-menus`
+3. 如果 `current-user` 返回 `401`，尝试 `POST /api/auth/refresh`
+4. 刷新成功后重试步骤 1 和步骤 2
+
+### 2.3 退出登录
+
+- 调用 `POST /api/auth/logout`
+- 成功后前端清理本地令牌、用户信息、菜单和权限缓存
+
+## 3. 认证接口
+
+### 3.1 账号登录
+
+- 请求：`POST /api/auth/login`
+- 鉴权：否
+- 用途：登录页账号密码登录
+- 请求体：`AuthLoginRequest`
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
-| username | String | 是 | 登录账号，支持用户名/邮箱/手机号 |
-| password | String | 是 | 登录密码 |
+| `username` | String | 是 | 支持用户名 / 邮箱 / 手机号 |
+| `password` | String | 是 | 登录密码 |
 
-- **响应**: `AuthenticationToken`
+- 响应：`AuthenticationToken`
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| tokenType | String | 令牌类型，固定为 `Bearer` |
-| accessToken | String | 访问令牌 |
-| refreshToken | String | 刷新令牌 |
-| expiresIn | Integer | accessToken 过期时间，单位秒 |
+| `tokenType` | String | 固定为 `Bearer` |
+| `accessToken` | String | 访问令牌 |
+| `refreshToken` | String | 刷新令牌 |
+| `expiresIn` | Integer | `accessToken` 过期秒数 |
 
-- **响应示例**:
+- 响应示例：
 
 ```json
 {
@@ -96,191 +126,277 @@ Authorization: Bearer <accessToken>
 }
 ```
 
-### 2.2 账号注册
+### 3.2 账号注册
 
-- **POST** `/api/auth/register`
-- **是否鉴权**: 否
-- **请求体**: `AuthRegisterRequest`
-
-| 字段 | 类型 | 必填 | 说明 |
-| --- | --- | --- | --- |
-| username | String | 是 | 用户名 |
-| password | String | 是 | 密码 |
-| nickname | String | 否 | 昵称，未传时默认使用用户名 |
-| email | String | 否 | 邮箱 |
-| phone | String | 否 | 手机号 |
-
-- **响应**: 同登录接口 `AuthenticationToken`
-
-### 2.3 发送邮箱登录验证码
-
-- **POST** `/api/auth/email-code`
-- **是否鉴权**: 否
-- **请求体**: `AuthEmailCodeRequest`
+- 请求：`POST /api/auth/register`
+- 鉴权：否
+- 用途：注册页
+- 请求体：`AuthRegisterRequest`
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
-| email | String | 是 | 邮箱地址 |
+| `username` | String | 是 | 用户名 |
+| `password` | String | 是 | 密码 |
+| `nickname` | String | 否 | 未传时默认使用用户名 |
+| `email` | String | 否 | 邮箱 |
+| `phone` | String | 否 | 手机号 |
 
-- **响应**: `data = null`
+- 响应：同 `AuthenticationToken`
 
-### 2.4 邮箱验证码登录
+### 3.3 发送邮箱验证码
 
-- **POST** `/api/auth/email-login`
-- **是否鉴权**: 否
-- **请求体**: `AuthEmailLoginRequest`
-
-| 字段 | 类型 | 必填 | 说明 |
-| --- | --- | --- | --- |
-| email | String | 是 | 邮箱地址 |
-| code | String | 是 | 6 位验证码 |
-
-- **响应**: 同登录接口 `AuthenticationToken`
-
-### 2.5 刷新令牌
-
-- **POST** `/api/auth/refresh`
-- **是否鉴权**: 否
-- **请求体**: `AuthRefreshRequest`
+- 请求：`POST /api/auth/email-code`
+- 鉴权：否
+- 用途：邮箱验证码登录前先发送验证码
+- 请求体：`AuthEmailCodeRequest`
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
-| refreshToken | String | 是 | 刷新令牌 |
+| `email` | String | 是 | 邮箱地址 |
 
-- **响应**: `AuthenticationToken`
+- 响应：`data = null`
 
-### 2.6 退出登录
+### 3.4 邮箱验证码登录
 
-- **POST** `/api/auth/logout`
-- **是否鉴权**: 建议传 Bearer Token
-- **请求体**: `LogoutRequest`，可为空
+- 请求：`POST /api/auth/email-login`
+- 鉴权：否
+- 用途：邮箱验证码登录
+- 请求体：`AuthEmailLoginRequest`
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
-| accessToken | String | 否 | 不传时默认读取 `Authorization` 请求头 |
+| `email` | String | 是 | 邮箱地址 |
+| `code` | String | 是 | 6 位验证码 |
 
-- **说明**:
-  - 前端通常只需要带上 `Authorization` 请求头即可。
-  - 成功后前端应清理本地登录态和缓存用户信息。
+- 响应：同 `AuthenticationToken`
 
-### 2.7 获取当前登录用户
+### 3.5 刷新令牌
 
-- **GET** `/api/auth/current-user`
-- **是否鉴权**: 是
-- **响应**: `AuthUserInfo`
+- 请求：`POST /api/auth/refresh`
+- 鉴权：否
+- 用途：令牌续期
+- 请求体：`AuthRefreshRequest`
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `refreshToken` | String | 是 | 刷新令牌 |
+
+- 响应：同 `AuthenticationToken`
+
+### 3.6 退出登录
+
+- 请求：`POST /api/auth/logout`
+- 鉴权：建议带 Bearer Token
+- 用途：主动退出登录
+- 请求体：`LogoutRequest`，可为空
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `accessToken` | String | 否 | 不传时默认读取 `Authorization` 请求头 |
+
+- 前端说明：
+  - 大多数场景只需要携带请求头即可。
+  - 即使接口失败，前端通常也应清理本地登录态，避免残留脏状态。
+
+### 3.7 获取当前登录用户
+
+- 请求：`GET /api/auth/current-user`
+- 鉴权：是
+- 用途：应用启动初始化用户信息、权限码、角色码
+- 响应：`AuthUserInfo`
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| id | Long | 用户 ID |
-| username | String | 用户名 |
-| nickname | String | 昵称 |
-| avatar | String | 头像 |
-| email | String | 邮箱 |
-| phone | String | 手机号 |
-| status | Integer | 用户状态，`0` 禁用，`1` 正常 |
-| roles | List<String> | 角色编码列表 |
-| permissions | List<String> | 权限标识列表 |
+| `id` | Long | 用户 ID |
+| `username` | String | 用户名 |
+| `nickname` | String | 昵称 |
+| `avatar` | String | 头像 |
+| `email` | String | 邮箱 |
+| `phone` | String | 手机号 |
+| `status` | Integer | `0` 禁用，`1` 正常 |
+| `roles` | List<String> | 角色编码列表 |
+| `permissions` | List<String> | 权限标识列表 |
 
-### 2.8 获取当前用户菜单
+### 3.8 获取当前用户菜单
 
-- **GET** `/api/auth/current-user-menus`
-- **是否鉴权**: 是
-- **响应**: `List<AuthMenuInfo>`
+- 请求：`GET /api/auth/current-user-menus`
+- 鉴权：是
+- 用途：后台动态路由、侧边菜单、按钮权限挂载
+- 响应：`List<AuthMenuInfo>`
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| id | Long | 菜单 ID |
-| parentId | Long | 父菜单 ID |
-| name | String | 菜单名称 |
-| type | String | 菜单类型：`C` 目录、`M` 菜单、`B` 按钮 |
-| routeName | String | 路由名称 |
-| routePath | String | 路由路径 |
-| component | String | 前端组件路径 |
-| perm | String | 权限标识 |
-| visible | Integer | 是否显示，`0/1` |
-| sort | Integer | 排序 |
-| icon | String | 图标 |
-| redirect | String | 重定向路径 |
-| alwaysShow | Integer | 是否始终显示 |
-| keepAlive | Integer | 是否缓存 |
-| params | Object | 路由参数 |
-| children | List<AuthMenuInfo> | 子菜单 |
+| `id` | Long | 菜单 ID |
+| `parentId` | Long | 父菜单 ID |
+| `name` | String | 菜单名称 |
+| `type` | String | `C` 目录、`M` 菜单、`B` 按钮 |
+| `routeName` | String | 路由名称 |
+| `routePath` | String | 路由路径 |
+| `component` | String | 前端组件路径 |
+| `perm` | String | 权限标识 |
+| `visible` | Integer | 是否显示，`0/1` |
+| `sort` | Integer | 排序 |
+| `icon` | String | 图标 |
+| `redirect` | String | 重定向路径 |
+| `alwaysShow` | Integer | 是否始终显示 |
+| `keepAlive` | Integer | 是否缓存 |
+| `params` | Object | 额外路由参数 |
+| `children` | List<AuthMenuInfo> | 子节点 |
 
-## 3. 后台用户管理
+## 4. 后台应用启动流程
 
-### 3.1 分页查询用户
+后台管理台通常要用到下面两组数据：
 
-- **GET** `/api/sys/users`
-- **权限**: `sys:user:query`
-- **查询参数**: `SysUserPageQuery`
+| 接口 | 用途 |
+| --- | --- |
+| `GET /api/auth/current-user` | 初始化头像、昵称、角色、按钮权限 |
+| `GET /api/auth/current-user-menus` | 渲染动态菜单、动态路由、页面缓存配置 |
+
+前端常见处理规则：
+
+- `type=B` 的菜单一般不渲染路由，用于按钮权限控制。
+- `visible=0` 可用于隐藏侧边栏，但仍保留路由配置。
+- `keepAlive=1` 可映射前端页面缓存开关。
+- `params` 可直接作为扩展路由元数据使用。
+
+## 5. 登录用户通知中心
+
+### 5.1 页面会用到哪些接口
+
+| 场景 | 接口 |
+| --- | --- |
+| 通知列表页 | `GET /api/user/notices` |
+| 右上角未读角标 | `GET /api/user/notices/unread-count` |
+| 通知详情抽屉 / 详情页 | `GET /api/user/notices/{id}` |
+| 单条标记已读 | `POST /api/user/notices/{id}/read` |
+| 全部标记已读 | `POST /api/user/notices/read-all` |
+
+### 5.2 我的通知列表
+
+- 请求：`GET /api/user/notices`
+- 鉴权：是
+- 查询参数：`UserNoticePageQuery`
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| current | Long | 页码，默认 `1` |
-| size | Long | 每页条数，默认 `10` |
-| username | String | 用户名 |
-| nickname | String | 昵称 |
-| email | String | 邮箱 |
-| phone | String | 手机号 |
-| status | Integer | 状态 |
+| `current` | Long | 页码 |
+| `size` | Long | 每页条数 |
+| `title` | String | 标题关键词 |
+| `isRead` | Integer | `0` 未读，`1` 已读 |
 
-- **响应项**: `SysUserAdminVO`
+- 响应项：`UserNoticeVO`
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| id | Long | 用户 ID |
-| username | String | 用户名 |
-| nickname | String | 昵称 |
-| email | String | 邮箱 |
-| phone | String | 手机号 |
-| avatar | String | 头像 |
-| gender | Integer | 性别 |
-| birthday | DateTime | 生日 |
-| status | Integer | 状态 |
-| lastLoginTime | DateTime | 最后登录时间 |
-| lastLoginIp | String | 最后登录 IP |
-| remark | String | 备注 |
-| roleIds | List<Long> | 角色 ID 列表 |
+| `id` | Long | 通知 ID |
+| `title` | String | 标题 |
+| `content` | String | 内容 |
+| `type` | Integer | 通知类型 |
+| `level` | String | 通知等级 |
+| `publishTime` | DateTime | 发布时间 |
+| `isRead` | Integer | 是否已读 |
+| `readTime` | DateTime | 阅读时间 |
 
-### 3.2 查询用户详情
+### 5.3 我的通知详情
 
-- **GET** `/api/sys/users/{id}`
-- **权限**: `sys:user:query`
-- **响应**: `SysUserAdminVO`
+- 请求：`GET /api/user/notices/{id}`
+- 鉴权：是
+- 路径参数：`id`
+- 前端注意：按当前实现，读取详情会顺带更新阅读状态。
 
-### 3.3 新增用户
+### 5.4 未读数量
 
-- **POST** `/api/sys/users`
-- **权限**: `sys:user:create`
-- **请求体**: `SysUserSaveRequest`
+- 请求：`GET /api/user/notices/unread-count`
+- 鉴权：是
+- 响应：`Long`
 
-| 字段 | 类型 | 必填 | 说明 |
+### 5.5 单条已读
+
+- 请求：`POST /api/user/notices/{id}/read`
+- 鉴权：是
+- 响应：`data = null`
+
+### 5.6 全部已读
+
+- 请求：`POST /api/user/notices/read-all`
+- 鉴权：是
+- 响应：`data = null`
+
+## 6. 后台系统管理接口
+
+这一组接口主要对应后台管理台的系统模块。所有接口都要求登录，并且需要对应权限码。
+
+### 6.1 用户管理
+
+#### 接口速览
+
+| 场景 | 方法 | 路径 | 权限 |
 | --- | --- | --- | --- |
-| username | String | 是 | 用户名 |
-| password | String | 是 | 新增时必填 |
-| nickname | String | 否 | 昵称 |
-| email | String | 否 | 邮箱 |
-| phone | String | 否 | 手机号 |
-| avatar | String | 否 | 头像 |
-| gender | Integer | 否 | 性别 |
-| birthday | DateTime | 否 | 生日 |
-| status | Integer | 否 | 状态，默认 `1` |
-| remark | String | 否 | 备注 |
+| 分页查询用户 | GET | `/api/sys/users` | `sys:user:query` |
+| 查询用户详情 | GET | `/api/sys/users/{id}` | `sys:user:query` |
+| 新增用户 | POST | `/api/sys/users` | `sys:user:create` |
+| 修改用户 | PUT | `/api/sys/users/{id}` | `sys:user:update` |
+| 修改用户状态 | PUT | `/api/sys/users/{id}/status` | `sys:user:update` |
+| 重置用户密码 | PUT | `/api/sys/users/{id}/password/reset` | `sys:user:reset-password` |
+| 删除用户 | DELETE | `/api/sys/users/{id}` | `sys:user:delete` |
+| 查询用户角色 | GET | `/api/sys/users/{id}/roles` | `sys:user:query` |
+| 分配用户角色 | PUT | `/api/sys/users/{id}/roles` | `sys:user:assign-role` |
 
-- **响应**: `SysUserAdminVO`
+#### 分页查询用户
 
-### 3.4 修改用户
+- 请求：`GET /api/sys/users`
+- 查询参数：`SysUserPageQuery`
 
-- **PUT** `/api/sys/users/{id}`
-- **权限**: `sys:user:update`
-- **请求体**: `SysUserSaveRequest`
-- **说明**: 修改用户时 `password` 不生效，重置密码请走单独接口。
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `current` | Long | 页码，默认 `1` |
+| `size` | Long | 每页条数，默认 `10` |
+| `username` | String | 用户名 |
+| `nickname` | String | 昵称 |
+| `email` | String | 邮箱 |
+| `phone` | String | 手机号 |
+| `status` | Integer | 状态 |
 
-### 3.5 修改用户状态
+- 响应项：`SysUserAdminVO`
 
-- **PUT** `/api/sys/users/{id}/status`
-- **权限**: `sys:user:update`
-- **请求体**: `StatusUpdateRequest`
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | Long | 用户 ID |
+| `username` | String | 用户名 |
+| `nickname` | String | 昵称 |
+| `email` | String | 邮箱 |
+| `phone` | String | 手机号 |
+| `avatar` | String | 头像 |
+| `gender` | Integer | 性别 |
+| `birthday` | DateTime | 生日 |
+| `status` | Integer | 状态 |
+| `lastLoginTime` | DateTime | 最后登录时间 |
+| `lastLoginIp` | String | 最后登录 IP |
+| `remark` | String | 备注 |
+| `roleIds` | List<Long> | 角色 ID 列表 |
+
+#### 新增 / 修改用户
+
+- 新增：`POST /api/sys/users`
+- 修改：`PUT /api/sys/users/{id}`
+- 请求体：`SysUserSaveRequest`
+
+| 字段 | 类型 | 新增必填 | 修改必填 | 说明 |
+| --- | --- | --- | --- | --- |
+| `username` | String | 是 | 否 | 用户名 |
+| `password` | String | 是 | 否 | 修改时不生效，重置密码走单独接口 |
+| `nickname` | String | 否 | 否 | 昵称 |
+| `email` | String | 否 | 否 | 邮箱 |
+| `phone` | String | 否 | 否 | 手机号 |
+| `avatar` | String | 否 | 否 | 头像 |
+| `gender` | Integer | 否 | 否 | 性别 |
+| `birthday` | DateTime | 否 | 否 | 生日 |
+| `status` | Integer | 否 | 否 | 默认 `1` |
+| `remark` | String | 否 | 否 | 备注 |
+
+#### 状态、密码、角色
+
+- 修改状态：`PUT /api/sys/users/{id}/status`
 
 ```json
 {
@@ -288,11 +404,7 @@ Authorization: Bearer <accessToken>
 }
 ```
 
-### 3.6 重置用户密码
-
-- **PUT** `/api/sys/users/{id}/password/reset`
-- **权限**: `sys:user:reset-password`
-- **请求体**: `PasswordResetRequest`
+- 重置密码：`PUT /api/sys/users/{id}/password/reset`
 
 ```json
 {
@@ -300,22 +412,8 @@ Authorization: Bearer <accessToken>
 }
 ```
 
-### 3.7 删除用户
-
-- **DELETE** `/api/sys/users/{id}`
-- **权限**: `sys:user:delete`
-
-### 3.8 查询用户角色
-
-- **GET** `/api/sys/users/{id}/roles`
-- **权限**: `sys:user:query`
-- **响应**: `List<Long>`
-
-### 3.9 分配用户角色
-
-- **PUT** `/api/sys/users/{id}/roles`
-- **权限**: `sys:user:assign-role`
-- **请求体**: `UserRoleAssignRequest`
+- 查询角色：`GET /api/sys/users/{id}/roles`
+- 分配角色：`PUT /api/sys/users/{id}/roles`
 
 ```json
 {
@@ -323,82 +421,72 @@ Authorization: Bearer <accessToken>
 }
 ```
 
-## 4. 后台角色管理
+### 6.2 角色管理
 
-### 4.1 分页查询角色
+#### 接口速览
 
-- **GET** `/api/sys/roles`
-- **权限**: `sys:role:query`
-- **查询参数**: `SysRolePageQuery`
+| 场景 | 方法 | 路径 | 权限 |
+| --- | --- | --- | --- |
+| 分页查询角色 | GET | `/api/sys/roles` | `sys:role:query` |
+| 查询角色详情 | GET | `/api/sys/roles/{id}` | `sys:role:query` |
+| 新增角色 | POST | `/api/sys/roles` | `sys:role:create` |
+| 修改角色 | PUT | `/api/sys/roles/{id}` | `sys:role:update` |
+| 修改角色状态 | PUT | `/api/sys/roles/{id}/status` | `sys:role:update` |
+| 删除角色 | DELETE | `/api/sys/roles/{id}` | `sys:role:delete` |
+| 查询角色菜单 | GET | `/api/sys/roles/{id}/menus` | `sys:role:query` |
+| 分配角色菜单 | PUT | `/api/sys/roles/{id}/menus` | `sys:role:assign-menu` |
+
+#### 角色分页字段
+
+- 请求：`GET /api/sys/roles`
+- 查询参数：`SysRolePageQuery`
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| current | Long | 页码 |
-| size | Long | 每页条数 |
-| name | String | 角色名称 |
-| code | String | 角色编码 |
-| status | Integer | 角色状态 |
+| `current` | Long | 页码 |
+| `size` | Long | 每页条数 |
+| `name` | String | 角色名称 |
+| `code` | String | 角色编码 |
+| `status` | Integer | 角色状态 |
 
-- **响应项**: `SysRoleAdminVO`
+- 响应项：`SysRoleAdminVO`
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| id | Long | 角色 ID |
-| name | String | 角色名称 |
-| code | String | 角色编码 |
-| sort | Integer | 显示顺序 |
-| status | Integer | 状态 |
-| dataScope | Integer | 数据权限 |
-| menuIds | List<Long> | 菜单 ID 列表 |
+| `id` | Long | 角色 ID |
+| `name` | String | 角色名称 |
+| `code` | String | 角色编码 |
+| `sort` | Integer | 显示顺序 |
+| `status` | Integer | 状态 |
+| `dataScope` | Integer | 数据权限 |
+| `menuIds` | List<Long> | 菜单 ID 列表 |
 
-### 4.2 查询角色详情
+#### 新增 / 修改角色
 
-- **GET** `/api/sys/roles/{id}`
-- **权限**: `sys:role:query`
-- **响应**: `SysRoleAdminVO`
-
-### 4.3 新增角色
-
-- **POST** `/api/sys/roles`
-- **权限**: `sys:role:create`
-- **请求体**: `SysRoleSaveRequest`
+- 新增：`POST /api/sys/roles`
+- 修改：`PUT /api/sys/roles/{id}`
+- 请求体：`SysRoleSaveRequest`
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
-| name | String | 是 | 角色名称 |
-| code | String | 是 | 角色编码 |
-| sort | Integer | 否 | 显示顺序 |
-| status | Integer | 否 | 状态，默认 `1` |
-| dataScope | Integer | 否 | 数据权限 |
+| `name` | String | 是 | 角色名称 |
+| `code` | String | 是 | 角色编码 |
+| `sort` | Integer | 否 | 显示顺序 |
+| `status` | Integer | 否 | 默认 `1` |
+| `dataScope` | Integer | 否 | 数据权限 |
 
-### 4.4 修改角色
+#### 状态与菜单分配
 
-- **PUT** `/api/sys/roles/{id}`
-- **权限**: `sys:role:update`
-- **请求体**: `SysRoleSaveRequest`
+- 修改状态：`PUT /api/sys/roles/{id}/status`
 
-### 4.5 修改角色状态
+```json
+{
+  "status": 1
+}
+```
 
-- **PUT** `/api/sys/roles/{id}/status`
-- **权限**: `sys:role:update`
-- **请求体**: `StatusUpdateRequest`
-
-### 4.6 删除角色
-
-- **DELETE** `/api/sys/roles/{id}`
-- **权限**: `sys:role:delete`
-
-### 4.7 查询角色菜单
-
-- **GET** `/api/sys/roles/{id}/menus`
-- **权限**: `sys:role:query`
-- **响应**: `List<Long>`
-
-### 4.8 分配角色菜单
-
-- **PUT** `/api/sys/roles/{id}/menus`
-- **权限**: `sys:role:assign-menu`
-- **请求体**: `RoleMenuAssignRequest`
+- 查询角色菜单：`GET /api/sys/roles/{id}/menus`
+- 分配角色菜单：`PUT /api/sys/roles/{id}/menus`
 
 ```json
 {
@@ -406,114 +494,109 @@ Authorization: Bearer <accessToken>
 }
 ```
 
-## 5. 后台菜单管理
+### 6.3 菜单管理
 
-### 5.1 查询菜单树
+#### 接口速览
 
-- **GET** `/api/sys/menus/tree`
-- **权限**: `sys:menu:query`
-- **响应**: `List<SysMenuAdminVO>`
+| 场景 | 方法 | 路径 | 权限 |
+| --- | --- | --- | --- |
+| 查询菜单树 | GET | `/api/sys/menus/tree` | `sys:menu:query` |
+| 查询菜单详情 | GET | `/api/sys/menus/{id}` | `sys:menu:query` |
+| 新增菜单 | POST | `/api/sys/menus` | `sys:menu:create` |
+| 修改菜单 | PUT | `/api/sys/menus/{id}` | `sys:menu:update` |
+| 删除菜单 | DELETE | `/api/sys/menus/{id}` | `sys:menu:delete` |
+
+#### 菜单树响应
+
+- 请求：`GET /api/sys/menus/tree`
+- 响应：`List<SysMenuAdminVO>`
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| id | Long | 菜单 ID |
-| parentId | Long | 父菜单 ID |
-| treePath | String | 树路径 |
-| name | String | 菜单名称 |
-| type | String | 菜单类型 |
-| routeName | String | 路由名称 |
-| routePath | String | 路由路径 |
-| component | String | 组件路径 |
-| perm | String | 权限标识 |
-| alwaysShow | Integer | 是否始终显示 |
-| keepAlive | Integer | 是否缓存 |
-| visible | Integer | 是否显示 |
-| sort | Integer | 排序 |
-| icon | String | 图标 |
-| redirect | String | 跳转地址 |
-| params | Object | 路由参数 |
-| children | List<SysMenuAdminVO> | 子菜单 |
+| `id` | Long | 菜单 ID |
+| `parentId` | Long | 父菜单 ID |
+| `treePath` | String | 树路径 |
+| `name` | String | 菜单名称 |
+| `type` | String | 菜单类型 |
+| `routeName` | String | 路由名称 |
+| `routePath` | String | 路由路径 |
+| `component` | String | 组件路径 |
+| `perm` | String | 权限标识 |
+| `alwaysShow` | Integer | 是否始终显示 |
+| `keepAlive` | Integer | 是否缓存 |
+| `visible` | Integer | 是否显示 |
+| `sort` | Integer | 排序 |
+| `icon` | String | 图标 |
+| `redirect` | String | 跳转地址 |
+| `params` | Object | 路由参数 |
+| `children` | List<SysMenuAdminVO> | 子节点 |
 
-### 5.2 查询菜单详情
+#### 新增 / 修改菜单
 
-- **GET** `/api/sys/menus/{id}`
-- **权限**: `sys:menu:query`
-- **响应**: `SysMenuAdminVO`
-
-### 5.3 新增菜单
-
-- **POST** `/api/sys/menus`
-- **权限**: `sys:menu:create`
-- **请求体**: `SysMenuSaveRequest`
+- 新增：`POST /api/sys/menus`
+- 修改：`PUT /api/sys/menus/{id}`
+- 请求体：`SysMenuSaveRequest`
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
-| parentId | Long | 是 | 父菜单 ID，根节点传 `0` |
-| treePath | String | 否 | 前端通常无需传，后端会重新计算 |
-| name | String | 是 | 菜单名称 |
-| type | String | 是 | `C` / `M` / `B` |
-| routeName | String | 否 | 路由名称 |
-| routePath | String | 否 | 路由路径 |
-| component | String | 否 | 组件路径 |
-| perm | String | 否 | 权限标识 |
-| alwaysShow | Integer | 否 | 是否始终显示 |
-| keepAlive | Integer | 否 | 是否缓存 |
-| visible | Integer | 否 | 是否显示 |
-| sort | Integer | 否 | 排序 |
-| icon | String | 否 | 图标 |
-| redirect | String | 否 | 跳转地址 |
-| params | Object | 否 | 路由参数 |
+| `parentId` | Long | 是 | 根节点传 `0` |
+| `treePath` | String | 否 | 前端通常无需传，后端会重新计算 |
+| `name` | String | 是 | 菜单名称 |
+| `type` | String | 是 | `C` / `M` / `B` |
+| `routeName` | String | 否 | 路由名称 |
+| `routePath` | String | 否 | 路由路径 |
+| `component` | String | 否 | 组件路径 |
+| `perm` | String | 否 | 权限标识 |
+| `alwaysShow` | Integer | 否 | 是否始终显示 |
+| `keepAlive` | Integer | 否 | 是否缓存 |
+| `visible` | Integer | 否 | 是否显示 |
+| `sort` | Integer | 否 | 排序 |
+| `icon` | String | 否 | 图标 |
+| `redirect` | String | 否 | 跳转地址 |
+| `params` | Object | 否 | 路由参数 |
 
-### 5.4 修改菜单
+### 6.4 系统配置管理
 
-- **PUT** `/api/sys/menus/{id}`
-- **权限**: `sys:menu:update`
-- **请求体**: `SysMenuSaveRequest`
+#### 接口速览
 
-### 5.5 删除菜单
+| 场景 | 方法 | 路径 | 权限 |
+| --- | --- | --- | --- |
+| 分页查询配置 | GET | `/api/sys/configs` | `sys:config:query` |
+| 查询配置详情 | GET | `/api/sys/configs/{id}` | `sys:config:query` |
+| 新增配置 | POST | `/api/sys/configs` | `sys:config:create` |
+| 修改配置 | PUT | `/api/sys/configs/{id}` | `sys:config:update` |
+| 删除配置 | DELETE | `/api/sys/configs/{id}` | `sys:config:delete` |
+| 按 key 查询配置值 | GET | `/api/sys/configs/key/{configKey}` | `sys:config:query` |
 
-- **DELETE** `/api/sys/menus/{id}`
-- **权限**: `sys:menu:delete`
+#### 分页查询配置
 
-## 6. 系统配置管理
-
-### 6.1 分页查询配置
-
-- **GET** `/api/sys/configs`
-- **权限**: `sys:config:query`
-- **查询参数**: `SysConfigPageQuery`
+- 请求：`GET /api/sys/configs`
+- 查询参数：`SysConfigPageQuery`
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| current | Long | 页码 |
-| size | Long | 每页条数 |
-| configName | String | 配置名称 |
-| configKey | String | 配置键 |
-| createTimeStart | DateTime | 创建开始时间，格式 `yyyy-MM-dd HH:mm:ss` |
-| createTimeEnd | DateTime | 创建结束时间，格式 `yyyy-MM-dd HH:mm:ss` |
+| `current` | Long | 页码 |
+| `size` | Long | 每页条数 |
+| `configName` | String | 配置名称 |
+| `configKey` | String | 配置键 |
+| `createTimeStart` | DateTime | 创建开始时间，格式 `yyyy-MM-dd HH:mm:ss` |
+| `createTimeEnd` | DateTime | 创建结束时间，格式 `yyyy-MM-dd HH:mm:ss` |
 
-- **响应项**: `SysConfigAdminVO`
+- 响应项：`SysConfigAdminVO`
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| id | Long | 配置 ID |
-| configName | String | 配置名称 |
-| configKey | String | 配置键 |
-| configValue | String | 配置值 |
-| remark | String | 备注 |
-| createTime | DateTime | 创建时间 |
-| updateTime | DateTime | 更新时间 |
+| `id` | Long | 配置 ID |
+| `configName` | String | 配置名称 |
+| `configKey` | String | 配置键 |
+| `configValue` | String | 配置值 |
+| `remark` | String | 备注 |
+| `createTime` | DateTime | 创建时间 |
+| `updateTime` | DateTime | 更新时间 |
 
-### 6.2 查询配置详情
+#### 新增 / 修改配置
 
-- **GET** `/api/sys/configs/{id}`
-- **权限**: `sys:config:query`
-
-### 6.3 新增配置
-
-- **POST** `/api/sys/configs`
-- **权限**: `sys:config:create`
-- **请求体**: `SysConfigSaveRequest`
+- 请求体：`SysConfigSaveRequest`
 
 ```json
 {
@@ -524,223 +607,134 @@ Authorization: Bearer <accessToken>
 }
 ```
 
-### 6.4 修改配置
+### 6.5 后台通知管理
 
-- **PUT** `/api/sys/configs/{id}`
-- **权限**: `sys:config:update`
-- **请求体**: `SysConfigSaveRequest`
+#### 接口速览
 
-### 6.5 删除配置
+| 场景 | 方法 | 路径 | 权限 |
+| --- | --- | --- | --- |
+| 分页查询通知 | GET | `/api/sys/notices` | `sys:notice:query` |
+| 查询通知详情 | GET | `/api/sys/notices/{id}` | `sys:notice:query` |
+| 新增通知 | POST | `/api/sys/notices` | `sys:notice:create` |
+| 修改通知 | PUT | `/api/sys/notices/{id}` | `sys:notice:update` |
+| 发布通知 | POST | `/api/sys/notices/{id}/publish` | `sys:notice:publish` |
+| 撤回通知 | POST | `/api/sys/notices/{id}/revoke` | `sys:notice:revoke` |
+| 删除通知 | DELETE | `/api/sys/notices/{id}` | `sys:notice:delete` |
 
-- **DELETE** `/api/sys/configs/{id}`
-- **权限**: `sys:config:delete`
+#### 分页查询通知
 
-### 6.6 按配置键查询配置值
-
-- **GET** `/api/sys/configs/key/{configKey}`
-- **权限**: `sys:config:query`
-- **响应**: `String`
-
-## 7. 通知后台管理
-
-### 7.1 分页查询通知
-
-- **GET** `/api/sys/notices`
-- **权限**: `sys:notice:query`
-- **查询参数**: `SysNoticePageQuery`
+- 请求：`GET /api/sys/notices`
+- 查询参数：`SysNoticePageQuery`
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| current | Long | 页码 |
-| size | Long | 每页条数 |
-| title | String | 标题 |
-| publishStatus | Integer | 发布状态 |
-| targetType | Integer | 目标类型 |
+| `current` | Long | 页码 |
+| `size` | Long | 每页条数 |
+| `title` | String | 标题 |
+| `publishStatus` | Integer | 发布状态 |
+| `targetType` | Integer | 目标类型 |
 
-- **响应项**: `SysNoticeAdminVO`
+- 响应项：`SysNoticeAdminVO`
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| id | Long | 通知 ID |
-| title | String | 标题 |
-| content | String | 内容 |
-| type | Integer | 通知类型 |
-| level | String | 通知等级 |
-| targetType | Integer | 目标类型，`1` 全体，`2` 指定 |
-| targetUserIds | List<Long> | 目标用户 ID 列表 |
-| publisherId | Long | 发布人 ID |
-| publishStatus | Integer | 发布状态 |
-| publishTime | DateTime | 发布时间 |
-| revokeTime | DateTime | 撤回时间 |
-| createTime | DateTime | 创建时间 |
-| updateTime | DateTime | 更新时间 |
+| `id` | Long | 通知 ID |
+| `title` | String | 标题 |
+| `content` | String | 内容 |
+| `type` | Integer | 通知类型 |
+| `level` | String | 通知等级 |
+| `targetType` | Integer | `1` 全体，`2` 指定用户 |
+| `targetUserIds` | List<Long> | 指定用户列表 |
+| `publisherId` | Long | 发布人 ID |
+| `publishStatus` | Integer | 发布状态 |
+| `publishTime` | DateTime | 发布时间 |
+| `revokeTime` | DateTime | 撤回时间 |
+| `createTime` | DateTime | 创建时间 |
+| `updateTime` | DateTime | 更新时间 |
 
-### 7.2 查询通知详情
+#### 新增 / 修改通知
 
-- **GET** `/api/sys/notices/{id}`
-- **权限**: `sys:notice:query`
-
-### 7.3 新增通知
-
-- **POST** `/api/sys/notices`
-- **权限**: `sys:notice:create`
-- **请求体**: `SysNoticeSaveRequest`
+- 请求体：`SysNoticeSaveRequest`
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
-| title | String | 是 | 通知标题 |
-| content | String | 是 | 通知内容 |
-| type | Integer | 是 | 通知类型 |
-| level | String | 是 | 通知等级 |
-| targetType | Integer | 是 | 目标类型，`1` 全体，`2` 指定 |
-| targetUserIds | List<Long> | 否 | 指定用户列表 |
+| `title` | String | 是 | 通知标题 |
+| `content` | String | 是 | 通知内容 |
+| `type` | Integer | 是 | 通知类型 |
+| `level` | String | 是 | 通知等级 |
+| `targetType` | Integer | 是 | `1` 全体，`2` 指定 |
+| `targetUserIds` | List<Long> | 否 | 指定用户时使用 |
 
-### 7.4 修改通知
+### 6.6 系统日志管理
 
-- **PUT** `/api/sys/notices/{id}`
-- **权限**: `sys:notice:update`
-- **请求体**: `SysNoticeSaveRequest`
+#### 接口速览
 
-### 7.5 发布通知
+| 场景 | 方法 | 路径 | 权限 |
+| --- | --- | --- | --- |
+| 分页查询日志 | GET | `/api/sys/logs` | `sys:log:query` |
+| 查询日志详情 | GET | `/api/sys/logs/{id}` | `sys:log:query` |
+| 删除日志 | DELETE | `/api/sys/logs/{id}` | `sys:log:delete` |
+| 按条件清理日志 | POST | `/api/sys/logs/clean` | `sys:log:clean` |
 
-- **POST** `/api/sys/notices/{id}/publish`
-- **权限**: `sys:notice:publish`
-- **响应**: `data = null`
+#### 分页查询日志
 
-### 7.6 撤回通知
-
-- **POST** `/api/sys/notices/{id}/revoke`
-- **权限**: `sys:notice:revoke`
-- **响应**: `data = null`
-
-### 7.7 删除通知
-
-- **DELETE** `/api/sys/notices/{id}`
-- **权限**: `sys:notice:delete`
-
-## 8. 用户通知中心
-
-### 8.1 我的通知列表
-
-- **GET** `/api/user/notices`
-- **是否鉴权**: 是
-- **查询参数**: `UserNoticePageQuery`
+- 请求：`GET /api/sys/logs`
+- 查询参数：`SysLogPageQuery`
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| current | Long | 页码 |
-| size | Long | 每页条数 |
-| title | String | 标题 |
-| isRead | Integer | 已读状态，`0` 未读，`1` 已读 |
+| `current` | Long | 页码 |
+| `size` | Long | 每页条数 |
+| `module` | String | 日志模块 |
+| `requestMethod` | String | 请求方式 |
+| `requestUri` | String | 请求路径 |
+| `ip` | String | IP |
+| `createBy` | Long | 创建人 ID |
+| `createTimeStart` | DateTime | 创建开始时间 |
+| `createTimeEnd` | DateTime | 创建结束时间 |
 
-- **响应项**: `UserNoticeVO`
-
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| id | Long | 通知 ID |
-| title | String | 标题 |
-| content | String | 内容 |
-| type | Integer | 通知类型 |
-| level | String | 通知等级 |
-| publishTime | DateTime | 发布时间 |
-| isRead | Integer | 是否已读 |
-| readTime | DateTime | 阅读时间 |
-
-### 8.2 我的通知详情
-
-- **GET** `/api/user/notices/{id}`
-- **是否鉴权**: 是
-- **说明**: 获取详情时会按当前实现更新阅读状态。
-
-### 8.3 我的未读数
-
-- **GET** `/api/user/notices/unread-count`
-- **是否鉴权**: 是
-- **响应**: `Long`
-
-### 8.4 单条已读
-
-- **POST** `/api/user/notices/{id}/read`
-- **是否鉴权**: 是
-
-### 8.5 全部已读
-
-- **POST** `/api/user/notices/read-all`
-- **是否鉴权**: 是
-
-## 9. 系统日志管理
-
-### 9.1 分页查询日志
-
-- **GET** `/api/sys/logs`
-- **权限**: `sys:log:query`
-- **查询参数**: `SysLogPageQuery`
-
-| 参数 | 类型 | 说明 |
-| --- | --- | --- |
-| current | Long | 页码 |
-| size | Long | 每页条数 |
-| module | String | 日志模块 |
-| requestMethod | String | 请求方式 |
-| requestUri | String | 请求路径 |
-| ip | String | IP |
-| createBy | Long | 创建人 ID |
-| createTimeStart | DateTime | 创建开始时间 |
-| createTimeEnd | DateTime | 创建结束时间 |
-
-- **响应项**: `SysLogAdminVO`
+- 响应项：`SysLogAdminVO`
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| id | Long | 日志 ID |
-| module | String | 日志模块 |
-| requestMethod | String | 请求方式 |
-| requestParams | String | 请求参数 |
-| responseContent | String | 响应内容 |
-| content | String | 日志内容 |
-| requestUri | String | 请求路径 |
-| method | String | 处理方法 |
-| ip | String | IP 地址 |
-| province | String | 省份 |
-| city | String | 城市 |
-| executionTime | Long | 执行耗时（ms） |
-| browser | String | 浏览器 |
-| browserVersion | String | 浏览器版本 |
-| os | String | 操作系统 |
-| createBy | Long | 创建人 ID |
-| createTime | DateTime | 创建时间 |
+| `id` | Long | 日志 ID |
+| `module` | String | 日志模块 |
+| `requestMethod` | String | 请求方式 |
+| `requestParams` | String | 请求参数 |
+| `responseContent` | String | 响应内容 |
+| `content` | String | 日志内容 |
+| `requestUri` | String | 请求路径 |
+| `method` | String | 处理方法 |
+| `ip` | String | IP 地址 |
+| `province` | String | 省份 |
+| `city` | String | 城市 |
+| `executionTime` | Long | 执行耗时（ms） |
+| `browser` | String | 浏览器 |
+| `browserVersion` | String | 浏览器版本 |
+| `os` | String | 操作系统 |
+| `createBy` | Long | 创建人 ID |
+| `createTime` | DateTime | 创建时间 |
 
-### 9.2 查询日志详情
+#### 条件清理日志
 
-- **GET** `/api/sys/logs/{id}`
-- **权限**: `sys:log:query`
-
-### 9.3 删除日志
-
-- **DELETE** `/api/sys/logs/{id}`
-- **权限**: `sys:log:delete`
-
-### 9.4 按条件清理日志
-
-- **POST** `/api/sys/logs/clean`
-- **权限**: `sys:log:clean`
-- **请求体**: `SysLogCleanRequest`
+- 请求：`POST /api/sys/logs/clean`
+- 请求体：`SysLogCleanRequest`
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| module | String | 日志模块 |
-| requestMethod | String | 请求方式 |
-| requestUri | String | 请求路径 |
-| ip | String | IP |
-| createBy | Long | 创建人 ID |
-| createTimeStart | DateTime | 创建开始时间 |
-| createTimeEnd | DateTime | 创建结束时间 |
+| `module` | String | 日志模块 |
+| `requestMethod` | String | 请求方式 |
+| `requestUri` | String | 请求路径 |
+| `ip` | String | IP |
+| `createBy` | Long | 创建人 ID |
+| `createTimeStart` | DateTime | 创建开始时间 |
+| `createTimeEnd` | DateTime | 创建结束时间 |
 
-- **响应**: `Long`，表示清理数量。
+- 响应：`Long`，表示清理数量
 
-## 10. 权限标识速查
+## 7. 权限标识速查
 
-| 权限 | 说明 |
+| 权限标识 | 说明 |
 | --- | --- |
 | `sys:user:query` | 查询用户 |
 | `sys:user:create` | 新增用户 |
@@ -770,3 +764,13 @@ Authorization: Bearer <accessToken>
 | `sys:log:query` | 查询日志 |
 | `sys:log:delete` | 删除日志 |
 | `sys:log:clean` | 清理日志 |
+
+## 8. 常见联调问题
+
+| 问题 | 当前行为 |
+| --- | --- |
+| 匿名访问 `/api/sys/**` | HTTP `401` |
+| 匿名访问 `/api/user/notices/**` | HTTP `401` |
+| 已登录但权限不足 | HTTP `403` |
+| 打开通知详情后未读数变化 | 详情接口按当前实现会更新已读状态 |
+| 修改用户时传了 `password` | 不生效，必须走重置密码接口 |

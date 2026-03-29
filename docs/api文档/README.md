@@ -1,31 +1,135 @@
-# API文档总览
+# 前端 API 联调导航
 
-## 文档分布
+这份目录不是后端控制器清单，而是给前端同学用来快速定位接口的入口页。建议先看本页，再进入对应模块文档。
 
-- [`auth-api.md`](/e:/project/blog/blog-backend/docs/api文档/auth-api.md)：认证与系统管理模块接口文档，覆盖 `auth` 模块下全部控制器。
-- [`content-api.md`](/e:/project/blog/blog-backend/docs/api文档/content-api.md)：内容域接口文档，统一覆盖 `article` 与 `content` 模块下全部控制器。
-- [`file-api.md`](/e:/project/blog/blog-backend/docs/api文档/file-api.md)：文件上传与后台文件管理接口文档，覆盖 `file` 模块下全部控制器。
+如果你需要确认项目阶段、开发规范或数据库修复口径，请回到 [`docs/README.md`](../README.md)。
 
-## 模块扫描结果
+## 1. 先看什么
 
-本次按 `src/main/java/com/cybzacg/blogbackend/module` 目录扫描控制器，结果如下：
+如果你正在做下面这些页面，优先阅读对应文档：
 
-| 模块 | 控制器情况 | 文档归属 | 备注 |
-|----|------|------|----|
-| `auth` | 已发现认证、用户、角色、菜单、配置、通知、日志、用户通知中心控制器 | [`auth-api.md`](/e:/project/blog/blog-backend/docs/api文档/auth-api.md) | 已覆盖 |
-| `article` | 已发现后台文章、前台文章、用户文章点赞控制器 | [`content-api.md`](/e:/project/blog/blog-backend/docs/api文档/content-api.md) | 作为内容域的一部分统一编写 |
-| `content` | 已发现后台分类/标签/评论/收藏/互动/足迹，以及前台分类/标签/评论与用户行为控制器 | [`content-api.md`](/e:/project/blog/blog-backend/docs/api文档/content-api.md) | 已覆盖 |
-| `file` | 已发现后台文件管理与用户文件上传控制器 | [`file-api.md`](/e:/project/blog/blog-backend/docs/api文档/file-api.md) | 已覆盖 |
+| 前端场景 | 先看文档 | 重点章节 |
+| --- | --- | --- |
+| 登录页、注册页、刷新登录态 | `auth-api.md` | `登录态接入流程`、`认证接口` |
+| 后台管理框架初始化（用户信息、菜单、权限） | `auth-api.md` | `后台应用启动流程`、`获取当前登录用户`、`获取当前用户菜单` |
+| 后台用户/角色/菜单/配置/通知/日志页面 | `auth-api.md` | `后台系统管理接口` |
+| 博客首页、文章列表、文章详情、分类/标签筛选 | `content-api.md` | `前台页面接口` |
+| 评论、点赞、收藏、足迹等登录后行为 | `content-api.md` | `登录后用户行为接口` |
+| 后台文章、分类、标签、评论、互动、足迹管理 | `content-api.md` | `后台内容管理接口` |
+| 用户头像上传、文章附件上传、评论图片上传 | `file-api.md` | `用户上传接入流程`、`用户文件接口` |
+| 聊天会话、后台聊天管理、消息发送、群管理与 WebSocket 推送 | `chat-api.md` | `HTTP 接口`、`后台聊天管理接口`、`WebSocket 协议`、`服务端推送事件` |
+| 后台文件库、上传任务管理 | `file-api.md` | `后台文件管理接口` |
 
-## 统一约定
+## 2. 三份文档分别覆盖什么
 
-- `/api/auth/**`：认证相关接口
-- `/api/sys/**`：后台管理接口
-- `/api/user/**`：登录用户行为接口
-- 前台公开只读接口统一放在非 `/api/sys/**`、非 `/api/user/**` 路径下
+| 文档 | 面向页面 / 模块 | 主要路由范围 |
+| --- | --- | --- |
+| `auth-api.md` | 登录注册、后台权限框架、系统管理、用户通知中心 | `/api/auth/**`、`/api/sys/**` 中的认证/系统管理接口、`/api/user/notices/**` |
+| `content-api.md` | 前台内容页、登录后内容行为、后台内容管理 | `/api/articles/**`、`/api/categories/**`、`/api/tags/**`、`/api/comments/**`、`/api/user/**` 中的内容行为接口、`/api/sys/**` 中的内容管理接口 |
+| `file-api.md` | 上传流程、我的文件、后台文件库 | `/api/user/files/**`、`/api/sys/files/**` |
+| `chat-api.md` | 聊天 HTTP 接口、后台聊天管理与 WebSocket 实时协议 | `/api/user/chat/**`、`/api/sys/chats/**`、`/ws/chat` |
 
-## 维护说明
+## 3. 联调统一约定
 
-- 新增控制器时，先更新本总览，再补对应模块文档。
-- `file` 模块接口较多，独立维护 `file-api.md`。
-- 仓库根目录 `README.md` 中的“接口与文档”入口应与本目录保持一致。
+### 3.1 Base URL
+
+- 统一前缀：`/api`
+
+### 3.2 登录态
+
+- 匿名接口可直接调用。
+- 需要登录的接口统一传：
+
+```http
+Authorization: Bearer <accessToken>
+```
+
+- `accessToken` 过期后，先调用刷新接口换新令牌，再决定是否跳转登录。
+
+### 3.3 统一响应结构
+
+所有接口统一返回 `Result<T>`：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {}
+}
+```
+
+字段含义：
+
+| 字段 | 说明 |
+| --- | --- |
+| `code` | 业务状态码，`200` 表示成功 |
+| `message` | 业务提示文案 |
+| `timestamp` | 服务端响应时间戳，毫秒 |
+| `data` | 实际业务数据，可能是对象、数组、分页对象或 `null` |
+
+分页接口的 `data` 固定结构：
+
+```json
+{
+  "total": 1,
+  "current": 1,
+  "size": 10,
+  "records": []
+}
+```
+
+### 3.4 前端统一错误处理建议
+
+| 场景 | 建议处理 |
+| --- | --- |
+| HTTP `401` | 未登录、令牌失效或已过期，尝试刷新或跳转登录 |
+| HTTP `403` | 已登录但无权限，展示无权限页或禁用入口 |
+| `Result.code != 200` | 业务失败，优先展示 `message` |
+| 上传接口返回任务失败状态 | 读取 `errorCode`、`errorMessage` 展示可操作提示 |
+
+### 3.5 时间与分页字段
+
+- 时间字段按后端序列化结果返回，前端统一自行格式化。
+- 分页参数默认使用 `current`、`size`。
+- 列表接口若未特别说明，筛选参数都支持“不传即忽略”。
+
+## 4. 当前模块扫描结果
+
+本目录按 `src/main/java/com/cybzacg/blogbackend/module` 下现有控制器整理，覆盖关系如下：
+
+| 模块 | 当前文档归属 | 说明 |
+| --- | --- | --- |
+| `auth` | `auth-api.md` | 认证、用户、角色、菜单、系统配置、通知、日志 |
+| `article` | `content-api.md` | 后台文章、前台文章、文章点赞 |
+| `content` | `content-api.md` | 分类、标签、评论、收藏、互动、足迹 |
+| `file` | `file-api.md` | 用户上传、我的文件、后台文件管理 |
+| `chat` | `chat-api.md` | 会话列表、后台聊天管理、消息发送、群管理与 WebSocket 实时推送 |
+
+## 5. 推荐阅读顺序
+
+### 前台站点
+
+1. `content-api.md` 的 `前台页面接口`
+2. `content-api.md` 的 `登录后用户行为接口`
+3. 如果页面涉及上传，再看 `file-api.md` 的 `用户上传接入流程`
+
+### 后台管理台
+
+1. `auth-api.md` 的 `登录态接入流程`
+2. `auth-api.md` 的 `后台应用启动流程`
+3. 按业务模块继续看：
+   - 用户/角色/菜单/配置/通知/日志：`auth-api.md`
+   - 内容管理：`content-api.md`
+   - 文件管理：`file-api.md`
+
+## 6. 维护规则
+
+- 新增、删除、修改前端可见接口时，必须同步更新对应文档。
+- 如果只是补字段、改枚举或改边界行为，也不能只改代码不改文档。
+- 当某个接口更适合归入另一个前端场景时，允许调整文档结构，但要保持本页导航可用。
+- 当前 `chat-api.md` 已覆盖 chat v1 的用户侧 HTTP 接口、后台聊天管理接口与 WebSocket 实时协议，联调可直接按文档接入。
+
+
+
+
