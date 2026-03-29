@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cybzacg.blogbackend.mapper.SysUserFollowMapper">
+
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.SysUserFollow">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="followerId" column="follower_id" jdbcType="BIGINT"/>
+        <result property="followingId" column="following_id" jdbcType="BIGINT"/>
+        <result property="followStatus" column="follow_status" jdbcType="TINYINT"/>
+        <result property="isSpecialFollow" column="is_special_follow" jdbcType="TINYINT"/>
+        <result property="source" column="source" jdbcType="VARCHAR"/>
+        <result property="followTime" column="follow_time" jdbcType="TIMESTAMP"/>
+        <result property="unfollowTime" column="unfollow_time" jdbcType="TIMESTAMP"/>
+        <result property="remark" column="remark" jdbcType="VARCHAR"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, follower_id, following_id, follow_status, is_special_follow,
+        source, follow_time, unfollow_time, remark, created_at, updated_at
+    </sql>
+</mapper>
