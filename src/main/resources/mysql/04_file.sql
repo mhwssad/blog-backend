@@ -164,7 +164,7 @@ CREATE TABLE file_business_info
     updated_at     DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3) NOT NULL ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
 
     -- 索引
-    UNIQUE KEY uk_file_reference (file_id, reference_type, reference_id) COMMENT '同一业务对象对同一文件只允许绑定一次',
+    UNIQUE KEY uk_file_reference (file_id, user_id, reference_type, reference_id) COMMENT '同一用户对同一业务对象绑定同一文件只允许一次',
     INDEX          idx_user_created (user_id, created_at DESC) COMMENT '按用户查询引用记录',
     INDEX          idx_reference (reference_type, reference_id) COMMENT '按业务对象查询文件引用',
     INDEX          idx_category (category) COMMENT '按分类查询'

@@ -19,9 +19,15 @@ CREATE TABLE `sys_user`
     `updated_at`      datetime DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `deleted_flag`    tinyint(1) DEFAULT 0 NOT NULL COMMENT '删除标记：0-未删除，1-已删除',
     `remark`          varchar(500) COMMENT '备注',
+    `active_username` varchar(50) GENERATED ALWAYS AS (CASE WHEN deleted_flag = 0 THEN username ELSE NULL END) STORED COMMENT '有效用户名唯一键辅助列',
+    `active_email`    varchar(128) GENERATED ALWAYS AS (CASE WHEN deleted_flag = 0 THEN NULLIF(TRIM(email), '') ELSE NULL END) STORED COMMENT '有效邮箱唯一键辅助列',
+    `active_phone`    varchar(20) GENERATED ALWAYS AS (CASE WHEN deleted_flag = 0 THEN NULLIF(TRIM(phone), '') ELSE NULL END) STORED COMMENT '有效手机号唯一键辅助列',
     PRIMARY KEY (`id`) USING BTREE,
-    UNIQUE KEY `uk_username` (`username`) COMMENT '用户名唯一索引',
+    UNIQUE KEY `uk_sys_user_active_username` (`active_username`) COMMENT '有效用户名唯一索引',
+    UNIQUE KEY `uk_sys_user_active_email` (`active_email`) COMMENT '有效邮箱唯一索引',
+    UNIQUE KEY `uk_sys_user_active_phone` (`active_phone`) COMMENT '有效手机号唯一索引',
     KEY `idx_user_created_at` (`created_at`) COMMENT '创建时间索引',
+    KEY `idx_user_deleted_username` (`deleted_flag`, `username`) COMMENT '有效用户名查询索引',
     KEY `idx_user_email` (`email`) COMMENT '邮箱索引',
     KEY `idx_user_phone` (`phone`) COMMENT '手机号索引'
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COMMENT = '用户信息表';
@@ -62,23 +68,29 @@ CREATE TABLE `sys_role`  (
                              `update_by` bigint NULL COMMENT '更新人ID',
                              `update_time` datetime NULL COMMENT '更新时间',
                              `is_deleted` tinyint(1) DEFAULT 0 COMMENT '逻辑删除标识(0-未删除 1-已删除)',
+                             `active_role_name` varchar(64) GENERATED ALWAYS AS (CASE WHEN is_deleted = 0 THEN NULLIF(TRIM(name), '') ELSE NULL END) STORED COMMENT '有效角色名称唯一辅助列',
+                             `active_role_code` varchar(32) GENERATED ALWAYS AS (CASE WHEN is_deleted = 0 THEN NULLIF(TRIM(code), '') ELSE NULL END) STORED COMMENT '有效角色编码唯一辅助列',
                              PRIMARY KEY (`id`) USING BTREE,
-                             UNIQUE INDEX `uk_name`(`name` ASC) USING BTREE COMMENT '角色名称唯一索引',
-                             UNIQUE INDEX `uk_code`(`code` ASC) USING BTREE COMMENT '角色编码唯一索引'
+                             UNIQUE INDEX `uk_sys_role_active_name`(`active_role_name` ASC) USING BTREE COMMENT '有效角色名称唯一索引',
+                             UNIQUE INDEX `uk_sys_role_active_code`(`active_role_code` ASC) USING BTREE COMMENT '有效角色编码唯一索引',
+                             KEY `idx_role_deleted_name` (`is_deleted`, `name`) COMMENT '角色名称查询索引',
+                             KEY `idx_role_deleted_code` (`is_deleted`, `code`) COMMENT '角色编码查询索引'
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COMMENT = '系统角色表';
 
 DROP TABLE IF EXISTS `sys_role_menu`;
 CREATE TABLE `sys_role_menu`  (
                                   `role_id` bigint NOT NULL COMMENT '角色ID',
                                   `menu_id` bigint NOT NULL COMMENT '菜单ID',
-                                  UNIQUE INDEX `uk_roleid_menuid`(`role_id` ASC, `menu_id` ASC) USING BTREE COMMENT '角色菜单唯一索引'
+                                  UNIQUE INDEX `uk_roleid_menuid`(`role_id` ASC, `menu_id` ASC) USING BTREE COMMENT '角色菜单唯一索引',
+                                  KEY `idx_role_menu_menu_id` (`menu_id`) COMMENT '按菜单清理角色关系索引'
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COMMENT = '角色菜单关联表';
 
 DROP TABLE IF EXISTS `sys_user_role`;
 CREATE TABLE `sys_user_role`  (
                                   `user_id` bigint NOT NULL COMMENT '用户ID',
                                   `role_id` bigint NOT NULL COMMENT '角色ID',
-                                  PRIMARY KEY (`user_id`, `role_id`) USING BTREE
+                                  PRIMARY KEY (`user_id`, `role_id`) USING BTREE,
+                                  KEY `idx_user_role_role_id` (`role_id`) COMMENT '按角色清理用户关系索引'
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COMMENT = '用户角色关联表';
 
 DROP TABLE IF EXISTS `sys_log`;
@@ -102,7 +114,7 @@ CREATE TABLE `sys_log` (
                            `create_time` datetime COMMENT '创建时间',
                            PRIMARY KEY (`id`) USING BTREE,
                            KEY `idx_create_time` (`create_time`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COMMENT='系统操作日志表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统操作日志表';
 
 DROP TABLE IF EXISTS `sys_config`;
 CREATE TABLE `sys_config` (
@@ -116,7 +128,10 @@ CREATE TABLE `sys_config` (
                               `update_time` datetime COMMENT '更新时间',
                               `update_by` bigint COMMENT '更新人ID',
                               `is_deleted` tinyint(4) DEFAULT '0' NOT NULL COMMENT '逻辑删除标识(0-未删除 1-已删除)',
-                              PRIMARY KEY (`id`)
+                              `active_config_key` varchar(50) GENERATED ALWAYS AS (CASE WHEN is_deleted = 0 THEN NULLIF(TRIM(config_key), '') ELSE NULL END) STORED COMMENT '有效配置键唯一辅助列',
+                              PRIMARY KEY (`id`),
+                              UNIQUE KEY `uk_sys_config_active_key` (`active_config_key`) COMMENT '有效配置键唯一索引',
+                              KEY `idx_config_key_deleted` (`config_key`, `is_deleted`) COMMENT '配置键查询索引'
 ) ENGINE=InnoDB COMMENT='系统配置表';
 
 DROP TABLE IF EXISTS `sys_notice`;
@@ -137,7 +152,9 @@ CREATE TABLE `sys_notice` (
                               `update_by` bigint COMMENT '更新人ID',
                               `update_time` datetime COMMENT '更新时间',
                               `is_deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除（0: 未删除, 1: 已删除）',
-                              PRIMARY KEY (`id`) USING BTREE
+                              PRIMARY KEY (`id`) USING BTREE,
+                              KEY `idx_notice_admin_page` (`is_deleted`, `create_time`, `id`) COMMENT '后台通知列表索引',
+                              KEY `idx_notice_publish_scope_time` (`is_deleted`, `publish_status`, `target_type`, `publish_time`, `id`) COMMENT '用户收件箱索引'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统通知公告表';
 
 DROP TABLE IF EXISTS `sys_user_notice`;
@@ -150,7 +167,9 @@ CREATE TABLE `sys_user_notice` (
                                    `create_time` datetime NOT NULL COMMENT '创建时间',
                                    `update_time` datetime COMMENT '更新时间',
                                    `is_deleted` tinyint DEFAULT '0' COMMENT '逻辑删除(0: 未删除, 1: 已删除)',
-                                   PRIMARY KEY (`id`) USING BTREE
+                                   PRIMARY KEY (`id`) USING BTREE,
+                                   UNIQUE KEY `uk_notice_user` (`notice_id`, `user_id`) COMMENT '同一通知同一用户唯一',
+                                   KEY `idx_user_notice_inbox` (`user_id`, `is_deleted`, `is_read`, `notice_id`) COMMENT '用户收件箱索引'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户通知公告关联表';
 
 
