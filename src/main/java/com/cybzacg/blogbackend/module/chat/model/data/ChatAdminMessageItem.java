@@ -1,0 +1,28 @@
+package com.cybzacg.blogbackend.module.chat.model.data;
+
+import java.util.Date;
+import lombok.Data;
+
+/**
+ * 后台消息分页查询结果。
+ */
+@Data
+public class ChatAdminMessageItem {
+    private Long id;
+    private Long conversationId;
+    private Long senderId;
+    private String messageType;
+    private String content;
+    private String payloadJson;
+    private Long replyMessageId;
+    private String clientMessageId;
+    private Integer sendStatus;
+    private Integer revokeStatus;
+    private Long revokedBy;
+    private Date revokedAt;
+    private Long totalRecipientCount;
+    private Long deliveredRecipientCount;
+    private Long readRecipientCount;
+    private Date createdAt;
+    private Date updatedAt;
+}
