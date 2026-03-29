@@ -11,6 +11,7 @@ public enum FileReferenceTypeEnum {
     AVATAR("avatar", "用户头像"),
     ARTICLE_ATTACHMENT("article_attachment", "文章附件"),
     COMMENT_IMAGE("comment_image", "评论图片"),
+    CHAT_MESSAGE("chat_message", "聊天消息文件"),
     TEMP("temp", "临时文件");
 
     private final String value;

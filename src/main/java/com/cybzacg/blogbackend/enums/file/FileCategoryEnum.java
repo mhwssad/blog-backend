@@ -11,6 +11,7 @@ public enum FileCategoryEnum {
     AVATAR("avatar", "头像"),
     ATTACHMENT("attachment", "附件"),
     COMMENT("comment", "评论图片"),
+    CHAT_ATTACHMENT("chat_attachment", "聊天附件"),
     TEMP("temp", "临时文件");
 
     private final String value;

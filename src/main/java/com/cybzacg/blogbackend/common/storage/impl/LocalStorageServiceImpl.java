@@ -273,8 +273,8 @@ public class LocalStorageServiceImpl implements StorageService {
                     Path sourcePath = PathUtils.create(basePath, sourceObjectName);
 
                     if (!FileUtils.exists(PathUtils.toFile(sourcePath))) {
-                        log.warn("分片文件不存在，跳过: {}", sourceObjectName);
-                        continue;
+                        log.error("分片文件不存在，终止合并: {}", sourceObjectName);
+                        throw new StorageException(StorageResultCode.UPLOAD_MERGE_FILES.getCode(), "分片文件不存在: " + sourceObjectName);
                     }
 
                     try (InputStream inputStream = Files.newInputStream(sourcePath)) {
@@ -309,7 +309,14 @@ public class LocalStorageServiceImpl implements StorageService {
                     totalBytesWritten, deletedCount, sourceObjectNames.size());
             return true;
         } catch (StorageException e) {
-            // 重新抛出 StorageException，保留原始异常信息
+            if (!mergeSuccess && targetPath != null && Files.exists(targetPath)) {
+                try {
+                    Files.deleteIfExists(targetPath);
+                    log.info("已删除部分合并的目标文件: {}", targetObjectName);
+                } catch (Exception deleteException) {
+                    log.error("删除部分合并的目标文件失败: {}", targetObjectName, deleteException);
+                }
+            }
             throw e;
         } catch (Exception e) {
             log.error("文件合并失败: {} -> {}", sourceObjectNames, targetObjectName, e);
@@ -364,4 +371,6 @@ public class LocalStorageServiceImpl implements StorageService {
         }
     }
 }
+
+
 

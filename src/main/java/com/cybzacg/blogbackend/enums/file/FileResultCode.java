@@ -31,7 +31,9 @@ public enum FileResultCode implements ResultCode {
     FILE_MD5_MISMATCH(71021, "文件MD5校验失败"),
     FILE_MD5_CALCULATE_FAILED(71022, "计算MD5失败"),
     FILE_NOT_FOUND(71023, "文件不存在"),
-    FILE_STATUS_INVALID(71024, "文件状态非法");
+    FILE_STATUS_INVALID(71024, "文件状态非法"),
+    UPLOAD_TASK_STATUS_INVALID(71025, "上传任务状态非法"),
+    UPLOAD_TASK_EXPIRED(71026, "上传任务已过期");
 
     private final Integer code;
     private final String message;

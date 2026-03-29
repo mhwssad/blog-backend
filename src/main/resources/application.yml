@@ -12,6 +12,7 @@ security:
     - /api/auth/email-code
     - /api/auth/email-login
     - /api/auth/refresh
+    - /ws/**
     - /api/articles
     - /api/articles/**
     - /api/categories/tree
@@ -30,4 +31,10 @@ security:
       secret-key: SecretKey012345678901234567890123456789
     redis-token:
       allow-multi-login: true
+
+websocket:
+  endpoint: /ws/chat
+  allowed-origin-patterns:
+    - "*"
+  token-query-param: accessToken
 
