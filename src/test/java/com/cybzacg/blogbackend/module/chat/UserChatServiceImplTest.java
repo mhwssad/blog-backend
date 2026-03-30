@@ -1907,6 +1907,7 @@ class UserChatServiceImplTest {
     @Test
     void revokeMessageShouldReleaseChatFileReference() {
         Long currentUserId = 1L;
+        Long conversationId = 1001L;
         Long messageId = 9802L;
         Long fileId = 7001L;
 
@@ -1917,6 +1918,7 @@ class UserChatServiceImplTest {
 
         ChatMessage message = new ChatMessage();
         message.setId(messageId);
+        message.setConversationId(conversationId);
         message.setSenderId(currentUserId);
         message.setMessageType(ChatConstants.MESSAGE_TYPE_FILE);
         message.setPayloadJson("{\"fileId\":7001}");
@@ -1929,7 +1931,7 @@ class UserChatServiceImplTest {
         fileReference.setReferenceId(messageId);
 
         ChatConversationMember selfMember = new ChatConversationMember();
-        selfMember.setConversationId(1L);
+        selfMember.setConversationId(conversationId);
         selfMember.setUserId(currentUserId);
         selfMember.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
 
@@ -1947,7 +1949,10 @@ class UserChatServiceImplTest {
         when(chatConversationMemberService.lambdaQuery()).thenReturn(activeMembersQuery);
         when(activeMembersQuery.eq(anySFunction(), any())).thenReturn(activeMembersQuery);
         when(activeMembersQuery.list()).thenReturn(List.of(selfMember));
-        when(chatMessageMapper.selectVisibleMessageById(any(Long.class), eq(currentUserId), eq(messageId))).thenReturn(new ChatMessageHistoryItem());
+        ChatMessageHistoryItem revokedItem = new ChatMessageHistoryItem();
+        revokedItem.setId(messageId);
+        revokedItem.setConversationId(conversationId);
+        when(chatMessageMapper.selectVisibleMessageById(conversationId, currentUserId, messageId)).thenReturn(revokedItem);
         when(chatModelMapper.toMessageVO(any(ChatMessageHistoryItem.class))).thenReturn(new ChatMessageVO());
 
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(currentUserId)) {
@@ -2172,11 +2177,9 @@ class UserChatServiceImplTest {
         LambdaQueryChainWrapper<ChatConversationMember> secondSelfQuery = mock(LambdaQueryChainWrapper.class);
         LambdaQueryChainWrapper<ChatConversationMember> secondActiveMembersQuery = mock(LambdaQueryChainWrapper.class);
         LambdaQueryChainWrapper<ChatConversationMember> senderMemberQuery = mock(LambdaQueryChainWrapper.class);
-        LambdaQueryChainWrapper<ChatConversationMember> targetMemberQuery = mock(LambdaQueryChainWrapper.class);
         LambdaQueryChainWrapper<ChatMessageReadCursor> senderCursorQuery = mock(LambdaQueryChainWrapper.class);
         LambdaQueryChainWrapper<ChatMessageReadCursor> targetCursorUnreadQuery = mock(LambdaQueryChainWrapper.class);
         LambdaQueryChainWrapper<FileBusinessInfo> existingChatRefQuery = mock(LambdaQueryChainWrapper.class);
-        LambdaUpdateChainWrapper<ChatMessageRecipient> deliveredUpdate = mock(LambdaUpdateChainWrapper.class);
 
         when(chatConversationService.getById(conversationId)).thenReturn(conversation);
         when(chatConversationMemberService.lambdaQuery()).thenReturn(
@@ -2184,8 +2187,7 @@ class UserChatServiceImplTest {
                 firstActiveMembersQuery,
                 secondSelfQuery,
                 secondActiveMembersQuery,
-                senderMemberQuery,
-                targetMemberQuery
+                senderMemberQuery
         );
         mockMemberFindQuery(firstSelfQuery, selfMember);
         when(firstActiveMembersQuery.eq(anySFunction(), any())).thenReturn(firstActiveMembersQuery);
@@ -2194,7 +2196,6 @@ class UserChatServiceImplTest {
         when(secondActiveMembersQuery.eq(anySFunction(), any())).thenReturn(secondActiveMembersQuery);
         when(secondActiveMembersQuery.list()).thenReturn(List.of(selfMember, targetMember));
         mockMemberFindQuery(senderMemberQuery, selfMember);
-        mockMemberFindQuery(targetMemberQuery, targetMember);
 
         when(fileBusinessInfoService.getById(businessId)).thenReturn(tempReference);
         when(fileInfoService.getById(7001L)).thenReturn(fileInfo);
@@ -2219,8 +2220,6 @@ class UserChatServiceImplTest {
         when(chatMessageService.updateById(any(ChatMessage.class))).thenReturn(true);
         when(chatConversationService.updateById(conversation)).thenReturn(true);
         when(chatMessageRecipientService.saveBatch(any())).thenReturn(true);
-        when(chatMessageRecipientService.lambdaUpdate()).thenReturn(deliveredUpdate);
-        mockRecipientUpdateQuery(deliveredUpdate);
         when(chatMessageReadCursorService.lambdaQuery()).thenReturn(senderCursorQuery, targetCursorUnreadQuery);
         mockCursorFindQuery(senderCursorQuery, senderCursor);
         mockCursorFindQuery(targetCursorUnreadQuery, targetCursor);

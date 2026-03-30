@@ -124,6 +124,11 @@ public class AuthServiceImpl implements AuthService {
         ExceptionThrowerCore.throwBusinessIfNull(user, ResultErrorCode.USER_NOT_FOUND);
         ExceptionThrowerCore.throwBusinessIfNot(Integer.valueOf(1).equals(user.getStatus()), ResultErrorCode.ACCOUNT_DISABLED);
 
+        String rateLimitKey = RedisKeyUtils.build(AuthConstants.EMAIL_LOGIN_CODE_RATE_PREFIX, email);
+        ExceptionThrowerCore.throwBusinessIfNot(
+                redisOperator.setIfAbsent(rateLimitKey, "1", AuthConstants.EMAIL_LOGIN_CODE_RATE_TTL),
+                ResultErrorCode.EMAIL_CAPTCHA_RATE_LIMITED);
+
         String code = generateEmailCode();
         try {
             SimpleMailMessage message = new SimpleMailMessage();

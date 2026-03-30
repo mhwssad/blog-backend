@@ -20,6 +20,8 @@ public final class AuthConstants {
 
     public static final String EMAIL_LOGIN_CODE_PREFIX = "auth:email-login-code";
     public static final Duration EMAIL_LOGIN_CODE_TTL = Duration.ofMinutes(5);
+    public static final String EMAIL_LOGIN_CODE_RATE_PREFIX = "auth:email-login-code:rate";
+    public static final Duration EMAIL_LOGIN_CODE_RATE_TTL = Duration.ofSeconds(60);
     public static final String EMAIL_LOGIN_SUBJECT = "登录验证码";
 
     private AuthConstants() {

@@ -107,7 +107,7 @@ public class JwtTokenManager implements TokenManager {
         try {
             Claims claims = parseClaims(token);
             return expectedTokenType.equals(claims.get(AuthConstants.TOKEN_TYPE, String.class));
-        } catch (JwtException | IllegalArgumentException ex) {
+        } catch (BusinessException | JwtException | IllegalArgumentException ex) {
             return false;
         }
     }
@@ -126,7 +126,7 @@ public class JwtTokenManager implements TokenManager {
                     .build()
                     .parseSignedClaims(normalizeToken(token))
                     .getPayload();
-        } catch (JwtException | IllegalArgumentException ex) {
+        } catch (BusinessException | JwtException | IllegalArgumentException ex) {
             throw new BusinessException("Token无效或已过期", ex);
         }
     }
@@ -255,3 +255,5 @@ public class JwtTokenManager implements TokenManager {
         return null;
     }
 }
+
+

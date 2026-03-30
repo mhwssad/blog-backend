@@ -1,7 +1,9 @@
 package com.cybzacg.blogbackend.module.file;
 
+import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.cybzacg.blogbackend.common.storage.StorageManager;
@@ -18,6 +20,7 @@ import com.cybzacg.blogbackend.module.file.service.FileChunkService;
 import com.cybzacg.blogbackend.module.file.service.FileInfoService;
 import com.cybzacg.blogbackend.module.file.service.FileUploadTaskService;
 import com.cybzacg.blogbackend.module.file.service.impl.FileLifecycleServiceImpl;
+import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -61,6 +64,7 @@ class FileLifecycleServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        initTableInfo(FileInfo.class);
         fileLifecycleService = new FileLifecycleServiceImpl(
                 fileInfoService,
                 fileUploadTaskService,
@@ -84,7 +88,7 @@ class FileLifecycleServiceImplTest {
         FileUploadTask task = buildExpiredChunkTask();
         when(fileUploadTaskService.lambdaQuery()).thenReturn(taskQuery);
         when(taskQuery.le(anySFunction(), any())).thenReturn(taskQuery);
-        when(taskQuery.in(anySFunction(), anyCollection())).thenReturn(taskQuery);
+        when(taskQuery.in(anySFunction(), any(), any(), any())).thenReturn(taskQuery);
         when(taskQuery.orderByAsc(anySFunction())).thenReturn(taskQuery);
         when(taskQuery.last(anyString())).thenReturn(taskQuery);
         when(taskQuery.list()).thenReturn(List.of(task), List.of());
@@ -110,7 +114,7 @@ class FileLifecycleServiceImplTest {
         FileUploadTask task = buildExpiredChunkTask();
         when(fileUploadTaskService.lambdaQuery()).thenReturn(taskQuery);
         when(taskQuery.le(anySFunction(), any())).thenReturn(taskQuery);
-        when(taskQuery.in(anySFunction(), anyCollection())).thenReturn(taskQuery);
+        when(taskQuery.in(anySFunction(), any(), any(), any())).thenReturn(taskQuery);
         when(taskQuery.orderByAsc(anySFunction())).thenReturn(taskQuery);
         when(taskQuery.last(anyString())).thenReturn(taskQuery);
         when(taskQuery.list()).thenReturn(List.of(task), List.of());
@@ -206,8 +210,20 @@ class FileLifecycleServiceImplTest {
         return task;
     }
 
+    private static void initTableInfo(Class<?> entityClass) {
+        if (TableInfoHelper.getTableInfo(entityClass) != null) {
+            return;
+        }
+        MapperBuilderAssistant assistant = new MapperBuilderAssistant(new MybatisConfiguration(), "test");
+        assistant.setCurrentNamespace(entityClass.getName());
+        TableInfoHelper.initTableInfo(assistant, entityClass);
+    }
+
     @SuppressWarnings("unchecked")
     private static <T> SFunction<T, ?> anySFunction() {
         return (SFunction<T, ?>) any(SFunction.class);
     }
 }
+
+
+

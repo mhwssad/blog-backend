@@ -7,17 +7,18 @@
 当前已支持：
 
 - 单聊、群聊、全站群聊
-- 文本消息、文件消息
+- 文本消息、文件消息、图片消息、语音消息
+- 基础回复能力，当前通过 `replyMessageId` 关联被回复消息
 - 消息编辑、撤回、仅当前用户视角删除
 - 会话列表 / 会话详情 / 历史消息 / 已读推进
 - 群管理员、转让群主、禁言、群公告
 - 后台会话管理、消息详情、回执明细、成员角色/状态/禁言管理、后台撤回
-- WebSocket 新消息推送与已读推进推送
+- WebSocket 新消息、编辑、撤回、会话更新、成员更新、已读推进推送
 
 当前仍未支持：
 
-- 图片、语音、回复等更多消息类型
-- 编辑/撤回/群治理专用 WebSocket 事件
+- 回复消息的引用快照、被回复消息摘要冗余、富文本引用块
+- 图片尺寸/缩略图、语音时长/波形等更细粒度附件元数据
 - 多节点 WebSocket 广播
 
 ## 2. 鉴权要求
@@ -123,16 +124,17 @@ const socket = new WebSocket(`ws://localhost:8000/ws/chat?accessToken=${accessTo
 
 | 字段 | 说明 |
 | --- | --- |
-| `messageType` | `text/file` |
-| `content` | 文本内容或文件摘要；撤回后固定为“消息已撤回” |
-| `file` | 文件消息载荷；文本消息为空 |
+| `messageType` | `text/file/image/voice` |
+| `content` | 文本内容或附件摘要；撤回后固定为“消息已撤回” |
+| `file` | 附件消息载荷；文本消息为空 |
+| `replyMessageId` | 被回复消息 ID；未回复时为空 |
 | `deliveryStatus` | 当前用户视角下的投递状态：`0/1/2` |
 | `readByCurrentUser` | 当前用户是否已读 |
 | `revoked` | 是否已撤回 |
 | `edited` | 是否编辑过；当前仅文本消息可能为 `true` |
 | `updatedAt` | 更新时间 |
 
-文件载荷 `file` 字段：
+附件载荷 `file` 字段：
 
 | 字段 | 说明 |
 | --- | --- |
@@ -149,6 +151,7 @@ const socket = new WebSocket(`ws://localhost:8000/ws/chat?accessToken=${accessTo
 
 - 当前实现采用“在线即 delivered”语义：如果发送时服务端检测到接收方存在在线 WebSocket 会话，会立即把 recipient 推进到 `已送达`。
 - 用户拉取历史消息时，如命中此前仍是 `待投递` 的消息，也会补记为 `已送达`。
+- `replyMessageId` 当前只返回关联消息 ID，不额外内嵌被回复消息摘要。
 
 ### 3.4 发送文本消息
 
@@ -162,7 +165,8 @@ const socket = new WebSocket(`ws://localhost:8000/ws/chat?accessToken=${accessTo
 {
   "conversationId": 1001,
   "content": "hello",
-  "clientMessageId": "msg-001"
+  "clientMessageId": "msg-001",
+  "replyMessageId": 90001
 }
 ```
 
@@ -172,7 +176,8 @@ const socket = new WebSocket(`ws://localhost:8000/ws/chat?accessToken=${accessTo
 {
   "targetUserId": 2,
   "content": "hello",
-  "clientMessageId": "msg-001"
+  "clientMessageId": "msg-001",
+  "replyMessageId": 90001
 }
 ```
 
@@ -180,6 +185,7 @@ const socket = new WebSocket(`ws://localhost:8000/ws/chat?accessToken=${accessTo
 
 - `conversationId` 和 `targetUserId` 不能同时为空。
 - `clientMessageId` 作为同一发送人的幂等键。
+- `replyMessageId` 非空时，必须是当前用户在同一会话内可见的消息。
 - 当前成员被禁言时会拒绝发送。
 
 ### 3.5 发送文件消息
@@ -192,7 +198,8 @@ const socket = new WebSocket(`ws://localhost:8000/ws/chat?accessToken=${accessTo
 {
   "conversationId": 1001,
   "businessId": 501,
-  "clientMessageId": "file-001"
+  "clientMessageId": "file-001",
+  "replyMessageId": 90001
 }
 ```
 
@@ -211,6 +218,11 @@ const socket = new WebSocket(`ws://localhost:8000/ws/chat?accessToken=${accessTo
 - 当前只接受：
   - 上传阶段的临时引用 `temp`
   - 尚未绑定具体消息的 `chat_message` 引用
+- 服务端会根据 `file_info.mime_type` 自动推断消息类型：
+  - `image/*` -> `image`
+  - `audio/*` -> `voice`
+  - 其他 -> `file`
+- `replyMessageId` 非空时，同样要求当前用户在该会话内可见。
 - 发送成功后，服务端会把文件业务引用重绑到 `chat_message`，并清理临时引用。
 
 ### 3.6 编辑 / 撤回 / 删除
@@ -230,6 +242,7 @@ const socket = new WebSocket(`ws://localhost:8000/ws/chat?accessToken=${accessTo
 
 - 仅允许编辑自己发送的文本消息
 - 文件消息、已撤回消息不允许编辑
+- 编辑成功后，服务端会向当前会话活跃成员推送 `message_updated`
 
 撤回：
 
@@ -241,6 +254,7 @@ const socket = new WebSocket(`ws://localhost:8000/ws/chat?accessToken=${accessTo
 - 当前仅允许撤回自己发送的消息
 - 撤回后消息主记录保留，但内容会改为“消息已撤回”
 - 文件消息撤回时会释放聊天引用
+- 撤回成功后，服务端会向当前会话活跃成员推送 `message_revoked`
 
 删除我的消息视图：
 
@@ -340,6 +354,8 @@ DELETE /api/user/chat/groups/{conversationId}/members/{memberUserId}
 
 - 用户不能通过“移除成员”接口移除自己
 - 群主不能直接退群，只能先转让群主或解散
+- 邀请成员、设置管理员、取消管理员、转让群主、禁言成员、移除成员、成员退群后，服务端会推送 `members_updated`
+- 转让群主、更新群公告、解散群聊后，服务端还会补推 `conversation_updated`
 
 ## 4. 后台聊天管理接口
 
@@ -375,8 +391,9 @@ DELETE /api/user/chat/groups/{conversationId}/members/{memberUserId}
 
 | 字段 | 说明 |
 | --- | --- |
-| `messageType` | `text/file` |
-| `file` | 文件消息载荷 |
+| `messageType` | `text/file/image/voice` |
+| `file` | 附件消息载荷 |
+| `replyMessageId` | 被回复消息 ID |
 | `revokeStatus` | 撤回状态 |
 | `revokedBy` | 撤回操作人 ID |
 | `revokedAt` | 撤回时间 |
@@ -458,7 +475,9 @@ PUT /api/sys/chats/conversations/{conversationId}/members/{memberUserId}/mute
 说明：
 
 - 把成员角色更新为 `owner` 时，服务端会同步更新 `chat_conversation.owner_id`
-- 单聊会话成员角色只允许为 `member`
+- 后台成员治理当前仅支持普通群聊会话，单聊和全站群会直接拒绝
+- 角色/状态/禁言更新成功后，服务端会推送 `members_updated`
+- 群主转移类角色变更还会补推 `conversation_updated`
 
 ### 4.6 后台撤回消息
 
@@ -498,6 +517,10 @@ PUT /api/sys/chats/conversations/{conversationId}/members/{memberUserId}/mute
 - `pong`
 - `ack`
 - `message_created`
+- `message_updated`
+- `message_revoked`
+- `conversation_updated`
+- `members_updated`
 - `read_updated`
 - `error`
 
@@ -512,7 +535,8 @@ PUT /api/sys/chats/conversations/{conversationId}/members/{memberUserId}/mute
   "payload": {
     "conversationId": 1001,
     "content": "hello",
-    "clientMessageId": "msg-001"
+    "clientMessageId": "msg-001",
+    "replyMessageId": 90001
   }
 }
 ```
@@ -520,6 +544,7 @@ PUT /api/sys/chats/conversations/{conversationId}/members/{memberUserId}/mute
 说明：
 
 - 当前 WebSocket 侧 `send_message` 仍只映射到文本消息发送
+- `replyMessageId` 的校验规则与 HTTP 文本消息发送保持一致
 - 文件消息仍建议走 HTTP
 
 ### 5.4 `mark_read`
@@ -539,8 +564,10 @@ PUT /api/sys/chats/conversations/{conversationId}/members/{memberUserId}/mute
 
 ### 5.5 当前限制
 
-- 编辑、撤回、删除、群治理没有专用 WS 事件
-- 前端执行这些动作后，如需同步其他视图，当前应主动刷新对应 HTTP 数据
+- 当前客户端主动请求仍只有 `send_message`、`mark_read` 两类业务请求
+- `message_updated` / `message_revoked` / `conversation_updated` / `members_updated` 都是服务端推送事件，客户端不能反向发送
+- 删除消息仍然只影响本人视角，当前没有单独的删除 WS 事件
+- 回复消息当前只下发 `replyMessageId`，如需展示引用摘要仍建议前端结合本地消息缓存或补拉 HTTP
 
 ## 6. 联调建议
 

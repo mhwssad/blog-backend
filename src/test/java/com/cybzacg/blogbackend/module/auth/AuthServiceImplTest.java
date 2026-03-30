@@ -285,6 +285,10 @@ class AuthServiceImplTest {
         user.setStatus(1);
 
         when(sysUserService.getByEmail("demo@example.com")).thenReturn(user);
+        when(redisOperator.setIfAbsent(
+                eq(RedisKeyUtils.build(AuthConstants.EMAIL_LOGIN_CODE_RATE_PREFIX, "demo@example.com")),
+                eq("1"),
+                eq(AuthConstants.EMAIL_LOGIN_CODE_RATE_TTL))).thenReturn(true);
         when(mailProperties.getUsername()).thenReturn("noreply@example.com");
 
         authService.sendEmailLoginCode(request);
@@ -336,6 +340,10 @@ class AuthServiceImplTest {
         user.setStatus(1);
 
         when(sysUserService.getByEmail("demo@example.com")).thenReturn(user);
+        when(redisOperator.setIfAbsent(
+                eq(RedisKeyUtils.build(AuthConstants.EMAIL_LOGIN_CODE_RATE_PREFIX, "demo@example.com")),
+                eq("1"),
+                eq(AuthConstants.EMAIL_LOGIN_CODE_RATE_TTL))).thenReturn(true);
         when(mailProperties.getUsername()).thenReturn("noreply@example.com");
         doThrow(new RuntimeException("mail server down")).when(javaMailSender).send(any(SimpleMailMessage.class));
 
@@ -442,5 +450,57 @@ class AuthServiceImplTest {
         }
 
         verify(authModelMapper, never()).toAuthMenuInfo(button);
+    }
+
+    @Test
+    void sendEmailLoginCodeShouldRejectWhenRateLimited() {
+        AuthEmailCodeRequest request = new AuthEmailCodeRequest();
+        request.setEmail("demo@example.com");
+
+        SysUser user = new SysUser();
+        user.setId(7L);
+        user.setStatus(1);
+
+        when(sysUserService.getByEmail("demo@example.com")).thenReturn(user);
+        when(redisOperator.setIfAbsent(
+                eq(RedisKeyUtils.build(AuthConstants.EMAIL_LOGIN_CODE_RATE_PREFIX, "demo@example.com")),
+                eq("1"),
+                eq(AuthConstants.EMAIL_LOGIN_CODE_RATE_TTL))).thenReturn(false);
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> authService.sendEmailLoginCode(request));
+
+        assertEquals(ResultErrorCode.EMAIL_CAPTCHA_RATE_LIMITED.getCode(), exception.getCode());
+        verify(javaMailSender, never()).send(any(SimpleMailMessage.class));
+        verify(redisOperator, never()).set(any(), any(), any());
+    }
+
+    @Test
+    void sendEmailLoginCodeShouldSetRateLimitKeyOnFirstRequest() {
+        AuthEmailCodeRequest request = new AuthEmailCodeRequest();
+        request.setEmail("demo@example.com");
+
+        SysUser user = new SysUser();
+        user.setId(7L);
+        user.setStatus(1);
+
+        when(sysUserService.getByEmail("demo@example.com")).thenReturn(user);
+        when(redisOperator.setIfAbsent(
+                eq(RedisKeyUtils.build(AuthConstants.EMAIL_LOGIN_CODE_RATE_PREFIX, "demo@example.com")),
+                eq("1"),
+                eq(AuthConstants.EMAIL_LOGIN_CODE_RATE_TTL))).thenReturn(true);
+        when(mailProperties.getUsername()).thenReturn("noreply@example.com");
+
+        authService.sendEmailLoginCode(request);
+
+        verify(redisOperator).setIfAbsent(
+                eq(RedisKeyUtils.build(AuthConstants.EMAIL_LOGIN_CODE_RATE_PREFIX, "demo@example.com")),
+                eq("1"),
+                eq(AuthConstants.EMAIL_LOGIN_CODE_RATE_TTL));
+        verify(javaMailSender).send(any(SimpleMailMessage.class));
+        verify(redisOperator).set(
+                eq(RedisKeyUtils.build(AuthConstants.EMAIL_LOGIN_CODE_PREFIX, "demo@example.com")),
+                any(),
+                eq(AuthConstants.EMAIL_LOGIN_CODE_TTL));
     }
 }

@@ -87,6 +87,7 @@ class UserFileServiceImplTest {
         FileUploadInitRequest request = buildInitRequest();
         request.setIsPublic(2);
         when(fileUploadProperties.getAllowedExtensions()).thenReturn(List.of("png"));
+        when(fileUploadProperties.getMaxFileSize()).thenReturn(10_240L);
         when(fileUploadProperties.getEnableMd5Check()).thenReturn(false);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockUser()) {
@@ -106,6 +107,7 @@ class UserFileServiceImplTest {
         FileUploadInitRequest request = buildInitRequest();
         request.setTotalChunks(3);
         when(fileUploadProperties.getAllowedExtensions()).thenReturn(List.of("png"));
+        when(fileUploadProperties.getMaxFileSize()).thenReturn(10_240L);
         when(fileUploadProperties.getEnableMd5Check()).thenReturn(false);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockUser()) {
@@ -125,6 +127,7 @@ class UserFileServiceImplTest {
         request.setTotalChunks(1);
         request.setChunkSize(1024L);
         when(fileUploadProperties.getAllowedExtensions()).thenReturn(List.of("png"));
+        when(fileUploadProperties.getMaxFileSize()).thenReturn(10_240L);
         when(fileUploadProperties.getEnableMd5Check()).thenReturn(false);
 
         try (MockedStatic<SecurityUtils> securityUtils = mockUser()) {
@@ -347,3 +350,6 @@ class UserFileServiceImplTest {
         return (SFunction<T, ?>) any(SFunction.class);
     }
 }
+
+
+

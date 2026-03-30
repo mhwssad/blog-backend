@@ -118,8 +118,10 @@ Authorization: Bearer <accessToken>
 
 - 边界说明：
   - 默认部署下开启 MD5 校验，初始化时未传 `fileMd5` 会直接返回 `FILE_MD5_REQUIRED`。
+  - `isPublic` 仅允许传 `0` 或 `1`，否则直接返回 `ILLEGAL_ARGUMENT`。
   - `referenceType` 仅支持 `avatar`、`article_attachment`、`comment_image`、`temp`。
   - `category` 仅支持 `avatar`、`attachment`、`comment`、`temp`。
+  - 显式传分片参数时，`totalChunks` 与 `chunkSize` 必须同时传入；其中 `totalChunks` 必须大于 `1`，`chunkSize` 必须大于 `0`。
   - 传入非法 `referenceType` 或 `category` 时，服务端会直接返回 `ILLEGAL_ARGUMENT`，不会再自动兜底成 `temp`。
 
 - 响应字段：`FileUploadInitVO`
@@ -159,6 +161,8 @@ Authorization: Bearer <accessToken>
 - 请求：`POST /api/user/files/upload-tasks/{uploadId}/quick-check`
 - 用途：在初始化后显式执行秒传判断
 - 路径参数：`uploadId`
+- 边界说明：
+  - 若任务已过期，服务端会先把任务收口为 `5(已取消)`，并返回 `UPLOAD_TASK_EXPIRED`。
 - 响应字段：`FileUploadResultVO`
 
 | 字段 | 类型 | 说明 |
@@ -183,6 +187,7 @@ Authorization: Bearer <accessToken>
   - 如果初始化时已记录 `fileMd5`，且服务端开启 MD5 校验，普通上传会先校验整文件 MD5；不一致时直接返回 `FILE_MD5_MISMATCH`。
   - 如果命中同 `MD5 + 文件大小` 的正常文件，会直接复用已有物理文件并完成当前任务。
   - 如果落存储失败，任务会被回写为失败状态，失败原因可通过“查询我的上传任务”接口查看。
+  - 若任务已过期，服务端会立即收口当前任务并返回 `UPLOAD_TASK_EXPIRED`。
   - 已完成或已取消的任务不能继续上传，继续调用会返回 `UPLOAD_TASK_STATUS_INVALID`。
 - 响应：`FileUploadResultVO`
 
@@ -200,6 +205,7 @@ Authorization: Bearer <accessToken>
 - 边界说明：
   - 如果服务端开启 MD5 校验且传入了 `chunkMd5`，会先校验当前分片 MD5；不一致时直接返回 `CHUNK_MD5_MISMATCH`。
   - 同一 `uploadId + chunkNumber` 重复上传时，会覆盖已有分片元数据并刷新该分片的上传时间与大小，不会新增第二条分片记录。
+  - 若任务已过期，服务端会立即收口当前任务并返回 `UPLOAD_TASK_EXPIRED`。
   - 已完成、已取消或处于不允许续传状态的任务不能继续上传分片，继续调用会返回 `UPLOAD_TASK_STATUS_INVALID`。
 - 响应字段：`ChunkUploadVO`
 
@@ -224,6 +230,7 @@ Authorization: Bearer <accessToken>
   - 若分片合并失败，任务会被回写为失败状态，错误码为 `CHUNK_MERGE_FAILED`。
   - 合并完成后会尽力清理临时分片；清理失败不会改变已完成结果。
   - 本地存储模式下若任一临时分片缺失，完成上传会直接失败，不再跳过缺失分片继续合并。
+  - 若任务已过期，服务端会立即收口当前任务并返回 `UPLOAD_TASK_EXPIRED`。
   - 已完成或已取消的任务不能重复调用完成接口，继续调用会返回 `UPLOAD_TASK_STATUS_INVALID`。
 - 响应：`FileUploadResultVO`
 
@@ -281,6 +288,7 @@ Authorization: Bearer <accessToken>
 
 - 边界说明：
   - 传入非法 `taskStatus` 时会直接返回 `UPLOAD_TASK_STATUS_INVALID`。
+  - 进行中的上传任务若超过有效期，会被后台定时清理为 `5(已取消)`，并把 `UPLOAD_TASK_EXPIRED` 写入 `errorCode/errorMessage`。
 
 - 响应字段：`UserFileTaskVO`
 
@@ -484,7 +492,7 @@ Authorization: Bearer <accessToken>
 | `2` | 合并中 |
 | `3` | 已完成 |
 | `4` | 失败 |
-| `5` | 已取消 |
+| `5` | 已取消，过期任务也会收口到该状态 |
 
 ### 5.3 文件状态
 
@@ -515,6 +523,9 @@ Authorization: Bearer <accessToken>
 | 用户删除文件是否一定删掉底层物理文件 | 不一定，只有引用数归零才会尝试删除 |
 | 后台文件权限前缀是什么 | `content:file:query`、`content:file:update`、`content:file:delete` |
 | 分片完成后临时文件清理失败 | 上传结果仍保持成功，不回滚已完成任务 |
+| 上传任务过期后再继续调用上传接口会怎样 | 服务端会先把任务收口为已取消，再返回 `UPLOAD_TASK_EXPIRED` |
+
+
 
 
 

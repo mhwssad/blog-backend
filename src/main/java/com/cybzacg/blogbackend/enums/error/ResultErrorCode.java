@@ -39,6 +39,7 @@ public enum ResultErrorCode implements ResultCode {
     EMAIL_CAPTCHA_INVALID(40112, "邮箱验证码错误"),
     EMAIL_CAPTCHA_EXPIRED(40113, "邮箱验证码已过期"),
     EMAIL_CAPTCHA_SEND_FAILED(40114, "邮箱验证码发送失败"),
+    EMAIL_CAPTCHA_RATE_LIMITED(40115, "发送过于频繁，请稍后再试"),
     CSRF_TOKEN_VALIDATION_FAILED(40301, "CSRF令牌校验失败"),
     CSRF_TOKEN_MISSING(40302, "缺少CSRF令牌"),
     CSRF_TOKEN_INVALID(40303, "无效的CSRF令牌"),
