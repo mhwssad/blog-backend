@@ -4,6 +4,7 @@ import com.cybzacg.blogbackend.core.web.Result;
 import com.cybzacg.blogbackend.enums.error.ResultCode;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.utils.JsonUtils;
+import com.cybzacg.blogbackend.utils.RequestContextUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -49,8 +50,12 @@ public abstract class BaseExceptionHandler {
     }
 
     protected String getTraceId() {
+        String traceId = RequestContextUtils.getTraceId();
+        if (traceId != null) {
+            return traceId;
+        }
         HttpServletRequest request = getRequest();
-        return request != null ? (String) request.getAttribute("traceId") : null;
+        return request != null ? (String) request.getAttribute(RequestContextUtils.TRACE_ID_ATTRIBUTE) : null;
     }
 
     protected void logException(Exception e, String message) {

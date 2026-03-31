@@ -28,7 +28,7 @@ DELETE FROM `sys_category` WHERE `id` IN (1, 2, 3, 4, 5);
 -- 清理系统初始化数据
 DELETE FROM `sys_user_notice` WHERE `id` IN (1) OR `notice_id` IN (1, 2);
 DELETE FROM `sys_notice` WHERE `id` IN (1, 2);
-DELETE FROM `sys_config` WHERE `id` IN (1, 2, 3, 4);
+DELETE FROM `sys_config` WHERE `id` IN (1, 2, 3, 4, 5, 6);
 DELETE FROM `sys_user_role` WHERE `user_id` IN (1, 2) OR `role_id` IN (1, 2);
 DELETE FROM `sys_user` WHERE `id` IN (1, 2);
 
@@ -60,7 +60,9 @@ VALUES
     (1, '站点名称', 'site.name', 'Cybz Blog', '系统初始化站点名称', NOW(), 1, NOW(), 1, 0),
     (2, '站点副标题', 'site.subtitle', 'Spring Boot Blog Backend', '系统初始化站点副标题', NOW(), 1, NOW(), 1, 0),
     (3, '开放注册', 'auth.allow-register', 'true', '控制前台是否允许开放注册', NOW(), 1, NOW(), 1, 0),
-    (4, '默认文章访问级别', 'article.default-access-level', '0', '0-公开，1-登录可见，2-付费可见，3-VIP可见，4-指定用户可见', NOW(), 1, NOW(), 1, 0);
+    (4, '默认文章访问级别', 'article.default-access-level', '0', '0-公开，1-登录可见，2-付费可见，3-VIP可见，4-指定用户可见', NOW(), 1, NOW(), 1, 0),
+    (5, '登录失败锁定阈值', 'auth.login-fail.max-attempts', '5', '连续失败达到该次数后临时锁定账号，0 表示关闭该能力', NOW(), 1, NOW(), 1, 0),
+    (6, '登录失败锁定时长(分钟)', 'auth.login-fail.lock-minutes', '15', '登录失败达到阈值后的锁定时长（分钟）', NOW(), 1, NOW(), 1, 0);
 
 -- 初始化系统通知
 INSERT INTO `sys_notice`
@@ -210,6 +212,13 @@ VALUES
 (1791, 1790, '0,1700,1790', '会话查询', 'B', NULL, NULL, NULL, 'content:chat:query', 0, 0, 1, 1, NULL, NULL, NOW(), NOW(), NULL),
 (1792, 1790, '0,1700,1790', '会话状态', 'B', NULL, NULL, NULL, 'content:chat:update', 0, 0, 1, 2, NULL, NULL, NOW(), NOW(), NULL);
 
+-- 关注管理
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`, `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`, `update_time`, `params`)
+VALUES
+(1793, 1700, '0,1700', '关注管理', 'M', 'ContentFollow', 'follows', 'content/follow/index', NULL, 0, 1, 1, 10, 'user-filled', NULL, NOW(), NOW(), NULL),
+(1794, 1793, '0,1700,1793', '关注查询', 'B', NULL, NULL, NULL, 'content:follow:query', 0, 0, 1, 1, NULL, NULL, NOW(), NOW(), NULL),
+(1795, 1793, '0,1700,1793', '关注清理', 'B', NULL, NULL, NULL, 'content:follow:clean', 0, 0, 1, 2, NULL, NULL, NOW(), NOW(), NULL);
+
 -- 超级管理员授权全部系统管理权限
 INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
 VALUES
@@ -229,7 +238,8 @@ VALUES
 (1, 1760), (1, 1761), (1, 1762),
 (1, 1770), (1, 1771), (1, 1772),
 (1, 1780), (1, 1781), (1, 1782), (1, 1783),
-(1, 1790), (1, 1791), (1, 1792);
+(1, 1790), (1, 1791), (1, 1792),
+(1, 1793), (1, 1794), (1, 1795);
 
 -- 初始化用户角色关系
 INSERT INTO `sys_user_role` (`user_id`, `role_id`)

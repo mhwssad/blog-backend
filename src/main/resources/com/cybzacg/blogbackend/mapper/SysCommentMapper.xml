@@ -35,6 +35,8 @@
         where target_id = #{targetId}
           and target_type = #{targetType}
           and root_id = 0
+          and parent_id = 0
+          and status = 1
         order by created_at asc, id asc
     </select>
 
@@ -46,6 +48,7 @@
         <foreach collection="rootIds" item="rootId" open="(" separator="," close=")">
             #{rootId}
         </foreach>
+          and status = 1
         order by created_at asc, id asc
     </select>
 </mapper>

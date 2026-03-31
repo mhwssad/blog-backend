@@ -8,7 +8,6 @@ import com.cybzacg.blogbackend.module.article.model.publics.PublicArticlePageQue
 import com.cybzacg.blogbackend.module.article.service.PublicArticleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,7 +34,7 @@ public class PublicArticleController {
 
     @GetMapping("/{id}")
     @Operation(summary = "查询文章详情")
-    public Result<PublicArticleDetailVO> getArticle(@PathVariable Long id, HttpServletRequest request) {
-        return Result.success(publicArticleService.getArticle(id, request));
+    public Result<PublicArticleDetailVO> getArticle(@PathVariable Long id) {
+        return Result.success(publicArticleService.getArticle(id));
     }
 }

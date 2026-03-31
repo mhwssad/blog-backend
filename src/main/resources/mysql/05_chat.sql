@@ -1,7 +1,7 @@
 -- ============================================
 -- 聊天模块表结构
--- 包含：会话主表、会话成员表、消息主表、消息接收状态表、会话已读游标表
--- 设计目标：支持单聊、群聊、全站特殊群聊，并兼容已送达、已读、撤回等基础能力
+-- 包含：会话主表、会话成员表、消息主表、消息接收状态表、会话已读游标表、附件异步处理任务表
+-- 设计目标：支持单聊、群聊、全站特殊群聊，并兼容已送达、已读、撤回及持久化媒体处理能力
 -- ============================================
 
 USE blog_backend;
@@ -14,6 +14,7 @@ DROP TABLE IF EXISTS chat_message_recipient;
 DROP TABLE IF EXISTS chat_message;
 DROP TABLE IF EXISTS chat_conversation_member;
 DROP TABLE IF EXISTS chat_conversation;
+DROP TABLE IF EXISTS chat_attachment_process_task;
 
 CREATE TABLE chat_conversation
 (
@@ -145,6 +146,35 @@ CREATE TABLE chat_message_read_cursor
     UNIQUE KEY uk_cursor_conversation_user (conversation_id, user_id) COMMENT '会话已读游标唯一',
     INDEX      idx_user_updated (user_id, updated_at DESC) COMMENT '按用户查询最近更新的会话游标'
 ) COMMENT '聊天会话已读游标表'
+    ENGINE = InnoDB
+    DEFAULT CHARSET = utf8mb4
+    COLLATE = utf8mb4_unicode_ci;
+
+-- ----------------------------
+-- 聊天附件异步处理任务表
+-- ----------------------------
+CREATE TABLE chat_attachment_process_task
+(
+    id                    BIGINT AUTO_INCREMENT COMMENT '任务ID' PRIMARY KEY,
+    message_id            BIGINT                             NOT NULL COMMENT '关联消息ID',
+    message_type          VARCHAR(16)                        NOT NULL COMMENT '消息类型：image/voice',
+    task_status           TINYINT      DEFAULT 0             NOT NULL COMMENT '任务状态：0-待执行，1-处理中，2-成功，3-失败',
+    retry_count           INT          DEFAULT 0             NOT NULL COMMENT '累计重试次数',
+    max_retry_count       INT          DEFAULT 3             NOT NULL COMMENT '最大重试次数',
+    next_retry_at         DATETIME     DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '下次执行时间',
+    lease_expire_at       DATETIME NULL COMMENT '当前处理租约过期时间',
+    started_at            DATETIME NULL COMMENT '最近一次开始处理时间',
+    completed_at          DATETIME NULL COMMENT '完成时间',
+    last_error            VARCHAR(512) NULL COMMENT '最近一次错误信息',
+    message_snapshot_json JSON NULL COMMENT '消息快照JSON，用于回推message_updated',
+    push_user_ids_json    JSON NULL COMMENT '待推送用户ID列表JSON',
+    created_at            DATETIME     DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    updated_at            DATETIME     DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+    UNIQUE KEY uk_message_id (message_id) COMMENT '同一消息只保留一条媒体处理任务',
+    INDEX idx_status_retry_time (task_status, next_retry_at, id) COMMENT '按状态和下次执行时间扫描任务',
+    INDEX idx_status_lease_expire (task_status, lease_expire_at) COMMENT '按租约过期时间恢复处理中任务'
+) COMMENT '聊天附件异步处理任务表'
     ENGINE = InnoDB
     DEFAULT CHARSET = utf8mb4
     COLLATE = utf8mb4_unicode_ci;

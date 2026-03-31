@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.socket.WebSocketSession;
 
 /**
- * 单机版 WebSocket 会话注册表实现。
+ * WebSocket 本地会话注册表实现。
  */
 @Service
 public class ChatWebSocketSessionRegistryImpl implements ChatWebSocketSessionRegistry {

@@ -126,6 +126,11 @@ Authorization: Bearer <accessToken>
 }
 ```
 
+- 当前行为补充：
+  - 支持通过系统配置 `auth.login-fail.max-attempts` 和 `auth.login-fail.lock-minutes` 控制“连续失败锁定”。
+  - 默认口径为连续失败 `5` 次后锁定 `15` 分钟；配置值 `<= 0` 时表示关闭该锁定能力。
+  - 账号已被临时锁定时，接口会返回 `40104 / 账号已锁定`。
+
 ### 3.2 账号注册
 
 - 请求：`POST /api/auth/register`
@@ -142,6 +147,8 @@ Authorization: Bearer <accessToken>
 | `phone` | String | 否 | 手机号 |
 
 - 响应：同 `AuthenticationToken`
+- 边界说明：
+  - 用户名 / 邮箱 / 手机号仍由数据库唯一约束兜底，遇到并发注册竞争时，接口会继续返回与单线程校验一致的重复提示，而不是裸露数据库异常。
 
 ### 3.3 发送邮箱验证码
 
@@ -155,6 +162,9 @@ Authorization: Bearer <accessToken>
 | `email` | String | 是 | 邮箱地址 |
 
 - 响应：`data = null`
+- 当前行为补充：
+  - 同一邮箱默认 `60` 秒内只能发送一次，超频会返回 `40115 / 发送过于频繁，请稍后再试`。
+  - 验证码默认 `5` 分钟过期，过期后重新申请会覆盖旧验证码。
 
 ### 3.4 邮箱验证码登录
 
@@ -169,6 +179,9 @@ Authorization: Bearer <accessToken>
 | `code` | String | 是 | 6 位验证码 |
 
 - 响应：同 `AuthenticationToken`
+- 边界说明：
+  - 过期验证码会返回 `40113 / 邮箱验证码已过期`。
+  - 成功登录后，当前邮箱验证码会立即失效，避免重复消费。
 
 ### 3.5 刷新令牌
 
@@ -182,6 +195,9 @@ Authorization: Bearer <accessToken>
 | `refreshToken` | String | 是 | 刷新令牌 |
 
 - 响应：同 `AuthenticationToken`
+- 当前行为补充：
+  - 当 `security.session.type=redis-token` 时，刷新成功会使旧的 `accessToken / refreshToken` 同步失效。
+  - 当 `security.session.type=jwt` 时，刷新属于纯无状态换发，服务端不会主动回收旧 JWT。
 
 ### 3.6 退出登录
 
@@ -197,6 +213,8 @@ Authorization: Bearer <accessToken>
 - 前端说明：
   - 大多数场景只需要携带请求头即可。
   - 即使接口失败，前端通常也应清理本地登录态，避免残留脏状态。
+  - 当 `security.session.type=redis-token` 时，退出会让当前会话对应的访问令牌和刷新令牌失效。
+  - 当 `security.session.type=jwt` 时，当前实现仅作为前端幂等退出入口，服务端不会回收已签发 JWT。
 
 ### 3.7 获取当前登录用户
 
@@ -607,6 +625,14 @@ Authorization: Bearer <accessToken>
 }
 ```
 
+- 内置安全相关配置键：
+- `security.ip.rate-limit.per-second`：全局 IP 每秒请求限流阈值。
+- 默认值：`10`。
+- 配置值 `<= 0` 时表示关闭该限流。
+- `auth.login-fail.max-attempts`：连续登录失败锁定阈值，默认 `5`。
+- 配置值 `<= 0` 时表示关闭登录失败锁定能力。
+- `auth.login-fail.lock-minutes`：登录失败达到阈值后的锁定时长（分钟），默认 `15`。
+
 ### 6.5 后台通知管理
 
 #### 接口速览
@@ -774,3 +800,4 @@ Authorization: Bearer <accessToken>
 | 已登录但权限不足 | HTTP `403` |
 | 打开通知详情后未读数变化 | 详情接口按当前实现会更新已读状态 |
 | 修改用户时传了 `password` | 不生效，必须走重置密码接口 |
+

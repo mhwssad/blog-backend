@@ -15,6 +15,7 @@ public enum ChatWsMessageType {
     MESSAGE_CREATED("message_created"),
     MESSAGE_UPDATED("message_updated"),
     MESSAGE_REVOKED("message_revoked"),
+    MESSAGE_DELETED("message_deleted"),
     READ_UPDATED("read_updated"),
     CONVERSATION_UPDATED("conversation_updated"),
     MEMBERS_UPDATED("members_updated"),

@@ -23,6 +23,7 @@ public enum ResultErrorCode implements ResultCode {
     HTTP_MEDIA_TYPE_NOT_SUPPORTED(41500, "不支持的媒体类型"),
     NO_HANDLER_FOUND(40400, "请求的接口不存在"),
     USER_NOT_FOUND(40401, "用户不存在"),
+    REQUEST_RATE_LIMITED(42900, "请求过于频繁，请稍后再试"),
 
     AUTH_FAILED(40100, "认证失败"),
     INVALID_CREDENTIALS(40101, "用户名或密码错误"),
@@ -100,3 +101,5 @@ public enum ResultErrorCode implements ResultCode {
         return message;
     }
 }
+
+

@@ -80,6 +80,9 @@ public class CommentAdminServiceImpl implements CommentAdminService {
         sysCommentService.updateById(comment);
     }
 
+    /**
+     * 删除指定评论及其整棵回复子树，并同步回退文章评论数与父评论回复数。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteComment(Long id) {
@@ -166,6 +169,4 @@ public class CommentAdminServiceImpl implements CommentAdminService {
         return comment;
     }
 }
-
-
 

@@ -30,7 +30,6 @@ import com.cybzacg.blogbackend.module.content.service.SysTagRelationService;
 import com.cybzacg.blogbackend.module.content.service.SysTagService;
 import com.cybzacg.blogbackend.module.content.service.UserFootprintService;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -68,6 +67,9 @@ public class PublicArticleServiceImpl implements PublicArticleService {
     private final ContentModelMapper contentModelMapper;
     private final UserFootprintService userFootprintService;
 
+    /**
+     * 分页读取当前用户可见的已发布文章，并在内存中统一完成条件过滤、排序和分页切片。
+     */
     @Override
     public PageResult<PublicArticleCardVO> pageArticles(PublicArticlePageQuery query) {
         Long currentUserId = SecurityUtils.getUserId();
@@ -104,8 +106,11 @@ public class PublicArticleServiceImpl implements PublicArticleService {
                 .build();
     }
 
+    /**
+     * 查询单篇文章详情，并在访问校验通过后补齐分类、标签和当前用户状态。
+     */
     @Override
-    public PublicArticleDetailVO getArticle(Long id, HttpServletRequest request) {
+    public PublicArticleDetailVO getArticle(Long id) {
         BlogArticle article = blogArticleService.getById(id);
         ExceptionThrowerCore.throwBusinessIf(article == null || !Integer.valueOf(1).equals(article.getStatus()), ResultErrorCode.NO_HANDLER_FOUND, "文章不存在");
 
@@ -122,7 +127,7 @@ public class PublicArticleServiceImpl implements PublicArticleService {
         detailVO.setLiked(isArticleLiked(article.getId(), userId));
         detailVO.setCollected(isArticleCollected(article.getId(), userId));
         detailVO.setCanComment(userId != null);
-        userFootprintService.recordArticleFootprint(article.getId(), request);
+        userFootprintService.recordArticleFootprint(article.getId());
         return detailVO;
     }
 
@@ -195,9 +200,7 @@ public class PublicArticleServiceImpl implements PublicArticleService {
         for (Long categoryId : categoryIds) {
             SysCategory category = categoryMap.get(categoryId);
             if (category != null) {
-                PublicCategoryTreeVO vo = contentModelMapper.toPublicCategoryTreeVO(category);
-                vo.setChildren(new ArrayList<>());
-                categories.add(vo);
+                categories.add(contentModelMapper.toPublicCategoryTreeVO(category));
             }
         }
         return categories;
@@ -259,6 +262,9 @@ public class PublicArticleServiceImpl implements PublicArticleService {
                 .exists();
     }
 
+    /**
+     * 批量读取作者名称，供分页列表回填作者展示名复用。
+     */
     private Map<Long, String> loadAuthorNames(Collection<Long> authorIds) {
         if (authorIds == null || authorIds.isEmpty()) {
             return Map.of();
@@ -268,6 +274,9 @@ public class PublicArticleServiceImpl implements PublicArticleService {
         return authorNameMap;
     }
 
+    /**
+     * 读取单个作者展示名，优先返回昵称，缺失时回退用户名。
+     */
     private String loadAuthorName(Long authorId) {
         if (authorId == null) {
             return null;

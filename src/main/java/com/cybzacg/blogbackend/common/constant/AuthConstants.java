@@ -23,6 +23,10 @@ public final class AuthConstants {
     public static final String EMAIL_LOGIN_CODE_RATE_PREFIX = "auth:email-login-code:rate";
     public static final Duration EMAIL_LOGIN_CODE_RATE_TTL = Duration.ofSeconds(60);
     public static final String EMAIL_LOGIN_SUBJECT = "登录验证码";
+    public static final String LOGIN_FAIL_COUNT_PREFIX = "auth:login-fail:count";
+    public static final String LOGIN_FAIL_LOCK_PREFIX = "auth:login-fail:lock";
+    public static final String LOGIN_FAIL_SCOPE_USER = "user";
+    public static final String LOGIN_FAIL_SCOPE_ACCOUNT = "account";
 
     private AuthConstants() {
     }

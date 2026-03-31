@@ -91,6 +91,7 @@ public interface ChatModelMapper {
     @Mapping(target = "self", ignore = true)
     @Mapping(target = "readByCurrentUser", ignore = true)
     @Mapping(target = "file", ignore = true)
+    @Mapping(target = "reply", ignore = true)
     @Mapping(target = "revoked", ignore = true)
     @Mapping(target = "edited", ignore = true)
     ChatMessageVO toMessageVO(ChatMessageHistoryItem item);
@@ -99,6 +100,7 @@ public interface ChatModelMapper {
     @Mapping(target = "senderNickname", ignore = true)
     @Mapping(target = "senderAvatar", ignore = true)
     @Mapping(target = "file", ignore = true)
+    @Mapping(target = "reply", ignore = true)
     @Mapping(target = "edited", ignore = true)
     ChatAdminMessageVO toAdminMessageVO(ChatAdminMessageItem item);
 

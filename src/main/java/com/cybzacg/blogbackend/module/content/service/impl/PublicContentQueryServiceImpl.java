@@ -5,6 +5,7 @@ import com.cybzacg.blogbackend.domain.SysComment;
 import com.cybzacg.blogbackend.domain.SysInteraction;
 import com.cybzacg.blogbackend.domain.SysTag;
 import com.cybzacg.blogbackend.domain.SysUser;
+import com.cybzacg.blogbackend.mapper.SysCommentMapper;
 import com.cybzacg.blogbackend.mapper.SysTagMapper;
 import com.cybzacg.blogbackend.module.auth.service.SysUserService;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
@@ -14,9 +15,7 @@ import com.cybzacg.blogbackend.module.content.model.publics.PublicCommentVO;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicTagVO;
 import com.cybzacg.blogbackend.module.content.service.PublicContentQueryService;
 import com.cybzacg.blogbackend.module.content.service.SysCategoryService;
-import com.cybzacg.blogbackend.module.content.service.SysCommentService;
 import com.cybzacg.blogbackend.module.content.service.SysInteractionService;
-import com.cybzacg.blogbackend.module.content.service.SysTagService;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
@@ -43,9 +42,8 @@ public class PublicContentQueryServiceImpl implements PublicContentQueryService 
     private static final String ARTICLE_TYPE = "article";
 
     private final SysCategoryService sysCategoryService;
-    private final SysTagService sysTagService;
     private final SysTagMapper sysTagMapper;
-    private final SysCommentService sysCommentService;
+    private final SysCommentMapper sysCommentMapper;
     private final SysInteractionService sysInteractionService;
     private final SysUserService sysUserService;
     private final ContentModelMapper contentModelMapper;
@@ -85,18 +83,21 @@ public class PublicContentQueryServiceImpl implements PublicContentQueryService 
                 .toList();
     }
 
+    /**
+     * 使用“根评论 + 回复”两段查询装配评论树，避免在高评论量场景下整表拉取同目标的所有记录。
+     */
     @Override
     public List<PublicCommentVO> listComments(PublicCommentQuery query) {
-        List<SysComment> comments = sysCommentService.lambdaQuery()
-                .eq(SysComment::getTargetType, query.getTargetType())
-                .eq(SysComment::getTargetId, query.getTargetId())
-                .eq(SysComment::getStatus, 1)
-                .orderByAsc(SysComment::getCreatedAt)
-                .orderByAsc(SysComment::getId)
-                .list();
-        if (comments.isEmpty()) {
+        List<SysComment> roots = sysCommentMapper.selectRootCommentsByTarget(query.getTargetId(), query.getTargetType());
+        if (roots.isEmpty()) {
             return List.of();
         }
+
+        List<Long> rootIds = roots.stream().map(SysComment::getId).toList();
+        List<SysComment> replies = sysCommentMapper.selectRepliesByRootIds(rootIds);
+        List<SysComment> comments = new ArrayList<>(roots.size() + replies.size());
+        comments.addAll(roots);
+        comments.addAll(replies);
 
         Long currentUserId = SecurityUtils.getUserId();
         Set<Long> userIds = comments.stream().map(SysComment::getUserId).filter(Objects::nonNull).collect(Collectors.toSet());
@@ -115,20 +116,27 @@ public class PublicContentQueryServiceImpl implements PublicContentQueryService 
             commentMap.put(comment.getId(), vo);
         }
 
-        List<PublicCommentVO> roots = new ArrayList<>();
-        for (PublicCommentVO comment : commentMap.values()) {
-            if (comment.getRootId() == null || comment.getRootId() == 0L || comment.getParentId() == null || comment.getParentId() == 0L) {
-                roots.add(comment);
+        List<PublicCommentVO> result = new ArrayList<>();
+        for (SysComment root : roots) {
+            PublicCommentVO rootVo = commentMap.get(root.getId());
+            if (rootVo == null) {
                 continue;
             }
-            PublicCommentVO parent = commentMap.get(comment.getParentId());
+            result.add(rootVo);
+        }
+        for (SysComment reply : replies) {
+            PublicCommentVO replyVo = commentMap.get(reply.getId());
+            if (replyVo == null) {
+                continue;
+            }
+            PublicCommentVO parent = commentMap.get(reply.getParentId());
             if (parent != null) {
-                parent.getChildren().add(comment);
+                parent.getChildren().add(replyVo);
             } else {
-                roots.add(comment);
+                result.add(replyVo);
             }
         }
-        return roots;
+        return result;
     }
 
     private Map<Long, SysUser> loadUserMap(Collection<Long> userIds) {
@@ -158,5 +166,4 @@ public class PublicContentQueryServiceImpl implements PublicContentQueryService 
                 .collect(Collectors.toSet());
     }
 }
-
 

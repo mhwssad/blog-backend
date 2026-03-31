@@ -1,0 +1,35 @@
+package com.cybzacg.blogbackend.module.content.repository.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.cybzacg.blogbackend.domain.SysTag;
+import com.cybzacg.blogbackend.mapper.SysTagMapper;
+import com.cybzacg.blogbackend.module.content.repository.SysTagRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+/**
+ * 标签 Repository 实现。
+ */
+@Repository
+public class SysTagRepositoryImpl extends ServiceImpl<SysTagMapper, SysTag> implements SysTagRepository {
+
+    @Override
+    public List<SysTag> findAllOrderByIdDesc() {
+        return list(new LambdaQueryWrapper<SysTag>()
+                .orderByDesc(SysTag::getId));
+    }
+
+    @Override
+    public boolean existsByNameExcludingId(String name, Long excludeId) {
+        return exists(new LambdaQueryWrapper<SysTag>()
+                .eq(SysTag::getName, name)
+                .ne(excludeId != null, SysTag::getId, excludeId));
+    }
+
+    @Override
+    public List<SysTag> findByTargetType(String targetType) {
+        return baseMapper.selectByTargetType(targetType);
+    }
+}

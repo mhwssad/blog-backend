@@ -72,6 +72,8 @@ public class UserFileServiceImpl implements UserFileService {
     private final FileUploadProperties fileUploadProperties;
     /**
      * 初始化上传任务，并根据文件指纹预判是否可以直接走秒传。
+     * 无论是否秒传命中，都会先固化一条上传任务，保证客户端后续轮询、审计与异常补偿都能基于同一条任务链路展开。
+     * 若已存在同 MD5 且大小匹配的物理文件，则当前任务会直接转为完成态并补建业务引用；否则返回整文件或分片上传所需上下文。
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -161,6 +163,8 @@ public class UserFileServiceImpl implements UserFileService {
     }
     /**
      * 处理普通整文件上传，在落存储前完成 MD5 校验与重复文件复用判断。
+     * 该方法先尝试复用同指纹文件，未命中时才真正写入存储；若落库阶段因唯一键竞争发现同 MD5 文件已被并发请求创建，
+     * 会回收本次多上传的对象并切换到已有记录，避免重复物理文件和脏元数据残留。
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -944,6 +948,7 @@ public class UserFileServiceImpl implements UserFileService {
     private record PersistedFileInfo(FileInfo fileInfo, boolean reusedExisting) {
     }
 }
+
 
 
 

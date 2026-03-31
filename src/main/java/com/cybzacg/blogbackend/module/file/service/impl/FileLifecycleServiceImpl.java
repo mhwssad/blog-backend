@@ -2,6 +2,7 @@ package com.cybzacg.blogbackend.module.file.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.cybzacg.blogbackend.common.storage.MediaAssetPathUtils;
 import com.cybzacg.blogbackend.common.storage.StorageManager;
 import com.cybzacg.blogbackend.common.storage.StorageService;
 import com.cybzacg.blogbackend.domain.FileBusinessInfo;
@@ -192,10 +193,26 @@ public class FileLifecycleServiceImpl implements FileLifecycleService {
         try {
             StorageService storageService = storageManager.getStorageService(fileInfo.getStorageKey());
             if (storageService != null) {
+                deleteDerivedMediaAsset(storageService, MediaAssetPathUtils.buildChatImageThumbnailPath(fileInfo.getFilePath()));
+                deleteDerivedMediaAsset(storageService, MediaAssetPathUtils.buildChatVoicePreviewPath(fileInfo.getFilePath()));
                 storageService.delete(fileInfo.getFilePath());
             }
         } catch (Exception e) {
             log.warn("回收无引用文件的物理对象失败, fileId={}", fileInfo.getId(), e);
+        }
+    }
+
+    /**
+     * 聊天附件的派生资源当前不单独建 file_info，因此在原文件物理回收时按约定路径一并尽力删除。
+     */
+    private void deleteDerivedMediaAsset(StorageService storageService, String objectPath) {
+        if (!StringUtils.hasText(objectPath)) {
+            return;
+        }
+        try {
+            storageService.delete(objectPath);
+        } catch (Exception ex) {
+            log.warn("回收派生媒体资源失败, objectPath={}", objectPath, ex);
         }
     }
 }

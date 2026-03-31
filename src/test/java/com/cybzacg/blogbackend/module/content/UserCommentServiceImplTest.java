@@ -47,6 +47,10 @@ class UserCommentServiceImplTest {
     private ContentModelMapper contentModelMapper;
     @Mock
     private LambdaQueryChainWrapper<SysComment> commentTreeQuery;
+    @Mock
+    private LambdaQueryChainWrapper<SysInteraction> interactionExistsQuery;
+    @Mock
+    private LambdaQueryChainWrapper<SysInteraction> interactionLookupQuery;
 
     private UserCommentServiceImpl userCommentService;
 
@@ -188,8 +192,98 @@ class UserCommentServiceImplTest {
         verify(sysCommentService).updateById(parent);
     }
 
+    @Test
+    void likeCommentShouldCreateInteractionAndIncreaseLikeCount() {
+        SysComment comment = new SysComment();
+        comment.setId(100L);
+        comment.setLikeCount(2);
+
+        SysInteraction interaction = new SysInteraction();
+        interaction.setUserId(7L);
+        interaction.setTargetId(100L);
+
+        when(sysCommentService.getById(100L)).thenReturn(comment);
+        when(sysInteractionService.lambdaQuery()).thenReturn(interactionExistsQuery);
+        when(interactionExistsQuery.eq(anySFunction(), any())).thenReturn(interactionExistsQuery);
+        when(interactionExistsQuery.exists()).thenReturn(false);
+        when(contentModelMapper.toInteraction(7L, 100L, "comment", "like")).thenReturn(interaction);
+
+        try (MockedStatic<?> securityUtils = SecurityTestUtils.mockUserId(7L)) {
+            userCommentService.likeComment(100L);
+        }
+
+        assertEquals(Integer.valueOf(3), comment.getLikeCount());
+        verify(sysInteractionService).save(interaction);
+        verify(sysCommentService).updateById(comment);
+    }
+
+    @Test
+    void likeCommentShouldReturnWhenAlreadyLiked() {
+        SysComment comment = new SysComment();
+        comment.setId(100L);
+        comment.setLikeCount(2);
+
+        when(sysCommentService.getById(100L)).thenReturn(comment);
+        when(sysInteractionService.lambdaQuery()).thenReturn(interactionExistsQuery);
+        when(interactionExistsQuery.eq(anySFunction(), any())).thenReturn(interactionExistsQuery);
+        when(interactionExistsQuery.exists()).thenReturn(true);
+
+        try (MockedStatic<?> securityUtils = SecurityTestUtils.mockUserId(7L)) {
+            userCommentService.likeComment(100L);
+        }
+
+        assertEquals(Integer.valueOf(2), comment.getLikeCount());
+        verify(sysInteractionService, never()).save(any(SysInteraction.class));
+        verify(sysCommentService, never()).updateById(comment);
+    }
+
+    @Test
+    void unlikeCommentShouldRemoveInteractionAndRollbackLikeCount() {
+        SysComment comment = new SysComment();
+        comment.setId(100L);
+        comment.setLikeCount(2);
+
+        SysInteraction interaction = new SysInteraction();
+        interaction.setId(200L);
+        interaction.setTargetId(100L);
+
+        when(sysCommentService.getById(100L)).thenReturn(comment);
+        when(sysInteractionService.lambdaQuery()).thenReturn(interactionLookupQuery);
+        when(interactionLookupQuery.eq(anySFunction(), any())).thenReturn(interactionLookupQuery);
+        when(interactionLookupQuery.one()).thenReturn(interaction);
+
+        try (MockedStatic<?> securityUtils = SecurityTestUtils.mockUserId(7L)) {
+            userCommentService.unlikeComment(100L);
+        }
+
+        assertEquals(Integer.valueOf(1), comment.getLikeCount());
+        verify(sysInteractionService).removeById(200L);
+        verify(sysCommentService).updateById(comment);
+    }
+
+    @Test
+    void unlikeCommentShouldReturnWhenInteractionMissing() {
+        SysComment comment = new SysComment();
+        comment.setId(100L);
+        comment.setLikeCount(2);
+
+        when(sysCommentService.getById(100L)).thenReturn(comment);
+        when(sysInteractionService.lambdaQuery()).thenReturn(interactionLookupQuery);
+        when(interactionLookupQuery.eq(anySFunction(), any())).thenReturn(interactionLookupQuery);
+        when(interactionLookupQuery.one()).thenReturn(null);
+
+        try (MockedStatic<?> securityUtils = SecurityTestUtils.mockUserId(7L)) {
+            userCommentService.unlikeComment(100L);
+        }
+
+        assertEquals(Integer.valueOf(2), comment.getLikeCount());
+        verify(sysInteractionService, never()).removeById(any(Long.class));
+        verify(sysCommentService, never()).updateById(comment);
+    }
+
     @SuppressWarnings("unchecked")
     private static <T> SFunction<T, ?> anySFunction() {
         return (SFunction<T, ?>) any(SFunction.class);
     }
 }
+

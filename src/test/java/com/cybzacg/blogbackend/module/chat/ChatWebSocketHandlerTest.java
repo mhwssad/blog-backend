@@ -591,6 +591,22 @@ class ChatWebSocketHandlerTest {
     }
 
     @Test
+    void messageDeletedTypeShouldReturnIllegalArgument() throws Exception {
+        ChatWsRequest request = new ChatWsRequest();
+        request.setType(ChatWsMessageType.MESSAGE_DELETED.getValue());
+        request.setRequestId("req-message-deleted");
+        TextMessage errorMessage = new TextMessage("{\"type\":\"error\"}");
+
+        when(messageCodec.decode("{\"type\":\"message_deleted\"}")).thenReturn(request);
+        when(messageCodec.buildIllegalArgument("req-message-deleted", "当前消息类型不允许由客户端直接发送: message_deleted"))
+                .thenReturn(errorMessage);
+
+        handler.handleMessage(session, new TextMessage("{\"type\":\"message_deleted\"}"));
+
+        verify(session).sendMessage(errorMessage);
+    }
+
+    @Test
     void afterConnectionClosedShouldUnregisterSession() {
         mockSessionIdAndUser();
         handler.afterConnectionClosed(session, CloseStatus.NORMAL);

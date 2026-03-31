@@ -68,8 +68,6 @@ public class SysLogAspect {
 
     /**
      * 拦截所有 RestController 的公开方法，再在运行时按 URI 和注解进一步筛选。
-     */
-    /**
      * 包装控制器调用，确保业务成功或异常退出时都能补记系统操作日志。
      */
     @Around("within(@org.springframework.web.bind.annotation.RestController *) && execution(public * com.cybzacg.blogbackend..controller..*(..))")

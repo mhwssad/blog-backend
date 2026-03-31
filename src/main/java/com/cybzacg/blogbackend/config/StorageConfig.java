@@ -14,20 +14,15 @@ import com.cybzacg.blogbackend.enums.storage.StorageType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 存储配置类
@@ -107,47 +102,17 @@ public class StorageConfig {
         return serviceMap;
     }
 
-    @Bean(name = "scheduledTaskExecutor", destroyMethod = "shutdown")
-    @ConditionalOnMissingBean(name = "scheduledTaskExecutor")
-    public ScheduledExecutorService scheduledTaskExecutor() {
-        return Executors.newScheduledThreadPool(1, namedDaemonThreadFactory("scheduled-task-"));
-    }
-
-    @Bean(name = "shortTaskExecutor")
-    @ConditionalOnMissingBean(name = "shortTaskExecutor")
-    public Executor shortTaskExecutor() {
-        int cpu = Runtime.getRuntime().availableProcessors();
-        int corePoolSize = Math.max(2, cpu);
-        int maxPoolSize = Math.max(4, cpu * 2);
-
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(corePoolSize);
-        executor.setMaxPoolSize(maxPoolSize);
-        executor.setQueueCapacity(256);
-        executor.setThreadNamePrefix("short-task-");
-        executor.initialize();
-        return executor;
-    }
-
-    private static ThreadFactory namedDaemonThreadFactory(String prefix) {
-        AtomicInteger idx = new AtomicInteger(1);
-        return runnable -> {
-            Thread thread = new Thread(runnable);
-            thread.setName(prefix + idx.getAndIncrement());
-            thread.setDaemon(true);
-            return thread;
-        };
-    }
-
     /**
-     * 创建存储健康检查服务 Bean
-     * 使用项目的定时任务线程池 scheduledTaskExecutor 和短任务线程池 shortTaskExecutor
+     * 创建存储健康检查服务 Bean。
+     *
+     * <p>线程池统一复用 {@link ThreadPoolConfig} 中的定时任务线程池和默认异步线程池，
+     * 避免存储模块单独维护一套执行器配置。
      *
      * @param storageServiceMap        所有存储服务Map
      * @param storageProperties        存储配置
      * @param storageManagerProperties 管理器配置
      * @param scheduledTaskExecutor    定时任务执行器
-     * @param shortTaskExecutor        短任务线程池（用于并发执行健康检查）
+     * @param asyncTaskExecutor        默认异步线程池（用于并发执行健康检查）
      * @return StorageHealthCheckService 实例
      */
     @Bean
@@ -156,7 +121,7 @@ public class StorageConfig {
             StorageProperties storageProperties,
             StorageManagerProperties storageManagerProperties,
             @Qualifier("scheduledTaskExecutor") ScheduledExecutorService scheduledTaskExecutor,
-            @Qualifier("shortTaskExecutor") Executor shortTaskExecutor) {
+            @Qualifier("asyncTaskExecutor") Executor asyncTaskExecutor) {
         log.info("初始化存储健康检查服务，监控节点数: {}, 检查间隔: {} 秒",
                 storageServiceMap.size(),
                 storageManagerProperties.getHealthCheckInterval());
@@ -165,7 +130,7 @@ public class StorageConfig {
                 storageProperties,
                 storageManagerProperties,
                 scheduledTaskExecutor,
-                shortTaskExecutor);
+                asyncTaskExecutor);
     }
 
     /**

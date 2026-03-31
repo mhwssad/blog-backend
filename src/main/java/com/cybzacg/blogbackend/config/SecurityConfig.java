@@ -1,6 +1,7 @@
 package com.cybzacg.blogbackend.config;
 
 import com.cybzacg.blogbackend.config.property.SecurityProperties;
+import com.cybzacg.blogbackend.core.filter.IpRateLimitFilter;
 import com.cybzacg.blogbackend.core.filter.TokenAuthenticationFilter;
 import com.cybzacg.blogbackend.module.auth.authentication.EmailCodeAuthenticationProvider;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
@@ -35,6 +36,7 @@ public class SecurityConfig {
     private final AuthUserDetailsService authUserDetailsService;
     private final EmailCodeAuthenticationProvider emailCodeAuthenticationProvider;
     private final PasswordEncoder passwordEncoder;
+    private final IpRateLimitFilter ipRateLimitFilter;
     private final TokenAuthenticationFilter tokenAuthenticationFilter;
 
     @Bean
@@ -54,7 +56,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(securityProperties.getUnsecuredUrls()).permitAll()
                         .anyRequest().authenticated())
-                .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(ipRateLimitFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(tokenAuthenticationFilter, IpRateLimitFilter.class);
         return http.build();
     }
 

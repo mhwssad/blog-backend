@@ -1,6 +1,7 @@
 package com.cybzacg.blogbackend.module.chat.model.common;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.List;
 import lombok.Data;
 
 /**
@@ -32,4 +33,25 @@ public class ChatFilePayloadVO {
 
     @Schema(description = "MIME 类型")
     private String mimeType;
+
+    @Schema(description = "预览地址，图片/语音可直接复用")
+    private String previewUrl;
+
+    @Schema(description = "缩略图地址，当前图片默认回落原图地址")
+    private String thumbnailUrl;
+
+    @Schema(description = "图片宽度")
+    private Integer width;
+
+    @Schema(description = "图片高度")
+    private Integer height;
+
+    @Schema(description = "语音时长，单位秒")
+    private Integer durationSeconds;
+
+    @Schema(description = "语音波形采样点")
+    private List<Integer> waveform;
+
+    @Schema(description = "转码状态：source/pending/ready/failed")
+    private String transcodeStatus;
 }

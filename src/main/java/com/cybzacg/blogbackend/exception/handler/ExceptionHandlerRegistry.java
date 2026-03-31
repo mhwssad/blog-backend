@@ -1,6 +1,7 @@
 package com.cybzacg.blogbackend.exception.handler;
 
 import jakarta.annotation.PostConstruct;
+import com.cybzacg.blogbackend.utils.SpringBeanUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
@@ -30,8 +31,7 @@ public class ExceptionHandlerRegistry {
 
     @PostConstruct
     public void init() {
-        Map<String, Object> handlers = applicationContext.getBeansWithAnnotation(
-                RestControllerAdvice.class);
+        Map<String, Object> handlers = SpringBeanUtils.getBeansWithAnnotation(applicationContext, RestControllerAdvice.class);
 
         for (Object handler : handlers.values()) {
             registerHandler(handler);
@@ -42,7 +42,7 @@ public class ExceptionHandlerRegistry {
 
     private void registerHandler(Object handler) {
         allHandlers.add(handler);
-        int order = getOrder(handler);
+        int order = SpringBeanUtils.resolveOrder(handler);
 
         java.lang.reflect.Method[] methods = handler.getClass().getMethods();
         for (java.lang.reflect.Method method : methods) {
@@ -64,14 +64,7 @@ public class ExceptionHandlerRegistry {
             }
         }
 
-        log.debug("注册异常处理器: {} (优先级: {})", handler.getClass().getSimpleName(), order);
-    }
-
-    private int getOrder(Object handler) {
-        if (handler.getClass().isAnnotationPresent(org.springframework.core.annotation.Order.class)) {
-            return handler.getClass().getAnnotation(org.springframework.core.annotation.Order.class).value();
-        }
-        return Integer.MAX_VALUE;
+        log.debug("注册异常处理器: {} (优先级: {})", SpringBeanUtils.resolveTargetClass(handler).getSimpleName(), order);
     }
 
     public List<Object> getHandlers(Exception exception) {
@@ -91,7 +84,7 @@ public class ExceptionHandlerRegistry {
 
         return handlers.stream()
                 .distinct()
-                .sorted(Comparator.comparingInt(this::getOrder))
+                .sorted(Comparator.comparingInt(SpringBeanUtils::resolveOrder))
                 .toList();
     }
 

@@ -18,8 +18,10 @@ import com.cybzacg.blogbackend.module.auth.service.SysUserService;
 import com.cybzacg.blogbackend.module.chat.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.convert.ChatModelMapper;
 import com.cybzacg.blogbackend.module.chat.model.common.ChatFilePayloadVO;
+import com.cybzacg.blogbackend.module.chat.model.common.ChatMessagePayloadVO;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatConversationListItem;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatMessageHistoryItem;
+import com.cybzacg.blogbackend.module.chat.model.common.ChatReplyMessageVO;
 import com.cybzacg.blogbackend.module.chat.model.user.ChatConversationPageQuery;
 import com.cybzacg.blogbackend.module.chat.model.user.ChatConversationVO;
 import com.cybzacg.blogbackend.module.chat.model.user.ChatCreateGroupRequest;
@@ -38,8 +40,12 @@ import com.cybzacg.blogbackend.module.chat.model.user.ChatSendTextRequest;
 import com.cybzacg.blogbackend.module.chat.model.user.ChatTransferGroupOwnerRequest;
 import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsConversationUpdatedPayload;
 import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsMembersUpdatedPayload;
+import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsMessageDeletedPayload;
+import com.cybzacg.blogbackend.module.chat.service.ChatAttachmentAsyncProcessingService;
 import com.cybzacg.blogbackend.module.chat.service.ChatConversationMemberService;
 import com.cybzacg.blogbackend.module.chat.service.ChatConversationService;
+import com.cybzacg.blogbackend.module.chat.service.ChatMessageGovernanceService;
+import com.cybzacg.blogbackend.module.chat.service.ChatMetricsService;
 import com.cybzacg.blogbackend.module.chat.service.ChatMessageReadCursorService;
 import com.cybzacg.blogbackend.module.chat.service.ChatMessageRecipientService;
 import com.cybzacg.blogbackend.module.chat.service.ChatMessageService;
@@ -92,6 +98,9 @@ public class UserChatServiceImpl implements UserChatService {
     private final FileBusinessInfoService fileBusinessInfoService;
     private final FileInfoService fileInfoService;
     private final FileLifecycleService fileLifecycleService;
+    private final ChatAttachmentAsyncProcessingService chatAttachmentAsyncProcessingService;
+    private final ChatMessageGovernanceService chatMessageGovernanceService;
+    private final ChatMetricsService chatMetricsService;
 
     @Override
     public PageResult<ChatConversationVO> pageMyConversations(ChatConversationPageQuery query) {
@@ -152,76 +161,112 @@ public class UserChatServiceImpl implements UserChatService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ChatMessageVO sendTextMessage(Long userId, ChatSendTextRequest request) {
-        validateSendRequest(request);
-        ChatConversation conversation = resolveSendConversation(userId, request);
-        ConversationAccessContext context = requireConversationAccess(userId, conversation.getId());
-        validateMemberCanSend(context.selfMember());
-        List<ChatConversationMember> activeMembers = context.activeMembers();
-        ChatMessageHistoryItem existing = findExistingMessage(userId, request.getClientMessageId(), conversation.getId());
-        if (existing != null) {
-            return buildMessageVO(userId, existing, loadUsers(Set.of(existing.getSenderId())));
+        try {
+            validateSendRequest(request);
+            chatMessageGovernanceService.validateTextMessage(userId, request.getContent());
+            ChatConversation conversation = resolveSendConversation(userId, request);
+            ConversationAccessContext context = requireConversationAccess(userId, conversation.getId());
+            validateMemberCanSend(context.selfMember());
+            List<ChatConversationMember> activeMembers = context.activeMembers();
+            ChatMessageHistoryItem existing = findExistingMessage(userId, request.getClientMessageId(), conversation.getId());
+            if (existing != null) {
+                ChatMessageVO existingMessage = buildMessageVO(userId, existing, loadUsers(Set.of(existing.getSenderId())));
+                chatMetricsService.recordSend(ChatConstants.MESSAGE_TYPE_TEXT, "success");
+                return existingMessage;
+            }
+            ChatMessageHistoryItem replyMessage = resolveReplyMessage(userId, conversation.getId(), request.getReplyMessageId());
+
+            ChatMessage message = chatModelMapper.toTextMessage(request);
+            message.setConversationId(conversation.getId());
+            message.setSenderId(userId);
+            message.setReplyMessageId(replyMessage != null ? replyMessage.getId() : null);
+            message.setPayloadJson(buildMessagePayloadJson(null, buildReplySnapshot(replyMessage)));
+            try {
+                chatMessageService.save(message);
+            } catch (DuplicateKeyException ex) {
+                ChatMessageVO existingMessage = resolveDuplicateClientMessage(userId, request.getClientMessageId(), conversation.getId(), ex);
+                chatMetricsService.recordSend(ChatConstants.MESSAGE_TYPE_TEXT, "success");
+                return existingMessage;
+            }
+
+            Date now = message.getCreatedAt() != null ? message.getCreatedAt() : new Date();
+            conversation.setLastMessageId(message.getId());
+            conversation.setLastMessageTime(now);
+            chatConversationService.updateById(conversation);
+
+            List<Long> activeUserIds = activeMembers.stream().map(ChatConversationMember::getUserId).distinct().toList();
+            persistRecipients(message, activeUserIds, userId, now);
+            updateSenderCursorAfterSend(conversation, userId, message.getId(), now);
+            incrementUnreadForRecipients(conversation.getId(), activeUserIds, userId);
+            markDeliveredForOnlineRecipients(conversation.getId(), activeUserIds, userId, message.getId(), now);
+
+            ChatMessageHistoryItem item = requireVisibleMessage(userId, conversation.getId(), message.getId());
+            ChatMessageVO messageVO = buildMessageVO(userId, item, loadUsers(Set.of(userId)));
+            chatPushService.pushMessageCreated(messageVO, activeUserIds);
+            chatMetricsService.recordSend(ChatConstants.MESSAGE_TYPE_TEXT, "success");
+            return messageVO;
+        } catch (RuntimeException ex) {
+            chatMetricsService.recordSend(ChatConstants.MESSAGE_TYPE_TEXT, metricResultOf(ex));
+            throw ex;
         }
-
-        ChatMessage message = chatModelMapper.toTextMessage(request);
-        message.setConversationId(conversation.getId());
-        message.setSenderId(userId);
-        message.setReplyMessageId(resolveReplyMessageId(userId, conversation.getId(), request.getReplyMessageId()));
-        chatMessageService.save(message);
-
-        Date now = message.getCreatedAt() != null ? message.getCreatedAt() : new Date();
-        conversation.setLastMessageId(message.getId());
-        conversation.setLastMessageTime(now);
-        chatConversationService.updateById(conversation);
-
-        List<Long> activeUserIds = activeMembers.stream().map(ChatConversationMember::getUserId).distinct().toList();
-        persistRecipients(message, activeUserIds, userId, now);
-        updateSenderCursorAfterSend(conversation, userId, message.getId(), now);
-        incrementUnreadForRecipients(conversation.getId(), activeUserIds, userId);
-        markDeliveredForOnlineRecipients(conversation.getId(), activeUserIds, userId, message.getId(), now);
-
-        ChatMessageHistoryItem item = requireVisibleMessage(userId, conversation.getId(), message.getId());
-        ChatMessageVO messageVO = buildMessageVO(userId, item, loadUsers(Set.of(userId)));
-        chatPushService.pushMessageCreated(messageVO, activeUserIds);
-        return messageVO;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ChatMessageVO sendFileMessage(ChatSendFileRequest request) {
         Long userId = SecurityUtils.requireUserId();
-        validateSendFileRequest(request);
-        ChatConversation conversation = resolveSendConversation(userId, request.getConversationId(), request.getTargetUserId());
-        ConversationAccessContext context = requireConversationAccess(userId, conversation.getId());
-        validateMemberCanSend(context.selfMember());
-        List<ChatConversationMember> activeMembers = context.activeMembers();
-        ChatMessageHistoryItem existing = findExistingMessage(userId, request.getClientMessageId(), conversation.getId());
-        if (existing != null) {
-            return buildMessageVO(userId, existing, loadUsers(Set.of(existing.getSenderId())));
+        String metricMessageType = ChatConstants.MESSAGE_TYPE_FILE;
+        try {
+            validateSendFileRequest(request);
+            chatMessageGovernanceService.validateAttachmentMessage(userId);
+            ChatConversation conversation = resolveSendConversation(userId, request.getConversationId(), request.getTargetUserId());
+            ConversationAccessContext context = requireConversationAccess(userId, conversation.getId());
+            validateMemberCanSend(context.selfMember());
+            List<ChatConversationMember> activeMembers = context.activeMembers();
+            ChatMessageHistoryItem existing = findExistingMessage(userId, request.getClientMessageId(), conversation.getId());
+            if (existing != null) {
+                ChatMessageVO existingMessage = buildMessageVO(userId, existing, loadUsers(Set.of(existing.getSenderId())));
+                chatMetricsService.recordSend(existing.getMessageType(), "success");
+                return existingMessage;
+            }
+
+            PreparedFileMessage preparedFile = prepareFileMessage(userId, request.getBusinessId());
+            metricMessageType = resolveAttachmentMessageType(preparedFile.fileInfo());
+            ChatMessageHistoryItem replyMessage = resolveReplyMessage(userId, conversation.getId(), request.getReplyMessageId());
+            Long replyMessageId = replyMessage != null ? replyMessage.getId() : null;
+            ChatMessage message = buildFileMessage(conversation.getId(), userId, request.getClientMessageId(), replyMessageId, preparedFile.fileInfo());
+            try {
+                chatMessageService.save(message);
+            } catch (DuplicateKeyException ex) {
+                ChatMessageVO existingMessage = resolveDuplicateClientMessage(userId, request.getClientMessageId(), conversation.getId(), ex);
+                chatMetricsService.recordSend(existingMessage.getMessageType(), "success");
+                return existingMessage;
+            }
+            ChatFilePayloadVO filePayload = bindFileReferenceToMessage(preparedFile, message.getId(), message.getMessageType());
+            message.setPayloadJson(buildMessagePayloadJson(filePayload, buildReplySnapshot(replyMessage)));
+            chatMessageService.updateById(message);
+
+            Date now = message.getCreatedAt() != null ? message.getCreatedAt() : new Date();
+            conversation.setLastMessageId(message.getId());
+            conversation.setLastMessageTime(now);
+            chatConversationService.updateById(conversation);
+
+            List<Long> activeUserIds = activeMembers.stream().map(ChatConversationMember::getUserId).distinct().toList();
+            persistRecipients(message, activeUserIds, userId, now);
+            updateSenderCursorAfterSend(conversation, userId, message.getId(), now);
+            incrementUnreadForRecipients(conversation.getId(), activeUserIds, userId);
+            markDeliveredForOnlineRecipients(conversation.getId(), activeUserIds, userId, message.getId(), now);
+
+            ChatMessageHistoryItem item = requireVisibleMessage(userId, conversation.getId(), message.getId());
+            ChatMessageVO messageVO = buildMessageVO(userId, item, loadUsers(Set.of(userId)));
+            chatPushService.pushMessageCreated(messageVO, activeUserIds);
+            chatAttachmentAsyncProcessingService.scheduleAfterCommit(message.getId(), messageVO, activeUserIds);
+            chatMetricsService.recordSend(metricMessageType, "success");
+            return messageVO;
+        } catch (RuntimeException ex) {
+            chatMetricsService.recordSend(metricMessageType, metricResultOf(ex));
+            throw ex;
         }
-
-        PreparedFileMessage preparedFile = prepareFileMessage(userId, request.getBusinessId());
-        Long replyMessageId = resolveReplyMessageId(userId, conversation.getId(), request.getReplyMessageId());
-        ChatMessage message = buildFileMessage(conversation.getId(), userId, request.getClientMessageId(), replyMessageId, preparedFile.fileInfo());
-        chatMessageService.save(message);
-        ChatFilePayloadVO filePayload = bindFileReferenceToMessage(preparedFile, message.getId());
-        message.setPayloadJson(JsonUtils.toJson(filePayload));
-        chatMessageService.updateById(message);
-
-        Date now = message.getCreatedAt() != null ? message.getCreatedAt() : new Date();
-        conversation.setLastMessageId(message.getId());
-        conversation.setLastMessageTime(now);
-        chatConversationService.updateById(conversation);
-
-        List<Long> activeUserIds = activeMembers.stream().map(ChatConversationMember::getUserId).distinct().toList();
-        persistRecipients(message, activeUserIds, userId, now);
-        updateSenderCursorAfterSend(conversation, userId, message.getId(), now);
-        incrementUnreadForRecipients(conversation.getId(), activeUserIds, userId);
-        markDeliveredForOnlineRecipients(conversation.getId(), activeUserIds, userId, message.getId(), now);
-
-        ChatMessageHistoryItem item = requireVisibleMessage(userId, conversation.getId(), message.getId());
-        ChatMessageVO messageVO = buildMessageVO(userId, item, loadUsers(Set.of(userId)));
-        chatPushService.pushMessageCreated(messageVO, activeUserIds);
-        return messageVO;
     }
 
     @Override
@@ -263,8 +308,15 @@ public class UserChatServiceImpl implements UserChatService {
                 .set(ChatMessageRecipient::getVisibleStatus, ChatConstants.VISIBLE_STATUS_HIDDEN)
                 .update();
         ChatMessageReadCursor cursor = getOrCreateCursor(message.getConversationId(), userId, null, null);
-        cursor.setUnreadCount((int) countUnread(message.getConversationId(), userId));
+        int unreadCount = (int) countUnread(message.getConversationId(), userId);
+        cursor.setUnreadCount(unreadCount);
         saveOrUpdateCursor(cursor);
+        chatPushService.pushMessageDeleted(ChatWsMessageDeletedPayload.builder()
+                .conversationId(message.getConversationId())
+                .messageId(messageId)
+                .userId(userId)
+                .unreadCount(unreadCount)
+                .build(), List.of(userId));
     }
 
     @Override
@@ -273,7 +325,9 @@ public class UserChatServiceImpl implements UserChatService {
         Long userId = SecurityUtils.requireUserId();
         return markRead(userId, conversationId, request.getReadMessageId());
     }
-
+    /**
+     * 推进当前用户在会话内的已读高水位，并同步回写 recipient/cursor/member 三处读状态。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ChatReadStateVO markRead(Long userId, Long conversationId, Long readMessageId) {
@@ -508,7 +562,8 @@ public class UserChatServiceImpl implements UserChatService {
         markMessagesDelivered(userId, conversationId, items);
         Collections.reverse(items);
         Map<Long, SysUser> userMap = loadUsers(collectSenderIds(items));
-        List<ChatMessageVO> records = items.stream().map(item -> buildMessageVO(userId, item, userMap)).toList();
+        Map<Long, ChatReplyMessageVO> replySnapshots = loadReplySnapshotsForVisibleMessages(userId, conversationId, collectReplyMessageIds(items));
+        List<ChatMessageVO> records = items.stream().map(item -> buildMessageVO(userId, item, userMap, replySnapshots)).toList();
         return PageResult.<ChatMessageVO>builder()
                 .total(total)
                 .current(current)
@@ -757,18 +812,9 @@ public class UserChatServiceImpl implements UserChatService {
                     .set(ChatMessageRecipient::getDeliveryStatus, ChatConstants.DELIVERY_STATUS_DELIVERED)
                     .set(ChatMessageRecipient::getDeliveredAt, now)
                     .update();
-            ChatMessageReadCursor cursor = getOrCreateCursor(conversationId, recipientUserId, null, null);
-            if (cursor.getDeliveredMessageId() == null || cursor.getDeliveredMessageId() < messageId) {
-                cursor.setDeliveredMessageId(messageId);
-                cursor.setDeliveredAt(now);
-                saveOrUpdateCursor(cursor);
-            }
+            advanceCursorDeliveredState(conversationId, recipientUserId, messageId, now);
             ChatConversationMember member = findMember(conversationId, recipientUserId);
-            if (member != null && (member.getLastDeliveredMessageId() == null || member.getLastDeliveredMessageId() < messageId)) {
-                member.setLastDeliveredMessageId(messageId);
-                member.setLastDeliveredAt(now);
-                chatConversationMemberService.updateById(member);
-            }
+            advanceMemberDeliveredState(member, messageId, now);
         }
     }
 
@@ -791,18 +837,9 @@ public class UserChatServiceImpl implements UserChatService {
                 .set(ChatMessageRecipient::getDeliveredAt, now)
                 .update();
         Long maxMessageId = Collections.max(messageIds);
-        ChatMessageReadCursor cursor = getOrCreateCursor(conversationId, userId, null, null);
-        if (cursor.getDeliveredMessageId() == null || cursor.getDeliveredMessageId() < maxMessageId) {
-            cursor.setDeliveredMessageId(maxMessageId);
-            cursor.setDeliveredAt(now);
-            saveOrUpdateCursor(cursor);
-        }
+        advanceCursorDeliveredState(conversationId, userId, maxMessageId, now);
         ChatConversationMember member = findMember(conversationId, userId);
-        if (member != null && (member.getLastDeliveredMessageId() == null || member.getLastDeliveredMessageId() < maxMessageId)) {
-            member.setLastDeliveredMessageId(maxMessageId);
-            member.setLastDeliveredAt(now);
-            chatConversationMemberService.updateById(member);
-        }
+        advanceMemberDeliveredState(member, maxMessageId, now);
         for (ChatMessageHistoryItem item : items) {
             if (messageIds.contains(item.getId())) {
                 item.setDeliveryStatus(ChatConstants.DELIVERY_STATUS_DELIVERED);
@@ -868,7 +905,7 @@ public class UserChatServiceImpl implements UserChatService {
     /**
      * 把上传阶段的业务引用收口为聊天消息引用，避免聊天模块直接维护文件元数据。
      */
-    private ChatFilePayloadVO bindFileReferenceToMessage(PreparedFileMessage preparedFile, Long messageId) {
+    private ChatFilePayloadVO bindFileReferenceToMessage(PreparedFileMessage preparedFile, Long messageId, String messageType) {
         FileBusinessInfo sourceReference = preparedFile.sourceReference();
         FileInfo fileInfo = preparedFile.fileInfo();
         FileBusinessInfo chatReference = fileBusinessInfoService.lambdaQuery()
@@ -906,16 +943,7 @@ public class UserChatServiceImpl implements UserChatService {
             fileBusinessInfoService.removeById(sourceReference.getId());
         }
         fileLifecycleService.refreshReferenceMetadata(fileInfo.getId(), Integer.valueOf(1).equals(chatReference.getIsPublic()));
-        ChatFilePayloadVO payload = new ChatFilePayloadVO();
-        payload.setBusinessId(chatReference.getId());
-        payload.setFileId(fileInfo.getId());
-        payload.setFileName(fileInfo.getFileName());
-        payload.setOriginalName(fileInfo.getOriginalName());
-        payload.setFileUrl(fileInfo.getFileUrl());
-        payload.setFileSize(fileInfo.getFileSize());
-        payload.setFileType(fileInfo.getFileType());
-        payload.setMimeType(fileInfo.getMimeType());
-        return payload;
+        return buildFilePayload(chatReference, fileInfo, messageType);
     }
 
     private ChatMessage requireEditableOwnTextMessage(Long userId, Long messageId) {
@@ -926,12 +954,14 @@ public class UserChatServiceImpl implements UserChatService {
         return message;
     }
 
-    private Long resolveReplyMessageId(Long userId, Long conversationId, Long replyMessageId) {
+    /**
+     * 校验回复目标消息对当前用户仍可见，避免把 reply 指向越权、已删除或已隐藏的消息。
+     */
+    private ChatMessageHistoryItem resolveReplyMessage(Long userId, Long conversationId, Long replyMessageId) {
         if (replyMessageId == null) {
             return null;
         }
-        ChatMessageHistoryItem replyMessage = requireVisibleMessage(userId, conversationId, replyMessageId);
-        return replyMessage.getId();
+        return requireVisibleMessage(userId, conversationId, replyMessageId);
     }
 
     private RevocableMessageContext requireRevocableMessage(Long userId, Long messageId) {
@@ -1028,6 +1058,17 @@ public class UserChatServiceImpl implements UserChatService {
         return chatMessageMapper.selectVisibleMessageById(conversationId, userId, message.getId());
     }
 
+    private ChatMessageVO resolveDuplicateClientMessage(Long userId,
+                                                        String clientMessageId,
+                                                        Long conversationId,
+                                                        DuplicateKeyException ex) {
+        ChatMessageHistoryItem existing = findExistingMessage(userId, clientMessageId, conversationId);
+        if (existing == null) {
+            throw ex;
+        }
+        return buildMessageVO(userId, existing, loadUsers(Set.of(existing.getSenderId())));
+    }
+
     private ChatConversationVO getConversationVO(Long userId, Long conversationId) {
         ChatConversationListItem item = chatConversationMapper.selectConversationDetail(conversationId, userId);
         ExceptionThrowerCore.throwBusinessIfNull(item, ResultErrorCode.ILLEGAL_ARGUMENT, "会话不存在或不可访问");
@@ -1103,13 +1144,24 @@ public class UserChatServiceImpl implements UserChatService {
     }
 
     private ChatMessageVO buildMessageVO(Long currentUserId, ChatMessageHistoryItem item, Map<Long, SysUser> userMap) {
+        Map<Long, ChatReplyMessageVO> replySnapshots = item.getReplyMessageId() == null
+                ? Map.of()
+                : loadReplySnapshotsForVisibleMessages(currentUserId, item.getConversationId(), List.of(item.getReplyMessageId()));
+        return buildMessageVO(currentUserId, item, userMap, replySnapshots);
+    }
+
+    private ChatMessageVO buildMessageVO(Long currentUserId,
+                                         ChatMessageHistoryItem item,
+                                         Map<Long, SysUser> userMap,
+                                         Map<Long, ChatReplyMessageVO> replySnapshots) {
         ChatMessageVO vo = chatModelMapper.toMessageVO(item);
         SysUser sender = userMap.get(item.getSenderId());
         vo.setSenderUsername(sender != null ? sender.getUsername() : null);
         vo.setSenderNickname(displayName(sender, item.getSenderId()));
         vo.setSenderAvatar(sender != null ? sender.getAvatar() : null);
-        vo.setFile(parseFilePayload(item.getPayloadJson()));
+        vo.setFile(extractFilePayload(item.getPayloadJson()));
         vo.setReplyMessageId(item.getReplyMessageId());
+        vo.setReply(resolveReplySnapshot(item, item.getPayloadJson(), replySnapshots));
         vo.setSelf(Objects.equals(currentUserId, item.getSenderId()));
         vo.setReadByCurrentUser(item.getDeliveryStatus() != null && item.getDeliveryStatus() >= ChatConstants.DELIVERY_STATUS_READ);
         vo.setRevoked(Objects.equals(item.getRevokeStatus(), ChatConstants.REVOKE_STATUS_REVOKED));
@@ -1223,12 +1275,7 @@ public class UserChatServiceImpl implements UserChatService {
     }
 
     private ChatMessageReadCursor getOrCreateCursor(Long conversationId, Long userId, Long referenceMessageId, Date referenceTime) {
-        ChatMessageReadCursor cursor = chatMessageReadCursorService.lambdaQuery()
-                .eq(ChatMessageReadCursor::getConversationId, conversationId)
-                .eq(ChatMessageReadCursor::getUserId, userId)
-                .orderByDesc(ChatMessageReadCursor::getId)
-                .last("limit 1")
-                .one();
+        ChatMessageReadCursor cursor = findCursor(conversationId, userId);
         if (cursor != null) {
             if (cursor.getUnreadCount() == null) {
                 cursor.setUnreadCount(0);
@@ -1243,7 +1290,18 @@ public class UserChatServiceImpl implements UserChatService {
         cursor.setDeliveredMessageId(referenceMessageId);
         cursor.setDeliveredAt(referenceTime);
         cursor.setUnreadCount(0);
-        chatMessageReadCursorService.save(cursor);
+        try {
+            chatMessageReadCursorService.save(cursor);
+        } catch (DuplicateKeyException ex) {
+            ChatMessageReadCursor existing = findCursor(conversationId, userId);
+            if (existing != null) {
+                if (existing.getUnreadCount() == null) {
+                    existing.setUnreadCount(0);
+                }
+                return existing;
+            }
+            throw ex;
+        }
         return cursor;
     }
 
@@ -1252,6 +1310,61 @@ public class UserChatServiceImpl implements UserChatService {
             chatMessageReadCursorService.save(cursor);
         } else {
             chatMessageReadCursorService.updateById(cursor);
+        }
+    }
+
+    private ChatMessageReadCursor findCursor(Long conversationId, Long userId) {
+        return chatMessageReadCursorService.lambdaQuery()
+                .eq(ChatMessageReadCursor::getConversationId, conversationId)
+                .eq(ChatMessageReadCursor::getUserId, userId)
+                .orderByDesc(ChatMessageReadCursor::getId)
+                .last("limit 1")
+                .one();
+    }
+
+    /**
+     * delivered 高水位只能前进不能回退，避免并发推送时旧事务覆盖新事务的游标。
+     */
+    private void advanceCursorDeliveredState(Long conversationId, Long userId, Long messageId, Date deliveredAt) {
+        if (messageId == null) {
+            return;
+        }
+        ChatMessageReadCursor cursor = getOrCreateCursor(conversationId, userId, null, null);
+        if (cursor.getId() == null || (cursor.getDeliveredMessageId() != null && cursor.getDeliveredMessageId() >= messageId)) {
+            return;
+        }
+        boolean updated = chatMessageReadCursorService.lambdaUpdate()
+                .eq(ChatMessageReadCursor::getId, cursor.getId())
+                .and(wrapper -> wrapper.isNull(ChatMessageReadCursor::getDeliveredMessageId)
+                        .or()
+                        .lt(ChatMessageReadCursor::getDeliveredMessageId, messageId))
+                .set(ChatMessageReadCursor::getDeliveredMessageId, messageId)
+                .set(ChatMessageReadCursor::getDeliveredAt, deliveredAt)
+                .update();
+        if (updated) {
+            cursor.setDeliveredMessageId(messageId);
+            cursor.setDeliveredAt(deliveredAt);
+        }
+    }
+
+    private void advanceMemberDeliveredState(ChatConversationMember member, Long messageId, Date deliveredAt) {
+        if (member == null || member.getId() == null || messageId == null) {
+            return;
+        }
+        if (member.getLastDeliveredMessageId() != null && member.getLastDeliveredMessageId() >= messageId) {
+            return;
+        }
+        boolean updated = chatConversationMemberService.lambdaUpdate()
+                .eq(ChatConversationMember::getId, member.getId())
+                .and(wrapper -> wrapper.isNull(ChatConversationMember::getLastDeliveredMessageId)
+                        .or()
+                        .lt(ChatConversationMember::getLastDeliveredMessageId, messageId))
+                .set(ChatConversationMember::getLastDeliveredMessageId, messageId)
+                .set(ChatConversationMember::getLastDeliveredAt, deliveredAt)
+                .update();
+        if (updated) {
+            member.setLastDeliveredMessageId(messageId);
+            member.setLastDeliveredAt(deliveredAt);
         }
     }
 
@@ -1330,15 +1443,45 @@ public class UserChatServiceImpl implements UserChatService {
         return null;
     }
 
-    private ChatFilePayloadVO parseFilePayload(String payloadJson) {
+    private ChatMessagePayloadVO parseMessagePayload(String payloadJson) {
         if (!StrUtils.hasText(payloadJson)) {
             return null;
         }
         try {
-            return JsonUtils.fromJson(payloadJson, ChatFilePayloadVO.class);
+            ChatMessagePayloadVO payload = JsonUtils.fromJson(payloadJson, ChatMessagePayloadVO.class);
+            if (payload != null && (payload.getFile() != null || payload.getReply() != null)) {
+                return payload;
+            }
+            ChatFilePayloadVO legacyFilePayload = JsonUtils.fromJson(payloadJson, ChatFilePayloadVO.class);
+            if (hasFilePayloadContent(legacyFilePayload)) {
+                ChatMessagePayloadVO legacyPayload = new ChatMessagePayloadVO();
+                legacyPayload.setFile(legacyFilePayload);
+                return legacyPayload;
+            }
         } catch (RuntimeException ex) {
             return null;
         }
+        return null;
+    }
+
+    private ChatFilePayloadVO extractFilePayload(String payloadJson) {
+        ChatMessagePayloadVO payload = parseMessagePayload(payloadJson);
+        return payload == null ? null : payload.getFile();
+    }
+
+    private ChatReplyMessageVO extractReplyPayload(String payloadJson) {
+        ChatMessagePayloadVO payload = parseMessagePayload(payloadJson);
+        return payload == null ? null : payload.getReply();
+    }
+
+    private String buildMessagePayloadJson(ChatFilePayloadVO filePayload, ChatReplyMessageVO replySnapshot) {
+        if (filePayload == null && replySnapshot == null) {
+            return null;
+        }
+        ChatMessagePayloadVO payload = new ChatMessagePayloadVO();
+        payload.setFile(filePayload);
+        payload.setReply(replySnapshot);
+        return JsonUtils.toJson(payload);
     }
 
     private boolean isEdited(String messageType, Date createdAt, Date updatedAt) {
@@ -1366,6 +1509,148 @@ public class UserChatServiceImpl implements UserChatService {
             }
         }
         return ChatConstants.MESSAGE_TYPE_FILE;
+    }
+
+    private ChatFilePayloadVO buildFilePayload(FileBusinessInfo chatReference, FileInfo fileInfo, String messageType) {
+        ChatFilePayloadVO payload = new ChatFilePayloadVO();
+        payload.setBusinessId(chatReference.getId());
+        payload.setFileId(fileInfo.getId());
+        payload.setFileName(fileInfo.getFileName());
+        payload.setOriginalName(fileInfo.getOriginalName());
+        payload.setFileUrl(fileInfo.getFileUrl());
+        payload.setFileSize(fileInfo.getFileSize());
+        payload.setFileType(fileInfo.getFileType());
+        payload.setMimeType(fileInfo.getMimeType());
+        payload.setPreviewUrl(fileInfo.getFileUrl());
+        if (Objects.equals(messageType, ChatConstants.MESSAGE_TYPE_IMAGE) && !StrUtils.hasText(payload.getThumbnailUrl())) {
+            payload.setThumbnailUrl(fileInfo.getFileUrl());
+        }
+        if (Objects.equals(messageType, ChatConstants.MESSAGE_TYPE_VOICE)) {
+            payload.setTranscodeStatus(ChatConstants.ATTACHMENT_TRANSCODE_STATUS_PENDING);
+        } else {
+            payload.setTranscodeStatus(ChatConstants.ATTACHMENT_TRANSCODE_STATUS_SOURCE);
+        }
+        return payload;
+    }
+
+    private String metricResultOf(RuntimeException ex) {
+        return ex instanceof BusinessException ? "business_error" : "system_error";
+    }
+
+    /**
+     * 为新发消息持久化一份轻量 reply 快照，减少后续展示对原消息实时查询的强依赖。
+     */
+    private ChatReplyMessageVO buildReplySnapshot(ChatMessageHistoryItem item) {
+        if (item == null) {
+            return null;
+        }
+        return buildReplySnapshot(item, loadUsers(Set.of(item.getSenderId())));
+    }
+
+    private ChatReplyMessageVO buildReplySnapshot(ChatMessageHistoryItem item, Map<Long, SysUser> userMap) {
+        ChatReplyMessageVO reply = new ChatReplyMessageVO();
+        reply.setId(item.getId());
+        reply.setSenderId(item.getSenderId());
+        SysUser sender = userMap.get(item.getSenderId());
+        reply.setSenderUsername(sender != null ? sender.getUsername() : null);
+        reply.setSenderNickname(displayName(sender, item.getSenderId()));
+        reply.setSenderAvatar(sender != null ? sender.getAvatar() : null);
+        reply.setMessageType(item.getMessageType());
+        reply.setReplyToMessageId(item.getReplyMessageId());
+        reply.setContent(item.getContent());
+        reply.setFile(extractFilePayload(item.getPayloadJson()));
+        boolean revoked = Objects.equals(item.getRevokeStatus(), ChatConstants.REVOKE_STATUS_REVOKED);
+        reply.setRevoked(revoked);
+        reply.setDeleted(false);
+        reply.setState(revoked ? ChatConstants.REPLY_STATE_REVOKED : ChatConstants.REPLY_STATE_NORMAL);
+        reply.setCreatedAt(item.getCreatedAt());
+        return reply;
+    }
+
+    private ChatReplyMessageVO resolveReplySnapshot(ChatMessageHistoryItem item,
+                                                    String payloadJson,
+                                                    Map<Long, ChatReplyMessageVO> replySnapshots) {
+        if (item.getReplyMessageId() == null) {
+            return null;
+        }
+        ChatReplyMessageVO liveReply = replySnapshots.get(item.getReplyMessageId());
+        if (liveReply != null && !Boolean.TRUE.equals(liveReply.getDeleted())) {
+            return liveReply;
+        }
+        ChatReplyMessageVO payloadReply = normalizeReplySnapshot(extractReplyPayload(payloadJson));
+        if (payloadReply != null) {
+            return payloadReply;
+        }
+        return liveReply != null ? liveReply : buildUnavailableReplySnapshot(item.getReplyMessageId());
+    }
+    /**
+     * 批量加载当前用户仍可见的 reply 原消息；缺失记录会统一补成 unavailable 占位，保证历史消息渲染稳定。
+     */
+    private Map<Long, ChatReplyMessageVO> loadReplySnapshotsForVisibleMessages(Long userId,
+                                                                               Long conversationId,
+                                                                               Collection<Long> replyMessageIds) {
+        List<Long> ids = replyMessageIds == null ? List.of() : replyMessageIds.stream().filter(Objects::nonNull).distinct().toList();
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        List<ChatMessageHistoryItem> replyItems = Objects.requireNonNullElse(
+                chatMessageMapper.selectVisibleMessagesByIds(conversationId, userId, ids),
+                List.of()
+        );
+        Map<Long, SysUser> userMap = loadUsers(collectSenderIds(replyItems));
+        Map<Long, ChatReplyMessageVO> result = new LinkedHashMap<>();
+        for (ChatMessageHistoryItem replyItem : replyItems) {
+            result.put(replyItem.getId(), buildReplySnapshot(replyItem, userMap));
+        }
+        for (Long id : ids) {
+            result.putIfAbsent(id, buildUnavailableReplySnapshot(id));
+        }
+        return result;
+    }
+
+    private List<Long> collectReplyMessageIds(Collection<ChatMessageHistoryItem> items) {
+        if (items == null || items.isEmpty()) {
+            return List.of();
+        }
+        return items.stream()
+                .map(ChatMessageHistoryItem::getReplyMessageId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+    }
+
+    private ChatReplyMessageVO buildUnavailableReplySnapshot(Long replyMessageId) {
+        ChatReplyMessageVO reply = new ChatReplyMessageVO();
+        reply.setId(replyMessageId);
+        reply.setContent(ChatConstants.REPLY_MESSAGE_UNAVAILABLE_PLACEHOLDER);
+        reply.setDeleted(true);
+        reply.setRevoked(false);
+        reply.setState(ChatConstants.REPLY_STATE_UNAVAILABLE);
+        return reply;
+    }
+
+    private ChatReplyMessageVO normalizeReplySnapshot(ChatReplyMessageVO reply) {
+        if (reply == null) {
+            return null;
+        }
+        if (!StrUtils.hasText(reply.getState())) {
+            if (Boolean.TRUE.equals(reply.getDeleted())) {
+                reply.setState(ChatConstants.REPLY_STATE_UNAVAILABLE);
+            } else if (Boolean.TRUE.equals(reply.getRevoked())) {
+                reply.setState(ChatConstants.REPLY_STATE_REVOKED);
+            } else {
+                reply.setState(ChatConstants.REPLY_STATE_NORMAL);
+            }
+        }
+        return reply;
+    }
+
+    private boolean hasFilePayloadContent(ChatFilePayloadVO payload) {
+        return payload != null
+                && (payload.getBusinessId() != null
+                || payload.getFileId() != null
+                || StrUtils.hasText(payload.getFileName())
+                || StrUtils.hasText(payload.getFileUrl()));
     }
 
     private List<Long> listActiveUserIds(Long conversationId) {
@@ -1421,4 +1706,6 @@ public class UserChatServiceImpl implements UserChatService {
     private record RevocableMessageContext(ChatMessage message) {
     }
 }
+
+
 

@@ -1,15 +1,14 @@
 package com.cybzacg.blogbackend.module.content.service.impl;
 
 import com.cybzacg.blogbackend.domain.SysTag;
-import com.cybzacg.blogbackend.domain.SysTagRelation;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.admin.TagSaveRequest;
 import com.cybzacg.blogbackend.module.content.model.admin.TagVO;
-import com.cybzacg.blogbackend.module.content.service.SysTagRelationService;
-import com.cybzacg.blogbackend.module.content.service.SysTagService;
+import com.cybzacg.blogbackend.module.content.repository.SysTagRelationRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysTagRepository;
 import com.cybzacg.blogbackend.module.content.service.TagAdminService;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,20 +19,18 @@ import java.util.List;
 /**
  * 标签后台管理服务实现。
  *
- * <p>负责标签查询、创建、修改、删除，以及删除前的关联关系校验。
+ * <p>负责标签查询、创建、修改，以及删除标签时的关联关系清理。
  */
 @Service
 @RequiredArgsConstructor
 public class TagAdminServiceImpl implements TagAdminService {
-    private final SysTagService sysTagService;
-    private final SysTagRelationService sysTagRelationService;
+    private final SysTagRepository sysTagRepository;
+    private final SysTagRelationRepository sysTagRelationRepository;
     private final ContentModelMapper contentModelMapper;
 
     @Override
     public List<TagVO> listTags() {
-        return sysTagService.lambdaQuery()
-                .orderByDesc(SysTag::getId)
-                .list()
+        return sysTagRepository.findAllOrderByIdDesc()
                 .stream()
                 .map(contentModelMapper::toTagVO)
                 .toList();
@@ -49,7 +46,7 @@ public class TagAdminServiceImpl implements TagAdminService {
     public TagVO createTag(TagSaveRequest request) {
         validateNameUnique(null, request.getName());
         SysTag tag = contentModelMapper.toTag(request);
-        sysTagService.save(tag);
+        sysTagRepository.save(tag);
         return contentModelMapper.toTagVO(tag);
     }
 
@@ -59,27 +56,26 @@ public class TagAdminServiceImpl implements TagAdminService {
         SysTag tag = getTagOrThrow(id);
         validateNameUnique(id, request.getName());
         contentModelMapper.updateTag(request, tag);
-        sysTagService.updateById(tag);
+        sysTagRepository.updateById(tag);
         return contentModelMapper.toTagVO(tag);
     }
 
+    /**
+     * 删除标签时同步清理标签-目标关联，避免遗留失效的 sys_tag_relation 记录。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteTag(Long id) {
         getTagOrThrow(id);
-        boolean bound = sysTagRelationService.lambdaQuery().eq(SysTagRelation::getTagId, id).exists();
-        ExceptionThrowerCore.throwBusinessIf(bound, ResultErrorCode.ILLEGAL_ARGUMENT, "当前标签已绑定目标，无法删除");
-        sysTagService.removeById(id);
+        sysTagRelationRepository.removeByTagId(id);
+        sysTagRepository.removeById(id);
     }
 
     /**
      * 校验标签名称唯一，避免后台维护时出现重名标签。
      */
     private void validateNameUnique(Long currentId, String name) {
-        boolean exists = sysTagService.lambdaQuery()
-                .eq(SysTag::getName, StrUtils.trim(name))
-                .ne(currentId != null, SysTag::getId, currentId)
-                .exists();
+        boolean exists = sysTagRepository.existsByNameExcludingId(StrUtils.trim(name), currentId);
         ExceptionThrowerCore.throwBusinessIf(exists, ResultErrorCode.DATA_ALREADY_EXISTS, "标签名称已存在");
     }
 
@@ -87,15 +83,8 @@ public class TagAdminServiceImpl implements TagAdminService {
      * 按 ID 获取标签，不存在时抛出统一业务异常。
      */
     private SysTag getTagOrThrow(Long id) {
-        SysTag tag = sysTagService.getById(id);
+        SysTag tag = sysTagRepository.getById(id);
         ExceptionThrowerCore.throwBusinessIfNull(tag, ResultErrorCode.ILLEGAL_ARGUMENT, "标签不存在");
         return tag;
     }
-
 }
-
-
-
-
-
-

@@ -26,6 +26,8 @@ import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageReceiptPa
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageReceiptVO;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageVO;
 import com.cybzacg.blogbackend.module.chat.model.common.ChatFilePayloadVO;
+import com.cybzacg.blogbackend.module.chat.model.common.ChatMessagePayloadVO;
+import com.cybzacg.blogbackend.module.chat.model.common.ChatReplyMessageVO;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatAdminConversationListItem;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatAdminMessageItem;
 import com.cybzacg.blogbackend.module.chat.model.user.ChatConversationLastMessageVO;
@@ -133,7 +135,8 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         long offset = (current - 1) * size;
         List<ChatAdminMessageItem> items = chatMessageMapper.selectAdminMessagePage(conversationId, query, offset, size);
         Map<Long, SysUser> userMap = loadUsers(items.stream().map(ChatAdminMessageItem::getSenderId).collect(LinkedHashSet::new, Set::add, Set::addAll));
-        List<ChatAdminMessageVO> records = items.stream().map(item -> buildMessageVO(item, userMap)).toList();
+        Map<Long, ChatReplyMessageVO> replySnapshots = loadAdminReplySnapshots(conversationId, collectReplyMessageIds(items));
+        List<ChatAdminMessageVO> records = items.stream().map(item -> buildMessageVO(item, userMap, replySnapshots)).toList();
         return PageResult.<ChatAdminMessageVO>builder()
                 .total(total)
                 .current(current)
@@ -158,8 +161,9 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         vo.setSenderAvatar(sender != null ? sender.getAvatar() : null);
         vo.setMessageType(message.getMessageType());
         vo.setContent(message.getContent());
-        vo.setFile(parseFilePayload(message.getPayloadJson()));
+        vo.setFile(extractFilePayload(message.getPayloadJson()));
         vo.setReplyMessageId(message.getReplyMessageId());
+        vo.setReply(resolveReplySnapshot(message.getReplyMessageId(), extractReplyPayload(message.getPayloadJson()), loadAdminReplySnapshot(conversationId, message.getReplyMessageId())));
         vo.setClientMessageId(message.getClientMessageId());
         vo.setSendStatus(message.getSendStatus());
         vo.setRevokeStatus(message.getRevokeStatus());
@@ -368,14 +372,19 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         return vo;
     }
 
-    private ChatAdminMessageVO buildMessageVO(ChatAdminMessageItem item, Map<Long, SysUser> userMap) {
+    private ChatAdminMessageVO buildMessageVO(ChatAdminMessageItem item,
+                                              Map<Long, SysUser> userMap,
+                                              Map<Long, ChatReplyMessageVO> replySnapshots) {
         ChatAdminMessageVO vo = chatModelMapper.toAdminMessageVO(item);
         SysUser sender = userMap.get(item.getSenderId());
         vo.setSenderUsername(sender != null ? sender.getUsername() : null);
         vo.setSenderNickname(displayName(sender, item.getSenderId()));
         vo.setSenderAvatar(sender != null ? sender.getAvatar() : null);
-        vo.setFile(parseFilePayload(item.getPayloadJson()));
+        vo.setFile(extractFilePayload(item.getPayloadJson()));
         vo.setReplyMessageId(item.getReplyMessageId());
+        vo.setReply(resolveReplySnapshot(item.getReplyMessageId(),
+                extractReplyPayload(item.getPayloadJson()),
+                item.getReplyMessageId() == null ? null : replySnapshots.get(item.getReplyMessageId())));
         vo.setEdited(isEdited(item.getMessageType(), item.getCreatedAt(), item.getUpdatedAt()));
         return vo;
     }
@@ -570,15 +579,35 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         fileIds.values().forEach(fileLifecycleService::syncFileAfterReferenceRemoval);
     }
 
-    private ChatFilePayloadVO parseFilePayload(String payloadJson) {
+    private ChatMessagePayloadVO parseMessagePayload(String payloadJson) {
         if (!StrUtils.hasText(payloadJson)) {
             return null;
         }
         try {
-            return JsonUtils.fromJson(payloadJson, ChatFilePayloadVO.class);
+            ChatMessagePayloadVO payload = JsonUtils.fromJson(payloadJson, ChatMessagePayloadVO.class);
+            if (payload != null && (payload.getFile() != null || payload.getReply() != null)) {
+                return payload;
+            }
+            ChatFilePayloadVO legacyFilePayload = JsonUtils.fromJson(payloadJson, ChatFilePayloadVO.class);
+            if (hasFilePayloadContent(legacyFilePayload)) {
+                ChatMessagePayloadVO legacyPayload = new ChatMessagePayloadVO();
+                legacyPayload.setFile(legacyFilePayload);
+                return legacyPayload;
+            }
         } catch (RuntimeException ex) {
             return null;
         }
+        return null;
+    }
+
+    private ChatFilePayloadVO extractFilePayload(String payloadJson) {
+        ChatMessagePayloadVO payload = parseMessagePayload(payloadJson);
+        return payload == null ? null : payload.getFile();
+    }
+
+    private ChatReplyMessageVO extractReplyPayload(String payloadJson) {
+        ChatMessagePayloadVO payload = parseMessagePayload(payloadJson);
+        return normalizeReplySnapshot(payload == null ? null : payload.getReply());
     }
 
     private boolean isDelivered(ChatMessageRecipient recipient) {
@@ -644,8 +673,9 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         vo.setSenderId(message.getSenderId());
         vo.setMessageType(message.getMessageType());
         vo.setContent(message.getContent());
-        vo.setFile(parseFilePayload(message.getPayloadJson()));
+        vo.setFile(extractFilePayload(message.getPayloadJson()));
         vo.setReplyMessageId(message.getReplyMessageId());
+        vo.setReply(resolveReplySnapshot(message.getReplyMessageId(), extractReplyPayload(message.getPayloadJson()), loadAdminReplySnapshot(message.getConversationId(), message.getReplyMessageId())));
         SysUser sender = loadUsers(Set.of(message.getSenderId())).get(message.getSenderId());
         vo.setSenderUsername(sender != null ? sender.getUsername() : null);
         vo.setSenderNickname(displayName(sender, message.getSenderId()));
@@ -655,6 +685,113 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         vo.setUpdatedAt(message.getUpdatedAt());
         vo.setCreatedAt(message.getCreatedAt());
         return vo;
+    }
+
+    private Map<Long, ChatReplyMessageVO> loadAdminReplySnapshots(Long conversationId, Collection<Long> replyMessageIds) {
+        List<Long> ids = replyMessageIds == null ? List.of() : replyMessageIds.stream().filter(Objects::nonNull).distinct().toList();
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        List<ChatAdminMessageItem> replyItems = Objects.requireNonNullElse(
+                chatMessageMapper.selectAdminMessagesByIds(conversationId, ids),
+                List.of()
+        );
+        Map<Long, SysUser> userMap = loadUsers(replyItems.stream().map(ChatAdminMessageItem::getSenderId).collect(LinkedHashSet::new, Set::add, Set::addAll));
+        Map<Long, ChatReplyMessageVO> result = new LinkedHashMap<>();
+        for (ChatAdminMessageItem replyItem : replyItems) {
+            result.put(replyItem.getId(), buildReplySnapshot(replyItem, userMap));
+        }
+        for (Long id : ids) {
+            result.putIfAbsent(id, buildUnavailableReplySnapshot(id));
+        }
+        return result;
+    }
+
+    private ChatReplyMessageVO loadAdminReplySnapshot(Long conversationId, Long replyMessageId) {
+        if (replyMessageId == null) {
+            return null;
+        }
+        return loadAdminReplySnapshots(conversationId, List.of(replyMessageId)).get(replyMessageId);
+    }
+
+    private ChatReplyMessageVO buildReplySnapshot(ChatAdminMessageItem item, Map<Long, SysUser> userMap) {
+        ChatReplyMessageVO reply = new ChatReplyMessageVO();
+        reply.setId(item.getId());
+        reply.setSenderId(item.getSenderId());
+        SysUser sender = userMap.get(item.getSenderId());
+        reply.setSenderUsername(sender != null ? sender.getUsername() : null);
+        reply.setSenderNickname(displayName(sender, item.getSenderId()));
+        reply.setSenderAvatar(sender != null ? sender.getAvatar() : null);
+        reply.setMessageType(item.getMessageType());
+        reply.setReplyToMessageId(item.getReplyMessageId());
+        reply.setContent(item.getContent());
+        reply.setFile(extractFilePayload(item.getPayloadJson()));
+        boolean revoked = Objects.equals(item.getRevokeStatus(), ChatConstants.REVOKE_STATUS_REVOKED);
+        reply.setRevoked(revoked);
+        reply.setDeleted(false);
+        reply.setState(revoked ? ChatConstants.REPLY_STATE_REVOKED : ChatConstants.REPLY_STATE_NORMAL);
+        reply.setCreatedAt(item.getCreatedAt());
+        return reply;
+    }
+
+    private ChatReplyMessageVO buildUnavailableReplySnapshot(Long replyMessageId) {
+        ChatReplyMessageVO reply = new ChatReplyMessageVO();
+        reply.setId(replyMessageId);
+        reply.setContent(ChatConstants.REPLY_MESSAGE_UNAVAILABLE_PLACEHOLDER);
+        reply.setDeleted(true);
+        reply.setRevoked(false);
+        reply.setState(ChatConstants.REPLY_STATE_UNAVAILABLE);
+        return reply;
+    }
+
+    private ChatReplyMessageVO resolveReplySnapshot(Long replyMessageId,
+                                                    ChatReplyMessageVO payloadReply,
+                                                    ChatReplyMessageVO fallbackReply) {
+        if (replyMessageId == null) {
+            return null;
+        }
+        if (fallbackReply != null && !Boolean.TRUE.equals(fallbackReply.getDeleted())) {
+            return fallbackReply;
+        }
+        if (payloadReply != null) {
+            return payloadReply;
+        }
+        return fallbackReply != null ? fallbackReply : buildUnavailableReplySnapshot(replyMessageId);
+    }
+
+    private ChatReplyMessageVO normalizeReplySnapshot(ChatReplyMessageVO reply) {
+        if (reply == null) {
+            return null;
+        }
+        if (!StrUtils.hasText(reply.getState())) {
+            if (Boolean.TRUE.equals(reply.getDeleted())) {
+                reply.setState(ChatConstants.REPLY_STATE_UNAVAILABLE);
+            } else if (Boolean.TRUE.equals(reply.getRevoked())) {
+                reply.setState(ChatConstants.REPLY_STATE_REVOKED);
+            } else {
+                reply.setState(ChatConstants.REPLY_STATE_NORMAL);
+            }
+        }
+        return reply;
+    }
+
+    private List<Long> collectReplyMessageIds(Collection<ChatAdminMessageItem> items) {
+        if (items == null || items.isEmpty()) {
+            return List.of();
+        }
+        return items.stream()
+                .map(ChatAdminMessageItem::getReplyMessageId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+    }
+
+    private boolean hasFilePayloadContent(ChatFilePayloadVO payload) {
+        return payload != null
+                && (payload.getBusinessId() != null
+                || payload.getFileId() != null
+                || StrUtils.hasText(payload.getFileName())
+                || StrUtils.hasText(payload.getFileUrl()));
     }
 
     private String displayName(SysUser user, Long fallbackUserId) {

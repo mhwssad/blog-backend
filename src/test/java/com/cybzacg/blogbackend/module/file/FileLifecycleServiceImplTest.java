@@ -133,6 +133,31 @@ class FileLifecycleServiceImplTest {
     }
 
     @Test
+    void cleanupExpiredUploadTasksShouldContinueWhenBatchHitsLimit() {
+        List<FileUploadTask> firstBatch = java.util.stream.IntStream.rangeClosed(1, 100)
+                .mapToObj(id -> buildExpiredChunkTask(id))
+                .toList();
+        List<FileUploadTask> secondBatch = List.of(buildExpiredChunkTask(101));
+        when(fileUploadTaskService.lambdaQuery()).thenReturn(taskQuery);
+        when(taskQuery.le(anySFunction(), any())).thenReturn(taskQuery);
+        when(taskQuery.in(anySFunction(), any(), any(), any())).thenReturn(taskQuery);
+        when(taskQuery.orderByAsc(anySFunction())).thenReturn(taskQuery);
+        when(taskQuery.last(anyString())).thenReturn(taskQuery);
+        when(taskQuery.list()).thenReturn(firstBatch, secondBatch, List.of());
+        when(fileUploadTaskService.updateById(any(FileUploadTask.class))).thenReturn(true);
+        when(fileChunkService.remove(any(LambdaQueryWrapper.class))).thenReturn(true);
+        when(storageManager.getStorageService("local-test")).thenReturn(storageService);
+        when(storageService.deleteTempFiles(anyString())).thenReturn(true);
+
+        int cleaned = fileLifecycleService.cleanupExpiredUploadTasks();
+
+        assertEquals(101, cleaned);
+        verify(taskQuery, org.mockito.Mockito.times(2)).list();
+        verify(fileUploadTaskService, org.mockito.Mockito.times(101)).updateById(any(FileUploadTask.class));
+        verify(storageService, org.mockito.Mockito.times(101)).deleteTempFiles(anyString());
+    }
+
+    @Test
     void expireTaskIfNeededShouldReturnFalseForCompletedTask() {
         FileUploadTask task = new FileUploadTask();
         task.setTaskStatus(TaskStatusEnum.COMPLETED.getValue());
@@ -172,11 +197,15 @@ class FileLifecycleServiceImplTest {
         when(businessQuery.count()).thenReturn(0L);
         when(fileInfoService.update(any(LambdaUpdateWrapper.class))).thenReturn(true);
         when(storageManager.getStorageService("local-test")).thenReturn(storageService);
+        when(storageService.delete("attachment/demo__chat_thumb.jpg")).thenReturn(true);
+        when(storageService.delete("attachment/demo__chat_preview.wav")).thenReturn(true);
         when(storageService.delete("attachment/demo.png")).thenReturn(true);
 
         fileLifecycleService.syncFileAfterReferenceRemoval(9L);
 
         verify(fileInfoService).update(any(LambdaUpdateWrapper.class));
+        verify(storageService).delete("attachment/demo__chat_thumb.jpg");
+        verify(storageService).delete("attachment/demo__chat_preview.wav");
         verify(storageService).delete("attachment/demo.png");
     }
 
@@ -199,6 +228,25 @@ class FileLifecycleServiceImplTest {
         verify(storageManager, never()).getStorageService(anyString());
     }
 
+    @Test
+    void syncFileAfterReferenceRemovalShouldRefreshMetadataWhenConcurrentReferenceAppearsAfterZeroCountCheck() {
+        FileInfo fileInfo = new FileInfo();
+        fileInfo.setId(11L);
+        fileInfo.setStorageKey("local-test");
+        fileInfo.setFilePath("attachment/demo-3.png");
+        fileInfo.setStatus(FileStatusEnum.NORMAL.getValue());
+        when(fileInfoService.getById(11L)).thenReturn(fileInfo);
+        when(fileBusinessInfoService.lambdaQuery()).thenReturn(businessQuery);
+        when(businessQuery.eq(anySFunction(), any())).thenReturn(businessQuery);
+        when(businessQuery.count()).thenReturn(0L);
+        when(fileInfoService.update(any(LambdaUpdateWrapper.class))).thenReturn(false, true);
+
+        fileLifecycleService.syncFileAfterReferenceRemoval(11L);
+
+        verify(fileInfoService, org.mockito.Mockito.times(2)).update(any(LambdaUpdateWrapper.class));
+        verify(storageManager, never()).getStorageService(anyString());
+    }
+
     private FileUploadTask buildExpiredChunkTask() {
         FileUploadTask task = new FileUploadTask();
         task.setId(1L);
@@ -207,6 +255,13 @@ class FileLifecycleServiceImplTest {
         task.setIsChunked(1);
         task.setTaskStatus(TaskStatusEnum.UPLOADING.getValue());
         task.setExpireTime(new Date(System.currentTimeMillis() - 1000L));
+        return task;
+    }
+
+    private FileUploadTask buildExpiredChunkTask(long id) {
+        FileUploadTask task = buildExpiredChunkTask();
+        task.setId(id);
+        task.setUploadId("upload-expired-" + id);
         return task;
     }
 
@@ -224,6 +279,12 @@ class FileLifecycleServiceImplTest {
         return (SFunction<T, ?>) any(SFunction.class);
     }
 }
+
+
+
+
+
+
 
 
 

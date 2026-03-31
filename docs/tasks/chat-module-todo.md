@@ -1,60 +1,167 @@
 # Chat 模块待办清单
 
-本文档用于收口 chat 模块接下来要持续推进的任务，避免“知道有缺口，但每次都重新梳理一遍”。本清单按 2026-03-30 当前代码状态整理。
+本文档用于收口 chat 模块接下来要持续推进的任务，避免"知道有缺口，但每次都重新梳理一遍"。本清单按 2026-03-31 当前代码状态整理。
 
-## 1. 本轮已完成
+## 1. 模块结构概览
 
-- [x] 建立 chat 模块分阶段待办清单，区分“本轮收口”和“后续扩展”。
-- [x] 为后台聊天权限补齐存量库迁移入口，避免老库升级后只有接口、没有权限菜单。
-- [x] 补充 `/api/user/chat/**` 与 `/api/sys/chats/**` 的基础 WebMvc 鉴权测试，确认登录和权限拦截行为。
-- [x] 补充 `UserChatServiceImpl` 与 `ChatAdminServiceImpl` 的首批服务级测试，先覆盖单聊懒创建补成员、群主退群限制、后台单聊名称补齐、后台消息发送人装配和会话状态切换。
-- [x] 继续补充 `UserChatServiceImpl` 主链路测试，当前已覆盖文本消息发送、已读推进、创建群聊和移除成员。
-- [x] 补充 `ChatWebSocketHandler` 首批协议回归测试，已覆盖 ready、非法 JSON、缺少 `type`、不支持类型、`send_message` ACK、`mark_read` 缺字段和断开注销。
-- [x] 继续补充群管理、后台详情和协议成功分支测试，当前已覆盖邀请成员恢复、后台会话详情 / 成员列表、原始 `ping` / 协议 `ping` / `mark_read` 成功 ACK。
-- [x] 继续补充幂等、空结果和异常协议分支测试，当前已覆盖按目标用户自动建单聊发送、客户端消息幂等返回、已读幂等返回、后台空结果分页，以及 `send_message` 空 payload / 业务异常 / 系统异常 / 登录态异常。
-- [x] 继续补充状态边界和 `mark_read` / transport error 异常分支测试，当前已覆盖禁用会话发送拦截、群主移除自己拦截、解散群聊、会话不存在 / 状态未变分支，以及 `mark_read` 业务异常 / 系统异常、服务端事件类型直发保护、transport error 关闭分支。
-- [x] 继续补充 delivered 推进、分页归一化和登录态边界测试，当前已覆盖消息历史拉取时 delivered 推进、后台分页归一化，以及 `mark_read` 登录态异常和 `ready` 类型直发保护。
-- [x] 继续补充非法参数、全站群补建与协议保留类型测试，当前已覆盖禁用目标用户打开单聊拦截、空白消息拦截、全站群成员与游标自动补建、消息历史“无需 delivered 更新”分支、后台分页 offset/size 透传，以及 `ack` / `error` / `read_updated` 直发保护和 codec payload 解析异常。
-- [x] 继续补充成员状态、全站群恢复与 decode 兜底测试，当前已覆盖当前成员已移除时发送拦截、已读后仍有未读残留计数、全站群已有成员/游标恢复重置、后台会话空 ID 与详情缺失用户装配，以及 WebSocket `decode` 级业务/系统异常统一协议响应。
-- [x] 继续补充非法参数组合、筛选透传与 `mark_read` 解析异常测试，当前已覆盖给自己发起单聊拦截、建群成员归一化后为空拦截、发送消息缺少会话/目标参数拦截、后台会话/消息筛选参数透传验证，以及 `mark_read` payload 解析业务异常回包。
+```
+module/chat/
+├── config/              (Redis推送订阅配置)
+├── constant/            (ChatConstants: 会话/角色/消息类型/状态常量)
+├── controller/
+│   ├── UserChatController.java      (22个端点: 会话/消息/群管理/成员)
+│   └── ChatAdminController.java     (11个端点: 后台会话/消息/成员/状态管理)
+├── convert/             (ChatModelMapper MapStruct映射器)
+├── model/
+│   ├── data/            (4个Mapper结果对象: 会话列表项/管理会话项/消息历史项/管理消息项)
+│   ├── user/            (18个DTO: 请求/响应/分页查询)
+│   ├── admin/           (11个DTO: 管理侧请求/响应)
+│   ├── common/          (3个共享DTO: payload/文件/回复快照)
+│   ├── websocket/       (9个WS协议模型: 类型枚举/请求/响应/各类payload)
+│   └── internal/        (1个内部模型: Redis推送信封)
+├── service/
+│   ├── UserChatService.java           (24个方法: 会话/消息/群治理)
+│   ├── ChatAdminService.java          (11个方法: 后台管理)
+│   ├── ChatPushService.java           (7个方法: 实时推送+Redis广播)
+│   ├── ChatConversationService.java   (基础仓储, extends IService)
+│   ├── ChatConversationMemberService  (基础仓储, extends IService)
+│   ├── ChatMessageService.java        (基础仓储, extends IService)
+│   ├── ChatMessageRecipientService    (基础仓储, extends IService)
+│   ├── ChatMessageReadCursorService   (基础仓储, extends IService)
+│   ├── ChatWebSocketSessionRegistry   (5个方法: 会话注册/查找/在线数)
+│   ├── ChatAttachmentMetadataResolver (1个方法: 附件元数据抽取)
+│   ├── ChatAttachmentAsyncProcessing  (3个方法: 提交后调度/到期派发/租约恢复)
+│   ├── ChatMessageGovernanceService   (2个方法: 频控+敏感词)
+│   └── ChatMetricsService             (2个方法: Micrometer指标)
+├── impl/                (14个实现: UserChatServiceImpl~1629行/ChatAdminServiceImpl~825行/其他)
+└── websocket/
+    ├── ChatWebSocketHandler.java      (连接生命周期+消息分发)
+    └── ChatWebSocketMessageCodec.java (协议编解码)
+```
 
-## 2. 下一批高优先级
+数据库: 6张表 (`chat_conversation` / `chat_conversation_member` / `chat_message` / `chat_message_recipient` / `chat_message_read_cursor` / `chat_attachment_process_task`)
 
-- [x] 继续为 `UserChatServiceImpl` 补服务级测试，已补齐被禁用成员、自身禁言发送拦截、全站群重复建群兜底，以及 delivered 高水位保留 / unread 残量并存分支。
-- [x] 继续为 `ChatAdminServiceImpl` 补服务级测试，已补齐更多消息详情装配兜底、成员筛选相关分页透传和极端分页边界验证。
-- [x] 继续补齐 `ChatWebSocketHandler` 协议回归剩余异常分支，已补齐 ACK 载荷约束验证、更多客户端伪造边界，以及服务端事件类型下的“拒绝且不调用业务服务”验证。
-- [x] 明确并收口“已送达”语义，当前维持“在线即 delivered”，不等待客户端 ACK，并已同步到实现文档与接口文档。
+## 2. 功能完成度评估
 
-## 3. 中期功能扩展
+### 2.1 接口方法完成情况
 
-- [x] 设计并实现文件消息，已明确复用 `file` 模块上传与生命周期，发送时通过 `file_business_info -> chat_message` 引用重绑收口。
-- [x] 增加消息撤回 / 编辑 / 删除能力，并已补齐用户侧与后台接口文档。
-- [x] 增加群管理员、转让群主、禁言、群公告等治理能力。
-- [x] 为后台聊天管理补消息详情、接收人回执明细、成员管理等更细粒度操作。
+| 服务                           | 方法数  | 已实现 | 状态                    |
+| ------------------------------ | ------- | ------ | ----------------------- |
+| UserChatService                | 24      | 24     | ✅ 全部完成             |
+| ChatAdminService               | 11      | 11     | ✅ 全部完成             |
+| ChatPushService                | 7       | 7      | ✅ 全部完成             |
+| ChatWebSocketSessionRegistry   | 5       | 5      | ✅ 全部完成             |
+| ChatAttachmentMetadataResolver | 1       | 1      | ✅ 全部完成             |
+| ChatAttachmentAsyncProcessing  | 1       | 1      | ✅ 全部完成             |
+| ChatMessageGovernanceService   | 2       | 2      | ✅ 全部完成             |
+| ChatMetricsService             | 2       | 2      | ✅ 全部完成             |
+| 基础仓储(5个)                  | 0自定义 | 全部   | ✅ MyBatis-Plus标准CRUD |
 
-## 4. 下一阶段重点
+**结论: chat 模块所有接口方法均已完整实现，不存在缺失的方法。**
 
-- [x] 为编辑 / 撤回 / 群治理补专用 WebSocket 事件，当前已补入 `message_updated`、`message_revoked`、`conversation_updated`、`members_updated` 四类服务端事件。
-- [x] 继续为文件消息、后台成员治理和用户侧群治理补更多服务级异常测试与集成回归，当前已补入图片文件分类、回复消息持久化、后台成员治理收紧，以及对应 WebSocket 协议 / 服务级回归。
-- [x] 评估后台成员管理在单聊 / 全站群场景下是否需要进一步收紧规则，当前已统一收口为“仅普通群聊支持后台成员治理”。
-- [x] 继续扩展图片、语音、回复消息等更丰富的消息类型，当前已支持基于附件 MIME 的 `image/voice` 自动分类，以及基础 `replyMessageId` 引用回复。
+### 2.2 WebSocket协议完成情况
 
-## 5. 新一阶段重点
+| 方向          | 类型                                                                                                                                        | 状态    |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| 客户端→服务端 | `send_message` / `mark_read` / `ping`                                                                                                       | ✅ 完成 |
+| 服务端→客户端 | `message_created` / `message_updated` / `message_revoked` / `message_deleted` / `read_updated` / `conversation_updated` / `members_updated` | ✅ 完成 |
+| 多节点广播    | Redis pub/sub + 本地会话表                                                                                                                  | ✅ 完成 |
 
-- [ ] 在 `replyMessageId` 基础上继续补回复消息摘要、被回复消息快照和前端展示约定。
-- [ ] 继续为图片 / 语音消息补充更细的元数据设计，例如缩略图、尺寸、时长、波形与转码策略。
-- [ ] 继续补齐文件消息、后台成员治理和用户侧群治理的异常测试、控制器回归与集成验证。
-- [ ] 评估删除消息是否需要补专用 WebSocket 事件，以及后台审计是否需要更多变更推送。
+## 3. 本轮已完成
 
-## 6. 中长期基础设施
+- [x] 实现用户侧聊天完整链路（会话列表/单聊懒创建/消息收发/已读/群管理）。
+- [x] 实现后台聊天管理（会话/消息/成员/回执/撤回/状态管理）。
+- [x] 实现 WebSocket 实时通道（send_message/mark_read + 9种服务端推送事件）。
+- [x] 实现 Redis pub/sub 多节点广播。
+- [x] 实现文件消息（复用file模块上传+生命周期）。
+- [x] 实现消息编辑/撤回/删除（本人视角）。
+- [x] 实现群治理（管理员/转让群主/禁言/群公告/邀请/移除/退群/解散）。
+- [x] 实现 reply 快照持久化（replyMessageId + reply摘要 + state/replyToMessageId）。
+- [x] 实现附件 MIME 自动分类（image/voice/file）。
+- [x] 实现异步媒体处理（缩略图/语音转码/波形）+ message_updated 回推。
+- [x] 实现聊天域频控（用户分钟级发送限制）+ 敏感词拦截。
+- [x] 实现 Micrometer 指标埋点（发送/媒体处理/治理拒绝）。
+- [x] 补入用户侧/后台控制器鉴权测试（19个权限场景）。
+- [x] 补入 ChatWebSocketHandler 协议回归测试（25个场景）。
+- [x] 补入 UserChatServiceImpl 服务级测试（28个场景）。
+- [x] 补入 ChatAdminServiceImpl 服务级测试（18个场景）。
+- [x] 补入 ChatPushServiceImpl + ChatPushRedisSubscriber 测试。
+- [x] 补入 ChatAttachmentMetadataResolverImpl + ChatAttachmentAsyncProcessingServiceImpl 测试。
+- [x] 补入 ChatMessageGovernanceServiceImpl 测试。
+- [x] 继续补入 UserChatServiceImpl 高优先级空白方法测试（会话详情/群详情/群成员/管理员任免/转让群主/禁言）。
+- [x] 继续补入 UserChatServiceImpl 补充场景测试（非成员发言拦截、建群 owner、全新成员邀请、普通会话分页、编辑成功路径）。
+- [x] 继续补入 ChatAdminServiceImpl 成员状态/禁言正常路径测试。
+- [x] 继续补入 ChatPushServiceImpl 全量推送方法测试。
+- [x] 继续补入 ChatWebSocketSessionRegistryImpl 会话注册表测试。
+- [x] 继续补入 ChatMessageGovernanceServiceImpl 正常通过路径测试。
 
-- [ ] 将单机 `ChatWebSocketSessionRegistry` 升级为支持多节点广播的 Redis / MQ 方案。
-- [ ] 评估是否需要未读数缓存、会话列表缓存和推送异步化。
-- [ ] 补充反垃圾、敏感词、频控、风控审计与指标监控。
+## 4. 现有测试文件 (10个)
 
-## 7. 本轮执行说明
+| 测试文件                                       | 测试方法数 | 覆盖范围                                                               |
+| ---------------------------------------------- | ---------- | ---------------------------------------------------------------------- |
+| `ChatWebSocketHandlerTest`                     | 25         | 连接生命周期/ping/协议分发/拒绝服务端类型/send_message/mark_read全分支 |
+| `ChatControllerSecurityTest`                   | 19         | 用户端登录要求/后台权限拦截(11个场景)                                  |
+| `UserChatServiceImplTest`                      | 53         | 会话详情/文本发送/文件发送/已读/群创建/群治理/编辑/撤回/删除/分页边界  |
+| `ChatAdminServiceImplTest`                     | 33         | 会话分页/消息分页/详情/回执/成员治理/撤回/状态切换                     |
+| `ChatPushServiceImplTest`                      | 10         | 本地推送+Redis广播/全量推送方法/集群事件处理/未知类型忽略              |
+| `ChatPushRedisSubscriberTest`                  | 2          | 有效payload转发/无效JSON忽略                                           |
+| `ChatAttachmentMetadataResolverImplTest`       | 2          | 图片尺寸/WAV时长+波形                                                  |
+| `ChatAttachmentAsyncProcessingServiceImplTest` | 5          | 持久化任务落库/图片缩略图/语音转码/legacy兼容/失败重试                |
+| `ChatMessageGovernanceServiceImplTest`         | 3          | 敏感词拦截/频控拦截/正常通过路径                                       |
+| `ChatWebSocketSessionRegistryImplTest`         | 3          | 会话注册/注销/数字型用户ID解析/在线数统计                              |
 
-- 本轮优先选择“风险低、收益高、能完整验证”的事项先收口。
-- 当前 chat 已具备 WebMvc、服务层与 WebSocket 首批自动化回归，后续改动优先继续在现有测试面上加密。
-- 文件消息、撤回编辑、群治理和后台明细能力已从待设计进入已实现状态，本轮又继续把专用实时事件、图片/语音分类、基础回复引用和后台成员治理收紧收口完成。
-- 下一步不再是“有没有这些能力”，而是继续细化 richer payload、异常回归和多节点实时基础设施。
+## 5. 下一批高优先级
+
+### 5.1 UserChatService 未覆盖方法 (已清空)
+
+- [x] `getMyConversation` - 获取单个会话详情（成员/游标/最后消息装配）
+- [x] `getGroupDetail` - 获取群聊详情（群信息+自身角色校验）
+- [x] `listGroupMembers` - 列出群成员列表
+- [x] `appointGroupAdmin` - 设置管理员（角色升级+推送members_updated）
+- [x] `removeGroupAdmin` - 取消管理员（角色降级+推送members_updated）
+- [x] `transferGroupOwner` - 转让群主（原群主降级+目标升级+推送）
+- [x] `muteGroupMember` - 禁言成员（muteUntil设置+推送members_updated）
+
+### 5.2 已有方法的补充场景
+
+- [x] `sendTextMessage` - 非群成员发送拦截（当前群类型校验）
+- [x] `createGroup` - 建群者自动成为owner的验证
+- [x] `inviteGroupMembers` - 全新成员（非恢复）邀请路径
+- [x] `pageMyConversations` - 正常分页查询（非全站群场景）
+- [x] `editMessage` - 正常编辑成功路径（内容更新+推送）
+
+### 5.3 ChatAdminService 补充场景
+
+- [x] `updateMemberStatus` - 正常路径（禁用/启用成员）
+- [x] `updateMemberMute` - 正常路径（设置/取消禁言）
+- [x] `listMembers` - 更多排序稳定性场景
+
+### 5.4 推送服务补充
+
+- [x] `ChatPushServiceImpl` - `pushMessageUpdated` / `pushMessageRevoked` / `pushMessageDeleted` / `pushReadUpdated` / `pushConversationUpdated` / `pushMembersUpdated` 各推送方法验证
+- [x] `ChatMessageGovernanceServiceImpl` - 正常通过路径（无敏感词+未超频）
+- [x] `ChatWebSocketSessionRegistryImpl` - 会话注册/注销/查找/在线数统计
+
+## 6. 中期一致性补强
+
+- [x] 核对群解散后消息可见性规则（当前用户侧会话详情/历史消息不可继续查询，后台仍可审计已存消息）
+- [x] 核对全站群与普通群在成员管理/消息可见性上的差异一致性（全站群会自动恢复成员资格以读取消息，但不支持普通群治理接口）
+- [x] 核对 reply 快照在原消息被编辑/撤回后的状态同步（当前可见原消息优先返回实时状态，不可见时再回退 payload 快照）
+- [x] 核对并发发送同一 clientMessageId 的幂等行为（保存阶段唯一键冲突会回查并返回既有消息）
+- [x] 补充高成本方法的 Javadoc 注释（已补 `UserChatServiceImpl` 中已读推进、reply可见性校验、reply快照装配）
+- [x] 核对 delivered 语义（在线即delivered）在高并发下的游标一致性（cursor/member delivered 高水位改为单调推进）
+
+## 7. 中长期基础设施
+
+- [x] 将异步媒体处理从单机线程池升级为持久化任务（节点重启不丢任务）
+- [x] 评估更完整的 Redis Testcontainers 广播链路集成测试（结论：值得做，但应作为后续集成测试专项，优先验证 Redis pub/sub 广播、跨节点会话注册表协同，以及消息更新/已读事件跨节点送达）
+- [x] 评估从敏感词拦截升级到命中审计/人工复核/外部审核服务（结论：v1 先保持同步拦截；下一阶段优先补“命中留痕 + 审计记录 + 管理端查询”，再视合规要求接人工复核或外部审核）
+- [x] 当会话量和在线连接数显著增长后，评估未读数缓存/推送异步化（结论：当前先保持 DB 真值 + Redis 广播；当热点会话、未读聚合查询或广播风暴明显出现后，再按“未读缓存 + 推送削峰队列”拆分）
+- [x] 评估 delivered 从"在线即delivered"改为ACK驱动的改造影响（结论：会同步影响 recipient/cursor/member 高水位、WebSocket 协议、多端重连补 ACK 和消息状态回放；当前维持在线即 delivered，若业务要求更强送达语义再单独立项）
+
+## 8. 完成标志
+
+- 用户侧会话/消息/群治理全链路都具备服务级回归覆盖。
+- 后台管理操作都具备基础自动化验证。
+- WebSocket 协议分发与推送都具备回归路径。
+- 聊天域频控/敏感词/指标都具备验证。

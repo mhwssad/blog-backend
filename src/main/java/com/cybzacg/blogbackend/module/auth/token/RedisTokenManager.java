@@ -8,6 +8,7 @@ import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.model.AuthenticationToken;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserDetails;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserPrincipal;
+import com.cybzacg.blogbackend.utils.ReflectionUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,8 +22,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.Base64;
@@ -299,24 +298,13 @@ public class RedisTokenManager implements TokenManager {
     }
 
     private Long invokeLongGetter(Object source, String methodName) {
-        try {
-            Method method = source.getClass().getMethod(methodName);
-            Object value = method.invoke(source);
-            return value instanceof Number number ? number.longValue() : null;
-        } catch (ReflectiveOperationException ignored) {
-            return null;
-        }
+        Object value = ReflectionUtils.invokeNoArgMethod(source, methodName).orElse(null);
+        return value instanceof Number number ? number.longValue() : null;
     }
 
     private Long readLongField(Object source, String fieldName) {
-        try {
-            Field field = source.getClass().getDeclaredField(fieldName);
-            field.setAccessible(true);
-            Object value = field.get(source);
-            return value instanceof Number number ? number.longValue() : null;
-        } catch (ReflectiveOperationException ignored) {
-            return null;
-        }
+        Object value = ReflectionUtils.readField(source, fieldName).orElse(null);
+        return value instanceof Number number ? number.longValue() : null;
     }
 
     private String generateOpaqueToken() {

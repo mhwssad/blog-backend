@@ -4,9 +4,9 @@ import java.util.Collection;
 import org.springframework.web.socket.WebSocketSession;
 
 /**
- * 单机版 WebSocket 会话注册表。
+ * WebSocket 本地会话注册表。
  *
- * <p>用于维护当前节点在线用户的会话映射，后续可直接扩展单点消息推送与广播能力。
+ * <p>只维护当前节点在线用户的会话映射；多节点广播由上层推送总线负责。
  */
 public interface ChatWebSocketSessionRegistry {
     void register(WebSocketSession session);

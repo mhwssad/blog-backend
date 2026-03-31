@@ -1,9 +1,13 @@
 package com.cybzacg.blogbackend.common.storage.impl;
 
 import com.cybzacg.blogbackend.common.storage.StorageHealthCheckService;
+import com.cybzacg.blogbackend.common.storage.StorageHealthInfo;
 import com.cybzacg.blogbackend.common.storage.StorageService;
 import com.cybzacg.blogbackend.config.property.StorageManagerProperties;
 import com.cybzacg.blogbackend.config.property.StorageProperties;
+import com.cybzacg.blogbackend.enums.storage.StorageHealthStatus;
+import com.cybzacg.blogbackend.enums.storage.StorageStrategyEnum;
+import com.cybzacg.blogbackend.enums.storage.StorageType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,13 +17,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
@@ -29,13 +36,10 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class StorageManagerImplTest {
-
     @Mock
     private StorageHealthCheckService healthCheckService;
-
     @Mock
     private StorageService primaryStorageService;
-
     @Mock
     private StorageService secondaryStorageService;
 
@@ -61,8 +65,7 @@ class StorageManagerImplTest {
     @Test
     void shouldFailoverToHealthyNodeWhenDownloadFails() throws Exception {
         when(healthCheckService.getHealthyStorageKeys()).thenReturn(List.of("primary", "secondary"));
-        when(primaryStorageService.download("article/test.txt"))
-                .thenThrow(new RuntimeException("primary unavailable"));
+        when(primaryStorageService.download("article/test.txt")).thenThrow(new RuntimeException("primary unavailable"));
         when(secondaryStorageService.download("article/test.txt"))
                 .thenReturn(new ByteArrayInputStream("ok".getBytes(StandardCharsets.UTF_8)));
 
@@ -100,6 +103,69 @@ class StorageManagerImplTest {
 
         assertSame(primaryStorageService, storageManager.getStorageService());
         assertEquals("primary", storageManager.getCurrentStorageKey());
+    }
+
+    @Test
+    void shouldSelectHealthyNodesByRoundRobinWhenLoadBalancingEnabled() {
+        managerProperties.setStrategy("ROUND_ROBIN");
+        when(healthCheckService.getHealthyStorageKeys()).thenReturn(List.of("primary", "secondary"));
+
+        StorageManagerImpl storageManager = buildStorageManager();
+
+        assertSame(primaryStorageService, storageManager.getStorageService());
+        assertSame(secondaryStorageService, storageManager.getStorageService());
+        assertEquals("secondary", storageManager.getCurrentStorageKey());
+    }
+
+    @Test
+    void shouldSwitchStorageAndResetStrategyToDefault() {
+        StorageManagerImpl storageManager = buildStorageManager();
+        storageManager.setStorageStrategy(StorageStrategyEnum.RANDOM);
+
+        assertTrue(storageManager.switchStorage("secondary"));
+        assertEquals("secondary", storageManager.getCurrentStorageKey());
+        assertEquals(StorageStrategyEnum.DEFAULT, storageManager.getStorageStrategy());
+    }
+
+    @Test
+    void shouldRejectUnknownStorageWhenSwitching() {
+        StorageManagerImpl storageManager = buildStorageManager();
+
+        assertFalse(storageManager.switchStorage("missing"));
+        assertEquals("primary", storageManager.getCurrentStorageKey());
+    }
+
+    @Test
+    void shouldExposeHealthListFromHealthService() {
+        List<StorageHealthInfo> healthList = List.of(
+                StorageHealthInfo.builder()
+                        .key("primary")
+                        .storageType(StorageType.LOCAL)
+                        .status(StorageHealthStatus.HEALTHY)
+                        .lastCheckTime(LocalDateTime.now())
+                        .build()
+        );
+        when(healthCheckService.getAllHealthStatus()).thenReturn(healthList);
+
+        StorageManagerImpl storageManager = buildStorageManager();
+
+        assertSame(healthList, storageManager.getStorageHealthList());
+    }
+
+    @Test
+    void shouldSetStrategyWhenProvided() {
+        StorageManagerImpl storageManager = buildStorageManager();
+
+        assertTrue(storageManager.setStorageStrategy(StorageStrategyEnum.RANDOM));
+        assertEquals(StorageStrategyEnum.RANDOM, storageManager.getStorageStrategy());
+    }
+
+    @Test
+    void shouldRejectNullStrategy() {
+        StorageManagerImpl storageManager = buildStorageManager();
+
+        assertFalse(storageManager.setStorageStrategy(null));
+        assertEquals(StorageStrategyEnum.FAILOVER, storageManager.getStorageStrategy());
     }
 
     private StorageManagerImpl buildStorageManager() {

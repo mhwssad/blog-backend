@@ -18,12 +18,15 @@ import com.cybzacg.blogbackend.module.chat.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.convert.ChatModelMapper;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminConversationPageQuery;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminConversationVO;
+import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMemberMuteUpdateRequest;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMemberRoleUpdateRequest;
+import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMemberStatusUpdateRequest;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageDetailVO;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessagePageQuery;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageReceiptPageQuery;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageReceiptVO;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageVO;
+import com.cybzacg.blogbackend.module.chat.model.common.ChatMessagePayloadVO;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatAdminConversationListItem;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatAdminMessageItem;
 import com.cybzacg.blogbackend.module.chat.model.user.ChatConversationLastMessageVO;
@@ -36,6 +39,7 @@ import com.cybzacg.blogbackend.module.chat.service.ChatMessageService;
 import com.cybzacg.blogbackend.module.chat.service.impl.ChatAdminServiceImpl;
 import com.cybzacg.blogbackend.module.file.service.FileBusinessInfoService;
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
+import com.cybzacg.blogbackend.utils.JsonUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,10 +50,13 @@ import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -187,6 +194,174 @@ class ChatAdminServiceImplTest {
         assertEquals("zhangsan", result.getRecords().get(0).getSenderUsername());
         assertEquals("张三", result.getRecords().get(0).getSenderNickname());
         assertEquals("https://example.com/u2.png", result.getRecords().get(0).getSenderAvatar());
+    }
+
+    @Test
+    void pageMessagesShouldAllowDissolvedConversationForAudit() {
+        Long conversationId = 2004L;
+
+        ChatConversation conversation = new ChatConversation();
+        conversation.setId(conversationId);
+        conversation.setConversationType(ChatConstants.CONVERSATION_TYPE_GROUP);
+        conversation.setStatus(ChatConstants.CONVERSATION_STATUS_DISSOLVED);
+
+        ChatAdminMessagePageQuery query = new ChatAdminMessagePageQuery();
+
+        ChatAdminMessageItem item = new ChatAdminMessageItem();
+        item.setId(9004L);
+        item.setConversationId(conversationId);
+        item.setSenderId(4L);
+        item.setMessageType(ChatConstants.MESSAGE_TYPE_TEXT);
+        item.setContent("archived");
+
+        SysUser sender = new SysUser();
+        sender.setId(4L);
+        sender.setUsername("wangwu");
+        sender.setNickname("王五");
+
+        ChatAdminMessageVO vo = new ChatAdminMessageVO();
+        vo.setId(9004L);
+        vo.setConversationId(conversationId);
+
+        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
+        when(chatMessageMapper.countAdminMessagePage(conversationId, query)).thenReturn(1L);
+        when(chatMessageMapper.selectAdminMessagePage(conversationId, query, 0L, 20L)).thenReturn(List.of(item));
+        when(sysUserService.listByIds(any())).thenReturn(List.of(sender));
+        when(chatModelMapper.toAdminMessageVO(item)).thenReturn(vo);
+
+        var result = chatAdminService.pageMessages(conversationId, query);
+
+        assertEquals(1L, result.getTotal());
+        assertEquals(1, result.getRecords().size());
+        assertEquals("wangwu", result.getRecords().get(0).getSenderUsername());
+        assertEquals("王五", result.getRecords().get(0).getSenderNickname());
+    }
+
+    @Test
+    void pageMessagesShouldBuildReplySnapshotForLegacyPayload() {
+        Long conversationId = 2003L;
+        Long replyMessageId = 8801L;
+
+        ChatConversation conversation = new ChatConversation();
+        conversation.setId(conversationId);
+
+        ChatAdminMessagePageQuery query = new ChatAdminMessagePageQuery();
+
+        ChatAdminMessageItem item = new ChatAdminMessageItem();
+        item.setId(9003L);
+        item.setConversationId(conversationId);
+        item.setSenderId(2L);
+        item.setMessageType(ChatConstants.MESSAGE_TYPE_TEXT);
+        item.setContent("reply");
+        item.setReplyMessageId(replyMessageId);
+
+        ChatMessagePayloadVO replyPayload = new ChatMessagePayloadVO();
+        var replyFile = new com.cybzacg.blogbackend.module.chat.model.common.ChatFilePayloadVO();
+        replyFile.setFileUrl("https://example.com/demo.png");
+        replyPayload.setFile(replyFile);
+
+        ChatAdminMessageItem replyItem = new ChatAdminMessageItem();
+        replyItem.setId(replyMessageId);
+        replyItem.setConversationId(conversationId);
+        replyItem.setSenderId(3L);
+        replyItem.setMessageType(ChatConstants.MESSAGE_TYPE_IMAGE);
+        replyItem.setReplyMessageId(7701L);
+        replyItem.setContent("[图片] demo.png");
+        replyItem.setPayloadJson(JsonUtils.toJson(replyPayload));
+
+        SysUser sender = new SysUser();
+        sender.setId(2L);
+        sender.setUsername("zhangsan");
+        sender.setNickname("张三");
+
+        SysUser replySender = new SysUser();
+        replySender.setId(3L);
+        replySender.setUsername("lisi");
+        replySender.setNickname("李四");
+
+        ChatAdminMessageVO vo = new ChatAdminMessageVO();
+        vo.setId(9003L);
+        vo.setConversationId(conversationId);
+
+        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
+        when(chatMessageMapper.countAdminMessagePage(conversationId, query)).thenReturn(1L);
+        when(chatMessageMapper.selectAdminMessagePage(conversationId, query, 0L, 20L)).thenReturn(List.of(item));
+        when(chatMessageMapper.selectAdminMessagesByIds(conversationId, List.of(replyMessageId))).thenReturn(List.of(replyItem));
+        when(sysUserService.listByIds(any())).thenReturn(List.of(sender, replySender));
+        when(chatModelMapper.toAdminMessageVO(item)).thenReturn(vo);
+
+        var result = chatAdminService.pageMessages(conversationId, query);
+
+        assertNotNull(result.getRecords().get(0).getReply());
+        assertEquals(replyMessageId, result.getRecords().get(0).getReply().getId());
+        assertEquals("李四", result.getRecords().get(0).getReply().getSenderNickname());
+        assertEquals(ChatConstants.MESSAGE_TYPE_IMAGE, result.getRecords().get(0).getReply().getMessageType());
+        assertEquals("https://example.com/demo.png", result.getRecords().get(0).getReply().getFile().getFileUrl());
+        assertEquals(7701L, result.getRecords().get(0).getReply().getReplyToMessageId());
+        assertEquals(ChatConstants.REPLY_STATE_NORMAL, result.getRecords().get(0).getReply().getState());
+    }
+
+    @Test
+    void pageMessagesShouldPreferLiveReplySnapshotOverPayloadSnapshot() {
+        Long conversationId = 2004L;
+        Long replyMessageId = 8802L;
+
+        ChatConversation conversation = new ChatConversation();
+        conversation.setId(conversationId);
+
+        ChatAdminMessagePageQuery query = new ChatAdminMessagePageQuery();
+
+        com.cybzacg.blogbackend.module.chat.model.common.ChatReplyMessageVO payloadReply =
+                new com.cybzacg.blogbackend.module.chat.model.common.ChatReplyMessageVO();
+        payloadReply.setId(replyMessageId);
+        payloadReply.setContent("old snapshot");
+        payloadReply.setState(ChatConstants.REPLY_STATE_NORMAL);
+        ChatMessagePayloadVO payload = new ChatMessagePayloadVO();
+        payload.setReply(payloadReply);
+
+        ChatAdminMessageItem item = new ChatAdminMessageItem();
+        item.setId(9004L);
+        item.setConversationId(conversationId);
+        item.setSenderId(2L);
+        item.setMessageType(ChatConstants.MESSAGE_TYPE_TEXT);
+        item.setContent("reply");
+        item.setReplyMessageId(replyMessageId);
+        item.setPayloadJson(JsonUtils.toJson(payload));
+
+        ChatAdminMessageItem replyItem = new ChatAdminMessageItem();
+        replyItem.setId(replyMessageId);
+        replyItem.setConversationId(conversationId);
+        replyItem.setSenderId(3L);
+        replyItem.setMessageType(ChatConstants.MESSAGE_TYPE_TEXT);
+        replyItem.setContent("new live content");
+        replyItem.setRevokeStatus(ChatConstants.REVOKE_STATUS_NORMAL);
+
+        SysUser sender = new SysUser();
+        sender.setId(2L);
+        sender.setUsername("zhangsan");
+        sender.setNickname("张三");
+
+        SysUser replySender = new SysUser();
+        replySender.setId(3L);
+        replySender.setUsername("lisi");
+        replySender.setNickname("李四");
+
+        ChatAdminMessageVO vo = new ChatAdminMessageVO();
+        vo.setId(9004L);
+        vo.setConversationId(conversationId);
+
+        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
+        when(chatMessageMapper.countAdminMessagePage(conversationId, query)).thenReturn(1L);
+        when(chatMessageMapper.selectAdminMessagePage(conversationId, query, 0L, 20L)).thenReturn(List.of(item));
+        when(chatMessageMapper.selectAdminMessagesByIds(conversationId, List.of(replyMessageId))).thenReturn(List.of(replyItem));
+        when(sysUserService.listByIds(any())).thenReturn(List.of(sender, replySender));
+        when(chatModelMapper.toAdminMessageVO(item)).thenReturn(vo);
+
+        var result = chatAdminService.pageMessages(conversationId, query);
+
+        assertNotNull(result.getRecords().get(0).getReply());
+        assertEquals("new live content", result.getRecords().get(0).getReply().getContent());
+        assertEquals(ChatConstants.REPLY_STATE_NORMAL, result.getRecords().get(0).getReply().getState());
     }
 
     @Test
@@ -432,6 +607,112 @@ class ChatAdminServiceImplTest {
 
         assertEquals(List.of(1L, 2L, 3L), result.stream().map(ChatMemberVO::getUserId).toList());
         assertEquals(List.of("群主", "管理员", "成员"), result.stream().map(ChatMemberVO::getNickname).toList());
+    }
+
+    @Test
+    void listMembersShouldApplyStableOrderForSameRoleStatusAndNullJoinTime() {
+        Long conversationId = 5002L;
+
+        ChatConversation conversation = new ChatConversation();
+        conversation.setId(conversationId);
+
+        ChatConversationMember ownerMember = new ChatConversationMember();
+        ownerMember.setConversationId(conversationId);
+        ownerMember.setUserId(1L);
+        ownerMember.setMemberRole(ChatConstants.MEMBER_ROLE_OWNER);
+        ownerMember.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
+        ownerMember.setJoinedAt(new Date(5_000L));
+
+        ChatConversationMember adminEarly = new ChatConversationMember();
+        adminEarly.setConversationId(conversationId);
+        adminEarly.setUserId(2L);
+        adminEarly.setMemberRole(ChatConstants.MEMBER_ROLE_ADMIN);
+        adminEarly.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
+        adminEarly.setJoinedAt(new Date(1_000L));
+
+        ChatConversationMember adminLate = new ChatConversationMember();
+        adminLate.setConversationId(conversationId);
+        adminLate.setUserId(3L);
+        adminLate.setMemberRole(ChatConstants.MEMBER_ROLE_ADMIN);
+        adminLate.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
+        adminLate.setJoinedAt(new Date(2_000L));
+
+        ChatConversationMember adminWithoutJoinTime = new ChatConversationMember();
+        adminWithoutJoinTime.setConversationId(conversationId);
+        adminWithoutJoinTime.setUserId(4L);
+        adminWithoutJoinTime.setMemberRole(ChatConstants.MEMBER_ROLE_ADMIN);
+        adminWithoutJoinTime.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
+
+        ChatConversationMember memberLeft = new ChatConversationMember();
+        memberLeft.setConversationId(conversationId);
+        memberLeft.setUserId(5L);
+        memberLeft.setMemberRole(ChatConstants.MEMBER_ROLE_MEMBER);
+        memberLeft.setStatus(ChatConstants.MEMBER_STATUS_LEFT);
+        memberLeft.setJoinedAt(new Date(3_000L));
+
+        ChatConversationMember memberNormalHigherUserId = new ChatConversationMember();
+        memberNormalHigherUserId.setConversationId(conversationId);
+        memberNormalHigherUserId.setUserId(7L);
+        memberNormalHigherUserId.setMemberRole(ChatConstants.MEMBER_ROLE_MEMBER);
+        memberNormalHigherUserId.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
+        memberNormalHigherUserId.setJoinedAt(new Date(4_000L));
+
+        ChatConversationMember memberNormalLowerUserId = new ChatConversationMember();
+        memberNormalLowerUserId.setConversationId(conversationId);
+        memberNormalLowerUserId.setUserId(6L);
+        memberNormalLowerUserId.setMemberRole(ChatConstants.MEMBER_ROLE_MEMBER);
+        memberNormalLowerUserId.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
+        memberNormalLowerUserId.setJoinedAt(new Date(4_000L));
+
+        ChatConversationMember memberDisabled = new ChatConversationMember();
+        memberDisabled.setConversationId(conversationId);
+        memberDisabled.setUserId(8L);
+        memberDisabled.setMemberRole(ChatConstants.MEMBER_ROLE_MEMBER);
+        memberDisabled.setStatus(ChatConstants.MEMBER_STATUS_DISABLED);
+        memberDisabled.setJoinedAt(new Date(500L));
+
+        LambdaQueryChainWrapper<ChatConversationMember> memberQuery = org.mockito.Mockito.mock(LambdaQueryChainWrapper.class);
+
+        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
+        when(chatConversationMemberService.lambdaQuery()).thenReturn(memberQuery);
+        when(memberQuery.eq(anySFunction(), any())).thenReturn(memberQuery);
+        when(memberQuery.list()).thenReturn(List.of(
+                memberDisabled,
+                adminWithoutJoinTime,
+                memberNormalHigherUserId,
+                ownerMember,
+                memberLeft,
+                adminLate,
+                memberNormalLowerUserId,
+                adminEarly
+        ));
+        when(sysUserService.listByIds(any())).thenReturn(List.of(
+                buildUser(1L, "owner", "群主"),
+                buildUser(2L, "admin-2", "管理员-早"),
+                buildUser(3L, "admin-3", "管理员-晚"),
+                buildUser(4L, "admin-4", "管理员-无加入时间"),
+                buildUser(5L, "member-5", "已退群成员"),
+                buildUser(6L, "member-6", "普通成员-小ID"),
+                buildUser(7L, "member-7", "普通成员-大ID"),
+                buildUser(8L, "member-8", "禁用成员")
+        ));
+        when(chatModelMapper.toMemberVO(any(ChatConversationMember.class))).thenAnswer(invocation -> new ChatMemberVO());
+
+        List<ChatMemberVO> result = chatAdminService.listMembers(conversationId);
+
+        assertEquals(List.of(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L),
+                result.stream().map(ChatMemberVO::getUserId).toList());
+        assertEquals(List.of(
+                        "群主",
+                        "管理员-早",
+                        "管理员-晚",
+                        "管理员-无加入时间",
+                        "已退群成员",
+                        "普通成员-小ID",
+                        "普通成员-大ID",
+                        "禁用成员"
+                ),
+                result.stream().map(ChatMemberVO::getNickname).toList());
     }
 
     @Test
@@ -787,13 +1068,26 @@ class ChatAdminServiceImplTest {
         ChatConversation conversation = new ChatConversation();
         conversation.setId(conversationId);
 
+        ChatMessagePayloadVO payload = new ChatMessagePayloadVO();
+        var filePayload = new com.cybzacg.blogbackend.module.chat.model.common.ChatFilePayloadVO();
+        filePayload.setBusinessId(501L);
+        filePayload.setFileId(801L);
+        filePayload.setFileName("demo.pdf");
+        payload.setFile(filePayload);
+        var replySnapshot = new com.cybzacg.blogbackend.module.chat.model.common.ChatReplyMessageVO();
+        replySnapshot.setId(9000L);
+        replySnapshot.setContent("引用摘要");
+        replySnapshot.setDeleted(false);
+        payload.setReply(replySnapshot);
+
         ChatMessage message = new ChatMessage();
         message.setId(messageId);
         message.setConversationId(conversationId);
         message.setSenderId(2L);
         message.setMessageType(ChatConstants.MESSAGE_TYPE_FILE);
         message.setContent("[文件] demo.pdf");
-        message.setPayloadJson("{\"businessId\":501,\"fileId\":801,\"fileName\":\"demo.pdf\"}");
+        message.setPayloadJson(JsonUtils.toJson(payload));
+        message.setReplyMessageId(9000L);
         message.setSendStatus(ChatConstants.SEND_STATUS_SENT);
         message.setRevokeStatus(ChatConstants.REVOKE_STATUS_NORMAL);
         message.setCreatedAt(createdAt);
@@ -831,6 +1125,9 @@ class ChatAdminServiceImplTest {
         assertEquals(2L, result.getDeliveredRecipientCount());
         assertEquals(1L, result.getReadRecipientCount());
         assertEquals(801L, result.getFile().getFileId());
+        assertNotNull(result.getReply());
+        assertEquals(9000L, result.getReply().getId());
+        assertEquals("引用摘要", result.getReply().getContent());
         assertEquals(Boolean.FALSE, result.getEdited());
     }
 
@@ -999,6 +1296,66 @@ class ChatAdminServiceImplTest {
     }
 
     @Test
+    void updateMemberStatusShouldUpdateTargetStatusAndPushMembersUpdated() {
+        Long conversationId = 8006L;
+        Long memberUserId = 2L;
+
+        ChatConversation conversation = new ChatConversation();
+        conversation.setId(conversationId);
+        conversation.setConversationType(ChatConstants.CONVERSATION_TYPE_GROUP);
+        conversation.setIsAllSite(0);
+
+        ChatConversationMember targetMember = new ChatConversationMember();
+        targetMember.setId(21L);
+        targetMember.setConversationId(conversationId);
+        targetMember.setUserId(memberUserId);
+        targetMember.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
+
+        ChatConversationMember ownerMember = new ChatConversationMember();
+        ownerMember.setId(22L);
+        ownerMember.setConversationId(conversationId);
+        ownerMember.setUserId(1L);
+        ownerMember.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
+        ownerMember.setMemberRole(ChatConstants.MEMBER_ROLE_OWNER);
+
+        LambdaQueryChainWrapper<ChatConversationMember> targetQuery = org.mockito.Mockito.mock(LambdaQueryChainWrapper.class);
+        LambdaQueryChainWrapper<ChatConversationMember> listBeforeQuery = org.mockito.Mockito.mock(LambdaQueryChainWrapper.class);
+        LambdaQueryChainWrapper<ChatConversationMember> listAfterQuery = org.mockito.Mockito.mock(LambdaQueryChainWrapper.class);
+
+        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
+        when(chatConversationMemberService.lambdaQuery()).thenReturn(targetQuery, listBeforeQuery, listAfterQuery);
+        mockMemberFindQuery(targetQuery, targetMember);
+        when(listBeforeQuery.eq(anySFunction(), any())).thenReturn(listBeforeQuery);
+        when(listBeforeQuery.list()).thenReturn(List.of(ownerMember, targetMember));
+        when(listAfterQuery.eq(anySFunction(), any())).thenReturn(listAfterQuery);
+        when(listAfterQuery.list()).thenReturn(List.of(ownerMember));
+        when(chatConversationMemberService.updateById(targetMember)).thenReturn(true);
+        when(sysUserService.listByIds(any())).thenReturn(List.of());
+        when(chatModelMapper.toMemberVO(any(ChatConversationMember.class))).thenAnswer(invocation -> {
+            ChatConversationMember source = invocation.getArgument(0);
+            ChatMemberVO vo = new ChatMemberVO();
+            vo.setRole(source.getMemberRole());
+            vo.setStatus(source.getStatus());
+            return vo;
+        });
+
+        ChatAdminMemberStatusUpdateRequest request = new ChatAdminMemberStatusUpdateRequest();
+        request.setStatus(ChatConstants.MEMBER_STATUS_DISABLED);
+
+        List<ChatMemberVO> result = chatAdminService.updateMemberStatus(conversationId, memberUserId, request);
+
+        assertEquals(ChatConstants.MEMBER_STATUS_DISABLED, targetMember.getStatus());
+        assertEquals(1, result.size());
+        verify(chatPushService).pushMembersUpdated(argThat(payload ->
+                        payload != null
+                                && "admin_member_status_updated".equals(payload.getAction())
+                                && memberUserId.equals(payload.getAffectedUserId())
+                                && payload.getMembers() != null
+                                && payload.getMembers().size() == 1),
+                eq(List.of(1L, memberUserId)));
+    }
+
+    @Test
     void updateMemberStatusShouldRejectAllSiteConversation() {
         Long conversationId = 8006L;
 
@@ -1014,6 +1371,85 @@ class ChatAdminServiceImplTest {
 
         BusinessException exception = assertThrows(BusinessException.class,
                 () -> chatAdminService.updateMemberStatus(conversationId, 2L, request));
+
+        assertEquals(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), exception.getCode());
+        assertEquals("后台成员治理仅支持普通群聊会话", exception.getMessage());
+    }
+
+    @Test
+    void updateMemberMuteShouldUpdateMuteUntilAndPushMembersUpdated() {
+        Long conversationId = 8007L;
+        Long memberUserId = 2L;
+        Date muteUntil = new Date(System.currentTimeMillis() + 60_000L);
+
+        ChatConversation conversation = new ChatConversation();
+        conversation.setId(conversationId);
+        conversation.setConversationType(ChatConstants.CONVERSATION_TYPE_GROUP);
+        conversation.setIsAllSite(0);
+
+        ChatConversationMember targetMember = new ChatConversationMember();
+        targetMember.setId(31L);
+        targetMember.setConversationId(conversationId);
+        targetMember.setUserId(memberUserId);
+        targetMember.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
+        targetMember.setMemberRole(ChatConstants.MEMBER_ROLE_MEMBER);
+
+        ChatConversationMember ownerMember = new ChatConversationMember();
+        ownerMember.setId(32L);
+        ownerMember.setConversationId(conversationId);
+        ownerMember.setUserId(1L);
+        ownerMember.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
+        ownerMember.setMemberRole(ChatConstants.MEMBER_ROLE_OWNER);
+
+        LambdaQueryChainWrapper<ChatConversationMember> targetQuery = org.mockito.Mockito.mock(LambdaQueryChainWrapper.class);
+        LambdaQueryChainWrapper<ChatConversationMember> listQuery = org.mockito.Mockito.mock(LambdaQueryChainWrapper.class);
+
+        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
+        when(chatConversationMemberService.lambdaQuery()).thenReturn(targetQuery, listQuery);
+        mockMemberFindQuery(targetQuery, targetMember);
+        when(listQuery.eq(anySFunction(), any())).thenReturn(listQuery);
+        when(listQuery.list()).thenReturn(List.of(ownerMember, targetMember));
+        when(chatConversationMemberService.updateById(targetMember)).thenReturn(true);
+        when(sysUserService.listByIds(any())).thenReturn(List.of());
+        when(chatModelMapper.toMemberVO(any(ChatConversationMember.class))).thenAnswer(invocation -> {
+            ChatConversationMember source = invocation.getArgument(0);
+            ChatMemberVO vo = new ChatMemberVO();
+            vo.setRole(source.getMemberRole());
+            vo.setStatus(source.getStatus());
+            vo.setMuteUntil(source.getMuteUntil());
+            return vo;
+        });
+
+        ChatAdminMemberMuteUpdateRequest request = new ChatAdminMemberMuteUpdateRequest();
+        request.setMuteUntil(muteUntil);
+
+        List<ChatMemberVO> result = chatAdminService.updateMemberMute(conversationId, memberUserId, request);
+
+        assertEquals(muteUntil, targetMember.getMuteUntil());
+        assertEquals(2, result.size());
+        verify(chatPushService).pushMembersUpdated(argThat(payload ->
+                        payload != null
+                                && "admin_member_mute_updated".equals(payload.getAction())
+                                && memberUserId.equals(payload.getAffectedUserId())),
+                eq(List.of(1L, memberUserId)));
+    }
+
+    @Test
+    void updateMemberMuteShouldRejectSingleConversation() {
+        Long conversationId = 8007L;
+
+        ChatConversation conversation = new ChatConversation();
+        conversation.setId(conversationId);
+        conversation.setConversationType(ChatConstants.CONVERSATION_TYPE_SINGLE);
+        conversation.setIsAllSite(0);
+
+        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
+
+        var request = new ChatAdminMemberMuteUpdateRequest();
+        request.setMuteUntil(new Date(System.currentTimeMillis() + 60_000L));
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> chatAdminService.updateMemberMute(conversationId, 2L, request));
 
         assertEquals(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), exception.getCode());
         assertEquals("后台成员治理仅支持普通群聊会话", exception.getMessage());
@@ -1038,5 +1474,13 @@ class ChatAdminServiceImplTest {
         when(query.orderByDesc(anySFunction())).thenReturn(query);
         when(query.last(any())).thenReturn(query);
         when(query.one()).thenReturn(result);
+    }
+
+    private static SysUser buildUser(Long userId, String username, String nickname) {
+        SysUser user = new SysUser();
+        user.setId(userId);
+        user.setUsername(username);
+        user.setNickname(nickname);
+        return user;
     }
 }

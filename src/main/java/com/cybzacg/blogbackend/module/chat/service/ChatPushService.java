@@ -4,6 +4,7 @@ import com.cybzacg.blogbackend.module.chat.model.user.ChatMessageVO;
 import com.cybzacg.blogbackend.module.chat.model.user.ChatReadStateVO;
 import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsConversationUpdatedPayload;
 import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsMembersUpdatedPayload;
+import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsMessageDeletedPayload;
 import java.util.Collection;
 
 /**
@@ -15,6 +16,8 @@ public interface ChatPushService {
     void pushMessageUpdated(ChatMessageVO message, Collection<Long> userIds);
 
     void pushMessageRevoked(ChatMessageVO message, Collection<Long> userIds);
+
+    void pushMessageDeleted(ChatWsMessageDeletedPayload payload, Collection<Long> userIds);
 
     void pushReadUpdated(ChatReadStateVO readState, Collection<Long> userIds);
 

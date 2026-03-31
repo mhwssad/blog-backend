@@ -1,0 +1,96 @@
+package com.cybzacg.blogbackend.module.follow.service.impl;
+
+import com.cybzacg.blogbackend.common.constant.NoticeConstants;
+import com.cybzacg.blogbackend.domain.SysNotice;
+import com.cybzacg.blogbackend.domain.SysUser;
+import com.cybzacg.blogbackend.domain.SysUserNotice;
+import com.cybzacg.blogbackend.module.auth.service.SysNoticeService;
+import com.cybzacg.blogbackend.module.auth.service.SysUserNoticeService;
+import com.cybzacg.blogbackend.module.auth.service.SysUserService;
+import com.cybzacg.blogbackend.module.follow.service.FollowNoticeService;
+import com.cybzacg.blogbackend.utils.StrUtils;
+import java.util.Date;
+import java.util.Objects;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
+/**
+ * 关注关系通知服务实现。
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class FollowNoticeServiceImpl implements FollowNoticeService {
+    private static final int FOLLOW_NOTICE_TYPE = 1;
+    private static final String FOLLOW_NOTICE_LEVEL = "info";
+    private static final String FOLLOW_NOTICE_TITLE = "你收到了一位新粉丝";
+
+    private final SysNoticeService sysNoticeService;
+    private final SysUserNoticeService sysUserNoticeService;
+    private final SysUserService sysUserService;
+
+    /**
+     * 关注主事务提交成功后再投递通知，避免通知失败反向影响关注主链路。
+     */
+    @Override
+    public void notifyNewFollowerAfterCommit(Long targetUserId, Long followerUserId) {
+        if (targetUserId == null || followerUserId == null || Objects.equals(targetUserId, followerUserId)) {
+            return;
+        }
+        Runnable action = () -> createNewFollowerNotice(targetUserId, followerUserId);
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    action.run();
+                }
+            });
+            return;
+        }
+        action.run();
+    }
+
+    private void createNewFollowerNotice(Long targetUserId, Long followerUserId) {
+        SysUser follower = sysUserService.getById(followerUserId);
+        if (follower == null || !Objects.equals(follower.getDeletedFlag(), 0)) {
+            return;
+        }
+        Date now = new Date();
+        String displayName = StrUtils.trimToNull(follower.getNickname());
+        if (!StrUtils.hasText(displayName)) {
+            displayName = StrUtils.trimToDefault(follower.getUsername(), "有新用户");
+        }
+
+        SysNotice notice = new SysNotice();
+        notice.setTitle(FOLLOW_NOTICE_TITLE);
+        notice.setContent(displayName + " 关注了你");
+        notice.setType(FOLLOW_NOTICE_TYPE);
+        notice.setLevel(FOLLOW_NOTICE_LEVEL);
+        notice.setTargetType(NoticeConstants.TARGET_SPECIFIED);
+        notice.setTargetUserIds(String.valueOf(targetUserId));
+        notice.setPublisherId(followerUserId);
+        notice.setPublishStatus(NoticeConstants.PUBLISH_STATUS_PUBLISHED);
+        notice.setPublishTime(now);
+        notice.setCreateBy(followerUserId);
+        notice.setCreateTime(now);
+        notice.setUpdateBy(followerUserId);
+        notice.setUpdateTime(now);
+        notice.setIsDeleted(0);
+        try {
+            sysNoticeService.save(notice);
+            SysUserNotice relation = new SysUserNotice();
+            relation.setNoticeId(notice.getId());
+            relation.setUserId(targetUserId);
+            relation.setIsRead(NoticeConstants.READ_UNREAD);
+            relation.setCreateTime(now);
+            relation.setUpdateTime(now);
+            relation.setIsDeleted(0);
+            sysUserNoticeService.save(relation);
+        } catch (RuntimeException ex) {
+            log.warn("create follow notice failed: followerUserId={}, targetUserId={}", followerUserId, targetUserId, ex);
+        }
+    }
+}

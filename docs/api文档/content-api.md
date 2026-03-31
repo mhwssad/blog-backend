@@ -260,6 +260,8 @@
 
 - 当前行为：
   - 返回树形结构。
+  - 内部通过“根评论 + 回复”两段查询组装评论树。
+  - `current/size` 当前仅保留在请求模型中，现阶段不会对评论树做分页截断。
   - 仅返回 `status=1` 的评论。
   - 已登录用户会额外拿到 `liked` 状态。
 
@@ -314,7 +316,9 @@ Authorization: Bearer <accessToken>
 
 - 关键规则：
   - 当前仅支持 `targetType=article`。
-  - `parentId>0` 时必须与目标文章匹配。
+  - 顶级评论请传 `rootId=0`、`parentId=0`。
+  - `parentId>0` 时必须与目标文章匹配；若未显式传 `rootId`，服务端会按父评论自动推导根评论 ID。
+  - 点赞评论与取消点赞都按幂等处理。
   - 删除评论仅允许删除当前登录用户自己的评论。
   - 删除根评论时会级联删除其回复树。
 
@@ -423,6 +427,7 @@ Authorization: Bearer <accessToken>
 - 当前行为：
   - 登录用户访问文章详情时，系统会自动记录文章足迹。
   - 同一用户同一文章按 upsert 方式更新，而不是重复插入。
+  - 该行为依赖 `uk_user_target` 唯一键和 `ON DUPLICATE KEY UPDATE` 保证并发下只保留最新记录。
 
 ## 4. 后台内容管理接口
 
@@ -693,6 +698,10 @@ Authorization: Bearer <accessToken>
 | `color` | String | 标签颜色 |
 | `createdAt` | DateTime | 创建时间 |
 
+- 关键规则：
+  - 标签名称全局唯一。
+  - 删除标签会同步清理 `sys_tag_relation` 关联记录。
+
 ### 4.4 评论管理
 
 #### 接口速览
@@ -715,6 +724,8 @@ Authorization: Bearer <accessToken>
   "status": 1
 }
 ```
+
+- 状态取值：`0` 待审核，`1` 正常，`2` 隐藏
 
 #### 响应字段
 
@@ -870,7 +881,7 @@ Authorization: Bearer <accessToken>
 | --- | --- |
 | 文章状态 | `0` 草稿，`1` 已发布 |
 | 分类状态 | `0` 禁用，`1` 启用 |
-| 评论状态 | `0` 隐藏，`1` 展示 |
+| 评论状态 | `0` 待审核，`1` 正常，`2` 隐藏 |
 | 互动类型 | 当前固定 `like` |
 | 目标类型 | 文章相关固定 `article`，评论点赞固定 `comment` |
 
@@ -884,3 +895,6 @@ Authorization: Bearer <accessToken>
 | `accessLevel=4` 文章未命中白名单或命中黑名单 | 返回业务错误码 `40300` |
 | 删除分类前存在子节点或文章绑定 | 返回业务异常 |
 | 删除默认收藏夹 | 返回业务异常 |
+
+
+

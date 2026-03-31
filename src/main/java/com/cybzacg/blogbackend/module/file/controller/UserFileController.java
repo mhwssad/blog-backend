@@ -10,10 +10,9 @@ import com.cybzacg.blogbackend.module.file.model.user.UserFileTaskPageQuery;
 import com.cybzacg.blogbackend.module.file.model.user.UserFileTaskVO;
 import com.cybzacg.blogbackend.module.file.model.user.UserFileVO;
 import com.cybzacg.blogbackend.module.file.service.UserFileService;
-import com.cybzacg.blogbackend.utils.IPUtils;
+import com.cybzacg.blogbackend.utils.RequestContextUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -36,37 +35,32 @@ public class UserFileController {
     private final UserFileService userFileService;
     @PostMapping("/api/user/files/upload-tasks/init")
     @Operation(summary = "初始化上传任务")
-    public Result<FileUploadInitVO> initUploadTask(@Valid @RequestBody FileUploadInitRequest request,
-                                                   HttpServletRequest httpServletRequest) {
-        return Result.success(userFileService.initUploadTask(request, IPUtils.getIpAddr(httpServletRequest)));
+    public Result<FileUploadInitVO> initUploadTask(@Valid @RequestBody FileUploadInitRequest request) {
+        return Result.success(userFileService.initUploadTask(request, RequestContextUtils.getClientIp()));
     }
     @PostMapping("/api/user/files/upload-tasks/{uploadId}/quick-check")
     @Operation(summary = "秒传检测")
-    public Result<FileUploadResultVO> quickCheck(@PathVariable String uploadId,
-                                                 HttpServletRequest httpServletRequest) {
-        return Result.success(userFileService.quickCheck(uploadId, IPUtils.getIpAddr(httpServletRequest)));
+    public Result<FileUploadResultVO> quickCheck(@PathVariable String uploadId) {
+        return Result.success(userFileService.quickCheck(uploadId, RequestContextUtils.getClientIp()));
     }
     @PostMapping("/api/user/files/upload-tasks/{uploadId}/file")
     @Operation(summary = "普通上传")
     public Result<FileUploadResultVO> uploadFile(@PathVariable String uploadId,
-                                                 @RequestParam("file") MultipartFile file,
-                                                 HttpServletRequest httpServletRequest) {
-        return Result.success(userFileService.uploadFile(uploadId, file, IPUtils.getIpAddr(httpServletRequest)));
+                                                 @RequestParam("file") MultipartFile file) {
+        return Result.success(userFileService.uploadFile(uploadId, file, RequestContextUtils.getClientIp()));
     }
     @PostMapping("/api/user/files/upload-tasks/{uploadId}/chunks/{chunkNumber}")
     @Operation(summary = "上传分片")
     public Result<ChunkUploadVO> uploadChunk(@PathVariable String uploadId,
                                              @PathVariable Integer chunkNumber,
                                              @RequestParam("file") MultipartFile file,
-                                             @RequestParam(value = "chunkMd5", required = false) String chunkMd5,
-                                             HttpServletRequest httpServletRequest) {
-        return Result.success(userFileService.uploadChunk(uploadId, chunkNumber, file, chunkMd5, IPUtils.getIpAddr(httpServletRequest)));
+                                             @RequestParam(value = "chunkMd5", required = false) String chunkMd5) {
+        return Result.success(userFileService.uploadChunk(uploadId, chunkNumber, file, chunkMd5, RequestContextUtils.getClientIp()));
     }
     @PostMapping("/api/user/files/upload-tasks/{uploadId}/complete")
     @Operation(summary = "完成上传")
-    public Result<FileUploadResultVO> completeUpload(@PathVariable String uploadId,
-                                                     HttpServletRequest httpServletRequest) {
-        return Result.success(userFileService.completeUpload(uploadId, IPUtils.getIpAddr(httpServletRequest)));
+    public Result<FileUploadResultVO> completeUpload(@PathVariable String uploadId) {
+        return Result.success(userFileService.completeUpload(uploadId, RequestContextUtils.getClientIp()));
     }
     @GetMapping("/api/user/files")
     @Operation(summary = "查询我的文件")

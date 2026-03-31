@@ -1,69 +1,137 @@
 package com.cybzacg.blogbackend.module.chat.service.impl;
 
+import com.cybzacg.blogbackend.common.constant.RedisConstants;
+import com.cybzacg.blogbackend.module.chat.model.internal.ChatPushEventEnvelope;
 import com.cybzacg.blogbackend.module.chat.model.user.ChatMessageVO;
 import com.cybzacg.blogbackend.module.chat.model.user.ChatReadStateVO;
 import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsConversationUpdatedPayload;
 import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsMembersUpdatedPayload;
+import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsMessageDeletedPayload;
 import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsMessageType;
 import com.cybzacg.blogbackend.module.chat.service.ChatPushService;
 import com.cybzacg.blogbackend.module.chat.service.ChatWebSocketSessionRegistry;
 import com.cybzacg.blogbackend.module.chat.websocket.ChatWebSocketMessageCodec;
+import com.cybzacg.blogbackend.utils.JsonUtils;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
-import lombok.RequiredArgsConstructor;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 /**
- * 单机版聊天推送服务实现。
+ * 聊天推送服务实现。
+ *
+ * <p>当前采用“本地会话注册表 + Redis pub/sub”的模式：
+ * 当前节点先把事件推给本地会话，再把事件广播到 Redis，由其他节点转发到各自本地会话。
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class ChatPushServiceImpl implements ChatPushService {
     private final ChatWebSocketSessionRegistry sessionRegistry;
     private final ChatWebSocketMessageCodec messageCodec;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final String localNodeId;
+
+    public ChatPushServiceImpl(ChatWebSocketSessionRegistry sessionRegistry,
+                               ChatWebSocketMessageCodec messageCodec,
+                               RedisTemplate<String, Object> redisTemplate) {
+        this(sessionRegistry, messageCodec, redisTemplate, UUID.randomUUID().toString());
+    }
+
+    ChatPushServiceImpl(ChatWebSocketSessionRegistry sessionRegistry,
+                        ChatWebSocketMessageCodec messageCodec,
+                        RedisTemplate<String, Object> redisTemplate,
+                        String localNodeId) {
+        this.sessionRegistry = sessionRegistry;
+        this.messageCodec = messageCodec;
+        this.redisTemplate = redisTemplate;
+        this.localNodeId = localNodeId;
+    }
 
     @Override
     public void pushMessageCreated(ChatMessageVO message, Collection<Long> userIds) {
-        push(ChatWsMessageType.MESSAGE_CREATED.getValue(), message, userIds);
+        pushAndBroadcast(ChatWsMessageType.MESSAGE_CREATED.getValue(), message, userIds);
     }
 
     @Override
     public void pushMessageUpdated(ChatMessageVO message, Collection<Long> userIds) {
-        push(ChatWsMessageType.MESSAGE_UPDATED.getValue(), message, userIds);
+        pushAndBroadcast(ChatWsMessageType.MESSAGE_UPDATED.getValue(), message, userIds);
     }
 
     @Override
     public void pushMessageRevoked(ChatMessageVO message, Collection<Long> userIds) {
-        push(ChatWsMessageType.MESSAGE_REVOKED.getValue(), message, userIds);
+        pushAndBroadcast(ChatWsMessageType.MESSAGE_REVOKED.getValue(), message, userIds);
+    }
+
+    @Override
+    public void pushMessageDeleted(ChatWsMessageDeletedPayload payload, Collection<Long> userIds) {
+        pushAndBroadcast(ChatWsMessageType.MESSAGE_DELETED.getValue(), payload, userIds);
     }
 
     @Override
     public void pushReadUpdated(ChatReadStateVO readState, Collection<Long> userIds) {
-        push(ChatWsMessageType.READ_UPDATED.getValue(), readState, userIds);
+        pushAndBroadcast(ChatWsMessageType.READ_UPDATED.getValue(), readState, userIds);
     }
 
     @Override
     public void pushConversationUpdated(ChatWsConversationUpdatedPayload payload, Collection<Long> userIds) {
-        push(ChatWsMessageType.CONVERSATION_UPDATED.getValue(), payload, userIds);
+        pushAndBroadcast(ChatWsMessageType.CONVERSATION_UPDATED.getValue(), payload, userIds);
     }
 
     @Override
     public void pushMembersUpdated(ChatWsMembersUpdatedPayload payload, Collection<Long> userIds) {
-        push(ChatWsMessageType.MEMBERS_UPDATED.getValue(), payload, userIds);
+        pushAndBroadcast(ChatWsMessageType.MEMBERS_UPDATED.getValue(), payload, userIds);
     }
 
-    private void push(String type, Object payload, Collection<Long> userIds) {
-        if (userIds == null || userIds.isEmpty()) {
+    /**
+     * 处理 Redis 订阅到的跨节点推送事件，仅把事件下发到当前节点的本地会话。
+     */
+    void handleClusterEvent(ChatPushEventEnvelope event) {
+        if (event == null
+                || !StringUtils.hasText(event.getType())
+                || event.getUserIds() == null
+                || event.getUserIds().isEmpty()
+                || localNodeId.equals(event.getOriginNodeId())) {
             return;
         }
+        Object payload = decodeClusterPayload(event);
+        if (payload == null) {
+            return;
+        }
+        pushLocal(event.getType(), payload, event.getUserIds());
+    }
+
+    private void pushAndBroadcast(String type, Object payload, Collection<Long> userIds) {
+        List<Long> distinctUserIds = distinctUserIds(userIds);
+        if (distinctUserIds.isEmpty()) {
+            return;
+        }
+        pushLocal(type, payload, distinctUserIds);
+        publishClusterEvent(type, payload, distinctUserIds);
+    }
+
+    private void publishClusterEvent(String type, Object payload, List<Long> userIds) {
+        ChatPushEventEnvelope event = new ChatPushEventEnvelope();
+        event.setOriginNodeId(localNodeId);
+        event.setType(type);
+        event.setUserIds(userIds);
+        event.setPayload(JsonUtils.getObjectMapper().valueToTree(payload));
+        try {
+            redisTemplate.convertAndSend(RedisConstants.CHAT_WS_PUSH_TOPIC, event);
+        } catch (Exception ex) {
+            log.warn("publish chat redis push event failed: type={}, userIds={}", type, userIds, ex);
+        }
+    }
+
+    private void pushLocal(String type, Object payload, Collection<Long> userIds) {
         TextMessage message = messageCodec.buildEvent(type, payload);
-        Set<Long> distinctUserIds = new LinkedHashSet<>(userIds);
-        for (Long userId : distinctUserIds) {
+        for (Long userId : distinctUserIds(userIds)) {
             for (WebSocketSession session : sessionRegistry.getSessions(userId)) {
                 if (!session.isOpen()) {
                     continue;
@@ -75,5 +143,40 @@ public class ChatPushServiceImpl implements ChatPushService {
                 }
             }
         }
+    }
+
+    private Object decodeClusterPayload(ChatPushEventEnvelope event) {
+        if (event.getPayload() == null || event.getPayload().isNull()) {
+            return null;
+        }
+        return switch (event.getType()) {
+            case "message_created", "message_updated", "message_revoked" ->
+                    JsonUtils.getObjectMapper().convertValue(event.getPayload(), ChatMessageVO.class);
+            case "message_deleted" ->
+                    JsonUtils.getObjectMapper().convertValue(event.getPayload(), ChatWsMessageDeletedPayload.class);
+            case "read_updated" ->
+                    JsonUtils.getObjectMapper().convertValue(event.getPayload(), ChatReadStateVO.class);
+            case "conversation_updated" ->
+                    JsonUtils.getObjectMapper().convertValue(event.getPayload(), ChatWsConversationUpdatedPayload.class);
+            case "members_updated" ->
+                    JsonUtils.getObjectMapper().convertValue(event.getPayload(), ChatWsMembersUpdatedPayload.class);
+            default -> {
+                log.warn("ignore unknown chat redis push event type: {}", event.getType());
+                yield null;
+            }
+        };
+    }
+
+    private List<Long> distinctUserIds(Collection<Long> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return List.of();
+        }
+        Set<Long> distinctUserIds = new LinkedHashSet<>();
+        for (Long userId : userIds) {
+            if (userId != null) {
+                distinctUserIds.add(userId);
+            }
+        }
+        return distinctUserIds.isEmpty() ? List.of() : List.copyOf(distinctUserIds);
     }
 }

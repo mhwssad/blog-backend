@@ -1,12 +1,15 @@
 package com.cybzacg.blogbackend.module.auth.service.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.cybzacg.blogbackend.common.constant.AuthConstants;
+import com.cybzacg.blogbackend.common.constant.ConfigConstants;
 import com.cybzacg.blogbackend.common.constant.MenuConstants;
 import com.cybzacg.blogbackend.common.redis.RedisKeyUtils;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
 import com.cybzacg.blogbackend.domain.SysMenu;
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.authentication.EmailCodeAuthenticationToken;
 import com.cybzacg.blogbackend.module.auth.convert.AuthModelMapper;
 import com.cybzacg.blogbackend.module.auth.model.AuthEmailCodeRequest;
@@ -19,6 +22,7 @@ import com.cybzacg.blogbackend.module.auth.model.AuthUserInfo;
 import com.cybzacg.blogbackend.module.auth.model.AuthenticationToken;
 import com.cybzacg.blogbackend.module.auth.service.AuthService;
 import com.cybzacg.blogbackend.module.auth.service.SysMenuService;
+import com.cybzacg.blogbackend.module.auth.service.SysConfigService;
 import com.cybzacg.blogbackend.module.auth.service.SysRoleService;
 import com.cybzacg.blogbackend.module.auth.service.SysUserService;
 import com.cybzacg.blogbackend.module.auth.token.TokenManager;
@@ -27,17 +31,22 @@ import com.cybzacg.blogbackend.utils.SecurityUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.mail.autoconfigure.MailProperties;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -56,6 +65,7 @@ public class AuthServiceImpl implements AuthService {
     private final SysUserService sysUserService;
     private final SysRoleService sysRoleService;
     private final SysMenuService sysMenuService;
+    private final SysConfigService sysConfigService;
     private final AuthModelMapper authModelMapper;
     private final RedisOperator redisOperator;
     private final JavaMailSender javaMailSender;
@@ -70,11 +80,20 @@ public class AuthServiceImpl implements AuthService {
     @Transactional(rollbackFor = Exception.class)
     public AuthenticationToken login(AuthLoginRequest request, String loginIp) {
         String account = StrUtils.trim(request.getUsername());
-        Authentication authentication = authenticationManager.authenticate(
-                UsernamePasswordAuthenticationToken.unauthenticated(account, request.getPassword())
-        );
+        SysUser loginUser = sysUserService.getByUsername(account);
+        ensureLoginNotLocked(account, loginUser);
+
+        Authentication authentication;
+        try {
+            authentication = authenticationManager.authenticate(
+                    UsernamePasswordAuthenticationToken.unauthenticated(account, request.getPassword())
+            );
+        } catch (BadCredentialsException ex) {
+            throw handleLoginFailure(account, loginUser, ex);
+        }
 
         Long userId = SecurityUtils.getUserId(authentication);
+        clearLoginFailureState(account, userId != null ? userId : loginUser != null ? loginUser.getId() : null);
         if (userId != null) {
             sysUserService.updateLoginInfo(userId, loginIp);
         }
@@ -102,7 +121,11 @@ public class AuthServiceImpl implements AuthService {
         user.setPhone(phone);
         user.setStatus(1);
         user.setDeletedFlag(0);
-        sysUserService.save(user);
+        try {
+            sysUserService.save(user);
+        } catch (DuplicateKeyException ex) {
+            throw buildRegisterDuplicateException(username, email, phone, ex);
+        }
 
         Authentication authentication = authenticationManager.authenticate(
                 UsernamePasswordAuthenticationToken.unauthenticated(username, request.getPassword())
@@ -303,6 +326,124 @@ public class AuthServiceImpl implements AuthService {
                         .eq(SysUser::getPhone, identity))
                 .exists();
         ExceptionThrowerCore.throwBusinessIf(exists, ResultErrorCode.ILLEGAL_ARGUMENT, message);
+    }
+
+    /**
+     * 在认证前检查账号是否已进入临时锁定期，避免重复触发认证链路。
+     */
+    private void ensureLoginNotLocked(String account, SysUser loginUser) {
+        if (loginUser != null && !Integer.valueOf(1).equals(loginUser.getStatus())) {
+            return;
+        }
+        String lockKey = loginFailLockKey(account, loginUser != null ? loginUser.getId() : null);
+        ExceptionThrowerCore.throwBusinessIf(redisOperator.hasKey(lockKey), ResultErrorCode.ACCOUNT_LOCKED);
+    }
+
+    /**
+     * 在账号密码认证失败后累计失败次数，并在达到阈值时写入锁定态。
+     */
+    private AuthenticationException handleLoginFailure(String account,
+                                                       SysUser loginUser,
+                                                       BadCredentialsException cause) {
+        int maxAttempts = resolveIntConfig(
+                ConfigConstants.AUTH_LOGIN_FAIL_MAX_ATTEMPTS_KEY,
+                ConfigConstants.DEFAULT_AUTH_LOGIN_FAIL_MAX_ATTEMPTS,
+                0);
+        if (maxAttempts <= 0) {
+            return cause;
+        }
+
+        Long userId = loginUser != null ? loginUser.getId() : null;
+        String countKey = loginFailCountKey(account, userId);
+        long failures = redisOperator.increment(countKey);
+        Duration lockDuration = Duration.ofMinutes(resolveIntConfig(
+                ConfigConstants.AUTH_LOGIN_FAIL_LOCK_MINUTES_KEY,
+                ConfigConstants.DEFAULT_AUTH_LOGIN_FAIL_LOCK_MINUTES,
+                1));
+        if (failures == 1) {
+            redisOperator.expire(countKey, lockDuration);
+        }
+        if (failures < maxAttempts) {
+            return cause;
+        }
+
+        redisOperator.set(loginFailLockKey(account, userId), "1", lockDuration);
+        redisOperator.delete(countKey);
+        return new LockedException(ResultErrorCode.ACCOUNT_LOCKED.getMessage(), cause);
+    }
+
+    /**
+     * 登录成功后清理失败计数和锁定态，避免历史失败影响后续正常登录。
+     */
+    private void clearLoginFailureState(String account, Long userId) {
+        redisOperator.delete(loginFailCountKey(account, userId));
+        redisOperator.delete(loginFailLockKey(account, userId));
+        if (StringUtils.hasText(account)) {
+            redisOperator.delete(loginFailCountKey(account, null));
+            redisOperator.delete(loginFailLockKey(account, null));
+        }
+    }
+
+    /**
+     * 将并发注册时落到数据库唯一键的冲突重新翻译为前端可识别的业务提示。
+     */
+    private BusinessException buildRegisterDuplicateException(String username,
+                                                             String email,
+                                                             String phone,
+                                                             DuplicateKeyException cause) {
+        if (existsActiveUser(SysUser::getUsername, username)) {
+            return new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "用户名已存在", cause);
+        }
+        if (existsActiveUser(SysUser::getEmail, email)) {
+            return new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "邮箱已存在", cause);
+        }
+        if (existsActiveUser(SysUser::getPhone, phone)) {
+            return new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "手机号已存在", cause);
+        }
+        return new BusinessException(ResultErrorCode.DATA_ALREADY_EXISTS.getCode(), "注册信息已存在", cause);
+    }
+
+    /**
+     * 精确按字段检查有效用户是否已存在，用于并发唯一键冲突后的提示回填。
+     */
+    private boolean existsActiveUser(SFunction<SysUser, ?> field, String identity) {
+        if (!StringUtils.hasText(identity)) {
+            return false;
+        }
+        return sysUserService.lambdaQuery()
+                .eq(SysUser::getDeletedFlag, 0)
+                .eq(field, identity)
+                .exists();
+    }
+
+    /**
+     * 读取整型系统配置；非法值回退到默认值，并保证不低于指定下限。
+     */
+    private int resolveIntConfig(String configKey, int defaultValue, int minValue) {
+        String configuredValue = sysConfigService.getValueOrDefault(configKey, String.valueOf(defaultValue));
+        if (!StringUtils.hasText(configuredValue)) {
+            return defaultValue;
+        }
+        try {
+            return Math.max(Integer.parseInt(configuredValue.trim()), minValue);
+        } catch (NumberFormatException ex) {
+            return defaultValue;
+        }
+    }
+
+    private String loginFailCountKey(String account, Long userId) {
+        return RedisKeyUtils.build(AuthConstants.LOGIN_FAIL_COUNT_PREFIX, loginFailScope(account, userId));
+    }
+
+    private String loginFailLockKey(String account, Long userId) {
+        return RedisKeyUtils.build(AuthConstants.LOGIN_FAIL_LOCK_PREFIX, loginFailScope(account, userId));
+    }
+
+    private String loginFailScope(String account, Long userId) {
+        if (userId != null) {
+            return RedisKeyUtils.build(AuthConstants.LOGIN_FAIL_SCOPE_USER, userId);
+        }
+        return RedisKeyUtils.build(AuthConstants.LOGIN_FAIL_SCOPE_ACCOUNT, StrUtils.trim(account));
     }
 }
 

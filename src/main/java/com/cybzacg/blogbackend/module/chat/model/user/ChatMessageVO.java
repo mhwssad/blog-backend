@@ -1,6 +1,7 @@
 package com.cybzacg.blogbackend.module.chat.model.user;
 
 import com.cybzacg.blogbackend.module.chat.model.common.ChatFilePayloadVO;
+import com.cybzacg.blogbackend.module.chat.model.common.ChatReplyMessageVO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Date;
 import lombok.Data;
@@ -40,6 +41,9 @@ public class ChatMessageVO {
 
     @Schema(description = "回复的消息ID")
     private Long replyMessageId;
+
+    @Schema(description = "回复消息快照")
+    private ChatReplyMessageVO reply;
 
     @Schema(description = "客户端消息ID")
     private String clientMessageId;

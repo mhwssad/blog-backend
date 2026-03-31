@@ -3,7 +3,6 @@ package com.cybzacg.blogbackend.module.content.service;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.module.content.model.user.UserFootprintPageQuery;
 import com.cybzacg.blogbackend.module.content.model.user.UserFootprintVO;
-import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * 用户足迹服务接口。
@@ -17,5 +16,5 @@ public interface UserFootprintService {
 
     void clearFootprints();
 
-    void recordArticleFootprint(Long articleId, HttpServletRequest request);
+    void recordArticleFootprint(Long articleId);
 }

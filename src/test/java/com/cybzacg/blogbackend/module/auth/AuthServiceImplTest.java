@@ -2,6 +2,7 @@ package com.cybzacg.blogbackend.module.auth;
 
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.cybzacg.blogbackend.common.constant.AuthConstants;
+import com.cybzacg.blogbackend.common.constant.ConfigConstants;
 import com.cybzacg.blogbackend.common.constant.MenuConstants;
 import com.cybzacg.blogbackend.common.redis.RedisKeyUtils;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
@@ -19,6 +20,7 @@ import com.cybzacg.blogbackend.module.auth.model.AuthRefreshRequest;
 import com.cybzacg.blogbackend.module.auth.model.AuthRegisterRequest;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserInfo;
 import com.cybzacg.blogbackend.module.auth.model.AuthenticationToken;
+import com.cybzacg.blogbackend.module.auth.service.SysConfigService;
 import com.cybzacg.blogbackend.module.auth.service.SysMenuService;
 import com.cybzacg.blogbackend.module.auth.service.SysRoleService;
 import com.cybzacg.blogbackend.module.auth.service.SysUserService;
@@ -26,6 +28,7 @@ import com.cybzacg.blogbackend.module.auth.service.impl.AuthServiceImpl;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import com.cybzacg.blogbackend.module.auth.token.TokenManager;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
+import org.springframework.dao.DuplicateKeyException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,10 +39,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.mail.autoconfigure.MailProperties;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.ArrayList;
+import java.time.Duration;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -68,6 +74,8 @@ class AuthServiceImplTest {
     @Mock
     private SysMenuService sysMenuService;
     @Mock
+    private SysConfigService sysConfigService;
+    @Mock
     private AuthModelMapper authModelMapper;
     @Mock
     private RedisOperator redisOperator;
@@ -90,6 +98,7 @@ class AuthServiceImplTest {
                 sysUserService,
                 sysRoleService,
                 sysMenuService,
+                sysConfigService,
                 authModelMapper,
                 redisOperator,
                 javaMailSender,
@@ -104,12 +113,16 @@ class AuthServiceImplTest {
         request.setUsername("  demo@example.com  ");
         request.setPassword("secret");
 
+        SysUser user = new SysUser();
+        user.setId(7L);
+        user.setStatus(1);
         Authentication authentication = mock(Authentication.class);
         AuthenticationToken token = AuthenticationToken.builder()
                 .accessToken("access-token")
                 .refreshToken("refresh-token")
                 .build();
 
+        when(sysUserService.getByUsername("demo@example.com")).thenReturn(user);
         when(authenticationManager.authenticate(any(Authentication.class))).thenReturn(authentication);
         when(tokenManager.generateToken(authentication)).thenReturn(token);
 
@@ -123,8 +136,72 @@ class AuthServiceImplTest {
             assertEquals("demo@example.com", authenticationCaptor.getValue().getPrincipal());
             assertEquals("secret", authenticationCaptor.getValue().getCredentials());
             assertEquals(token, result);
+            verify(redisOperator).delete(RedisKeyUtils.build(
+                    AuthConstants.LOGIN_FAIL_COUNT_PREFIX,
+                    RedisKeyUtils.build(AuthConstants.LOGIN_FAIL_SCOPE_USER, 7L)));
+            verify(redisOperator).delete(RedisKeyUtils.build(
+                    AuthConstants.LOGIN_FAIL_LOCK_PREFIX,
+                    RedisKeyUtils.build(AuthConstants.LOGIN_FAIL_SCOPE_USER, 7L)));
             verify(sysUserService).updateLoginInfo(7L, "127.0.0.1");
         }
+    }
+
+    @Test
+    void loginShouldRejectLockedAccountBeforeAuthenticating() {
+        AuthLoginRequest request = new AuthLoginRequest();
+        request.setUsername("demo");
+        request.setPassword("secret");
+
+        SysUser user = new SysUser();
+        user.setId(9L);
+        user.setStatus(1);
+        String lockKey = RedisKeyUtils.build(
+                AuthConstants.LOGIN_FAIL_LOCK_PREFIX,
+                RedisKeyUtils.build(AuthConstants.LOGIN_FAIL_SCOPE_USER, 9L));
+
+        when(sysUserService.getByUsername("demo")).thenReturn(user);
+        when(redisOperator.hasKey(lockKey)).thenReturn(true);
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> authService.login(request, "127.0.0.1"));
+
+        assertEquals(ResultErrorCode.ACCOUNT_LOCKED.getCode(), exception.getCode());
+        verify(authenticationManager, never()).authenticate(any(Authentication.class));
+    }
+
+    @Test
+    void loginShouldLockAccountAfterConfiguredMaxFailures() {
+        AuthLoginRequest request = new AuthLoginRequest();
+        request.setUsername("demo");
+        request.setPassword("bad-secret");
+
+        SysUser user = new SysUser();
+        user.setId(9L);
+        user.setStatus(1);
+        String countKey = RedisKeyUtils.build(
+                AuthConstants.LOGIN_FAIL_COUNT_PREFIX,
+                RedisKeyUtils.build(AuthConstants.LOGIN_FAIL_SCOPE_USER, 9L));
+        String lockKey = RedisKeyUtils.build(
+                AuthConstants.LOGIN_FAIL_LOCK_PREFIX,
+                RedisKeyUtils.build(AuthConstants.LOGIN_FAIL_SCOPE_USER, 9L));
+
+        when(sysUserService.getByUsername("demo")).thenReturn(user);
+        when(authenticationManager.authenticate(any(Authentication.class)))
+                .thenThrow(new BadCredentialsException("bad credentials"));
+        when(sysConfigService.getValueOrDefault(
+                ConfigConstants.AUTH_LOGIN_FAIL_MAX_ATTEMPTS_KEY,
+                String.valueOf(ConfigConstants.DEFAULT_AUTH_LOGIN_FAIL_MAX_ATTEMPTS))).thenReturn("3");
+        when(sysConfigService.getValueOrDefault(
+                ConfigConstants.AUTH_LOGIN_FAIL_LOCK_MINUTES_KEY,
+                String.valueOf(ConfigConstants.DEFAULT_AUTH_LOGIN_FAIL_LOCK_MINUTES))).thenReturn("15");
+        when(redisOperator.increment(countKey)).thenReturn(3L);
+
+        LockedException exception = assertThrows(LockedException.class,
+                () -> authService.login(request, "127.0.0.1"));
+
+        assertEquals(ResultErrorCode.ACCOUNT_LOCKED.getMessage(), exception.getMessage());
+        verify(redisOperator).set(lockKey, "1", Duration.ofMinutes(15));
+        verify(redisOperator).delete(countKey);
     }
 
     @Test
@@ -241,6 +318,32 @@ class AuthServiceImplTest {
         assertEquals(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), exception.getCode());
         assertEquals("手机号已存在", exception.getMessage());
         verify(sysUserService, never()).save(any(SysUser.class));
+        verify(authenticationManager, never()).authenticate(any(Authentication.class));
+    }
+
+    @Test
+    void registerShouldTranslateDuplicateKeyConflictToUsernameExistsMessage() {
+        AuthRegisterRequest request = new AuthRegisterRequest();
+        request.setUsername("demo");
+        request.setPassword("secret");
+        request.setEmail("demo@example.com");
+        request.setPhone("13800138000");
+
+        SysUser mappedUser = new SysUser();
+
+        when(sysUserService.lambdaQuery()).thenReturn(userQuery, userQuery, userQuery, userQuery);
+        when(userQuery.eq(any(), any())).thenReturn(userQuery);
+        when(userQuery.and(any())).thenReturn(userQuery);
+        when(userQuery.exists()).thenReturn(false, false, false, true);
+        when(authModelMapper.toRegisterUser(request)).thenReturn(mappedUser);
+        when(passwordEncoder.encode("secret")).thenReturn("encoded-secret");
+        doThrow(new DuplicateKeyException("uk_sys_user_active_username")).when(sysUserService).save(mappedUser);
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> authService.register(request, "127.0.0.1"));
+
+        assertEquals(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), exception.getCode());
+        assertEquals("用户名已存在", exception.getMessage());
         verify(authenticationManager, never()).authenticate(any(Authentication.class));
     }
 

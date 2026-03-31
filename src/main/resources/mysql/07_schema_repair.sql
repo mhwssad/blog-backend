@@ -254,6 +254,31 @@ ENGINE = InnoDB
 DEFAULT CHARSET = utf8mb4
 COLLATE = utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS chat_attachment_process_task
+(
+    id                    BIGINT AUTO_INCREMENT COMMENT '任务ID' PRIMARY KEY,
+    message_id            BIGINT                                NOT NULL COMMENT '关联消息ID',
+    message_type          VARCHAR(16)                           NOT NULL COMMENT '消息类型：image/voice',
+    task_status           TINYINT      DEFAULT 0                NOT NULL COMMENT '任务状态：0-待执行，1-处理中，2-成功，3-失败',
+    retry_count           INT          DEFAULT 0                NOT NULL COMMENT '累计重试次数',
+    max_retry_count       INT          DEFAULT 3                NOT NULL COMMENT '最大重试次数',
+    next_retry_at         DATETIME     DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '下次执行时间',
+    lease_expire_at       DATETIME NULL COMMENT '当前处理租约过期时间',
+    started_at            DATETIME NULL COMMENT '最近一次开始处理时间',
+    completed_at          DATETIME NULL COMMENT '完成时间',
+    last_error            VARCHAR(512) NULL COMMENT '最近一次错误信息',
+    message_snapshot_json JSON NULL COMMENT '消息快照JSON，用于回推message_updated',
+    push_user_ids_json    JSON NULL COMMENT '待推送用户ID列表JSON',
+    created_at            DATETIME     DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    updated_at            DATETIME     DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    UNIQUE KEY uk_message_id (message_id) COMMENT '同一消息只保留一条媒体处理任务',
+    INDEX idx_status_retry_time (task_status, next_retry_at, id) COMMENT '按状态和下次执行时间扫描任务',
+    INDEX idx_status_lease_expire (task_status, lease_expire_at) COMMENT '按租约过期时间恢复处理中任务'
+) COMMENT '聊天附件异步处理任务表'
+ENGINE = InnoDB
+DEFAULT CHARSET = utf8mb4
+COLLATE = utf8mb4_unicode_ci;
+
 -- ----------------------------
 -- 粉丝关注缺失表补齐
 -- ----------------------------
@@ -604,7 +629,10 @@ INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_n
 VALUES
     (1790, 1700, '0,1700', '聊天管理', 'M', 'ContentChat', 'chats', 'content/chat/index', NULL, 0, 1, 1, 9, 'chat-dot-round', NULL, NOW(), NOW(), NULL),
     (1791, 1790, '0,1700,1790', '会话查询', 'B', NULL, NULL, NULL, 'content:chat:query', 0, 0, 1, 1, NULL, NULL, NOW(), NOW(), NULL),
-    (1792, 1790, '0,1700,1790', '会话状态', 'B', NULL, NULL, NULL, 'content:chat:update', 0, 0, 1, 2, NULL, NULL, NOW(), NOW(), NULL)
+    (1792, 1790, '0,1700,1790', '会话状态', 'B', NULL, NULL, NULL, 'content:chat:update', 0, 0, 1, 2, NULL, NULL, NOW(), NOW(), NULL),
+    (1793, 1700, '0,1700', '关注管理', 'M', 'ContentFollow', 'follows', 'content/follow/index', NULL, 0, 1, 1, 10, 'user-filled', NULL, NOW(), NOW(), NULL),
+    (1794, 1793, '0,1700,1793', '关注查询', 'B', NULL, NULL, NULL, 'content:follow:query', 0, 0, 1, 1, NULL, NULL, NOW(), NOW(), NULL),
+    (1795, 1793, '0,1700,1793', '关注清理', 'B', NULL, NULL, NULL, 'content:follow:clean', 0, 0, 1, 2, NULL, NULL, NOW(), NOW(), NULL)
 ON DUPLICATE KEY UPDATE
     parent_id = VALUES(parent_id),
     tree_path = VALUES(tree_path),
@@ -631,3 +659,12 @@ SELECT 1, 1791 FROM DUAL WHERE EXISTS (SELECT 1 FROM `sys_role` WHERE `id` = 1);
 
 INSERT IGNORE INTO `sys_role_menu` (`role_id`, `menu_id`)
 SELECT 1, 1792 FROM DUAL WHERE EXISTS (SELECT 1 FROM `sys_role` WHERE `id` = 1);
+
+INSERT IGNORE INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 1, 1793 FROM DUAL WHERE EXISTS (SELECT 1 FROM `sys_role` WHERE `id` = 1);
+
+INSERT IGNORE INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 1, 1794 FROM DUAL WHERE EXISTS (SELECT 1 FROM `sys_role` WHERE `id` = 1);
+
+INSERT IGNORE INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 1, 1795 FROM DUAL WHERE EXISTS (SELECT 1 FROM `sys_role` WHERE `id` = 1);

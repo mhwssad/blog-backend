@@ -244,21 +244,7 @@ public final class StringTemplateUtils {
                 if (current instanceof Map) {
                     current = ((Map<?, ?>) current).get(k);
                 } else {
-                    try {
-                        // 尝试通过反射获取属性值
-                        java.lang.reflect.Field field = current.getClass().getDeclaredField(k);
-                        field.setAccessible(true);
-                        current = field.get(current);
-                    } catch (NoSuchFieldException e) {
-                        // 尝试通过getter方法获取
-                        String getterName = "get" + Character.toUpperCase(k.charAt(0)) + k.substring(1);
-                        try {
-                            java.lang.reflect.Method method = current.getClass().getMethod(getterName);
-                            current = method.invoke(current);
-                        } catch (Exception ex) {
-                            return null;
-                        }
-                    }
+                    current = ReflectionUtils.readProperty(current, k).orElse(null);
                 }
             }
             return current;

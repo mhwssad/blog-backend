@@ -36,7 +36,6 @@ import com.cybzacg.blogbackend.module.file.service.FileBusinessInfoService;
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.IdCollectionUtils;
-import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.util.CollectionUtils;
 import org.springframework.stereotype.Service;
@@ -125,12 +124,18 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         return PageResult.of(page, records);
     }
 
+    /**
+     * 查询后台文章详情，并补齐分类、标签和访问授权列表。
+     */
     @Override
     public ArticleDetailVO getArticle(Long id) {
         BlogArticle article = getArticleOrThrow(id);
         return buildArticleDetail(article);
     }
 
+    /**
+     * 创建文章主体并同步落库分类、标签和访问授权关系。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ArticleDetailVO createArticle(ArticleSaveRequest request) {
@@ -145,6 +150,9 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         return buildArticleDetail(article);
     }
 
+    /**
+     * 更新文章主体信息，并按最新请求重建分类、标签和访问授权关系。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ArticleDetailVO updateArticle(Long id, ArticleSaveRequest request) {
@@ -158,6 +166,9 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         return buildArticleDetail(article);
     }
 
+    /**
+     * 调整文章发布状态，并在首次发布时补齐发布时间。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, Integer status) {
@@ -170,6 +181,9 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         blogArticleService.updateById(article);
     }
 
+    /**
+     * 为“指定用户可见”的文章重建授权名单。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void assignAccess(Long id, List<ArticleAccessItem> accessList) {
@@ -251,6 +265,9 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         }
     }
 
+    /**
+     * 根据目标状态和请求发布时间推导最终发布时间，保证已发布文章始终有稳定的发布时间。
+     */
     private Date resolvePublishTime(Integer status, Date requestPublishTime, Date existingPublishTime) {
         if (Integer.valueOf(1).equals(defaultIfNull(status, 0))) {
             return requestPublishTime != null ? requestPublishTime : (existingPublishTime != null ? existingPublishTime : new Date());
@@ -258,6 +275,9 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         return requestPublishTime;
     }
 
+    /**
+     * 初始化文章的统计字段，避免新建文章后计数字段为空。
+     */
     private void initializeCounters(BlogArticle article) {
         article.setViewCount(defaultIfNull(article.getViewCount(), 0));
         article.setLikeCount(defaultIfNull(article.getLikeCount(), 0));
@@ -423,6 +443,9 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         blogArticleAccessService.saveBatch(records);
     }
 
+    /**
+     * 读取文章分类 ID 列表，并保持与绑定顺序一致，供后台详情回显复用。
+     */
     private List<Long> listCategoryIds(Long articleId) {
         return blogArticleCategoryService.lambdaQuery()
                 .eq(BlogArticleCategory::getArticleId, articleId)
@@ -434,6 +457,9 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
                 .toList();
     }
 
+    /**
+     * 读取文章标签 ID 列表，并保持与绑定顺序一致，供后台详情回显复用。
+     */
     private List<Long> listTagIds(Long articleId) {
         return sysTagRelationService.lambdaQuery()
                 .eq(SysTagRelation::getTargetType, TARGET_TYPE_ARTICLE)
@@ -554,6 +580,9 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         return article;
     }
 
+    /**
+     * 批量读取作者展示名，供后台列表回填作者信息。
+     */
     private Map<Long, String> loadAuthorNames(Collection<Long> authorIds) {
         if (authorIds == null || authorIds.isEmpty()) {
             return Map.of();
@@ -563,6 +592,9 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         return authorNameMap;
     }
 
+    /**
+     * 读取单个作者展示名，优先返回昵称，缺失时回退用户名。
+     */
     private String loadAuthorName(Long authorId) {
         if (authorId == null) {
             return null;

@@ -12,6 +12,7 @@ import com.cybzacg.blogbackend.module.auth.service.SysNoticeService;
 import com.cybzacg.blogbackend.module.auth.service.SysUserNoticeService;
 import com.cybzacg.blogbackend.module.auth.service.impl.UserNoticeInboxServiceImpl;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
+import org.springframework.dao.DuplicateKeyException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -179,6 +180,41 @@ class UserNoticeInboxServiceImplTest {
         }
 
         assertEquals(3L, unreadCount);
+    }
+
+    @Test
+    void markAllReadShouldRecoverWhenGlobalNoticeRelationInsertedConcurrently() {
+        SysNotice unreadGlobalNotice = new SysNotice();
+        unreadGlobalNotice.setId(300L);
+
+        SysUserNotice existingReadRelation = new SysUserNotice();
+        existingReadRelation.setId(5L);
+        existingReadRelation.setNoticeId(300L);
+        existingReadRelation.setUserId(7L);
+        existingReadRelation.setIsRead(NoticeConstants.READ_READ);
+        existingReadRelation.setIsDeleted(0);
+
+        when(sysUserNoticeService.lambdaQuery()).thenReturn(userNoticeQuery, activeRelationQuery, activeRelationQuery);
+        when(userNoticeQuery.eq(anySFunction(), any())).thenReturn(userNoticeQuery);
+        when(userNoticeQuery.list()).thenReturn(List.of());
+
+        when(sysNoticeService.lambdaQuery()).thenReturn(noticeQuery);
+        when(noticeQuery.eq(anySFunction(), any())).thenReturn(noticeQuery);
+        when(noticeQuery.notIn(anyBoolean(), anySFunction(), anyCollection())).thenReturn(noticeQuery);
+        when(noticeQuery.list()).thenReturn(List.of(unreadGlobalNotice));
+
+        when(activeRelationQuery.eq(anySFunction(), any())).thenReturn(activeRelationQuery);
+        when(activeRelationQuery.orderByDesc(anySFunction())).thenReturn(activeRelationQuery);
+        when(activeRelationQuery.last(any())).thenReturn(activeRelationQuery);
+        when(activeRelationQuery.one()).thenReturn(null, existingReadRelation);
+        when(sysUserNoticeService.save(any(SysUserNotice.class))).thenThrow(new DuplicateKeyException("uk_notice_user"));
+
+        try (MockedStatic<?> securityUtils = SecurityTestUtils.mockUserId(7L)) {
+            userNoticeInboxService.markAllRead();
+        }
+
+        verify(sysUserNoticeService).save(any(SysUserNotice.class));
+        verify(sysUserNoticeService, never()).updateById(existingReadRelation);
     }
 
     @SuppressWarnings("unchecked")

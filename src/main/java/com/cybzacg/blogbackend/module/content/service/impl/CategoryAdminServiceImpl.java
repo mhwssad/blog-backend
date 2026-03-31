@@ -3,14 +3,14 @@ package com.cybzacg.blogbackend.module.content.service.impl;
 import com.cybzacg.blogbackend.domain.BlogArticleCategory;
 import com.cybzacg.blogbackend.domain.SysCategory;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
+import com.cybzacg.blogbackend.module.article.service.BlogArticleCategoryService;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.admin.CategoryAdminVO;
 import com.cybzacg.blogbackend.module.content.model.admin.CategorySaveRequest;
 import com.cybzacg.blogbackend.module.content.model.admin.CategoryTreeVO;
+import com.cybzacg.blogbackend.module.content.repository.SysCategoryRepository;
 import com.cybzacg.blogbackend.module.content.service.CategoryAdminService;
-import com.cybzacg.blogbackend.module.content.service.SysCategoryService;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleCategoryService;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,17 +33,13 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
     private static final long ROOT_PARENT_ID = 0L;
     private static final String ARTICLE_TYPE = "article";
 
-    private final SysCategoryService sysCategoryService;
+    private final SysCategoryRepository sysCategoryRepository;
     private final BlogArticleCategoryService blogArticleCategoryService;
     private final ContentModelMapper contentModelMapper;
 
     @Override
     public List<CategoryTreeVO> listCategoryTree() {
-        List<SysCategory> categories = sysCategoryService.lambdaQuery()
-                .eq(SysCategory::getType, ARTICLE_TYPE)
-                .orderByAsc(SysCategory::getSortOrder)
-                .orderByAsc(SysCategory::getId)
-                .list();
+        List<SysCategory> categories = sysCategoryRepository.findByTypeOrderBySortOrderAndId(ARTICLE_TYPE);
         return buildCategoryTree(categories);
     }
 
@@ -59,7 +55,7 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
         SysCategory parent = validateParent(request.getParentId(), null);
         SysCategory category = contentModelMapper.toCategory(request);
         applyFields(category, request, parent);
-        sysCategoryService.save(category);
+        sysCategoryRepository.save(category);
         return contentModelMapper.toCategoryAdminVO(category);
     }
 
@@ -70,7 +66,7 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
         validateRequest(request, id);
         SysCategory parent = validateParent(request.getParentId(), id);
         applyFields(category, request, parent);
-        sysCategoryService.updateById(category);
+        sysCategoryRepository.updateById(category);
         refreshChildrenHierarchy(category);
         return contentModelMapper.toCategoryAdminVO(category);
     }
@@ -80,18 +76,18 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
     public void updateStatus(Long id, Integer status) {
         SysCategory category = getCategoryOrThrow(id);
         category.setStatus(status);
-        sysCategoryService.updateById(category);
+        sysCategoryRepository.updateById(category);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteCategory(Long id) {
         getCategoryOrThrow(id);
-        boolean hasChildren = sysCategoryService.lambdaQuery().eq(SysCategory::getParentId, id).exists();
+        boolean hasChildren = sysCategoryRepository.existsByParentId(id);
         ExceptionThrowerCore.throwBusinessIf(hasChildren, ResultErrorCode.ILLEGAL_ARGUMENT, "当前分类存在子分类，无法删除");
         boolean boundArticle = blogArticleCategoryService.lambdaQuery().eq(BlogArticleCategory::getCategoryId, id).exists();
         ExceptionThrowerCore.throwBusinessIf(boundArticle, ResultErrorCode.ILLEGAL_ARGUMENT, "当前分类已绑定文章，无法删除");
-        sysCategoryService.removeById(id);
+        sysCategoryRepository.removeById(id);
     }
 
     /**
@@ -99,11 +95,10 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
      */
     private void validateRequest(CategorySaveRequest request, Long currentId) {
         ExceptionThrowerCore.throwBusinessIf(!StringUtils.hasText(request.getType()) || !ARTICLE_TYPE.equals(StrUtils.trim(request.getType())), ResultErrorCode.ILLEGAL_ARGUMENT, "当前仅支持文章分类");
-        boolean duplicated = sysCategoryService.lambdaQuery()
-                .eq(SysCategory::getType, StrUtils.trim(request.getType()))
-                .eq(SysCategory::getCode, StrUtils.trim(request.getCode()))
-                .ne(currentId != null, SysCategory::getId, currentId)
-                .exists();
+        boolean duplicated = sysCategoryRepository.existsByTypeAndCodeExcludingId(
+                StrUtils.trim(request.getType()),
+                StrUtils.trim(request.getCode()),
+                currentId);
         ExceptionThrowerCore.throwBusinessIf(duplicated, ResultErrorCode.DATA_ALREADY_EXISTS, "分类编码已存在");
     }
 
@@ -158,13 +153,11 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
      * 递归刷新子分类层级和祖先链，保证移动分类后整棵子树结构一致。
      */
     private void refreshChildrenHierarchy(SysCategory category) {
-        List<SysCategory> children = sysCategoryService.lambdaQuery()
-                .eq(SysCategory::getParentId, category.getId())
-                .list();
+        List<SysCategory> children = sysCategoryRepository.findByParentId(category.getId());
         for (SysCategory child : children) {
             child.setLevel(category.getLevel() + 1);
             child.setAncestors(buildAncestors(category));
-            sysCategoryService.updateById(child);
+            sysCategoryRepository.updateById(child);
             refreshChildrenHierarchy(child);
         }
     }
@@ -193,21 +186,8 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
      * 按 ID 获取分类，不存在时抛出统一业务异常。
      */
     private SysCategory getCategoryOrThrow(Long id) {
-        SysCategory category = sysCategoryService.getById(id);
+        SysCategory category = sysCategoryRepository.getById(id);
         ExceptionThrowerCore.throwBusinessIfNull(category, ResultErrorCode.ILLEGAL_ARGUMENT, "分类不存在");
         return category;
     }
-
 }
-
-
-
-
-
-
-
-
-
-
-
-

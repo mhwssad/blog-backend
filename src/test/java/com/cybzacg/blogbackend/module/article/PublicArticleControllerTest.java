@@ -7,7 +7,6 @@ import com.cybzacg.blogbackend.exception.handler.BusinessExceptionHandler;
 import com.cybzacg.blogbackend.module.article.controller.PublicArticleController;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleCardVO;
 import com.cybzacg.blogbackend.module.article.service.PublicArticleService;
-import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,7 +18,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -58,7 +56,7 @@ class PublicArticleControllerTest {
 
     @Test
     void getArticleShouldReturnLoginRequiredCodeWhenServiceRejectsAnonymous() throws Exception {
-        when(publicArticleService.getArticle(eq(1L), any(HttpServletRequest.class)))
+        when(publicArticleService.getArticle(1L))
                 .thenThrow(new BusinessException(ResultErrorCode.LOGIN_REQUIRED));
 
         mockMvc.perform(get("/api/articles/1"))
@@ -68,7 +66,7 @@ class PublicArticleControllerTest {
 
     @Test
     void getArticleShouldReturnForbiddenCodeForUnauthorizedUser() throws Exception {
-        when(publicArticleService.getArticle(eq(1L), any(HttpServletRequest.class)))
+        when(publicArticleService.getArticle(1L))
                 .thenThrow(new BusinessException(ResultErrorCode.FORBIDDEN.getCode(), "当前用户无权访问该文章"));
 
         mockMvc.perform(get("/api/articles/1"))

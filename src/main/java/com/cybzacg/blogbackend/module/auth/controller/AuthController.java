@@ -12,10 +12,9 @@ import com.cybzacg.blogbackend.module.auth.model.AuthUserInfo;
 import com.cybzacg.blogbackend.module.auth.model.AuthenticationToken;
 import com.cybzacg.blogbackend.module.auth.model.LogoutRequest;
 import com.cybzacg.blogbackend.module.auth.service.AuthService;
-import com.cybzacg.blogbackend.utils.IPUtils;
+import com.cybzacg.blogbackend.utils.RequestContextUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.util.StringUtils;
@@ -42,16 +41,14 @@ public class AuthController {
 
     @PostMapping("/login")
     @Operation(summary = "账号登录")
-    public Result<AuthenticationToken> login(@Valid @RequestBody AuthLoginRequest request,
-                                             HttpServletRequest httpServletRequest) {
-        return Result.success(authService.login(request, IPUtils.getIpAddr(httpServletRequest)));
+    public Result<AuthenticationToken> login(@Valid @RequestBody AuthLoginRequest request) {
+        return Result.success(authService.login(request, RequestContextUtils.getClientIp()));
     }
 
     @PostMapping("/register")
     @Operation(summary = "账号注册")
-    public Result<AuthenticationToken> register(@Valid @RequestBody AuthRegisterRequest request,
-                                                HttpServletRequest httpServletRequest) {
-        return Result.success(authService.register(request, IPUtils.getIpAddr(httpServletRequest)));
+    public Result<AuthenticationToken> register(@Valid @RequestBody AuthRegisterRequest request) {
+        return Result.success(authService.register(request, RequestContextUtils.getClientIp()));
     }
 
     @PostMapping("/email-code")
@@ -63,9 +60,8 @@ public class AuthController {
 
     @PostMapping("/email-login")
     @Operation(summary = "邮箱验证码登录")
-    public Result<AuthenticationToken> emailLogin(@Valid @RequestBody AuthEmailLoginRequest request,
-                                                  HttpServletRequest httpServletRequest) {
-        return Result.success(authService.emailLogin(request, IPUtils.getIpAddr(httpServletRequest)));
+    public Result<AuthenticationToken> emailLogin(@Valid @RequestBody AuthEmailLoginRequest request) {
+        return Result.success(authService.emailLogin(request, RequestContextUtils.getClientIp()));
     }
 
     @PostMapping("/refresh")

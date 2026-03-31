@@ -26,6 +26,10 @@ public interface ChatMessageMapper extends BaseMapper<ChatMessage> {
                                                     @Param("userId") Long userId,
                                                     @Param("messageId") Long messageId);
 
+    List<ChatMessageHistoryItem> selectVisibleMessagesByIds(@Param("conversationId") Long conversationId,
+                                                            @Param("userId") Long userId,
+                                                            @Param("messageIds") List<Long> messageIds);
+
     Long countAdminMessagePage(@Param("conversationId") Long conversationId,
                                @Param("query") ChatAdminMessagePageQuery query);
 
@@ -33,4 +37,7 @@ public interface ChatMessageMapper extends BaseMapper<ChatMessage> {
                                                       @Param("query") ChatAdminMessagePageQuery query,
                                                       @Param("offset") Long offset,
                                                       @Param("size") Long size);
+
+    List<ChatAdminMessageItem> selectAdminMessagesByIds(@Param("conversationId") Long conversationId,
+                                                        @Param("messageIds") List<Long> messageIds);
 }

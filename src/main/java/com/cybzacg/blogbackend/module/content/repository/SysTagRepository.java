@@ -1,0 +1,35 @@
+package com.cybzacg.blogbackend.module.content.repository;
+
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.cybzacg.blogbackend.domain.SysTag;
+
+import java.util.List;
+
+/**
+ * 标签 Repository。
+ */
+public interface SysTagRepository extends IService<SysTag> {
+    /**
+     * 按 ID 倒序查询全部标签。
+     *
+     * @return 标签列表
+     */
+    List<SysTag> findAllOrderByIdDesc();
+
+    /**
+     * 校验标签名称在排除指定 ID 后是否仍然存在。
+     *
+     * @param name 标签名称
+     * @param excludeId 需要排除的标签 ID
+     * @return 是否存在重名标签
+     */
+    boolean existsByNameExcludingId(String name, Long excludeId);
+
+    /**
+     * 按目标类型查询标签。
+     *
+     * @param targetType 目标类型
+     * @return 标签列表
+     */
+    List<SysTag> findByTargetType(String targetType);
+}

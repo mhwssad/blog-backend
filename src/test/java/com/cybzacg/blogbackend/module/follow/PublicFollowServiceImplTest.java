@@ -1,0 +1,88 @@
+package com.cybzacg.blogbackend.module.follow;
+
+import com.cybzacg.blogbackend.core.web.PageResult;
+import com.cybzacg.blogbackend.domain.SysUser;
+import com.cybzacg.blogbackend.mapper.SysUserFollowMapper;
+import com.cybzacg.blogbackend.module.auth.service.SysUserService;
+import com.cybzacg.blogbackend.module.follow.convert.FollowModelMapper;
+import com.cybzacg.blogbackend.module.follow.model.data.PublicFollowUserItem;
+import com.cybzacg.blogbackend.module.follow.model.publics.PublicFollowPageQuery;
+import com.cybzacg.blogbackend.module.follow.model.publics.PublicFollowUserVO;
+import com.cybzacg.blogbackend.module.follow.service.impl.PublicFollowServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class PublicFollowServiceImplTest {
+    @Mock
+    private SysUserFollowMapper sysUserFollowMapper;
+    @Mock
+    private SysUserService sysUserService;
+    @Mock
+    private FollowModelMapper followModelMapper;
+
+    private PublicFollowServiceImpl publicFollowService;
+
+    @BeforeEach
+    void setUp() {
+        publicFollowService = new PublicFollowServiceImpl(sysUserFollowMapper, sysUserService, followModelMapper);
+    }
+
+    @Test
+    void pageUserFollowsShouldReturnMappedRecords() {
+        PublicFollowPageQuery query = new PublicFollowPageQuery();
+        query.setCurrent(2L);
+        query.setSize(5L);
+        when(sysUserService.getById(12L)).thenReturn(activeUser(12L));
+        when(sysUserFollowMapper.countPublicFollowPage(12L)).thenReturn(8L);
+
+        PublicFollowUserItem item = new PublicFollowUserItem();
+        item.setUserId(21L);
+        item.setUsername("fan-a");
+        PublicFollowUserVO vo = new PublicFollowUserVO();
+        vo.setUserId(21L);
+        vo.setUsername("fan-a");
+        when(sysUserFollowMapper.selectPublicFollowPage(12L, 5L, 5L)).thenReturn(List.of(item));
+        when(followModelMapper.toPublicFollowUserVO(item)).thenReturn(vo);
+
+        PageResult<PublicFollowUserVO> result = publicFollowService.pageUserFollows(12L, query);
+
+        assertEquals(8L, result.getTotal());
+        assertEquals(2L, result.getCurrent());
+        assertEquals(5L, result.getSize());
+        assertEquals(1, result.getRecords().size());
+        assertEquals("fan-a", result.getRecords().get(0).getUsername());
+    }
+
+    @Test
+    void pageUserFansShouldReturnEmptyPageWhenNoData() {
+        when(sysUserService.getById(12L)).thenReturn(activeUser(12L));
+        when(sysUserFollowMapper.countPublicFanPage(12L)).thenReturn(0L);
+
+        PageResult<PublicFollowUserVO> result = publicFollowService.pageUserFans(12L, null);
+
+        assertEquals(0L, result.getTotal());
+        assertEquals(1L, result.getCurrent());
+        assertEquals(10L, result.getSize());
+        assertEquals(List.of(), result.getRecords());
+        verify(sysUserFollowMapper, never()).selectPublicFanPage(12L, 0L, 10L);
+    }
+
+    private SysUser activeUser(Long userId) {
+        SysUser user = new SysUser();
+        user.setId(userId);
+        user.setStatus(1);
+        user.setDeletedFlag(0);
+        return user;
+    }
+}

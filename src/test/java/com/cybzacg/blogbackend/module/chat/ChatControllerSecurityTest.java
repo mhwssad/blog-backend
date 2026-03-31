@@ -48,6 +48,7 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -143,12 +144,57 @@ class ChatControllerSecurityTest {
 
     @Test
     @WithMockUser
+    void sendFileMessageShouldAllowAuthenticatedUser() throws Exception {
+        ChatMessageVO messageVO = new ChatMessageVO();
+        messageVO.setId(9002L);
+        when(userChatService.sendFileMessage(any(com.cybzacg.blogbackend.module.chat.model.user.ChatSendFileRequest.class)))
+                .thenReturn(messageVO);
+
+        mockMvc.perform(post("/api/user/chat/messages/file")
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"conversationId\":1001,\"businessId\":88}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()))
+                .andExpect(jsonPath("$.data.id").value(9002));
+
+        verify(userChatService).sendFileMessage(any(com.cybzacg.blogbackend.module.chat.model.user.ChatSendFileRequest.class));
+    }
+
+    @Test
+    @WithMockUser
     void revokeMessageShouldAllowAuthenticatedUser() throws Exception {
         mockMvc.perform(post("/api/user/chat/messages/9001/revoke"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()));
 
         verify(userChatService).revokeMessage(9001L);
+    }
+
+    @Test
+    @WithMockUser
+    void deleteMessageShouldAllowAuthenticatedUser() throws Exception {
+        mockMvc.perform(delete("/api/user/chat/messages/9001"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()));
+
+        verify(userChatService).deleteMessage(9001L);
+    }
+
+    @Test
+    @WithMockUser
+    void updateGroupNoticeShouldAllowAuthenticatedUser() throws Exception {
+        ChatConversationVO conversationVO = new ChatConversationVO();
+        conversationVO.setId(1001L);
+        when(userChatService.updateGroupNotice(any(), any())).thenReturn(conversationVO);
+
+        mockMvc.perform(put("/api/user/chat/groups/1001/notice")
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"notice\":\"new notice\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()))
+                .andExpect(jsonPath("$.data.id").value(1001));
+
+        verify(userChatService).updateGroupNotice(org.mockito.ArgumentMatchers.eq(1001L), any());
     }
 
     @Test
@@ -253,6 +299,30 @@ class ChatControllerSecurityTest {
                 .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()));
 
         verify(chatAdminService).revokeMessage(1001L, 9001L);
+    }
+
+    @Test
+    @WithMockUser(authorities = "content:chat:update")
+    void adminUpdateMemberStatusShouldAllowAuthorizedUser() throws Exception {
+        mockMvc.perform(put("/api/sys/chats/conversations/1001/members/2/status")
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"status\":3}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()));
+
+        verify(chatAdminService).updateMemberStatus(org.mockito.ArgumentMatchers.eq(1001L), org.mockito.ArgumentMatchers.eq(2L), any());
+    }
+
+    @Test
+    @WithMockUser(authorities = "content:chat:update")
+    void adminUpdateMemberMuteShouldAllowAuthorizedUser() throws Exception {
+        mockMvc.perform(put("/api/sys/chats/conversations/1001/members/2/mute")
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"muteUntil\":null}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()));
+
+        verify(chatAdminService).updateMemberMute(org.mockito.ArgumentMatchers.eq(1001L), org.mockito.ArgumentMatchers.eq(2L), any());
     }
 
     @Test
