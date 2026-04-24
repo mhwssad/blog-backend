@@ -8,7 +8,7 @@ import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
-import com.cybzacg.blogbackend.module.auth.service.SysUserService;
+import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.admin.CommentPageQuery;
 import com.cybzacg.blogbackend.module.content.model.admin.CommentVO;
@@ -38,7 +38,7 @@ class CommentAdminServiceImplTest {
     @Mock
     private BlogArticleRepository blogArticleService;
     @Mock
-    private SysUserService sysUserService;
+    private SysUserRepository sysUserRepository;
     @Mock
     private ContentModelMapper contentModelMapper;
 
@@ -49,7 +49,7 @@ class CommentAdminServiceImplTest {
         commentAdminService = new CommentAdminServiceImpl(
                 sysCommentRepository,
                 blogArticleService,
-                sysUserService,
+                sysUserRepository,
                 contentModelMapper
         );
     }
@@ -70,7 +70,7 @@ class CommentAdminServiceImplTest {
         CommentVO vo = commentVO(10L, 7L);
 
         when(sysCommentRepository.pageByAdminConditions(query)).thenReturn(page);
-        when(sysUserService.listByIds(any())).thenReturn(List.of(user));
+        when(sysUserRepository.listByIds(any())).thenReturn(List.of(user));
         when(contentModelMapper.toCommentVO(comment)).thenReturn(vo);
 
         PageResult<CommentVO> result = commentAdminService.pageComments(query);
@@ -93,7 +93,7 @@ class CommentAdminServiceImplTest {
         CommentVO vo = commentVO(10L, 7L);
 
         when(sysCommentRepository.getById(10L)).thenReturn(comment);
-        when(sysUserService.getById(7L)).thenReturn(user);
+        when(sysUserRepository.getById(7L)).thenReturn(user);
         when(contentModelMapper.toCommentVO(comment)).thenReturn(vo);
 
         CommentVO result = commentAdminService.getComment(10L);

@@ -1,8 +1,7 @@
 package com.cybzacg.blogbackend.common.storage;
 import java.util.List;
 /**
- * 存储健康检查服务。
- * 负责维护各存储节点的探活结果，并为故障切换提供状态依据。
+ * 存储健康检查服务。<p>负责维护各存储节点的探活结果，并为故障切换提供状态依据。
  */
 public interface StorageHealthCheckService {
     /**

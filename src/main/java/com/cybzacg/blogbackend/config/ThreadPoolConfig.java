@@ -19,10 +19,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 /**
- * 统一线程池配置。
- *
- * <p>集中收口项目内默认异步执行器和定时执行器，避免各模块零散创建线程池。
- * 当前默认异步线程池同时作为 `@Async` 的默认执行器，并通过 TTL 包装透传请求上下文。
+ * 统一线程池配置。<p>集中管理项目默认异步线程池和定时任务线程池，同时作为 {@code @Async} 的默认执行器，并通过 TTL 包装透传请求上下文。</p>
  */
 @Configuration
 @EnableAsync
@@ -31,9 +28,10 @@ public class ThreadPoolConfig implements AsyncConfigurer {
     private final ThreadPoolProperties threadPoolProperties;
 
     /**
-     * 项目默认异步线程池。
+     * 创建项目默认异步线程池，同时保留 shortTaskExecutor 别名以兼容既有注入点。
+     * <p>未配置的线程数参数将根据 CPU 核心数自动推导。</p>
      *
-     * <p>同时保留 `shortTaskExecutor` 别名，兼容既有注入点平滑迁移。
+     * @return ThreadPoolTaskExecutor 实例
      */
     @Bean(name = {"asyncTaskExecutor", "shortTaskExecutor"})
     @ConditionalOnMissingBean(name = "asyncTaskExecutor")
@@ -58,7 +56,9 @@ public class ThreadPoolConfig implements AsyncConfigurer {
     }
 
     /**
-     * 项目统一定时任务线程池。
+     * 创建项目统一定时任务线程池。
+     *
+     * @return ScheduledExecutorService 实例
      */
     @Bean(name = "scheduledTaskExecutor", destroyMethod = "shutdown")
     @ConditionalOnMissingBean(name = "scheduledTaskExecutor")
@@ -73,6 +73,11 @@ public class ThreadPoolConfig implements AsyncConfigurer {
         return executor;
     }
 
+    /**
+     * 返回 {@code @Async} 使用的默认异步执行器。
+     *
+     * @return 异步线程池执行器
+     */
     @Override
     public Executor getAsyncExecutor() {
         return asyncTaskExecutor();
@@ -101,6 +106,9 @@ public class ThreadPoolConfig implements AsyncConfigurer {
 
     /**
      * 将配置文件中的拒绝策略字符串映射为 JDK 线程池拒绝策略。
+     *
+     * @param rejectionPolicy 拒绝策略名称
+     * @return 对应的 RejectedExecutionHandler 实例
      */
     private RejectedExecutionHandler resolveRejectedExecutionHandler(String rejectionPolicy) {
         String normalizedPolicy = rejectionPolicy == null ? "" : rejectionPolicy.trim().toLowerCase();

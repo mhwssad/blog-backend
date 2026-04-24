@@ -25,8 +25,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 /**
- * 用户侧文件接口。
- * 负责暴露上传任务、文件查询和文件引用删除能力。
+ * 用户侧文件控制器。
+ *
+ * <p>负责文件上传（普通/分片/秒传）、上传任务管理、文件列表查询与引用删除等用户侧接口。
  */
 @RestController
 @Tag(name = "用户文件")

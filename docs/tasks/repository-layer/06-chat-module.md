@@ -1,23 +1,27 @@
-# Chat 模块 Repository 迁移计划
+# Chat 模块 Repository 迁移记录
 
-## 模块信息
+## 完成状态
 
-- **优先级**：第6轮（最复杂）
+- **状态**：已完成
+- **轮次**：第6轮
 - **复杂度**：高
 - **前置依赖**：auth + file 模块的 Repository 已创建
-- **涉及薄服务**：5个
-- **涉及业务服务**：约8个（仅含数据操作的服务需要迁移）
-- **数据访问总数**：约80处
-- **直接 Mapper 注入**：2个服务注入3个 Mapper
 
-## 当前进展（2026-04-01）
+## 当前进展（2026-04-24 更新）
 
-- [x] 已新增 `ChatConversationRepository`、`ChatConversationMemberRepository`、`ChatMessageRepository`、`ChatMessageRecipientRepository`、`ChatMessageReadCursorRepository` 及对应实现，先收口 chat 模块 Repository 访问入口。
-- [x] 已将 `ChatAdminServiceImpl` 改为注入 `ChatConversationRepository`、`ChatConversationMemberRepository`、`ChatMessageRepository`、`ChatMessageRecipientRepository`，后台会话分页/详情、消息分页、回执分页、成员列表与成员治理都已改走 Repository。
-- [x] 已移除 `ChatAdminServiceImpl` 对 `ChatConversationMapper`、`ChatMessageMapper` 的直接注入，并移除了该服务内的 chat 成员/回执 `lambdaQuery()` 条件拼装。
-- [x] 已同步更新 `ChatAdminServiceImplTest`，并额外修复 `FileLifecycleServiceImplTest` 的 `anyString()` 静态导入，当前 `mvn -q -DskipTests compile` 与 `mvn -q "-Dtest=ChatAdminServiceImplTest" test` 均已通过。
-- [ ] 剩余最高优先级为 `UserChatServiceImpl`，其 Mapper 直连、`lambdaQuery()` / `lambdaUpdate()` 与读游标、投递状态高水位更新逻辑仍待继续迁移。
-- [ ] 当前按用户要求暂停执行，后续恢复时保持既定顺序：先补 `UserChatServiceImpl` 所需 Repository 方法，再迁移 `UserChatServiceImpl`，随后更新 `UserChatServiceImplTest` 并执行编译与 chat 定向测试。
+### 已完成
+
+- [x] 已新增 `ChatConversationRepository`、`ChatConversationMemberRepository`、`ChatMessageRepository`、`ChatMessageRecipientRepository`、`ChatMessageReadCursorRepository` 及对应实现，收口 chat 模块 Repository 访问入口。
+- [x] 已额外新增 `ChatAttachmentProcessTaskRepository` 及实现（原计划未列出，迁移过程中按需补充）。
+- [x] 已将 `ChatAdminServiceImpl` 改为注入 Chat 模块各 Repository，后台会话分页/详情、消息分页、回执分页、成员列表与成员治理都已改走 Repository。无遗留 `lambdaQuery`/直接 Mapper 注入。
+- [x] 已将 `UserChatServiceImpl` 改为注入 `ChatConversationRepository`、`ChatConversationMemberRepository`、`ChatMessageRepository`、`ChatMessageRecipientRepository`、`ChatMessageReadCursorRepository`，以及跨模块的 `SysUserRepository`、`FileBusinessInfoRepository`、`FileInfoRepository`。无遗留 `lambdaQuery`/`lambdaUpdate`/直接 Mapper 注入。
+- [x] 已同步更新 `ChatAdminServiceImplTest` 和 `UserChatServiceImplTest`，测试 mock 已切换到 Repository。
+- [x] `ChatMessageGovernanceServiceImpl` 和 `ChatMetricsServiceImpl` 无数据库访问，无需迁移。
+
+### 遗留问题（2026-04-24 已全部解决）
+
+- [x] ~~5 个旧薄服务仍保留~~ → 已确认无外部引用后全部删除。
+- [x] ~~`ChatAttachmentProcessTaskService` 旧薄服务仍保留~~ → 已删除（接口+实现），其 Repository 已存在且被业务服务直接注入。
 ## Repository 列表
 
 | Repository 接口 | 对应实体 | 薄服务来源 | Mapper自定义方法 |

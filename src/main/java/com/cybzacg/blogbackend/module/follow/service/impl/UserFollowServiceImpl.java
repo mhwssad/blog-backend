@@ -4,7 +4,7 @@ import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.domain.SysUserFollow;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.auth.service.SysUserService;
+import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.follow.convert.FollowModelMapper;
 import com.cybzacg.blogbackend.module.follow.model.data.FollowRelationUserItem;
 import com.cybzacg.blogbackend.module.follow.repository.SysUserFollowRepository;
@@ -43,7 +43,7 @@ public class UserFollowServiceImpl implements UserFollowService {
     private static final long MAX_PAGE_SIZE = 100L;
 
     private final SysUserFollowRepository sysUserFollowRepository;
-    private final SysUserService sysUserService;
+    private final SysUserRepository sysUserRepository;
     private final FollowModelMapper followModelMapper;
     private final FollowNoticeService followNoticeService;
 
@@ -83,6 +83,9 @@ public class UserFollowServiceImpl implements UserFollowService {
         sysUserFollowRepository.updateById(relation);
     }
 
+    /**
+     * 分页查询当前用户的关注列表，支持按特别关注筛选。
+     */
     @Override
     public PageResult<UserFollowUserVO> pageMyFollows(UserFollowPageQuery query) {
         Long userId = SecurityUtils.requireUserId();
@@ -105,6 +108,9 @@ public class UserFollowServiceImpl implements UserFollowService {
                 .build();
     }
 
+    /**
+     * 分页查询当前用户的粉丝列表。
+     */
     @Override
     public PageResult<UserFollowUserVO> pageMyFans(UserFanPageQuery query) {
         Long userId = SecurityUtils.requireUserId();
@@ -124,6 +130,12 @@ public class UserFollowServiceImpl implements UserFollowService {
                 .build();
     }
 
+    /**
+     * 查询当前用户与目标用户的互关状态。
+     *
+     * @param targetUserId 目标用户ID
+     * @return 包含是否关注、是否被关注及是否互关的状态视图
+     */
     @Override
     public UserFollowMutualVO getMutualFollowStatus(Long targetUserId) {
         Long userId = SecurityUtils.requireUserId();
@@ -138,6 +150,9 @@ public class UserFollowServiceImpl implements UserFollowService {
                 .build();
     }
 
+    /**
+     * 查询当前用户的关注数与粉丝数。
+     */
     @Override
     public UserFollowCountVO getMyFollowCount() {
         Long userId = SecurityUtils.requireUserId();
@@ -225,7 +240,7 @@ public class UserFollowServiceImpl implements UserFollowService {
     private void requireActiveTargetUser(Long userId, Long targetUserId) {
         ExceptionThrowerCore.throwBusinessIfNull(targetUserId, ResultErrorCode.USER_NOT_FOUND, "用户不存在");
         ExceptionThrowerCore.throwBusinessIf(Objects.equals(userId, targetUserId), ResultErrorCode.ILLEGAL_ARGUMENT, "不能关注自己");
-        SysUser targetUser = sysUserService.getById(targetUserId);
+        SysUser targetUser = sysUserRepository.getById(targetUserId);
         ExceptionThrowerCore.throwBusinessIf(
                 targetUser == null || !Objects.equals(targetUser.getDeletedFlag(), 0),
                 ResultErrorCode.USER_NOT_FOUND,

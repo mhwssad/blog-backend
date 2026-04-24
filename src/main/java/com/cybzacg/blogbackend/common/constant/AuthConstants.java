@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.common.constant;
 import java.time.Duration;
 
 /**
- * 认证相关常量
+ * 认证相关常量。<p>定义 Token 类型、Redis Key 前缀、邮箱验证码和登录失败锁定等常量。
  */
 public final class AuthConstants {
     public static final String BEARER = "Bearer";

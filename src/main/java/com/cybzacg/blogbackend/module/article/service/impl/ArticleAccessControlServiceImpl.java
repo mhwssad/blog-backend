@@ -23,6 +23,16 @@ import java.util.List;
 public class ArticleAccessControlServiceImpl implements ArticleAccessControlService {
     private final BlogArticleAccessRepository blogArticleAccessRepository;
 
+    /**
+     * 综合判断用户是否可访问指定文章。
+     *
+     * <p>依次检查：空文章拦截、作者自身放行、后台管理权限放行、
+     * 访问级别(公开/登录/密码/付费/指定用户白名单)逐级判定。
+     *
+     * @param article 目标文章
+     * @param userId  当前用户 ID，匿名时为 null
+     * @return 是否允许访问
+     */
     @Override
     public boolean canAccessArticle(BlogArticle article, Long userId) {
         if (article == null) {
@@ -68,11 +78,26 @@ public class ArticleAccessControlServiceImpl implements ArticleAccessControlServ
         return hitWhitelist;
     }
 
+    /**
+     * 校验文章访问权限，无权访问时抛出业务异常。
+     *
+     * @param article 目标文章
+     * @param userId  当前用户 ID
+     */
     @Override
     public void validateArticleAccess(BlogArticle article, Long userId) {
         ExceptionThrowerCore.throwBusinessIfNot(canAccessArticle(article, userId), ResultErrorCode.FORBIDDEN, "当前用户无权访问该文章");
     }
 
+    /**
+     * 判断用户是否在文章的定向授权名单中且未被拉黑。
+     *
+     * <p>要求同时满足：存在未过期的白名单记录(accessType=1)且不存在黑名单记录(accessType=2)。
+     *
+     * @param articleId 文章 ID
+     * @param userId    用户 ID
+     * @return 是否拥有定向授权
+     */
     @Override
     public boolean hasArticleAccess(Long articleId, Long userId) {
         if (articleId == null || userId == null) {

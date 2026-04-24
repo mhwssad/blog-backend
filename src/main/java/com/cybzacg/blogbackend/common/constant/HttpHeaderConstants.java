@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.common.constant;
 
 /**
- * HTTP 请求头常量
+ * HTTP 请求头常量。<p>定义鉴权、链路追踪和客户端 IP 相关的 Header 名称。
  */
 public final class HttpHeaderConstants {
     public static final String AUTHORIZATION = "Authorization";

@@ -7,8 +7,7 @@ import com.cybzacg.blogbackend.config.property.StorageProperties;
 import com.cybzacg.blogbackend.enums.storage.StorageType;
 
 /**
- * 存储服务工厂接口
- * 定义创建存储服务实例的统一接口，便于扩展新的存储类型
+ * 存储服务工厂接口。<p>定义创建存储服务实例的统一契约，便于扩展新的存储类型。
  *
  * @author System
  */

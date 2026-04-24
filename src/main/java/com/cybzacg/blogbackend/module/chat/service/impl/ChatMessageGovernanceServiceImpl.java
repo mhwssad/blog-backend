@@ -39,12 +39,23 @@ public class ChatMessageGovernanceServiceImpl implements ChatMessageGovernanceSe
         this.meterRegistry = meterRegistry;
     }
 
+    /**
+     * 校验文本消息的发送频率和敏感词。
+     *
+     * @param userId  发送者用户 ID
+     * @param content 消息文本内容
+     */
     @Override
     public void validateTextMessage(Long userId, String content) {
         enforceUserRateLimit(userId);
         validateSensitiveWords(content);
     }
 
+    /**
+     * 校验附件消息的发送频率（仅频控，不含内容审查）。
+     *
+     * @param userId 发送者用户 ID
+     */
     @Override
     public void validateAttachmentMessage(Long userId) {
         enforceUserRateLimit(userId);

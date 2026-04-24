@@ -31,6 +31,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 聊天后台管理控制器。
+ *
+ * <p>负责会话查询、消息审计、成员管理与状态维护等后台运营接口。
  */
 @RestController
 @RequestMapping("/api/sys/chats")

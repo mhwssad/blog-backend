@@ -35,6 +35,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 用户侧聊天控制器。
+ *
+ * <p>负责单聊与群聊的会话管理、消息收发、已读游标推进及群成员操作等用户侧接口。
  */
 @RestController
 @RequestMapping("/api/user/chat")

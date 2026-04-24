@@ -15,7 +15,7 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.RedisSerializer;
 
 /**
- * Redis 缓存配置
+ * Redis 缓存管理器配置。<p>仅在 spring.cache.type=redis 时生效，自定义缓存序列化策略为 String/JSON，并支持通过配置调整 TTL、空值缓存和键前缀。</p>
  */
 @EnableCaching
 @Configuration
@@ -28,13 +28,11 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 public class RedisCacheConfig {
 
     /**
-     * 自定义 RedisCacheManager
-     * <p>
-     * 修改 Redis 序列化方式，默认 JdkSerializationRedisSerializer
+     * 创建自定义 RedisCacheManager，使用 String/JSON 序列化替代默认的 JDK 序列化。
      *
-     * @param redisConnectionFactory {@link RedisConnectionFactory}
-     * @param cacheProperties        {@link CacheProperties}
-     * @return {@link RedisCacheManager}
+     * @param redisConnectionFactory Redis 连接工厂
+     * @param cacheProperties        Spring Boot 缓存配置属性
+     * @return RedisCacheManager 实例
      */
     @Bean
     public RedisCacheManager redisCacheManager(RedisConnectionFactory redisConnectionFactory, CacheProperties cacheProperties) {
@@ -44,10 +42,10 @@ public class RedisCacheConfig {
     }
 
     /**
-     * 自定义 RedisCacheConfiguration
+     * 构建 Redis 缓存配置，覆盖默认的双冒号键前缀为单冒号。
      *
-     * @param cacheProperties {@link CacheProperties}
-     * @return {@link RedisCacheConfiguration}
+     * @param cacheProperties Spring Boot 缓存配置属性
+     * @return RedisCacheConfiguration 实例
      */
     @Bean
     RedisCacheConfiguration redisCacheConfiguration(CacheProperties cacheProperties) {

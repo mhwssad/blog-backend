@@ -10,18 +10,20 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 /**
- * 文章访问授权 Repository 实现。
+ * 文章访问授权 Repository 实现。<p>基于 MyBatis-Plus ServiceImpl 提供文章访问授权记录的增删改查。
  */
 @Repository
 public class BlogArticleAccessRepositoryImpl extends ServiceImpl<BlogArticleAccessMapper, BlogArticleAccess>
         implements BlogArticleAccessRepository {
 
+    /** {@inheritDoc} */
     @Override
     public boolean removeByArticleId(Long articleId) {
         return remove(new LambdaQueryWrapper<BlogArticleAccess>()
                 .eq(BlogArticleAccess::getArticleId, articleId));
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<BlogArticleAccess> listByArticleIdOrdered(Long articleId) {
         return list(new LambdaQueryWrapper<BlogArticleAccess>()

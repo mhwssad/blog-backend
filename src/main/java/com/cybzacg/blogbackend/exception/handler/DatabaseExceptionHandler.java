@@ -27,12 +27,18 @@ import java.sql.SQLSyntaxErrorException;
 import java.sql.SQLTimeoutException;
 
 /**
- * 数据库异常处理器
+ * 数据库异常处理器。<p>统一捕获 SQL 异常、Spring Data 异常、事务异常和 MyBatis 异常，根据错误特征映射为语义化的错误码。</p>
  */
 @Slf4j
 @Order(5)
 @RestControllerAdvice
 public class DatabaseExceptionHandler extends BaseExceptionHandler {
+    /**
+     * 处理通用 SQL 执行异常。
+     *
+     * @param e SQL 异常
+     * @return 包含数据库执行错误信息的统一响应
+     */
     @ExceptionHandler(SQLException.class)
     public Result<Object> handleSqlException(SQLException e) {
         log.error("SQL异常 [TraceID: {}] - {}", getTraceId(), e.getMessage(), e);
@@ -40,6 +46,12 @@ public class DatabaseExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : e.getMessage());
     }
 
+    /**
+     * 处理 Spring DataAccessException 及其子类。
+     *
+     * @param e 数据访问异常
+     * @return 包含数据访问错误信息的统一响应
+     */
     @ExceptionHandler(DataAccessException.class)
     public Result<Object> handleDataAccessException(DataAccessException e) {
         log.error("数据库访问异常 [TraceID: {}] - {}", getTraceId(), e.getMessage(), e);
@@ -48,12 +60,24 @@ public class DatabaseExceptionHandler extends BaseExceptionHandler {
                         : e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
     }
 
+    /**
+     * 处理乐观锁冲突异常。
+     *
+     * @param e 乐观锁异常
+     * @return 乐观锁失败错误响应
+     */
     @ExceptionHandler(OptimisticLockingFailureException.class)
     public Result<Object> handleOptimisticLockingFailure(OptimisticLockingFailureException e) {
         logException(e, "乐观锁异常");
         return buildErrorResult(ResultErrorCode.DB_OPTIMISTIC_LOCK_FAILURE);
     }
 
+    /**
+     * 处理 SQL 语法错误异常。
+     *
+     * @param e SQL 语法异常
+     * @return 包含语法错误信息的统一响应
+     */
     @ExceptionHandler(SQLSyntaxErrorException.class)
     public Result<Object> handleSqlSyntaxError(SQLSyntaxErrorException e) {
         log.error("SQL语法错误 [TraceID: {}] - {}", getTraceId(), e.getMessage(), e);
@@ -61,6 +85,12 @@ public class DatabaseExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : e.getMessage());
     }
 
+    /**
+     * 处理完整性约束违反异常，根据错误信息自动区分重复键、外键和主键冲突。
+     *
+     * @param e 完整性约束异常
+     * @return 映射为具体错误码的统一响应
+     */
     @ExceptionHandler(SQLIntegrityConstraintViolationException.class)
     public Result<Object> handleIntegrityConstraintViolation(SQLIntegrityConstraintViolationException e) {
         log.error("完整性约束异常 [TraceID: {}] - {}", getTraceId(), e.getMessage(), e);
@@ -83,6 +113,12 @@ public class DatabaseExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : e.getMessage());
     }
 
+    /**
+     * 处理 SQL 执行超时异常。
+     *
+     * @param e SQL 超时异常
+     * @return SQL 超时错误响应
+     */
     @ExceptionHandler(SQLTimeoutException.class)
     public Result<Object> handleSqlTimeout(SQLTimeoutException e) {
         log.error("SQL执行超时 [TraceID: {}] - {}", getTraceId(), e.getMessage(), e);
@@ -90,6 +126,12 @@ public class DatabaseExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : e.getMessage());
     }
 
+    /**
+     * 处理数据库连接获取失败异常。
+     *
+     * @param e 连接获取异常
+     * @return 数据库连接失败错误响应
+     */
     @ExceptionHandler(CannotGetJdbcConnectionException.class)
     public Result<Object> handleCannotGetConnection(CannotGetJdbcConnectionException e) {
         log.error("无法获取数据库连接 [TraceID: {}] - {}", getTraceId(), e.getMessage(), e);
@@ -97,6 +139,12 @@ public class DatabaseExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : e.getMessage());
     }
 
+    /**
+     * 处理 SQL 语法错误（MyBatis 封装层）。
+     *
+     * @param e SQL 语法异常
+     * @return SQL 语法错误响应
+     */
     @ExceptionHandler(BadSqlGrammarException.class)
     public Result<Object> handleBadSqlGrammar(BadSqlGrammarException e) {
         log.error("SQL语法错误 [TraceID: {}] - {}", getTraceId(), e.getMessage(), e);
@@ -104,6 +152,12 @@ public class DatabaseExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : e.getMessage());
     }
 
+    /**
+     * 处理数据检索失败异常。
+     *
+     * @param e 数据检索异常
+     * @return 数据检索失败错误响应
+     */
     @ExceptionHandler(DataRetrievalFailureException.class)
     public Result<Object> handleDataRetrievalFailure(DataRetrievalFailureException e) {
         log.error("数据检索失败 [TraceID: {}] - {}", getTraceId(), e.getMessage(), e);
@@ -111,6 +165,12 @@ public class DatabaseExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : e.getMessage());
     }
 
+    /**
+     * 处理数据完整性违反异常（Spring 封装层），根据错误信息区分重复数据、外键和空值违反。
+     *
+     * @param e 数据完整性异常
+     * @return 映射为具体错误码的统一响应
+     */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public Result<Object> handleDataIntegrityViolation(DataIntegrityViolationException e) {
         log.error("数据完整性违反 [TraceID: {}] - {}", getTraceId(), e.getMessage(), e);
@@ -131,6 +191,12 @@ public class DatabaseExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : e.getMessage());
     }
 
+    /**
+     * 处理悲观锁获取失败和死锁异常。
+     *
+     * @param e 悲观锁或死锁异常
+     * @return 映射为悲观锁或死锁错误码的统一响应
+     */
     @ExceptionHandler({PessimisticLockingFailureException.class, CannotAcquireLockException.class})
     public Result<Object> handlePessimisticLockingFailure(Exception e) {
         log.error("悲观锁获取失败 [TraceID: {}] - {}", getTraceId(), e.getMessage(), e);
@@ -145,6 +211,12 @@ public class DatabaseExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : e.getMessage());
     }
 
+    /**
+     * 处理事务创建失败异常。
+     *
+     * @param e 事务创建异常
+     * @return 事务失败错误响应
+     */
     @ExceptionHandler(CannotCreateTransactionException.class)
     public Result<Object> handleCannotCreateTransaction(CannotCreateTransactionException e) {
         log.error("无法创建事务 [TraceID: {}] - {}", getTraceId(), e.getMessage(), e);
@@ -152,6 +224,12 @@ public class DatabaseExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : e.getMessage());
     }
 
+    /**
+     * 处理事务系统异常。
+     *
+     * @param e 事务系统异常
+     * @return 事务失败错误响应
+     */
     @ExceptionHandler(TransactionSystemException.class)
     public Result<Object> handleTransactionSystem(TransactionSystemException e) {
         log.error("事务系统异常 [TraceID: {}] - {}", getTraceId(), e.getMessage(), e);
@@ -159,6 +237,12 @@ public class DatabaseExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : e.getMessage());
     }
 
+    /**
+     * 处理 MyBatis 系统异常。
+     *
+     * @param e MyBatis 系统异常
+     * @return 映射错误响应
+     */
     @ExceptionHandler(MyBatisSystemException.class)
     public Result<Object> handleMyBatisSystem(MyBatisSystemException e) {
         log.error("MyBatis系统异常 [TraceID: {}] - {}", getTraceId(), e.getMessage(), e);
@@ -166,6 +250,12 @@ public class DatabaseExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : e.getMessage());
     }
 
+    /**
+     * 处理无效数据访问资源使用异常。
+     *
+     * @param e 数据访问资源异常
+     * @return 映射错误响应
+     */
     @ExceptionHandler(InvalidDataAccessResourceUsageException.class)
     public Result<Object> handleInvalidResourceUsage(InvalidDataAccessResourceUsageException e) {
         log.error("无效的数据访问资源使用 [TraceID: {}] - {}", getTraceId(), e.getMessage(), e);
@@ -173,6 +263,12 @@ public class DatabaseExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : e.getMessage());
     }
 
+    /**
+     * 处理非暂时性数据访问异常。
+     *
+     * @param e 非暂时性数据访问异常
+     * @return 映射错误响应
+     */
     @ExceptionHandler(NonTransientDataAccessException.class)
     public Result<Object> handleNonTransientDataAccess(NonTransientDataAccessException e) {
         log.error("非暂时性数据访问异常 [TraceID: {}] - {}", getTraceId(), e.getMessage(), e);
@@ -180,6 +276,12 @@ public class DatabaseExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : e.getMessage());
     }
 
+    /**
+     * 处理暂时性数据访问异常。
+     *
+     * @param e 暂时性数据访问异常
+     * @return 映射错误响应
+     */
     @ExceptionHandler(TransientDataAccessException.class)
     public Result<Object> handleTransientDataAccess(TransientDataAccessException e) {
         log.error("暂时性数据访问异常 [TraceID: {}] - {}", getTraceId(), e.getMessage(), e);

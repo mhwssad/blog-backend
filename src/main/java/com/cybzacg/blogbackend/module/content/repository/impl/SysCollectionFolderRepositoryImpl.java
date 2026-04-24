@@ -12,12 +12,13 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 /**
- * 收藏夹 Repository 实现。
+ * 收藏夹 Repository 实现。<p>基于 MyBatis-Plus ServiceImpl 提供收藏夹数据的增删改查。
  */
 @Repository
 public class SysCollectionFolderRepositoryImpl extends ServiceImpl<SysCollectionFolderMapper, SysCollectionFolder>
         implements SysCollectionFolderRepository {
 
+    /** {@inheritDoc} */
     @Override
     public Page<SysCollectionFolder> pageByAdminConditions(CollectionPageQuery query) {
         return page(new Page<>(query.getCurrent(), query.getSize()), new LambdaQueryWrapper<SysCollectionFolder>()
@@ -27,6 +28,7 @@ public class SysCollectionFolderRepositoryImpl extends ServiceImpl<SysCollection
                 .orderByDesc(SysCollectionFolder::getId));
     }
 
+    /** {@inheritDoc} */
     @Override
     public Page<SysCollectionFolder> pageByUserIdOrderByDefaultAndSort(Long userId, long current, long size) {
         return page(new Page<>(current, size), new LambdaQueryWrapper<SysCollectionFolder>()
@@ -36,6 +38,7 @@ public class SysCollectionFolderRepositoryImpl extends ServiceImpl<SysCollection
                 .orderByDesc(SysCollectionFolder::getId));
     }
 
+    /** {@inheritDoc} */
     @Override
     public SysCollectionFolder findDefaultByUserIdAndFolderType(Long userId, String folderType) {
         return getOne(new LambdaQueryWrapper<SysCollectionFolder>()
@@ -44,6 +47,7 @@ public class SysCollectionFolderRepositoryImpl extends ServiceImpl<SysCollection
                 .eq(SysCollectionFolder::getIsDefault, 1));
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<SysCollectionFolder> findDefaultsByUserIdAndFolderType(Long userId, String folderType) {
         return list(new LambdaQueryWrapper<SysCollectionFolder>()

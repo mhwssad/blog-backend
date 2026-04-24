@@ -27,6 +27,11 @@ public class UserArticleActionServiceImpl implements UserArticleActionService {
     private final ArticleAccessControlService articleAccessControlService;
     private final ContentModelMapper contentModelMapper;
 
+    /**
+     * 点赞文章，重复点赞时幂等跳过。
+     *
+     * @param articleId 目标文章 ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void likeArticle(Long articleId) {
@@ -42,6 +47,11 @@ public class UserArticleActionServiceImpl implements UserArticleActionService {
         blogArticleRepository.updateById(article);
     }
 
+    /**
+     * 取消点赞文章，未点赞时幂等跳过。
+     *
+     * @param articleId 目标文章 ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void unlikeArticle(Long articleId) {

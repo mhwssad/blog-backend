@@ -4,9 +4,12 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.cybzacg.blogbackend.domain.ChatMessageReadCursor;
 
 /**
- * 聊天会话已读游标 Repository。
+ * 聊天会话已读游标 Repository。<p>
+ * 封装每个用户在每个会话中的已读/已投递游标持久化操作。
  */
 public interface ChatMessageReadCursorRepository extends IService<ChatMessageReadCursor> {
+
+    /** 根据会话 ID 和用户 ID 查找已读游标记录。 */
     ChatMessageReadCursor findByConversationAndUser(Long conversationId, Long userId);
 
     /**

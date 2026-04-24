@@ -19,6 +19,7 @@ import org.mapstruct.MappingTarget;
 import java.util.ArrayList;
 import java.util.List;
 
+/** RBAC 管理端对象转换器，处理用户、角色、菜单的增删改查映射。 */
 @Mapper(componentModel = "spring", imports = StrUtils.class)
 public interface RbacAdminModelMapper {
 

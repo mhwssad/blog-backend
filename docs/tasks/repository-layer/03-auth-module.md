@@ -47,12 +47,14 @@
 - `SysNoticeAdminServiceImplTest`
 - `UserNoticeInboxServiceImplTest`
 
-## 保留项与边界说明
+## 保留项与遗留问题（2026-04-24 更新）
 
-- `SysUserService` 仍被 `follow`、`chat`、`article`、`content` 等模块注入，本轮**不删除**旧薄服务，等相关模块迁移到 `SysUserRepository` 后再统一清理。
-- `SysRoleService`、`SysMenuService`、`SysNoticeService`、`SysUserNoticeService`、`SysRoleMenuService`、`SysUserRoleService`、`SysLogService` 等薄服务当前也暂时保留，避免在未完成跨模块替换前破坏兼容性。
-- `SysConfigService` 的缓存职责继续保留在 Service 层；本轮仅将底层 CRUD / 查询收口到 `SysConfigRepository`。
-- `AuthUserDetailsServiceImpl` 本轮未强制调整，仍按现有依赖保持兼容。
+- [x] ~~`SysUserService` 仍被外部模块注入~~ → 已将 6 个外部调用方替换为 `SysUserRepository`，旧薄服务已删除。
+- [x] ~~`SysRoleService`/`SysMenuService` 仍被 `AuthUserDetailsServiceImpl` 注入~~ → 已替换为 `SysRoleRepository`/`SysMenuRepository`，旧薄服务已删除。
+- [x] ~~`SysLogService` 仍被 `SysLogAspect` 引用~~ → 已替换为 `SysLogRepository.saveLog()`（含 `REQUIRES_NEW`），旧薄服务已删除。
+- [x] ~~`SysNoticeService`/`SysUserNoticeService` 仍被 `FollowNoticeServiceImpl` 引用~~ → 已替换为 `SysNoticeRepository`/`SysUserNoticeRepository`，旧薄服务已删除。
+- [x] ~~`SysRoleMenuServiceImpl`/`SysUserRoleServiceImpl` 含 lambdaQuery 调用~~ → 随旧薄服务删除已清理。
+- **`SysConfigService` 保留为真正业务服务**（含缓存逻辑 `getValueOrDefault`/`evictConfigCache`，被 `SysConfigAdminServiceImpl`、`ChatMessageGovernanceServiceImpl`、`IpRateLimitFilter` 注入），不删除。
 
 ## 验证结果
 

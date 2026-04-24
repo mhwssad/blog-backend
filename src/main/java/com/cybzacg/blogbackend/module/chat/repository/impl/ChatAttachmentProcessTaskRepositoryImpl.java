@@ -20,6 +20,12 @@ public class ChatAttachmentProcessTaskRepositoryImpl
         extends ServiceImpl<ChatAttachmentProcessTaskMapper, ChatAttachmentProcessTask>
         implements ChatAttachmentProcessTaskRepository {
 
+    /**
+     * 为消息创建或重置待执行任务。<p>
+     * 先查询是否已有记录：若无则新建；若已存在则重置为待执行状态。
+     * 新建时通过捕获 DuplicateKeyException 处理并发场景下的唯一键冲突，
+     * 冲突后重新查询并走重置逻辑。
+     */
     @Override
     public ChatAttachmentProcessTask saveOrResetPendingTask(Long messageId,
                                                             String messageType,
@@ -41,6 +47,7 @@ public class ChatAttachmentProcessTaskRepositoryImpl
                 save(task);
                 return task;
             } catch (DuplicateKeyException ex) {
+                // 并发写入导致唯一键冲突，重新查询已有记录并走重置逻辑
                 existing = lambdaQuery()
                         .eq(ChatAttachmentProcessTask::getMessageId, messageId)
                         .last("limit 1")
@@ -55,6 +62,9 @@ public class ChatAttachmentProcessTaskRepositoryImpl
         return task;
     }
 
+    /**
+     * 查询到期可执行的任务，按 nextRetryAt 和 ID 升序排列以保证调度公平性。
+     */
     @Override
     public List<ChatAttachmentProcessTask> listDispatchableTasks(Date executeBefore, int limit) {
         return lambdaQuery()
@@ -66,6 +76,9 @@ public class ChatAttachmentProcessTaskRepositoryImpl
                 .list();
     }
 
+    /**
+     * 抢占式认领任务，通过 status + nextRetryAt 条件保证同一任务不会被多个节点重复执行。
+     */
     @Override
     public boolean claimTask(Long taskId, Date executeBefore, Date leaseExpireAt) {
         return lambdaUpdate()
@@ -80,6 +93,9 @@ public class ChatAttachmentProcessTaskRepositoryImpl
                 .update();
     }
 
+    /**
+     * 将租约过期的 PROCESSING 任务恢复为 PENDING，使其可被重新调度。
+     */
     @Override
     public int resetExpiredTasks(Date now, String lastError) {
         return baseMapper.update(
@@ -95,6 +111,9 @@ public class ChatAttachmentProcessTaskRepositoryImpl
                         .set(ChatAttachmentProcessTask::getLastError, lastError));
     }
 
+    /**
+     * 标记任务处理成功，清除租约和重试相关字段。
+     */
     @Override
     public boolean markSuccess(Long taskId, Date completedAt) {
         return lambdaUpdate()
@@ -108,6 +127,9 @@ public class ChatAttachmentProcessTaskRepositoryImpl
                 .update();
     }
 
+    /**
+     * 标记任务稍后重试，将状态回退为 PENDING 并重置执行上下文字段。
+     */
     @Override
     public boolean markRetry(Long taskId, int retryCount, Date nextRetryAt, String lastError) {
         return lambdaUpdate()
@@ -123,6 +145,9 @@ public class ChatAttachmentProcessTaskRepositoryImpl
                 .update();
     }
 
+    /**
+     * 标记任务最终失败，不再重试，清除调度相关字段。
+     */
     @Override
     public boolean markFailed(Long taskId, int retryCount, Date completedAt, String lastError) {
         return lambdaUpdate()

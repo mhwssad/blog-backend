@@ -23,10 +23,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * 参数校验异常处理器。<p>统一处理请求参数绑定、约束违反、类型不匹配及消息格式转换等校验类异常。</p>
+ */
 @Slf4j
 @Order(3)
 @RestControllerAdvice
 public class ValidationExceptionHandler extends BaseExceptionHandler {
+    /**
+     * 处理 @Valid 校验失败异常，提取字段级错误信息。
+     *
+     * @param e 方法参数校验异常
+     * @return 包含字段错误详情的统一响应
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException e) {
@@ -46,6 +55,12 @@ public class ValidationExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : errorMap);
     }
 
+    /**
+     * 处理对象绑定异常，提取字段和全局错误信息。
+     *
+     * @param e 绑定异常
+     * @return 包含绑定错误详情的统一响应
+     */
     @ExceptionHandler(BindException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Object> handleBindException(BindException e) {
@@ -66,6 +81,12 @@ public class ValidationExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : errorMap);
     }
 
+    /**
+     * 处理 JSR-303 约束违反异常，提取属性路径和错误消息。
+     *
+     * @param e 约束违反异常
+     * @return 包含约束错误详情的统一响应
+     */
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Object> handleConstraintViolation(ConstraintViolationException e) {
@@ -89,6 +110,12 @@ public class ValidationExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : errorMap);
     }
 
+    /**
+     * 处理方法参数类型不匹配异常。
+     *
+     * @param e 参数类型不匹配异常
+     * @return 包含期望类型和实际值的统一响应
+     */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Object> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException e) {
@@ -110,6 +137,12 @@ public class ValidationExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : errorDetail);
     }
 
+    /**
+     * 处理通用类型不匹配异常。
+     *
+     * @param e 类型不匹配异常
+     * @return 包含期望类型的统一响应
+     */
     @ExceptionHandler(TypeMismatchException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Object> handleTypeMismatch(TypeMismatchException e) {
@@ -125,6 +158,12 @@ public class ValidationExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : e.getValue());
     }
 
+    /**
+     * 处理 HTTP 消息格式转换异常（如 JSON/XML 格式错误）。
+     *
+     * @param e 消息转换异常
+     * @return 包含格式错误提示的统一响应
+     */
     @ExceptionHandler(HttpMessageConversionException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Object> handleHttpMessageConversion(HttpMessageConversionException e) {

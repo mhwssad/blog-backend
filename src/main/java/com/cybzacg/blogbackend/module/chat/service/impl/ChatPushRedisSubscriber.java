@@ -18,6 +18,9 @@ import org.springframework.stereotype.Component;
 public class ChatPushRedisSubscriber implements MessageListener {
     private final ChatPushServiceImpl chatPushService;
 
+    /**
+     * 接收 Redis pub/sub 推送事件，反序列化后委托给推送服务处理跨节点下发。
+     */
     @Override
     public void onMessage(Message message, byte[] pattern) {
         if (message == null || message.getBody() == null || message.getBody().length == 0) {

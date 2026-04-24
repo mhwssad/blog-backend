@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 公开关注关系控制器。
+ *
+ * <p>负责查询指定用户的关注列表与粉丝列表等无需登录的公开接口。
  */
 @RestController
 @RequestMapping("/api/users/{userId}")

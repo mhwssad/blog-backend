@@ -21,6 +21,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * 用户足迹服务实现。
+ *
+ * <p>负责用户浏览足迹的分页查询、单条删除、全部清除以及自动记录文章浏览行为。
+ */
 @Service
 @RequiredArgsConstructor
 public class UserFootprintServiceImpl implements UserFootprintService {
@@ -29,6 +34,7 @@ public class UserFootprintServiceImpl implements UserFootprintService {
     private final ArticleAccessControlService articleAccessControlService;
     private final ContentModelMapper contentModelMapper;
 
+    /** 分页查询当前用户的浏览足迹列表。 */
     @Override
     public PageResult<UserFootprintVO> pageFootprints(UserFootprintPageQuery query) {
         Long userId = SecurityUtils.requireUserId();
@@ -41,6 +47,7 @@ public class UserFootprintServiceImpl implements UserFootprintService {
         return PageResult.of(page, records);
     }
 
+    /** 删除当前用户的单条足迹记录。 */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteFootprint(Long id) {
@@ -50,6 +57,7 @@ public class UserFootprintServiceImpl implements UserFootprintService {
         sysUserFootprintRepository.removeById(id);
     }
 
+    /** 清除当前用户的所有浏览足迹。 */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void clearFootprints() {

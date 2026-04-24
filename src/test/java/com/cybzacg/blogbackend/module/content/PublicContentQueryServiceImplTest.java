@@ -5,7 +5,7 @@ import com.cybzacg.blogbackend.domain.SysComment;
 import com.cybzacg.blogbackend.domain.SysInteraction;
 import com.cybzacg.blogbackend.domain.SysTag;
 import com.cybzacg.blogbackend.domain.SysUser;
-import com.cybzacg.blogbackend.module.auth.service.SysUserService;
+import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicCategoryTreeVO;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicCommentQuery;
@@ -47,7 +47,7 @@ class PublicContentQueryServiceImplTest {
     @Mock
     private SysInteractionRepository sysInteractionRepository;
     @Mock
-    private SysUserService sysUserService;
+    private SysUserRepository sysUserRepository;
     @Mock
     private ContentModelMapper contentModelMapper;
 
@@ -60,7 +60,7 @@ class PublicContentQueryServiceImplTest {
                 sysTagRepository,
                 sysCommentRepository,
                 sysInteractionRepository,
-                sysUserService,
+                sysUserRepository,
                 contentModelMapper
         );
     }
@@ -132,7 +132,7 @@ class PublicContentQueryServiceImplTest {
 
         when(sysCommentRepository.selectRootCommentsByTarget(100L, "article")).thenReturn(List.of(root));
         when(sysCommentRepository.selectRepliesByRootIds(List.of(20L))).thenReturn(List.of(reply));
-        when(sysUserService.listByIds(anyCollection())).thenReturn(List.of(rootUser, replyUser));
+        when(sysUserRepository.listByIds(anyCollection())).thenReturn(List.of(rootUser, replyUser));
         when(contentModelMapper.toPublicCommentVO(root)).thenReturn(rootVo);
         when(contentModelMapper.toPublicCommentVO(reply)).thenReturn(replyVo);
         when(sysInteractionRepository.findByUserIdAndTargetTypeAndActionTypeInTargetIds(eq(7L), eq("comment"), eq("like"), anyCollection()))
@@ -163,7 +163,7 @@ class PublicContentQueryServiceImplTest {
 
         assertTrue(result.isEmpty());
         verify(sysCommentRepository, never()).selectRepliesByRootIds(org.mockito.ArgumentMatchers.any());
-        verify(sysUserService, never()).listByIds(anyCollection());
+        verify(sysUserRepository, never()).listByIds(anyCollection());
         verifyNoInteractions(sysInteractionRepository);
     }
 

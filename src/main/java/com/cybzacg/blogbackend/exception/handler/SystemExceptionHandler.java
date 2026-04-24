@@ -19,12 +19,18 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 /**
- * 系统级异常处理器
+ * 系统级异常处理器。<p>兜底处理所有未被更高优先级处理器捕获的异常，包括空指针、IO、并发、反射、超时等 JVM 和框架级错误。</p>
  */
 @Slf4j
 @Order(6)
 @RestControllerAdvice
 public class SystemExceptionHandler extends BaseExceptionHandler {
+    /**
+     * 兜底处理 BusinessException，在业务处理器未捕获时提供带位置信息的日志记录。
+     *
+     * @param e 业务异常
+     * @return 包含错误码和错误信息的统一响应
+     */
     @ExceptionHandler(BusinessException.class)
     public Result<Object> handleBusinessException(BusinessException e) {
         log.warn("业务异常 [TraceID: {}] [位置: {}] - {}", getTraceId(), getErrorLocation(e), e.getMessage(), e);
@@ -35,6 +41,12 @@ public class SystemExceptionHandler extends BaseExceptionHandler {
                         : e.getCause() != null ? e.getCause().getMessage() : null);
     }
 
+    /**
+     * 处理并发修改异常。
+     *
+     * @param e 并发修改异常
+     * @return 并发冲突错误响应
+     */
     @ExceptionHandler(ConcurrentModificationException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public Result<Object> handleConcurrentModification(ConcurrentModificationException e) {
@@ -43,6 +55,12 @@ public class SystemExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理空指针异常。
+     *
+     * @param e 空指针异常
+     * @return 内部服务器错误响应
+     */
     @ExceptionHandler(NullPointerException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<Object> handleNullPointerException(NullPointerException e) {
@@ -51,6 +69,12 @@ public class SystemExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理类型转换异常。
+     *
+     * @param e 类型转换异常
+     * @return 内部服务器错误响应
+     */
     @ExceptionHandler(ClassCastException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<Object> handleClassCastException(ClassCastException e) {
@@ -59,6 +83,12 @@ public class SystemExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理数组越界异常。
+     *
+     * @param e 数组越界异常
+     * @return 内部服务器错误响应
+     */
     @ExceptionHandler(ArrayIndexOutOfBoundsException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<Object> handleArrayIndexOutOfBounds(ArrayIndexOutOfBoundsException e) {
@@ -67,6 +97,12 @@ public class SystemExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理算术异常。
+     *
+     * @param e 算术异常
+     * @return 内部服务器错误响应
+     */
     @ExceptionHandler(ArithmeticException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<Object> handleArithmeticException(ArithmeticException e) {
@@ -75,6 +111,12 @@ public class SystemExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理非法参数异常。
+     *
+     * @param e 非法参数异常
+     * @return 请求错误响应
+     */
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Object> handleIllegalArgumentException(IllegalArgumentException e) {
@@ -83,6 +125,12 @@ public class SystemExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理非法状态异常。
+     *
+     * @param e 非法状态异常
+     * @return 内部服务器错误响应
+     */
     @ExceptionHandler(IllegalStateException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<Object> handleIllegalStateException(IllegalStateException e) {
@@ -91,6 +139,12 @@ public class SystemExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理 IO 异常，区分客户端断开、SSE 请求和普通文件 IO 场景。
+     *
+     * @param e IO 异常
+     * @return IO 错误响应，客户端断开或 SSE 请求时返回 null
+     */
     @ExceptionHandler(IOException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<Object> handleIOException(IOException e) {
@@ -110,6 +164,12 @@ public class SystemExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理 JSON 处理异常。
+     *
+     * @param e JSON 处理异常
+     * @return 请求错误响应
+     */
     @ExceptionHandler(JsonProcessingException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Object> handleJsonProcessingException(JsonProcessingException e) {
@@ -118,6 +178,12 @@ public class SystemExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理日期格式解析异常。
+     *
+     * @param e 日期解析异常
+     * @return 请求错误响应
+     */
     @ExceptionHandler(DateTimeParseException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Object> handleDateTimeParseException(DateTimeParseException e) {
@@ -126,6 +192,12 @@ public class SystemExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理数字格式解析异常。
+     *
+     * @param e 数字格式异常
+     * @return 请求错误响应
+     */
     @ExceptionHandler(NumberFormatException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Object> handleNumberFormatException(NumberFormatException e) {
@@ -134,6 +206,12 @@ public class SystemExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理不支持的操作异常。
+     *
+     * @param e 不支持操作异常
+     * @return 未实现响应
+     */
     @ExceptionHandler(UnsupportedOperationException.class)
     @ResponseStatus(HttpStatus.NOT_IMPLEMENTED)
     public Result<Object> handleUnsupportedOperation(UnsupportedOperationException e) {
@@ -142,6 +220,12 @@ public class SystemExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理类未找到异常。
+     *
+     * @param e 类未找到异常
+     * @return 内部服务器错误响应
+     */
     @ExceptionHandler(ClassNotFoundException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<Object> handleClassNotFound(ClassNotFoundException e) {
@@ -150,6 +234,12 @@ public class SystemExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理方法未找到异常。
+     *
+     * @param e 方法未找到异常
+     * @return 内部服务器错误响应
+     */
     @ExceptionHandler(NoSuchMethodException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<Object> handleNoSuchMethod(NoSuchMethodException e) {
@@ -158,6 +248,12 @@ public class SystemExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理字段未找到异常。
+     *
+     * @param e 字段未找到异常
+     * @return 内部服务器错误响应
+     */
     @ExceptionHandler(NoSuchFieldException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<Object> handleNoSuchField(NoSuchFieldException e) {
@@ -166,6 +262,12 @@ public class SystemExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理非法访问异常。
+     *
+     * @param e 非法访问异常
+     * @return 内部服务器错误响应
+     */
     @ExceptionHandler(IllegalAccessException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<Object> handleIllegalAccess(IllegalAccessException e) {
@@ -174,6 +276,12 @@ public class SystemExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理实例化异常。
+     *
+     * @param e 实例化异常
+     * @return 内部服务器错误响应
+     */
     @ExceptionHandler(InstantiationException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<Object> handleInstantiationException(InstantiationException e) {
@@ -182,6 +290,12 @@ public class SystemExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理反射调用目标异常。
+     *
+     * @param e 反射调用异常
+     * @return 内部服务器错误响应
+     */
     @ExceptionHandler(InvocationTargetException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<Object> handleInvocationTargetException(InvocationTargetException e) {
@@ -190,6 +304,12 @@ public class SystemExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理线程中断异常，恢复中断状态后返回错误响应。
+     *
+     * @param e 线程中断异常
+     * @return 内部服务器错误响应
+     */
     @ExceptionHandler(InterruptedException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<Object> handleInterruptedException(InterruptedException e) {
@@ -199,6 +319,12 @@ public class SystemExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理异步执行异常。
+     *
+     * @param e 执行异常
+     * @return 内部服务器错误响应
+     */
     @ExceptionHandler(ExecutionException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<Object> handleExecutionException(ExecutionException e) {
@@ -207,6 +333,12 @@ public class SystemExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理超时异常。
+     *
+     * @param e 超时异常
+     * @return 请求超时响应
+     */
     @ExceptionHandler(TimeoutException.class)
     @ResponseStatus(HttpStatus.REQUEST_TIMEOUT)
     public Result<Object> handleTimeoutException(TimeoutException e) {
@@ -215,6 +347,12 @@ public class SystemExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 全局兜底异常处理器，捕获所有未被其他处理器匹配的异常。
+     *
+     * @param e 未被捕获的异常
+     * @return 系统错误响应，客户端断开或 SSE 请求时返回 null
+     */
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(Exception.class)
     public Result<Object> handleGlobalException(Exception e) {

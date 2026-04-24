@@ -77,6 +77,13 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final SecureRandom secureRandom = new SecureRandom();
 
+    /**
+     * 账号密码登录，含失败锁定与登录信息记录。
+     *
+     * @param request 登录请求（用户名 + 密码）
+     * @param loginIp 登录来源 IP
+     * @return 认证令牌（accessToken + refreshToken）
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AuthenticationToken login(AuthLoginRequest request, String loginIp) {
@@ -101,6 +108,13 @@ public class AuthServiceImpl implements AuthService {
         return tokenManager.generateToken(authentication);
     }
 
+    /**
+     * 用户注册，校验唯一性后创建账号并自动登录。
+     *
+     * @param request 注册请求（用户名、邮箱、手机号、密码）
+     * @param loginIp 注册来源 IP
+     * @return 认证令牌
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AuthenticationToken register(AuthRegisterRequest request, String loginIp) {
@@ -135,6 +149,11 @@ public class AuthServiceImpl implements AuthService {
         return tokenManager.generateToken(authentication);
     }
 
+    /**
+     * 发送邮箱登录验证码，含频率限制。
+     *
+     * @param request 邮箱验证码请求（目标邮箱地址）
+     */
     @Override
     public void sendEmailLoginCode(AuthEmailCodeRequest request) {
         String email = StrUtils.trimToLowerCase(request.getEmail());
@@ -162,6 +181,13 @@ public class AuthServiceImpl implements AuthService {
         redisOperator.set(emailLoginCodeKey(email), code, AuthConstants.EMAIL_LOGIN_CODE_TTL);
     }
 
+    /**
+     * 邮箱验证码登录。
+     *
+     * @param request 邮箱登录请求（邮箱 + 验证码）
+     * @param loginIp 登录来源 IP
+     * @return 认证令牌
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AuthenticationToken emailLogin(AuthEmailLoginRequest request, String loginIp) {
@@ -176,6 +202,12 @@ public class AuthServiceImpl implements AuthService {
         return tokenManager.generateToken(authentication);
     }
 
+    /**
+     * 使用 refreshToken 换发新的认证令牌。
+     *
+     * @param request 刷新令牌请求（refreshToken）
+     * @return 新的认证令牌
+     */
     @Override
     public AuthenticationToken refresh(AuthRefreshRequest request) {
         ExceptionThrowerCore.throwBusinessIfNot(tokenManager.validateRefreshToken(request.getRefreshToken()),
@@ -183,6 +215,7 @@ public class AuthServiceImpl implements AuthService {
         return tokenManager.refreshToken(request.getRefreshToken());
     }
 
+    /** 注销当前会话，立即使令牌失效。 */
     @Override
     public void logout(String token) {
         if (!StringUtils.hasText(token)) {
@@ -191,6 +224,7 @@ public class AuthServiceImpl implements AuthService {
         tokenManager.invalidateToken(token);
     }
 
+    /** 获取当前登录用户的基本信息、角色编码与权限列表。 */
     @Override
     public AuthUserInfo getCurrentUser() {
         Authentication authentication = SecurityUtils.requireAuthentication();
@@ -200,6 +234,7 @@ public class AuthServiceImpl implements AuthService {
         return authModelMapper.toAuthUserInfo(user, roleCodes, permissions);
     }
 
+    /** 获取当前登录用户可见的菜单树（过滤按钮类型，仅保留目录和菜单）。 */
     @Override
     public List<AuthMenuInfo> getCurrentUserMenus() {
         Authentication authentication = SecurityUtils.requireAuthentication();

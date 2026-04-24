@@ -5,7 +5,7 @@ import com.cybzacg.blogbackend.common.constant.RedisConstants;
 import java.util.StringJoiner;
 
 /**
- * Redis Key 工具类
+ * Redis Key 拼装工具。<p>按冒号分隔符将多个片段拼接为符合项目约定的 Key，自动忽略 {@code null} 和空白片段。
  */
 public final class RedisKeyUtils {
     private RedisKeyUtils() {

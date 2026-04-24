@@ -5,7 +5,7 @@ import com.cybzacg.blogbackend.domain.SysComment;
 import com.cybzacg.blogbackend.domain.SysInteraction;
 import com.cybzacg.blogbackend.domain.SysTag;
 import com.cybzacg.blogbackend.domain.SysUser;
-import com.cybzacg.blogbackend.module.auth.service.SysUserService;
+import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicCategoryTreeVO;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicCommentQuery;
@@ -47,9 +47,10 @@ public class PublicContentQueryServiceImpl implements PublicContentQueryService 
     private final SysTagRepository sysTagRepository;
     private final SysCommentRepository sysCommentRepository;
     private final SysInteractionRepository sysInteractionRepository;
-    private final SysUserService sysUserService;
+    private final SysUserRepository sysUserRepository;
     private final ContentModelMapper contentModelMapper;
 
+    /** 查询前台文章分类树，仅返回启用状态的分类。 */
     @Override
     public List<PublicCategoryTreeVO> listCategoryTree() {
         List<SysCategory> categories = sysCategoryRepository.findByTypeAndStatusOrderBySortOrderAndId(ARTICLE_TYPE, 1);
@@ -69,6 +70,12 @@ public class PublicContentQueryServiceImpl implements PublicContentQueryService 
         return roots;
     }
 
+    /**
+     * 按目标类型查询公开标签列表。
+     *
+     * @param targetType 目标类型，目前仅支持 article
+     * @return 标签列表，不支持的类型返回空列表
+     */
     @Override
     public List<PublicTagVO> listTags(String targetType) {
         String actualTargetType = StrUtils.trimToDefault(targetType, ARTICLE_TYPE);
@@ -141,7 +148,7 @@ public class PublicContentQueryServiceImpl implements PublicContentQueryService 
             return Map.of();
         }
         Map<Long, SysUser> userMap = new HashMap<>();
-        sysUserService.listByIds(userIds).forEach(user -> userMap.put(user.getId(), user));
+        sysUserRepository.listByIds(userIds).forEach(user -> userMap.put(user.getId(), user));
         return userMap;
     }
 

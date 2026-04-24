@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * 文件业务引用 Repository。
+ * 文件业务引用 Repository。<p>封装文件与业务对象关联引用的持久化操作，提供按文件、用户、引用类型等多维度查询与删除。
  */
 public interface FileBusinessInfoRepository extends IService<FileBusinessInfo> {
     /**

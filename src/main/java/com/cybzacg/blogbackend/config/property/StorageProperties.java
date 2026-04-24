@@ -13,6 +13,9 @@ import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 
+/**
+ * 多存储节点配置属性。<p>映射 {@code storage} 前缀下的默认存储类型和多节点列表，每个节点可独立配置类型、端点和凭据。</p>
+ */
 @Data
 @Validated
 @Component

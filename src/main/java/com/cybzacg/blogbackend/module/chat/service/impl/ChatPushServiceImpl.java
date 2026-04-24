@@ -54,36 +54,57 @@ public class ChatPushServiceImpl implements ChatPushService {
         this.localNodeId = localNodeId;
     }
 
+    /**
+     * 向指定用户推送新消息通知。
+     */
     @Override
     public void pushMessageCreated(ChatMessageVO message, Collection<Long> userIds) {
         pushAndBroadcast(ChatWsMessageType.MESSAGE_CREATED.getValue(), message, userIds);
     }
 
+    /**
+     * 向指定用户推送消息更新通知（如附件处理完成）。
+     */
     @Override
     public void pushMessageUpdated(ChatMessageVO message, Collection<Long> userIds) {
         pushAndBroadcast(ChatWsMessageType.MESSAGE_UPDATED.getValue(), message, userIds);
     }
 
+    /**
+     * 向指定用户推送消息撤回通知。
+     */
     @Override
     public void pushMessageRevoked(ChatMessageVO message, Collection<Long> userIds) {
         pushAndBroadcast(ChatWsMessageType.MESSAGE_REVOKED.getValue(), message, userIds);
     }
 
+    /**
+     * 向指定用户推送消息删除通知。
+     */
     @Override
     public void pushMessageDeleted(ChatWsMessageDeletedPayload payload, Collection<Long> userIds) {
         pushAndBroadcast(ChatWsMessageType.MESSAGE_DELETED.getValue(), payload, userIds);
     }
 
+    /**
+     * 向指定用户推送已读状态更新通知。
+     */
     @Override
     public void pushReadUpdated(ChatReadStateVO readState, Collection<Long> userIds) {
         pushAndBroadcast(ChatWsMessageType.READ_UPDATED.getValue(), readState, userIds);
     }
 
+    /**
+     * 向指定用户推送会话信息变更通知（如群名、公告、状态变更）。
+     */
     @Override
     public void pushConversationUpdated(ChatWsConversationUpdatedPayload payload, Collection<Long> userIds) {
         pushAndBroadcast(ChatWsMessageType.CONVERSATION_UPDATED.getValue(), payload, userIds);
     }
 
+    /**
+     * 向指定用户推送群成员变更通知（如加入、移除、角色变更）。
+     */
     @Override
     public void pushMembersUpdated(ChatWsMembersUpdatedPayload payload, Collection<Long> userIds) {
         pushAndBroadcast(ChatWsMessageType.MEMBERS_UPDATED.getValue(), payload, userIds);

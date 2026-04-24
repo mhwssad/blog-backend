@@ -41,6 +41,7 @@ public class UserCollectionServiceImpl implements UserCollectionService {
     private final ArticleAccessControlService articleAccessControlService;
     private final ContentModelMapper contentModelMapper;
 
+    /** 分页查询当前用户的收藏夹列表，按默认夹与排序字段排列。 */
     @Override
     public PageResult<CollectionFolderVO> pageFolders() {
         Long userId = SecurityUtils.requireUserId();
@@ -109,6 +110,7 @@ public class UserCollectionServiceImpl implements UserCollectionService {
         sysCollectionFolderRepository.removeById(id);
     }
 
+    /** 分页查询当前用户的收藏记录列表。 */
     @Override
     public PageResult<CollectionVO> pageCollections() {
         Long userId = SecurityUtils.requireUserId();

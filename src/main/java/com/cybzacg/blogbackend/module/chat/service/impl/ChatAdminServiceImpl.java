@@ -76,6 +76,9 @@ public class ChatAdminServiceImpl implements ChatAdminService {
     private final FileBusinessInfoRepository fileBusinessInfoRepository;
     private final FileLifecycleService fileLifecycleService;
 
+    /**
+     * 分页查询后台会话列表。
+     */
     @Override
     public PageResult<ChatAdminConversationVO> pageConversations(ChatAdminConversationPageQuery query) {
         long current = normalizeCurrent(query.getCurrent());
@@ -99,6 +102,9 @@ public class ChatAdminServiceImpl implements ChatAdminService {
                 .build();
     }
 
+    /**
+     * 查询后台会话详情。
+     */
     @Override
     public ChatAdminConversationVO getConversation(Long conversationId) {
         requireConversation(conversationId);
@@ -107,12 +113,18 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         return buildConversationVO(item, listMembersByConversationIds(List.of(conversationId)).getOrDefault(conversationId, List.of()));
     }
 
+    /**
+     * 查询指定会话的全部成员列表。
+     */
     @Override
     public List<ChatMemberVO> listMembers(Long conversationId) {
         requireConversation(conversationId);
         return buildMemberRecords(listConversationMembers(conversationId));
     }
 
+    /**
+     * 分页查询指定会话的消息列表。
+     */
     @Override
     public PageResult<ChatAdminMessageVO> pageMessages(Long conversationId, ChatAdminMessagePageQuery query) {
         requireConversation(conversationId);
@@ -140,6 +152,9 @@ public class ChatAdminServiceImpl implements ChatAdminService {
                 .build();
     }
 
+    /**
+     * 查询指定消息的完整详情，含投递和已读统计。
+     */
     @Override
     public ChatAdminMessageDetailVO getMessageDetail(Long conversationId, Long messageId) {
         requireConversation(conversationId);
@@ -173,6 +188,9 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         return vo;
     }
 
+    /**
+     * 分页查询指定消息的投递回执列表。
+     */
     @Override
     public PageResult<ChatAdminMessageReceiptVO> pageMessageReceipts(Long conversationId, Long messageId, ChatAdminMessageReceiptPageQuery query) {
         requireConversation(conversationId);
@@ -195,6 +213,14 @@ public class ChatAdminServiceImpl implements ChatAdminService {
                 .build();
     }
 
+    /**
+     * 修改群成员角色，若新角色为群主则自动进行群主转让。
+     *
+     * @param conversationId 目标会话 ID
+     * @param memberUserId   被操作成员的用户 ID
+     * @param request        包含新角色信息
+     * @return 更新后的成员列表
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public List<ChatMemberVO> updateMemberRole(Long conversationId, Long memberUserId, ChatAdminMemberRoleUpdateRequest request) {
@@ -227,6 +253,14 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         return records;
     }
 
+    /**
+     * 修改群成员状态（正常、退出、移除、禁用），状态变更后同步清空禁言时间。
+     *
+     * @param conversationId 目标会话 ID
+     * @param memberUserId   被操作成员的用户 ID
+     * @param request        包含目标状态信息
+     * @return 更新后的成员列表
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public List<ChatMemberVO> updateMemberStatus(Long conversationId, Long memberUserId, ChatAdminMemberStatusUpdateRequest request) {
@@ -252,6 +286,14 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         return records;
     }
 
+    /**
+     * 设置或清除群成员的禁言截止时间。
+     *
+     * @param conversationId 目标会话 ID
+     * @param memberUserId   被操作成员的用户 ID
+     * @param request        包含禁言截止时间，null 或已过去的时间视为解除禁言
+     * @return 更新后的成员列表
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public List<ChatMemberVO> updateMemberMute(Long conversationId, Long memberUserId, ChatAdminMemberMuteUpdateRequest request) {
@@ -266,6 +308,9 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         return records;
     }
 
+    /**
+     * 后台强制撤回指定消息，同时释放关联的文件业务引用。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void revokeMessage(Long conversationId, Long messageId) {
@@ -285,6 +330,12 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         chatPushService.pushMessageRevoked(buildMessagePushVO(message), activeUserIds(listActiveMembers(conversationId)));
     }
 
+    /**
+     * 更新会话状态（正常或禁用），状态相同时跳过写入。
+     *
+     * @param conversationId 目标会话 ID
+     * @param status         目标状态，仅支持正常和禁用
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateConversationStatus(Long conversationId, Integer status) {

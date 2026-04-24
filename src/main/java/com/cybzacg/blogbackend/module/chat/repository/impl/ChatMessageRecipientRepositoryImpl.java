@@ -21,6 +21,7 @@ import java.util.List;
 public class ChatMessageRecipientRepositoryImpl extends ServiceImpl<ChatMessageRecipientMapper, ChatMessageRecipient>
         implements ChatMessageRecipientRepository {
 
+    /** {@inheritDoc} */
     @Override
     public boolean hideMessage(Long conversationId, Long recipientUserId, Long messageId) {
         return lambdaUpdate()
@@ -31,6 +32,10 @@ public class ChatMessageRecipientRepositoryImpl extends ServiceImpl<ChatMessageR
                 .update();
     }
 
+    /**
+     * 将当前用户在该会话中 message_id <= 目标值且仍可见的记录全部标为已读，
+     * delivered_at 和 read_at 统一使用 readAt 以保证时序一致。
+     */
     @Override
     public boolean markReadUpTo(Long conversationId, Long recipientUserId, Long messageId, Date readAt) {
         return lambdaUpdate()
@@ -44,6 +49,9 @@ public class ChatMessageRecipientRepositoryImpl extends ServiceImpl<ChatMessageR
                 .update();
     }
 
+    /**
+     * 仅将当前状态为 PENDING 的记录更新为 DELIVERED，避免覆盖已读状态。
+     */
     @Override
     public boolean markDelivered(Long conversationId, Long recipientUserId, Long messageId, Date deliveredAt) {
         return lambdaUpdate()
@@ -56,6 +64,9 @@ public class ChatMessageRecipientRepositoryImpl extends ServiceImpl<ChatMessageR
                 .update();
     }
 
+    /**
+     * 批量标记已投递，仅更新状态低于 DELIVERED 的记录，防止降级已读状态。
+     */
     @Override
     public boolean batchMarkDelivered(Long conversationId, Long recipientUserId, Collection<Long> messageIds, Date deliveredAt) {
         if (messageIds == null || messageIds.isEmpty()) {
@@ -71,6 +82,7 @@ public class ChatMessageRecipientRepositoryImpl extends ServiceImpl<ChatMessageR
                 .update();
     }
 
+    /** {@inheritDoc} */
     @Override
     public long countUnread(Long conversationId, Long recipientUserId) {
         return count(new LambdaQueryWrapper<ChatMessageRecipient>()
@@ -80,6 +92,9 @@ public class ChatMessageRecipientRepositoryImpl extends ServiceImpl<ChatMessageR
                 .lt(ChatMessageRecipient::getDeliveryStatus, ChatConstants.DELIVERY_STATUS_READ));
     }
 
+    /**
+     * 根据用户和消息查找可见的投递记录，按 ID 降序取最新一条。
+     */
     @Override
     public ChatMessageRecipient findVisibleByUserAndMessage(Long recipientUserId, Long messageId) {
         return getOne(new LambdaQueryWrapper<ChatMessageRecipient>()
@@ -90,12 +105,17 @@ public class ChatMessageRecipientRepositoryImpl extends ServiceImpl<ChatMessageR
                 .last("limit 1"), false);
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<ChatMessageRecipient> listByMessageId(Long messageId) {
         return list(new LambdaQueryWrapper<ChatMessageRecipient>()
                 .eq(ChatMessageRecipient::getMessageId, messageId));
     }
 
+    /**
+     * 管理后台投递记录分页查询，对空查询参数做防御性默认值处理，
+     * 并根据前端传入的筛选条件动态拼接 WHERE 子句。
+     */
     @Override
     public Page<ChatMessageRecipient> pageAdminReceipts(Long conversationId, Long messageId, ChatAdminMessageReceiptPageQuery query) {
         ChatAdminMessageReceiptPageQuery safeQuery = query == null ? new ChatAdminMessageReceiptPageQuery() : query;

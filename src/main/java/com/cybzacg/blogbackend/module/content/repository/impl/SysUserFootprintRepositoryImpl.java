@@ -10,12 +10,13 @@ import com.cybzacg.blogbackend.module.content.repository.SysUserFootprintReposit
 import org.springframework.stereotype.Repository;
 
 /**
- * 用户足迹 Repository 实现。
+ * 用户足迹 Repository 实现。<p>基于 MyBatis-Plus ServiceImpl 提供用户浏览足迹数据的增删改查。
  */
 @Repository
 public class SysUserFootprintRepositoryImpl extends ServiceImpl<SysUserFootprintMapper, SysUserFootprint>
         implements SysUserFootprintRepository {
 
+    /** {@inheritDoc} */
     @Override
     public Page<SysUserFootprint> pageByAdminConditions(FootprintPageQuery query) {
         return page(new Page<>(query.getCurrent(), query.getSize()), buildAdminWrapper(query)
@@ -23,6 +24,7 @@ public class SysUserFootprintRepositoryImpl extends ServiceImpl<SysUserFootprint
                 .orderByDesc(SysUserFootprint::getId));
     }
 
+    /** {@inheritDoc} */
     @Override
     public Page<SysUserFootprint> pageByUserIdAndTargetType(Long userId, String targetType, long current, long size) {
         return page(new Page<>(current, size), new LambdaQueryWrapper<SysUserFootprint>()
@@ -32,22 +34,26 @@ public class SysUserFootprintRepositoryImpl extends ServiceImpl<SysUserFootprint
                 .orderByDesc(SysUserFootprint::getId));
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean removeByUserId(Long userId) {
         return remove(new LambdaQueryWrapper<SysUserFootprint>()
                 .eq(SysUserFootprint::getUserId, userId));
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean removeByAdminConditions(FootprintPageQuery query) {
         return remove(buildAdminWrapper(query));
     }
 
+    /** {@inheritDoc} */
     @Override
     public int upsertFootprint(SysUserFootprint footprint) {
         return baseMapper.upsertFootprint(footprint);
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean removeByTargetTypeAndTargetId(String targetType, Long targetId) {
         return remove(new LambdaQueryWrapper<SysUserFootprint>()

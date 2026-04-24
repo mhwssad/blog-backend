@@ -10,8 +10,7 @@ import com.cybzacg.blogbackend.enums.storage.StorageType;
 import org.springframework.stereotype.Component;
 
 /**
- * 本地存储服务工厂
- * 负责创建本地存储服务实例
+ * 本地存储服务工厂。<p>负责创建本地文件系统存储服务实例。
  *
  * @author System
  */

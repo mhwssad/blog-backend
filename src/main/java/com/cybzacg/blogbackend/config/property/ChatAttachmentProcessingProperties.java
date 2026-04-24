@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
 /**
- * 聊天附件异步处理任务配置。
+ * 聊天附件异步处理任务配置。<p>映射 {@code chat.attachment-processing} 前缀下的批次大小、重试次数、租约时长和调度间隔等参数。</p>
  */
 @Data
 @Component

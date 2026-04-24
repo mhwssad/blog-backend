@@ -9,7 +9,9 @@
 - **涉及业务服务**：10个
 - **数据访问总数**：约78处
 
-## 当前进展（2026-03-31）
+## 当前进展（2026-04-24 更新）
+
+### 已完成
 
 - [x] 已新增 `SysUserFootprintRepository` 与 `SysUserFootprintRepositoryImpl`，先收口用户足迹路径的 Repository 访问入口。
 - [x] 已将 `UserFootprintServiceImpl` 改为注入 `SysUserFootprintRepository`，分页、按用户清空和文章浏览足迹 UPSERT 均改走 Repository。
@@ -24,7 +26,11 @@
 - [x] 已将 `UserCommentServiceImpl` 改为注入 `SysCommentRepository`、`SysInteractionRepository`，评论点赞状态查询、评论子树读取与评论互动级联清理都已改走 Repository。
 - [x] 已将 `CommentAdminServiceImpl` 改为注入 `SysCommentRepository`，管理端评论分页、评论子树读取与删除都已改走 Repository。
 - [x] 已同步更新 `UserCollectionServiceImplTest`、`UserCommentServiceImplTest`、`CommentAdminServiceImplTest`，测试 mock 已切换到 Repository。
-- [x] content 自有业务服务的 Repository 迁移已完成；当前剩余直接 `lambdaQuery()` 仅为 `CategoryAdminServiceImpl` 中跨模块 `BlogArticleCategoryService` 的文章分类绑定校验，留待 article 模块轮次统一迁移。
+
+### 遗留问题（2026-04-24 已全部解决）
+
+- [x] ~~`CategoryAdminServiceImpl:88` 仍有一处 `lambdaQuery()` 调用~~ → 已在 `BlogArticleCategoryRepository` 新增 `existsByCategoryId(Long)` 方法消除。
+- [x] ~~8 个旧薄服务仍保留~~ → 已确认无外部引用后全部删除。
 
 ## Repository 列表
 

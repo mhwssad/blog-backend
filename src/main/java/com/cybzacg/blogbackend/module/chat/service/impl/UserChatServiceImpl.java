@@ -98,6 +98,9 @@ public class UserChatServiceImpl implements UserChatService {
     private final ChatMessageGovernanceService chatMessageGovernanceService;
     private final ChatMetricsService chatMetricsService;
 
+    /**
+     * 分页查询当前用户的会话列表。
+     */
     @Override
     public PageResult<ChatConversationVO> pageMyConversations(ChatConversationPageQuery query) {
         Long userId = SecurityUtils.requireUserId();
@@ -124,6 +127,9 @@ public class UserChatServiceImpl implements UserChatService {
                 .build();
     }
 
+    /**
+     * 查询当前用户指定会话的详情。
+     */
     @Override
     public ChatConversationVO getMyConversation(Long conversationId) {
         Long userId = SecurityUtils.requireUserId();
@@ -132,6 +138,9 @@ public class UserChatServiceImpl implements UserChatService {
         return getConversationVO(userId, conversationId);
     }
 
+    /**
+     * 打开或创建与目标用户的单聊会话。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ChatConversationVO openSingleConversation(ChatOpenSingleConversationRequest request) {
@@ -141,12 +150,18 @@ public class UserChatServiceImpl implements UserChatService {
         return getConversationVO(userId, conversation.getId());
     }
 
+    /**
+     * 分页查询当前用户在指定会话中的消息历史。
+     */
     @Override
     public PageResult<ChatMessageVO> pageMyMessages(Long conversationId, ChatMessagePageQuery query) {
         Long userId = SecurityUtils.requireUserId();
         return pageMessages(userId, conversationId, query);
     }
 
+    /**
+     * 以当前登录用户身份发送文本消息。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ChatMessageVO sendTextMessage(ChatSendTextRequest request) {
@@ -154,6 +169,13 @@ public class UserChatServiceImpl implements UserChatService {
         return sendTextMessage(userId, request);
     }
 
+    /**
+     * 以指定用户身份发送文本消息，含频控校验、幂等检查、回复快照、未读计数和实时推送。
+     *
+     * @param userId  发送者用户 ID
+     * @param request 发送请求，含会话/目标用户、内容和客户端消息 ID
+     * @return 发送成功的消息视图
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ChatMessageVO sendTextMessage(Long userId, ChatSendTextRequest request) {
@@ -207,6 +229,12 @@ public class UserChatServiceImpl implements UserChatService {
         }
     }
 
+    /**
+     * 发送文件/图片/语音附件消息，发送后调度异步媒体处理（缩略图、转码等）。
+     *
+     * @param request 发送请求，含文件业务引用 ID、会话/目标用户和客户端消息 ID
+     * @return 发送成功的消息视图
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ChatMessageVO sendFileMessage(ChatSendFileRequest request) {
@@ -265,6 +293,9 @@ public class UserChatServiceImpl implements UserChatService {
         }
     }
 
+    /**
+     * 编辑当前用户自己发送的文本消息。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ChatMessageVO editMessage(Long messageId, ChatEditMessageRequest request) {
@@ -280,6 +311,9 @@ public class UserChatServiceImpl implements UserChatService {
         return messageVO;
     }
 
+    /**
+     * 撤回当前用户自己发送的消息，同时释放关联的文件业务引用。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void revokeMessage(Long messageId) {
@@ -292,6 +326,9 @@ public class UserChatServiceImpl implements UserChatService {
         chatPushService.pushMessageRevoked(messageVO, activeUserIds);
     }
 
+    /**
+     * 对当前用户隐藏指定消息（仅影响自身可见性），并重新计算未读数。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteMessage(Long messageId) {
@@ -310,6 +347,9 @@ public class UserChatServiceImpl implements UserChatService {
                 .build(), List.of(userId));
     }
 
+    /**
+     * 以当前登录用户身份标记会话内消息为已读。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ChatReadStateVO markRead(Long conversationId, ChatMarkReadRequest request) {
@@ -351,6 +391,9 @@ public class UserChatServiceImpl implements UserChatService {
         return state;
     }
 
+    /**
+     * 创建群聊会话，并将创建者设为群主、指定成员设为普通成员。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ChatConversationVO createGroup(ChatCreateGroupRequest request) {
@@ -368,6 +411,9 @@ public class UserChatServiceImpl implements UserChatService {
         return getConversationVO(userId, conversation.getId());
     }
 
+    /**
+     * 查询当前用户所在群聊的详情。
+     */
     @Override
     public ChatConversationVO getGroupDetail(Long conversationId) {
         Long userId = SecurityUtils.requireUserId();
@@ -375,6 +421,9 @@ public class UserChatServiceImpl implements UserChatService {
         return getConversationVO(userId, context.conversation().getId());
     }
 
+    /**
+     * 查询指定群聊的活跃成员列表。
+     */
     @Override
     public List<ChatMemberVO> listGroupMembers(Long conversationId) {
         Long userId = SecurityUtils.requireUserId();
@@ -382,6 +431,9 @@ public class UserChatServiceImpl implements UserChatService {
         return buildMemberRecords(listActiveMembers(conversationId));
     }
 
+    /**
+     * 邀请用户加入群聊（需要群主或管理员权限）。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public List<ChatMemberVO> inviteGroupMembers(Long conversationId, ChatGroupMemberOperateRequest request) {
@@ -399,6 +451,9 @@ public class UserChatServiceImpl implements UserChatService {
         return records;
     }
 
+    /**
+     * 将指定成员提升为群管理员（需要群主权限）。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public List<ChatMemberVO> appointGroupAdmin(Long conversationId, Long memberUserId) {
@@ -414,6 +469,9 @@ public class UserChatServiceImpl implements UserChatService {
         return records;
     }
 
+    /**
+     * 取消指定成员的群管理员角色，回退为普通成员（需要群主权限）。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public List<ChatMemberVO> removeGroupAdmin(Long conversationId, Long memberUserId) {
@@ -429,6 +487,9 @@ public class UserChatServiceImpl implements UserChatService {
         return records;
     }
 
+    /**
+     * 将群主转让给指定成员，当前群主自动降级为管理员。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ChatConversationVO transferGroupOwner(Long conversationId, ChatTransferGroupOwnerRequest request) {
@@ -451,6 +512,14 @@ public class UserChatServiceImpl implements UserChatService {
         return getConversationVO(userId, conversationId);
     }
 
+    /**
+     * 设置或解除群成员禁言（需要群主或管理员权限）。
+     *
+     * @param conversationId 目标会话 ID
+     * @param memberUserId   被操作成员的用户 ID
+     * @param request        包含禁言截止时间，null 或已过去的时间视为解除禁言
+     * @return 更新后的成员列表
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public List<ChatMemberVO> muteGroupMember(Long conversationId, Long memberUserId, ChatMuteMemberRequest request) {
@@ -468,6 +537,9 @@ public class UserChatServiceImpl implements UserChatService {
         return records;
     }
 
+    /**
+     * 更新群公告内容（需要群主或管理员权限）。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ChatConversationVO updateGroupNotice(Long conversationId, ChatGroupNoticeUpdateRequest request) {
@@ -479,6 +551,9 @@ public class UserChatServiceImpl implements UserChatService {
         return getConversationVO(userId, conversationId);
     }
 
+    /**
+     * 将指定成员从群聊中移除（需要群主或管理员权限，不能移除自己）。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void removeGroupMember(Long conversationId, Long memberUserId) {
@@ -494,6 +569,9 @@ public class UserChatServiceImpl implements UserChatService {
         chatPushService.pushMembersUpdated(buildMembersUpdatedPayload("member_removed", conversationId, memberUserId, records), notifyUserIds);
     }
 
+    /**
+     * 当前用户主动退出群聊（群主不能退出，需先解散或转让）。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void leaveGroup(Long conversationId) {
@@ -507,6 +585,9 @@ public class UserChatServiceImpl implements UserChatService {
         chatPushService.pushMembersUpdated(buildMembersUpdatedPayload("member_left", conversationId, userId, records), notifyUserIds);
     }
 
+    /**
+     * 解散群聊，移除所有活跃成员并将会话标记为已解散（需要群主权限）。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void dissolveGroup(Long conversationId) {

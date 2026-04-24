@@ -14,7 +14,7 @@ import lombok.Data;
 @Data
 public class SysConfig {
     /**
-     *
+     * 主键ID
      */
     @TableId(type = IdType.AUTO)
     private Long id;

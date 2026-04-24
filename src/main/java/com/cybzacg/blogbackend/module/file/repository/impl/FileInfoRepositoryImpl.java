@@ -19,10 +19,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * 文件物理信息 Repository 实现。
+ * 文件物理信息 Repository 实现。<p>基于 MyBatis-Plus ServiceImpl 提供文件物理信息的增删改查。
  */
 @Repository
 public class FileInfoRepositoryImpl extends ServiceImpl<FileInfoMapper, FileInfo> implements FileInfoRepository {
+    /** {@inheritDoc} */
     @Override
     public FileInfo findByMd5AndStatus(String md5, Integer status) {
         return getOne(new LambdaQueryWrapper<FileInfo>()
@@ -31,6 +32,7 @@ public class FileInfoRepositoryImpl extends ServiceImpl<FileInfoMapper, FileInfo
                 .last("limit 1"));
     }
 
+    /** {@inheritDoc} */
     @Override
     public FileInfo findByMd5(String md5) {
         return getOne(new LambdaQueryWrapper<FileInfo>()
@@ -38,6 +40,7 @@ public class FileInfoRepositoryImpl extends ServiceImpl<FileInfoMapper, FileInfo
                 .last("limit 1"));
     }
 
+    /** {@inheritDoc} */
     @Override
     public Set<Long> findIdsByStatusAndKeyword(Integer status, String keyword) {
         return list(new LambdaQueryWrapper<FileInfo>()
@@ -51,6 +54,7 @@ public class FileInfoRepositoryImpl extends ServiceImpl<FileInfoMapper, FileInfo
                 .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
+    /** {@inheritDoc} */
     @Override
     public Page<FileInfo> pageAdminFiles(FileAdminPageQuery query) {
         LambdaQueryWrapper<FileInfo> wrapper = new LambdaQueryWrapper<FileInfo>()
@@ -63,6 +67,7 @@ public class FileInfoRepositoryImpl extends ServiceImpl<FileInfoMapper, FileInfo
                         .like(FileInfo::getFileName, query.getKeyword()))
                 .orderByDesc(FileInfo::getUpdatedAt)
                 .orderByDesc(FileInfo::getId);
+        // 按引用类型反查：仅保留在 file_business_info 中存在对应引用类型的文件
         if (StringUtils.hasText(query.getReferenceType())) {
             String type = FileReferenceTypeEnum.normalize(query.getReferenceType());
             wrapper.inSql(FileInfo::getId, "select distinct file_id from file_business_info where reference_type='" + type + "'");
@@ -70,8 +75,10 @@ public class FileInfoRepositoryImpl extends ServiceImpl<FileInfoMapper, FileInfo
         return page(new Page<>(query.getCurrent(), query.getSize()), wrapper);
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean refreshReferenceMetadata(Long fileId, boolean promotePublic) {
+        // 通过子查询实时统计引用数，保证与 file_business_info 表一致
         LambdaUpdateWrapper<FileInfo> updateWrapper = new LambdaUpdateWrapper<FileInfo>()
                 .eq(FileInfo::getId, fileId)
                 .setSql("reference_count = (select count(*) from file_business_info where file_id = " + fileId + ")");
@@ -81,6 +88,7 @@ public class FileInfoRepositoryImpl extends ServiceImpl<FileInfoMapper, FileInfo
         return update(updateWrapper);
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean markDeletedIfNoReferences(Long fileId) {
         return update(new LambdaUpdateWrapper<FileInfo>()

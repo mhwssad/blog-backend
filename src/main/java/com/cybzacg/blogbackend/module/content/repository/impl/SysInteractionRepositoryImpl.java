@@ -13,12 +13,13 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * 互动 Repository 实现。
+ * 互动 Repository 实现。<p>基于 MyBatis-Plus ServiceImpl 提供用户互动（点赞、收藏等）数据的增删改查。
  */
 @Repository
 public class SysInteractionRepositoryImpl extends ServiceImpl<SysInteractionMapper, SysInteraction>
         implements SysInteractionRepository {
 
+    /** {@inheritDoc} */
     @Override
     public Page<SysInteraction> pageByAdminConditions(InteractionPageQuery query) {
         return page(new Page<>(query.getCurrent(), query.getSize()), new LambdaQueryWrapper<SysInteraction>()
@@ -30,6 +31,7 @@ public class SysInteractionRepositoryImpl extends ServiceImpl<SysInteractionMapp
                 .orderByDesc(SysInteraction::getId));
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean existsByUserIdAndTargetIdAndTargetTypeAndActionType(Long userId,
                                                                        Long targetId,
@@ -42,6 +44,7 @@ public class SysInteractionRepositoryImpl extends ServiceImpl<SysInteractionMapp
                 .eq(SysInteraction::getActionType, actionType));
     }
 
+    /** {@inheritDoc} */
     @Override
     public SysInteraction findOneByUserIdAndTargetIdAndTargetTypeAndActionType(Long userId,
                                                                                Long targetId,
@@ -54,6 +57,7 @@ public class SysInteractionRepositoryImpl extends ServiceImpl<SysInteractionMapp
                 .eq(SysInteraction::getActionType, actionType));
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean removeByTargetTypeAndTargetId(String targetType, Long targetId) {
         return remove(new LambdaQueryWrapper<SysInteraction>()
@@ -61,8 +65,10 @@ public class SysInteractionRepositoryImpl extends ServiceImpl<SysInteractionMapp
                 .eq(SysInteraction::getTargetId, targetId));
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean removeByTargetTypeAndTargetIds(String targetType, Collection<Long> targetIds) {
+        // 空集合时无需执行删除，直接返回成功
         if (targetIds == null || targetIds.isEmpty()) {
             return true;
         }
@@ -71,6 +77,7 @@ public class SysInteractionRepositoryImpl extends ServiceImpl<SysInteractionMapp
                 .in(SysInteraction::getTargetId, targetIds));
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<SysInteraction> findByUserIdAndTargetTypeAndActionTypeInTargetIds(Long userId,
                                                                                    String targetType,

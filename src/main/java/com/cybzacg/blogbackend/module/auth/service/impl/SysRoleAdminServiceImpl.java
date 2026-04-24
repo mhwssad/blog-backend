@@ -37,6 +37,7 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
     private final SysMenuRepository sysMenuRepository;
     private final RbacAdminModelMapper rbacAdminModelMapper;
 
+    /** 分页查询角色列表，附带每个角色已分配的菜单 ID。 */
     @Override
     public PageResult<SysRoleAdminVO> pageRoles(SysRolePageQuery query) {
         Page<SysRole> page = sysRoleRepository.pageByAdminConditions(query);
@@ -46,12 +47,14 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
         return PageResult.of(page, records);
     }
 
+    /** 根据 ID 获取角色详情及其关联的菜单 ID。 */
     @Override
     public SysRoleAdminVO getRole(Long id) {
         SysRole role = getAvailableRole(id);
         return rbacAdminModelMapper.toRoleVO(role, sysRoleMenuRepository.findMenuIdsByRoleId(id));
     }
 
+    /** 创建角色，校验名称与编码唯一性。 */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public SysRoleAdminVO createRole(SysRoleSaveRequest request) {
@@ -63,6 +66,7 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
         return rbacAdminModelMapper.toRoleVO(role, List.of());
     }
 
+    /** 更新角色资料，校验名称与编码唯一性。 */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public SysRoleAdminVO updateRole(Long id, SysRoleSaveRequest request) {
@@ -73,6 +77,7 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
         return rbacAdminModelMapper.toRoleVO(role, sysRoleMenuRepository.findMenuIdsByRoleId(id));
     }
 
+    /** 更新角色状态（启用/禁用）。 */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, Integer status) {
@@ -81,6 +86,7 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
         sysRoleRepository.updateById(role);
     }
 
+    /** 删除角色，同步清理角色-菜单和用户-角色关联数据。 */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteRole(Long id) {
@@ -90,12 +96,19 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
         sysRoleRepository.removeById(id);
     }
 
+    /** 查询角色已分配的菜单 ID 列表。 */
     @Override
     public List<Long> listMenuIds(Long roleId) {
         getAvailableRole(roleId);
         return sysRoleMenuRepository.findMenuIdsByRoleId(roleId);
     }
 
+    /**
+     * 为角色分配菜单权限，先清除旧关联再批量写入。
+     *
+     * @param roleId  角色 ID
+     * @param menuIds 菜单 ID 列表（为空时仅清除）
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void assignMenus(Long roleId, List<Long> menuIds) {

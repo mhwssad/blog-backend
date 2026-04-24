@@ -10,8 +10,7 @@ import com.cybzacg.blogbackend.enums.storage.StorageType;
 import org.springframework.stereotype.Component;
 
 /**
- * MinIO 存储服务工厂
- * 负责创建 MinIO 存储服务实例
+ * MinIO 存储服务工厂。<p>负责创建 MinIO 存储服务实例。
  *
  * @author System
  */

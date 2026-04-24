@@ -4,10 +4,7 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * 邮件配置类，用于接收和存储邮件相关的配置属性。
- *
- * @author Ray
- * @since 2024/8/17
+ * 邮件配置属性。<p>映射 {@code spring.mail} 前缀下的邮件服务器连接信息、发件人地址及 SMTP 加密选项。</p>
  */
 @ConfigurationProperties(prefix = "spring.mail")
 @Data

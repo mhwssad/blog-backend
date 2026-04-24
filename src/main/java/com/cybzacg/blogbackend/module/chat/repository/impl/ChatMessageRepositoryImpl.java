@@ -20,21 +20,25 @@ import java.util.List;
 public class ChatMessageRepositoryImpl extends ServiceImpl<ChatMessageMapper, ChatMessage>
         implements ChatMessageRepository {
 
+    /** {@inheritDoc} */
     @Override
     public Long countMessagePage(Long conversationId, Long userId, Long beforeMessageId) {
         return baseMapper.countMessagePage(conversationId, userId, beforeMessageId);
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<ChatMessageHistoryItem> selectMessagePage(Long conversationId, Long userId, Long beforeMessageId, Long offset, Long size) {
         return baseMapper.selectMessagePage(conversationId, userId, beforeMessageId, offset, size);
     }
 
+    /** {@inheritDoc} */
     @Override
     public ChatMessageHistoryItem selectVisibleMessageById(Long conversationId, Long userId, Long messageId) {
         return baseMapper.selectVisibleMessageById(conversationId, userId, messageId);
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<ChatMessageHistoryItem> selectVisibleMessagesByIds(Long conversationId, Long userId, Collection<Long> messageIds) {
         if (messageIds == null || messageIds.isEmpty()) {
@@ -43,16 +47,19 @@ public class ChatMessageRepositoryImpl extends ServiceImpl<ChatMessageMapper, Ch
         return baseMapper.selectVisibleMessagesByIds(conversationId, userId, messageIds.stream().toList());
     }
 
+    /** {@inheritDoc} */
     @Override
     public Long countAdminMessagePage(Long conversationId, ChatAdminMessagePageQuery query) {
         return baseMapper.countAdminMessagePage(conversationId, query);
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<ChatAdminMessageItem> selectAdminMessagePage(Long conversationId, ChatAdminMessagePageQuery query, Long offset, Long size) {
         return baseMapper.selectAdminMessagePage(conversationId, query, offset, size);
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<ChatAdminMessageItem> selectAdminMessagesByIds(Long conversationId, Collection<Long> messageIds) {
         if (messageIds == null || messageIds.isEmpty()) {
@@ -61,6 +68,9 @@ public class ChatMessageRepositoryImpl extends ServiceImpl<ChatMessageMapper, Ch
         return baseMapper.selectAdminMessagesByIds(conversationId, messageIds.stream().toList());
     }
 
+    /**
+     * 根据发送者和客户端消息 ID 查找消息，按 ID 降序取最新一条，用于幂等去重。
+     */
     @Override
     public ChatMessage findBySenderAndClientMessageId(Long senderId, String clientMessageId) {
         return getOne(new LambdaQueryWrapper<ChatMessage>()

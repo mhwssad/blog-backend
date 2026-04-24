@@ -8,7 +8,7 @@ import com.cybzacg.blogbackend.module.content.model.admin.CommentPageQuery;
 import java.util.List;
 
 /**
- * 评论 Repository。
+ * 评论 Repository。<p>封装评论表的持久化操作，提供后台分页查询、根评论/回复树查询及批量删除。
  */
 public interface SysCommentRepository extends IService<SysComment> {
     /**

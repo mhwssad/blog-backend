@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * 存储节点健康信息DTO
+ * 存储节点健康信息 DTO。<p>承载单个存储节点的探活结果，包括状态、连续成功/失败次数和最近一次错误信息。
  */
 @Data
 @Builder

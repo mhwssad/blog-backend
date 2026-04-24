@@ -27,10 +27,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * 增强扩展属性支持
- * @since 4.1.0
- * @author <a href="xiaoymin@foxmail.com">xiaoymin@foxmail.com</a>
- * 2022/12/11 22:40
+ * Knife4j OpenAPI 增强定制器。<p>在 OpenAPI 规范中注入 Knife4j 扩展属性（设置、Markdown 文档），并为 Controller 上的 {@code @ApiSupport} 注解生成 x-order 排序扩展。</p>
  */
 @Primary
 @Configuration

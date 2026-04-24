@@ -11,8 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 /**
- * 存储服务工厂管理器。
- * 负责注册不同存储类型对应的工厂，并在配置装配阶段创建具体存储实例。
+ * 存储服务工厂管理器。<p>负责注册不同存储类型对应的工厂，并在配置装配阶段创建具体存储实例。
  */
 @Slf4j
 @Component

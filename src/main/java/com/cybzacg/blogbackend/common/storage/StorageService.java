@@ -3,8 +3,7 @@ import com.cybzacg.blogbackend.enums.storage.StorageType;
 import java.io.InputStream;
 import java.util.List;
 /**
- * 存储服务抽象。
- * 统一封装正式文件、临时文件和分片合并等基础能力，屏蔽底层存储差异。
+ * 存储服务抽象。<p>统一封装正式文件、临时文件和分片合并等基础能力，屏蔽底层存储差异。
  */
 public interface StorageService {
     /**

@@ -21,6 +21,9 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 
+/**
+ * 本地文件系统存储实现。<p>将文件存储在服务器本地磁盘，适用于开发环境或小规模部署场景。
+ */
 @Slf4j
 public class LocalStorageServiceImpl implements StorageService {
     private final String basePath;
@@ -40,6 +43,7 @@ public class LocalStorageServiceImpl implements StorageService {
         log.info("创建本地存储目录: {}", basePath);
     }
 
+    /** 委托给带 contentType 的重载方法，contentType 传 {@code null}。 */
     @Override
     public String upload(InputStream inputStream, String objectName) {
         return upload(inputStream, objectName, null);
@@ -105,6 +109,7 @@ public class LocalStorageServiceImpl implements StorageService {
         }
     }
 
+    /** 逐个调用 {@link #delete} 完成批量删除，返回成功数量。 */
     @Override
     public int deleteBatch(List<String> objectNames) {
         int successCount = 0;
@@ -117,6 +122,7 @@ public class LocalStorageServiceImpl implements StorageService {
         return successCount;
     }
 
+    /** 检查本地文件是否存在，支持 URL 格式和相对路径格式。 */
     @Override
     public boolean exists(String objectName) {
         try {
@@ -195,6 +201,7 @@ public class LocalStorageServiceImpl implements StorageService {
         return PathUtils.toAbsolutePath(filePath).toString();
     }
 
+    /** 返回 {@link StorageType#LOCAL}。 */
     @Override
     public StorageType getStorageType() {
         return StorageType.LOCAL;
@@ -238,11 +245,13 @@ public class LocalStorageServiceImpl implements StorageService {
         }
     }
 
+    /** 委托给带 contentType 的重载方法，contentType 传 {@code null}。 */
     @Override
     public String uploadToTemp(InputStream inputStream, String objectName) {
         return uploadToTemp(inputStream, objectName, null);
     }
 
+    /** 将文件上传到临时目录，路径前缀由配置项 {@code tempDirPrefix} 决定。 */
     @Override
     public String uploadToTemp(InputStream inputStream, String objectName, String contentType) {
         // 构建临时存储路径：temp/{uploadId}/{objectName}
@@ -335,6 +344,7 @@ public class LocalStorageServiceImpl implements StorageService {
         }
     }
 
+    /** 按 uploadId 删除对应的临时文件或目录。 */
     @Override
     public boolean deleteTempFiles(String uploadId) {
         String prefix = fileUploadProperties.getTempDirPrefix() + "/" + uploadId;

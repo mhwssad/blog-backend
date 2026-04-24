@@ -2,7 +2,7 @@ package com.cybzacg.blogbackend.common.aspect;
 
 import com.cybzacg.blogbackend.common.annotation.DisableSysLog;
 import com.cybzacg.blogbackend.domain.SysLog;
-import com.cybzacg.blogbackend.module.auth.service.SysLogService;
+import com.cybzacg.blogbackend.module.auth.repository.SysLogRepository;
 import com.cybzacg.blogbackend.utils.IPUtils;
 import com.cybzacg.blogbackend.utils.JsonUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
@@ -64,7 +64,7 @@ public class SysLogAspect {
             "captcha", "emailcode", "code"
     );
 
-    private final SysLogService sysLogService;
+    private final SysLogRepository sysLogRepository;
 
     /**
      * 拦截所有 RestController 的公开方法，再在运行时按 URI 和注解进一步筛选。
@@ -129,7 +129,7 @@ public class SysLogAspect {
         fillRegion(sysLog, ip);
         fillUserAgent(sysLog, request.getHeader("User-Agent"));
 
-        sysLogService.saveLog(sysLog);
+        sysLogRepository.saveLog(sysLog);
     }
 
     /**

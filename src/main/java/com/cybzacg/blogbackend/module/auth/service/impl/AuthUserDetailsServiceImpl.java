@@ -2,10 +2,10 @@ package com.cybzacg.blogbackend.module.auth.service.impl;
 
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserDetails;
+import com.cybzacg.blogbackend.module.auth.repository.SysMenuRepository;
+import com.cybzacg.blogbackend.module.auth.repository.SysRoleRepository;
+import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.service.AuthUserDetailsService;
-import com.cybzacg.blogbackend.module.auth.service.SysMenuService;
-import com.cybzacg.blogbackend.module.auth.service.SysRoleService;
-import com.cybzacg.blogbackend.module.auth.service.SysUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -25,23 +25,31 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class AuthUserDetailsServiceImpl implements AuthUserDetailsService {
-    private final SysUserService sysUserService;
-    private final SysRoleService sysRoleService;
-    private final SysMenuService sysMenuService;
+    private final SysUserRepository sysUserRepository;
+    private final SysRoleRepository sysRoleRepository;
+    private final SysMenuRepository sysMenuRepository;
 
+    /**
+     * 根据用户名加载认证详情，聚合角色编码与菜单权限。
+     *
+     * @param username 用户名
+     * @return 包含角色和权限的认证用户详情
+     * @throws UsernameNotFoundException 用户不存在时抛出
+     */
     @Override
     public AuthUserDetails loadAuthUserByUsername(String username) {
-        SysUser user = sysUserService.getByUsername(username);
+        SysUser user = sysUserRepository.findByUsername(username);
         if (user == null) {
             throw new UsernameNotFoundException("用户不存在");
         }
 
-        List<String> roleCodes = sysRoleService.listRoleCodesByUserId(user.getId());
-        List<String> permissions = sysMenuService.listPermissionsByUserId(user.getId());
+        List<String> roleCodes = sysRoleRepository.findRoleCodesByUserId(user.getId());
+        List<String> permissions = sysMenuRepository.findPermissionsByUserId(user.getId());
         List<GrantedAuthority> authorities = buildAuthorities(roleCodes, permissions);
         return AuthUserDetails.of(user, roleCodes, permissions, authorities);
     }
 
+    /** Spring Security UserDetailsService 契约方法，委托给 {@link #loadAuthUserByUsername}。 */
     @Override
     public AuthUserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return loadAuthUserByUsername(username);

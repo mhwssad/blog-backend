@@ -8,10 +8,11 @@ import com.cybzacg.blogbackend.module.file.repository.FileChunkRepository;
 import org.springframework.stereotype.Repository;
 
 /**
- * 文件分片 Repository 实现。
+ * 文件分片 Repository 实现。<p>基于 MyBatis-Plus ServiceImpl 提供文件分片记录的增删改查。
  */
 @Repository
 public class FileChunkRepositoryImpl extends ServiceImpl<FileChunkMapper, FileChunk> implements FileChunkRepository {
+    /** {@inheritDoc} */
     @Override
     public FileChunk findByTaskIdAndChunkNumber(Long uploadTaskId, Integer chunkNumber) {
         return getOne(new LambdaQueryWrapper<FileChunk>()
@@ -20,6 +21,7 @@ public class FileChunkRepositoryImpl extends ServiceImpl<FileChunkMapper, FileCh
                 .last("limit 1"));
     }
 
+    /** {@inheritDoc} */
     @Override
     public long countByTaskIdAndStatus(Long uploadTaskId, Integer completedStatus) {
         Long count = count(new LambdaQueryWrapper<FileChunk>()
@@ -28,6 +30,7 @@ public class FileChunkRepositoryImpl extends ServiceImpl<FileChunkMapper, FileCh
         return count == null ? 0L : count;
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean deleteByUploadTaskId(Long uploadTaskId) {
         return remove(new LambdaQueryWrapper<FileChunk>()

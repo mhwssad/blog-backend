@@ -9,10 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
 /**
- * 线程池配置属性。
- *
- * <p>统一承接项目默认异步线程池与定时任务线程池配置，
- * 便于通过 `application.yml` 按环境调整线程池参数。
+ * 统一线程池配置属性。<p>映射 {@code thread-pool} 前缀下的默认异步线程池和定时任务线程池参数，便于按环境调整。</p>
  */
 @Data
 @Component

@@ -17,12 +17,25 @@ public class ChatMetricsServiceImpl implements ChatMetricsService {
         this.meterRegistry = meterRegistry;
     }
 
+    /**
+     * 记录消息发送指标。
+     *
+     * @param messageType 消息类型（text/file/image/voice）
+     * @param result      发送结果（success/business_error/system_error）
+     */
     @Override
     public void recordSend(String messageType, String result) {
         meterRegistry.counter("chat.message.send.total", "messageType", normalize(messageType), "result", normalize(result))
                 .increment();
     }
 
+    /**
+     * 记录媒体文件异步处理耗时指标。
+     *
+     * @param messageType  消息类型（image/voice）
+     * @param result       处理结果（success/failed/skipped）
+     * @param durationNanos 处理耗时（纳秒）
+     */
     @Override
     public void recordMediaProcess(String messageType, String result, long durationNanos) {
         Timer.builder("chat.media.process.duration")

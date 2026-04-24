@@ -21,9 +21,7 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 import org.springframework.web.util.UriComponentsBuilder;
 
 /**
- * WebSocket 握手鉴权拦截器。
- *
- * <p>复用现有 TokenManager，在握手阶段完成访问令牌校验并回填当前用户信息。
+ * WebSocket 握手鉴权拦截器。<p>复用现有 TokenManager，在握手阶段从请求头或查询参数中提取访问令牌并完成校验，将用户认证信息回填到握手属性中。</p>
  */
 @Component
 @RequiredArgsConstructor
@@ -31,6 +29,15 @@ public class WebSocketAuthHandshakeInterceptor implements HandshakeInterceptor {
     private final TokenManager tokenManager;
     private final WebSocketProperties webSocketProperties;
 
+    /**
+     * 握手前校验访问令牌，校验通过则将用户认证信息写入握手属性。
+     *
+     * @param request    服务端 HTTP 请求
+     * @param response   服务端 HTTP 响应
+     * @param wsHandler  WebSocket 处理器
+     * @param attributes 握手属性，用于传递用户信息
+     * @return 令牌校验通过返回 true，否则返回 false 并设置 401 状态码
+     */
     @Override
     public boolean beforeHandshake(ServerHttpRequest request,
                                    ServerHttpResponse response,
@@ -53,6 +60,9 @@ public class WebSocketAuthHandshakeInterceptor implements HandshakeInterceptor {
         return true;
     }
 
+    /**
+     * 握手完成后的回调，当前无额外处理。
+     */
     @Override
     public void afterHandshake(ServerHttpRequest request,
                                ServerHttpResponse response,

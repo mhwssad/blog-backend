@@ -4,9 +4,9 @@ import com.cybzacg.blogbackend.common.constant.NoticeConstants;
 import com.cybzacg.blogbackend.domain.SysNotice;
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.domain.SysUserNotice;
-import com.cybzacg.blogbackend.module.auth.service.SysNoticeService;
-import com.cybzacg.blogbackend.module.auth.service.SysUserNoticeService;
-import com.cybzacg.blogbackend.module.auth.service.SysUserService;
+import com.cybzacg.blogbackend.module.auth.repository.SysNoticeRepository;
+import com.cybzacg.blogbackend.module.auth.repository.SysUserNoticeRepository;
+import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.follow.service.FollowNoticeService;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import java.util.Date;
@@ -28,9 +28,9 @@ public class FollowNoticeServiceImpl implements FollowNoticeService {
     private static final String FOLLOW_NOTICE_LEVEL = "info";
     private static final String FOLLOW_NOTICE_TITLE = "你收到了一位新粉丝";
 
-    private final SysNoticeService sysNoticeService;
-    private final SysUserNoticeService sysUserNoticeService;
-    private final SysUserService sysUserService;
+    private final SysNoticeRepository sysNoticeRepository;
+    private final SysUserNoticeRepository sysUserNoticeRepository;
+    private final SysUserRepository sysUserRepository;
 
     /**
      * 关注主事务提交成功后再投递通知，避免通知失败反向影响关注主链路。
@@ -54,7 +54,7 @@ public class FollowNoticeServiceImpl implements FollowNoticeService {
     }
 
     private void createNewFollowerNotice(Long targetUserId, Long followerUserId) {
-        SysUser follower = sysUserService.getById(followerUserId);
+        SysUser follower = sysUserRepository.getById(followerUserId);
         if (follower == null || !Objects.equals(follower.getDeletedFlag(), 0)) {
             return;
         }
@@ -80,7 +80,7 @@ public class FollowNoticeServiceImpl implements FollowNoticeService {
         notice.setUpdateTime(now);
         notice.setIsDeleted(0);
         try {
-            sysNoticeService.save(notice);
+            sysNoticeRepository.save(notice);
             SysUserNotice relation = new SysUserNotice();
             relation.setNoticeId(notice.getId());
             relation.setUserId(targetUserId);
@@ -88,7 +88,7 @@ public class FollowNoticeServiceImpl implements FollowNoticeService {
             relation.setCreateTime(now);
             relation.setUpdateTime(now);
             relation.setIsDeleted(0);
-            sysUserNoticeService.save(relation);
+            sysUserNoticeRepository.save(relation);
         } catch (RuntimeException ex) {
             log.warn("create follow notice failed: followerUserId={}, targetUserId={}", followerUserId, targetUserId, ex);
         }

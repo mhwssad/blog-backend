@@ -35,6 +35,13 @@ public class ChatAttachmentMetadataResolverImpl implements ChatAttachmentMetadat
 
     private final StorageManager storageManager;
 
+    /**
+     * 根据消息类型解析附件元数据（图片宽高、语音时长和波形）。
+     *
+     * @param fileInfo    文件实体
+     * @param messageType 消息类型，如 image 或 voice
+     * @return 解析到的元数据，解析失败时返回空元数据
+     */
     @Override
     public ChatAttachmentMetadata resolve(FileInfo fileInfo, String messageType) {
         StorageService storageService = resolveStorageService(fileInfo);

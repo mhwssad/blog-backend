@@ -25,11 +25,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
- * 存储配置类
- * 配置多种存储类型（OSS、COS、Local、MinIO），支持多存储节点
- * 统一使用 StorageManager 作为存储服务的入口，提供健康检查、故障转移、负载均衡等功能
- *
- * @author System
+ * 多存储服务配置。<p>支持 OSS、COS、Local、MinIO 等多种存储类型，通过工厂模式创建存储实例，并统一使用 StorageManager 提供健康检查、故障转移和负载均衡能力。</p>
  */
 @Slf4j
 @Configuration
@@ -40,11 +36,9 @@ public class StorageConfig {
     private final StorageServiceFactoryManager factoryManager;
 
     /**
-     * 创建多存储服务 Map
-     * 支持通过 key 获取不同的存储服务实例
-     * 使用工厂模式创建存储服务实例，便于扩展新的存储类型
+     * 创建多存储服务映射，Key 为节点标识，Value 为对应的存储服务实例。
      *
-     * @return Map<String, StorageService> 存储服务映射
+     * @return 存储服务映射
      */
     @Bean
     public Map<String, StorageService> storageServiceMap() {
@@ -103,16 +97,13 @@ public class StorageConfig {
     }
 
     /**
-     * 创建存储健康检查服务 Bean。
+     * 创建存储健康检查服务，复用全局线程池执行定时检查和并发探测。
      *
-     * <p>线程池统一复用 {@link ThreadPoolConfig} 中的定时任务线程池和默认异步线程池，
-     * 避免存储模块单独维护一套执行器配置。
-     *
-     * @param storageServiceMap        所有存储服务Map
+     * @param storageServiceMap        所有存储服务映射
      * @param storageProperties        存储配置
      * @param storageManagerProperties 管理器配置
      * @param scheduledTaskExecutor    定时任务执行器
-     * @param asyncTaskExecutor        默认异步线程池（用于并发执行健康检查）
+     * @param asyncTaskExecutor        异步线程池（用于并发执行健康检查）
      * @return StorageHealthCheckService 实例
      */
     @Bean
@@ -134,16 +125,9 @@ public class StorageConfig {
     }
 
     /**
-     * 创建存储管理器 Bean
-     * 作为默认的StorageService实现，提供统一入口
-     * 支持@Primary注解，在注入StorageService时优先使用此Bean
-     * 所有存储操作应统一使用StorageManager，它提供了：
-     * 1. 存储服务的统一管理
-     * 2. 健康检查和故障转移
-     * 3. 负载均衡策略
-     * 4. 手动切换存储节点功能
+     * 创建存储管理器 Bean，作为默认 StorageService 实现，提供统一入口、健康检查、故障转移和负载均衡。
      *
-     * @param storageServiceMap        所有存储服务Map
+     * @param storageServiceMap        所有存储服务映射
      * @param storageProperties        存储配置
      * @param healthCheckService       健康检查服务
      * @param storageManagerProperties 管理器配置
@@ -168,9 +152,7 @@ public class StorageConfig {
     }
 
     /**
-     * 创建存储健康检查指示器 Bean
-     * 集成到 Spring Boot Actuator 健康检查中
-     * Bean 名称指定为 "storage"，这样 Actuator 会将其识别为 storage 健康检查
+     * 创建集成 Spring Boot Actuator 的存储健康检查指示器。
      *
      * @param storageHealthCheckService 存储健康检查服务
      * @return StorageHealthIndicator 实例

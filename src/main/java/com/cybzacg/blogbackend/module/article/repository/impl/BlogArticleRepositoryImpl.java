@@ -14,15 +14,17 @@ import java.util.Set;
 import org.springframework.util.StringUtils;
 
 /**
- * 文章 Repository 实现。
+ * 文章 Repository 实现。<p>基于 MyBatis-Plus ServiceImpl 提供文章数据的增删改查。
  */
 @Repository
 public class BlogArticleRepositoryImpl extends ServiceImpl<BlogArticleMapper, BlogArticle>
         implements BlogArticleRepository {
 
+    /** {@inheritDoc} */
     @Override
     public Page<BlogArticle> pageAdminArticles(ArticleAdminPageQuery query, Set<Long> filteredArticleIds) {
         LambdaQueryWrapper<BlogArticle> wrapper = new LambdaQueryWrapper<>();
+        // 关键字同时匹配标题和摘要
         if (StringUtils.hasText(query.getKeyword())) {
             wrapper.and(w -> w.like(BlogArticle::getTitle, query.getKeyword())
                     .or()
@@ -40,6 +42,7 @@ public class BlogArticleRepositoryImpl extends ServiceImpl<BlogArticleMapper, Bl
         return page(new Page<>(query.getCurrent(), query.getSize()), wrapper);
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<BlogArticle> listAllPublished() {
         return list(new LambdaQueryWrapper<BlogArticle>()

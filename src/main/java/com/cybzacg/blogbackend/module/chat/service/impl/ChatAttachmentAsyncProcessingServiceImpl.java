@@ -90,6 +90,13 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
         this.chatMetricsService = chatMetricsService;
     }
 
+    /**
+     * 在当前事务提交后调度附件异步处理任务，事务未激活时立即提交。
+     *
+     * @param messageId       关联的消息 ID
+     * @param messageSnapshot 发送时的消息快照，用于异步线程恢复推送数据
+     * @param pushUserIds     待推送的目标用户 ID 集合
+     */
     @Override
     public void scheduleAfterCommit(Long messageId, ChatMessageVO messageSnapshot, Collection<Long> pushUserIds) {
         if (messageId == null
@@ -118,6 +125,9 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
         scheduleAction.run();
     }
 
+    /**
+     * 从数据库批量捞取到期的待处理任务并提交到异步线程池。
+     */
     @Override
     public void dispatchDueTasks() {
         List<ChatAttachmentProcessTask> tasks = chatAttachmentProcessTaskRepository.listDispatchableTasks(
@@ -129,6 +139,11 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
         }
     }
 
+    /**
+     * 重置租约过期但仍处于处理中的任务为待调度状态，避免任务永久卡住。
+     *
+     * @return 重置的任务数量
+     */
     @Override
     public int recoverExpiredTasks() {
         return chatAttachmentProcessTaskRepository.resetExpiredTasks(new Date(), LEASE_EXPIRED_REASON);

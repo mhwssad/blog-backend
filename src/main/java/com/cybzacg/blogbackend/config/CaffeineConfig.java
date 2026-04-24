@@ -11,10 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * caffeine缓存配置
- *
- * @author Theo
- * @since 2025-01-22 17:40:23
+ * Caffeine 本地缓存配置。<p>仅在 spring.cache.type=caffeine 时生效，根据配置规格字符串初始化 CaffeineCacheManager。</p>
  */
 @Slf4j
 @Configuration

@@ -1,14 +1,12 @@
-# Article 模块 Repository 迁移计划
+# Article 模块 Repository 迁移记录
 
-## 模块信息
+## 完成状态
 
-- **优先级**：第5轮（最重的跨模块消费者）
+- **状态**：已完成
+- **完成时间**：2026-04-24 确认
+- **轮次**：第5轮
 - **复杂度**：高
 - **前置依赖**：content + auth + file 模块的 Repository 已创建
-- **涉及薄服务**：3个
-- **涉及业务服务**：4个
-- **数据访问总数**：约43处
-- **跨模块数据访问**：content(7个服务) + auth(1个服务) + file(1个服务)
 
 ## Repository 列表
 
@@ -131,9 +129,12 @@ Article 模块的业务服务是最大的跨模块消费者，需要注入以下
 
 **同时清理**：此时 content/auth/file 模块的旧薄服务不再被引用，可以一并删除。
 
-## 验证
+## 完成内容（2026-04-24 确认）
 
-```bash
-mvn compile -q
-mvn test -Dtest="com.cybzacg.blogbackend.module.article.*Test"
-```
+- [x] 已创建 `BlogArticleRepository`、`BlogArticleCategoryRepository`、`BlogArticleAccessRepository` 及对应实现。
+- [x] 已删除旧薄服务 `BlogArticleService`、`BlogArticleCategoryService`、`BlogArticleAccessService` 及对应实现。
+- [x] `ArticleAdminServiceImpl` 已完成迁移，注入 article 模块 3 个 Repository + content 模块 5 个 Repository + auth 模块 `SysUserRepository` + file 模块 `FileBusinessInfoRepository`，无遗留 `lambdaQuery`/直接 Mapper 注入。
+- [x] `PublicArticleServiceImpl` 已完成迁移，注入 article 模块 2 个 Repository + content 模块 4 个 Repository + auth 模块 `SysUserRepository`，无遗留。
+- [x] `UserArticleActionServiceImpl` 已完成迁移，注入 `BlogArticleRepository` + `SysInteractionRepository`，无遗留。
+- [x] `ArticleAccessControlServiceImpl` 已完成迁移，注入 `BlogArticleAccessRepository`，无遗留。
+- [x] 所有 4 个业务服务中无 `lambdaQuery()`/`lambdaUpdate()`/`LambdaQueryWrapper`/直接 Mapper 注入。

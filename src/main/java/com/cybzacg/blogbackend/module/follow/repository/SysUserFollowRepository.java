@@ -10,7 +10,8 @@ import com.cybzacg.blogbackend.module.follow.model.data.PublicFollowUserItem;
 import java.util.List;
 
 /**
- * 用户关注关系 Repository。
+ * 用户关注关系 Repository。<p>
+ * 封装用户关注/粉丝关系的持久化操作，包括双向关注查询、公开列表查询、后台管理分页及无效关系清理。
  */
 public interface SysUserFollowRepository extends IService<SysUserFollow> {
     /**

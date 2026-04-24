@@ -10,14 +10,16 @@ import org.springframework.web.filter.CorsFilter;
 import java.util.Collections;
 
 /**
- * CORS 资源共享配置
- *
- * @author haoxr
- * @since 2023/4/17
+ * 跨域资源共享（CORS）配置。<p>注册全局 CORS 过滤器，允许所有来源、请求头和方法的跨域请求，并置于 Spring Security 过滤器之前执行。</p>
  */
 @Configuration
 public class CorsConfig {
 
+    /**
+     * 注册 CORS 过滤器，优先级高于 Spring Security 过滤器。
+     *
+     * @return CORS 过滤器注册 Bean
+     */
     @Bean
     public FilterRegistrationBean<?> filterRegistrationBean() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();

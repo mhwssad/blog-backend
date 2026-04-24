@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 异常处理器基类
+ * 异常处理器基类。<p>提供统一的错误响应构建、日志记录、TraceId 获取、错误位置定位、客户端断开检测和 SSE 错误写入等公共能力，供各具体异常处理器继承。</p>
  */
 public abstract class BaseExceptionHandler {
     protected static final Logger log = LoggerFactory.getLogger(BaseExceptionHandler.class);
@@ -35,20 +35,40 @@ public abstract class BaseExceptionHandler {
     @Value("${spring.application.name:unknown}")
     protected String applicationName;
 
+    /**
+     * 获取当前请求的 ServletRequestAttributes。
+     *
+     * @return ServletRequestAttributes，无线程绑定上下文时返回 null
+     */
     protected ServletRequestAttributes getRequestAttributes() {
         return (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
     }
 
+    /**
+     * 获取当前 HTTP 请求对象。
+     *
+     * @return HttpServletRequest，不可用时返回 null
+     */
     protected HttpServletRequest getRequest() {
         ServletRequestAttributes attributes = getRequestAttributes();
         return attributes != null ? attributes.getRequest() : null;
     }
 
+    /**
+     * 获取当前 HTTP 响应对象。
+     *
+     * @return HttpServletResponse，不可用时返回 null
+     */
     protected HttpServletResponse getResponse() {
         ServletRequestAttributes attributes = getRequestAttributes();
         return attributes != null ? attributes.getResponse() : null;
     }
 
+    /**
+     * 获取当前请求的 TraceId，优先从上下文工具获取，回退到请求属性。
+     *
+     * @return TraceId 字符串，不可用时返回 null
+     */
     protected String getTraceId() {
         String traceId = RequestContextUtils.getTraceId();
         if (traceId != null) {
@@ -58,6 +78,12 @@ public abstract class BaseExceptionHandler {
         return request != null ? (String) request.getAttribute(RequestContextUtils.TRACE_ID_ATTRIBUTE) : null;
     }
 
+    /**
+     * 记录异常日志，包含 TraceId 和错误位置；DEBUG 模式下输出完整堆栈。
+     *
+     * @param e       异常
+     * @param message 日志前缀描述
+     */
     protected void logException(Exception e, String message) {
         String errorLocation = getErrorLocation(e);
         if (log.isDebugEnabled()) {
@@ -68,6 +94,12 @@ public abstract class BaseExceptionHandler {
         log.error("{} [TraceID: {}] [位置: {}] - {}", message, getTraceId(), errorLocation, e.getMessage());
     }
 
+    /**
+     * 获取异常的首帧位置信息（类名.方法名(文件:行号)）。
+     *
+     * @param e 异常
+     * @return 格式化的位置字符串
+     */
     protected String getErrorLocation(Exception e) {
         StackTraceElement[] stackTrace = e.getStackTrace();
         if (stackTrace != null && stackTrace.length > 0) {
@@ -81,26 +113,68 @@ public abstract class BaseExceptionHandler {
         return "未知位置";
     }
 
+    /**
+     * 根据错误码、消息和数据构建错误响应。
+     *
+     * @param code    错误码
+     * @param message 错误消息
+     * @param data    附加数据
+     * @return 统一错误响应
+     */
     protected Result<Object> buildErrorResult(Integer code, String message, Object data) {
         return Result.of(code, message, data);
     }
 
+    /**
+     * 根据结果码和附加数据构建错误响应。
+     *
+     * @param resultCode 结果码枚举
+     * @param data       附加数据
+     * @return 统一错误响应
+     */
     protected Result<Object> buildErrorResult(ResultCode resultCode, Object data) {
         return buildErrorResult(resultCode.getCode(), resultCode.getMessage(), data);
     }
 
+    /**
+     * 根据结果码、自定义消息和附加数据构建错误响应。
+     *
+     * @param resultCode 结果码枚举
+     * @param message    自定义错误消息
+     * @param data       附加数据
+     * @return 统一错误响应
+     */
     protected Result<Object> buildErrorResult(ResultCode resultCode, String message, Object data) {
         return buildErrorResult(resultCode.getCode(), message, data);
     }
 
+    /**
+     * 根据结果码和自定义消息构建错误响应。
+     *
+     * @param resultCode 结果码枚举
+     * @param message    自定义错误消息
+     * @return 统一错误响应
+     */
     protected Result<Object> buildErrorResult(ResultCode resultCode, String message) {
         return buildErrorResult(resultCode, message, null);
     }
 
+    /**
+     * 根据结果码构建错误响应（无附加数据）。
+     *
+     * @param resultCode 结果码枚举
+     * @return 统一错误响应
+     */
     protected Result<Object> buildErrorResult(ResultCode resultCode) {
         return buildErrorResult(resultCode, null);
     }
 
+    /**
+     * 构建包含异常摘要、首帧位置、dev 环境堆栈和根因的错误详情映射。
+     *
+     * @param e 异常
+     * @return 错误详情 Map
+     */
     protected Map<String, Object> buildErrorDetail(Exception e) {
         Map<String, Object> errorDetail = new LinkedHashMap<>();
         errorDetail.putAll(buildThrowableSummary(e));
@@ -155,6 +229,11 @@ public abstract class BaseExceptionHandler {
         return traceElement;
     }
 
+    /**
+     * 判断当前请求是否为 SSE（Server-Sent Events）请求。
+     *
+     * @return 是 SSE 请求返回 true
+     */
     protected boolean isSseRequest() {
         HttpServletRequest request = getRequest();
         if (request == null) {
@@ -174,10 +253,22 @@ public abstract class BaseExceptionHandler {
         }
     }
 
+    /**
+     * 判断是否为客户端断开连接异常（IO 层）。
+     *
+     * @param e IO 异常
+     * @return 客户端断开返回 true
+     */
     protected boolean isClientAbortException(IOException e) {
         return isClientAbortException((Throwable) e);
     }
 
+    /**
+     * 判断是否为客户端断开连接异常（Throwable 层），遍历异常链检测。
+     *
+     * @param e 异常
+     * @return 客户端断开返回 true
+     */
     protected boolean isClientAbortException(Throwable e) {
         Throwable current = e;
         while (current != null) {
@@ -193,6 +284,11 @@ public abstract class BaseExceptionHandler {
         return false;
     }
 
+    /**
+     * 向 SSE 连接写入错误事件响应。
+     *
+     * @param errorMessage 错误消息内容
+     */
     protected void handleSseErrorResponse(String errorMessage) {
         HttpServletResponse response = getResponse();
         if (response != null) {

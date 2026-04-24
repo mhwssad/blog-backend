@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 关注关系后台管理控制器。
+ *
+ * <p>负责关注关系的分页查询与异常数据清理等后台运营接口。
  */
 @RestController
 @RequestMapping("/api/sys/follows")

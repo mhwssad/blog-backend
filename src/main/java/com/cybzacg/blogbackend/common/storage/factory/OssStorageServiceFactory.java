@@ -9,8 +9,7 @@ import com.cybzacg.blogbackend.enums.storage.StorageType;
 import org.springframework.stereotype.Component;
 
 /**
- * OSS 存储服务工厂
- * 负责创建 OSS 存储服务实例
+ * 阿里云 OSS 存储服务工厂。<p>负责创建 OSS 存储服务实例。
  *
  * @author System
  */

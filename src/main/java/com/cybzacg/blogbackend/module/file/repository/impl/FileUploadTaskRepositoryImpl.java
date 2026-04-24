@@ -14,11 +14,12 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * 文件上传任务 Repository 实现。
+ * 文件上传任务 Repository 实现。<p>基于 MyBatis-Plus ServiceImpl 提供文件上传任务的增删改查。
  */
 @Repository
 public class FileUploadTaskRepositoryImpl extends ServiceImpl<FileUploadTaskMapper, FileUploadTask>
         implements FileUploadTaskRepository {
+    /** {@inheritDoc} */
     @Override
     public FileUploadTask findByUploadIdAndUserId(String uploadId, Long userId) {
         return getOne(new LambdaQueryWrapper<FileUploadTask>()
@@ -27,6 +28,7 @@ public class FileUploadTaskRepositoryImpl extends ServiceImpl<FileUploadTaskMapp
                 .last("limit 1"));
     }
 
+    /** {@inheritDoc} */
     @Override
     public Page<FileUploadTask> pageByUserAndStatus(Long userId, UserFileTaskPageQuery query) {
         return page(new Page<>(query.getCurrent(), query.getSize()), new LambdaQueryWrapper<FileUploadTask>()
@@ -38,6 +40,7 @@ public class FileUploadTaskRepositoryImpl extends ServiceImpl<FileUploadTaskMapp
                 .orderByDesc(FileUploadTask::getId));
     }
 
+    /** {@inheritDoc} */
     @Override
     public Page<FileUploadTask> pageAdminTasks(FileTaskPageQuery query) {
         return page(new Page<>(query.getCurrent(), query.getSize()), new LambdaQueryWrapper<FileUploadTask>()
@@ -49,6 +52,7 @@ public class FileUploadTaskRepositoryImpl extends ServiceImpl<FileUploadTaskMapp
                 .orderByDesc(FileUploadTask::getId));
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<FileUploadTask> findExpiredTasks(Date expireTime, List<Integer> statuses, int limit) {
         return list(new LambdaQueryWrapper<FileUploadTask>()
@@ -59,6 +63,7 @@ public class FileUploadTaskRepositoryImpl extends ServiceImpl<FileUploadTaskMapp
                 .last("limit " + limit));
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<FileUploadTask> listRecentByFileId(Long fileId, int limit) {
         return list(new LambdaQueryWrapper<FileUploadTask>()
@@ -68,6 +73,7 @@ public class FileUploadTaskRepositoryImpl extends ServiceImpl<FileUploadTaskMapp
                 .last("limit " + limit));
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<FileUploadTask> listByFileId(Long fileId) {
         return list(new LambdaQueryWrapper<FileUploadTask>()

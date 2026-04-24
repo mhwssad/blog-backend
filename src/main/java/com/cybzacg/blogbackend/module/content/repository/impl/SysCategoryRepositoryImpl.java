@@ -11,12 +11,13 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * 分类 Repository 实现。
+ * 分类 Repository 实现。<p>基于 MyBatis-Plus ServiceImpl 提供分类数据的增删改查。
  */
 @Repository
 public class SysCategoryRepositoryImpl extends ServiceImpl<SysCategoryMapper, SysCategory>
         implements SysCategoryRepository {
 
+    /** {@inheritDoc} */
     @Override
     public List<SysCategory> findByTypeOrderBySortOrderAndId(String type) {
         return list(new LambdaQueryWrapper<SysCategory>()
@@ -25,6 +26,7 @@ public class SysCategoryRepositoryImpl extends ServiceImpl<SysCategoryMapper, Sy
                 .orderByAsc(SysCategory::getId));
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<SysCategory> findByTypeAndStatusOrderBySortOrderAndId(String type, Integer status) {
         return list(new LambdaQueryWrapper<SysCategory>()
@@ -34,18 +36,21 @@ public class SysCategoryRepositoryImpl extends ServiceImpl<SysCategoryMapper, Sy
                 .orderByAsc(SysCategory::getId));
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<SysCategory> findByParentId(Long parentId) {
         return list(new LambdaQueryWrapper<SysCategory>()
                 .eq(SysCategory::getParentId, parentId));
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean existsByParentId(Long parentId) {
         return exists(new LambdaQueryWrapper<SysCategory>()
                 .eq(SysCategory::getParentId, parentId));
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean existsByTypeAndCodeExcludingId(String type, String code, Long excludeId) {
         return exists(new LambdaQueryWrapper<SysCategory>()
@@ -54,6 +59,7 @@ public class SysCategoryRepositoryImpl extends ServiceImpl<SysCategoryMapper, Sy
                 .ne(excludeId != null, SysCategory::getId, excludeId));
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<SysCategory> listByTypeAndIds(String type, Collection<Long> ids) {
         return list(new LambdaQueryWrapper<SysCategory>()

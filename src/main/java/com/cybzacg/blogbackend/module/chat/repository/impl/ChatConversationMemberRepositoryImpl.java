@@ -19,6 +19,9 @@ import java.util.List;
 public class ChatConversationMemberRepositoryImpl extends ServiceImpl<ChatConversationMemberMapper, ChatConversationMember>
         implements ChatConversationMemberRepository {
 
+    /**
+     * 根据会话和用户查找成员记录，按 ID 降序取最新一条。
+     */
     @Override
     public ChatConversationMember findByConversationAndUser(Long conversationId, Long userId) {
         return getOne(new LambdaQueryWrapper<ChatConversationMember>()
@@ -28,6 +31,9 @@ public class ChatConversationMemberRepositoryImpl extends ServiceImpl<ChatConver
                 .last("limit 1"), false);
     }
 
+    /**
+     * 查找会话群主，按 ID 降序取最新一条。
+     */
     @Override
     public ChatConversationMember findOwnerByConversationId(Long conversationId) {
         return getOne(new LambdaQueryWrapper<ChatConversationMember>()
@@ -37,6 +43,7 @@ public class ChatConversationMemberRepositoryImpl extends ServiceImpl<ChatConver
                 .last("limit 1"), false);
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<ChatConversationMember> listActiveByConversationId(Long conversationId) {
         return list(new LambdaQueryWrapper<ChatConversationMember>()
@@ -44,6 +51,7 @@ public class ChatConversationMemberRepositoryImpl extends ServiceImpl<ChatConver
                 .eq(ChatConversationMember::getStatus, ChatConstants.MEMBER_STATUS_NORMAL));
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<ChatConversationMember> listActiveByConversationIds(Collection<Long> conversationIds) {
         if (conversationIds == null || conversationIds.isEmpty()) {
@@ -54,12 +62,14 @@ public class ChatConversationMemberRepositoryImpl extends ServiceImpl<ChatConver
                 .eq(ChatConversationMember::getStatus, ChatConstants.MEMBER_STATUS_NORMAL));
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<ChatConversationMember> listByConversationId(Long conversationId) {
         return list(new LambdaQueryWrapper<ChatConversationMember>()
                 .eq(ChatConversationMember::getConversationId, conversationId));
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<ChatConversationMember> listByConversationIds(Collection<Long> conversationIds) {
         if (conversationIds == null || conversationIds.isEmpty()) {
@@ -69,6 +79,7 @@ public class ChatConversationMemberRepositoryImpl extends ServiceImpl<ChatConver
                 .in(ChatConversationMember::getConversationId, conversationIds));
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean removeAllActiveMembers(Long conversationId) {
         return lambdaUpdate()
@@ -78,6 +89,9 @@ public class ChatConversationMemberRepositoryImpl extends ServiceImpl<ChatConver
                 .update();
     }
 
+    /**
+     * CAS 式推进已投递游标，仅在当前值为空或小于目标值时更新，避免并发回退。
+     */
     @Override
     public boolean advanceDeliveredState(Long id, Long messageId, Date deliveredAt) {
         return lambdaUpdate()

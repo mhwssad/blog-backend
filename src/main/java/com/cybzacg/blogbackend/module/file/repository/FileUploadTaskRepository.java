@@ -10,7 +10,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * 文件上传任务 Repository。
+ * 文件上传任务 Repository。<p>封装文件上传任务表的持久化操作，提供按用户、状态分页查询及过期任务清理。
  */
 public interface FileUploadTaskRepository extends IService<FileUploadTask> {
     /**

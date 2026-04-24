@@ -8,7 +8,7 @@ import com.cybzacg.blogbackend.module.content.model.admin.CollectionPageQuery;
 import java.util.List;
 
 /**
- * 收藏 Repository。
+ * 收藏 Repository。<p>封装用户收藏记录的持久化操作，提供按用户、收藏夹、目标等多维度查询与删除。
  */
 public interface SysCollectionRepository extends IService<SysCollection> {
     /**

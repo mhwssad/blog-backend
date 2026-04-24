@@ -2,8 +2,7 @@ package com.cybzacg.blogbackend.common.storage;
 import com.cybzacg.blogbackend.enums.storage.StorageStrategyEnum;
 import java.util.List;
 /**
- * 存储管理器。
- * 在具体存储实现之上补充路由、策略切换和健康状态查询能力。
+ * 存储管理器。<p>在具体存储实现之上补充路由、策略切换和健康状态查询能力。
  */
 public interface StorageManager extends StorageService {
     /**

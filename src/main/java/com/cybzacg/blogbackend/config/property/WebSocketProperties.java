@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
 /**
- * WebSocket 配置属性。
+ * WebSocket 配置属性。<p>映射 {@code websocket} 前缀下的握手端点、跨域来源模式和令牌查询参数名。</p>
  */
 @Data
 @Component

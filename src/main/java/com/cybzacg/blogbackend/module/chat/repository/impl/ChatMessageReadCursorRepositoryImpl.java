@@ -16,6 +16,9 @@ import java.util.Date;
 public class ChatMessageReadCursorRepositoryImpl extends ServiceImpl<ChatMessageReadCursorMapper, ChatMessageReadCursor>
         implements ChatMessageReadCursorRepository {
 
+    /**
+     * 根据会话和用户查找游标记录，按 ID 降序取最新一条。
+     */
     @Override
     public ChatMessageReadCursor findByConversationAndUser(Long conversationId, Long userId) {
         return getOne(new LambdaQueryWrapper<ChatMessageReadCursor>()
@@ -25,6 +28,9 @@ public class ChatMessageReadCursorRepositoryImpl extends ServiceImpl<ChatMessage
                 .last("limit 1"), false);
     }
 
+    /**
+     * CAS 式推进已投递游标，仅在当前值为空或小于目标值时更新，防止并发回退。
+     */
     @Override
     public boolean advanceDeliveredState(Long id, Long messageId, Date deliveredAt) {
         return lambdaUpdate()

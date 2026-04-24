@@ -710,6 +710,7 @@ class UserChatServiceImplTest {
         when(chatConversationMemberRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(selfMember);
         when(chatConversationMemberRepository.listActiveByConversationId(conversationId)).thenReturn(List.of(selfMember, senderMember));
 
+        when(chatMessageReadCursorRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(cursor);
         when(chatMessageRepository.selectVisibleMessageById(conversationId, currentUserId, readMessageId)).thenReturn(historyItem);
         when(chatMessageRecipientRepository.countUnread(eq(conversationId), eq(currentUserId))).thenReturn(0L);
         when(chatMessageReadCursorRepository.updateById(cursor)).thenReturn(true);
@@ -781,6 +782,7 @@ class UserChatServiceImplTest {
         when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
         when(chatConversationMemberRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(selfMember);
         when(chatConversationMemberRepository.listActiveByConversationId(conversationId)).thenReturn(List.of(selfMember, senderMember));
+        when(chatMessageReadCursorRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(cursor);
         when(chatMessageRepository.selectVisibleMessageById(conversationId, currentUserId, readMessageId)).thenReturn(historyItem);
         when(chatMessageRecipientRepository.countUnread(eq(conversationId), eq(currentUserId))).thenReturn(2L);
         when(chatMessageReadCursorRepository.updateById(cursor)).thenReturn(true);
@@ -847,6 +849,7 @@ class UserChatServiceImplTest {
         when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
         when(chatConversationMemberRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(selfMember);
         when(chatConversationMemberRepository.listActiveByConversationId(conversationId)).thenReturn(List.of(selfMember, senderMember));
+        when(chatMessageReadCursorRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(cursor);
         when(chatMessageRepository.selectVisibleMessageById(conversationId, currentUserId, readMessageId)).thenReturn(historyItem);
         when(chatMessageRecipientRepository.countUnread(eq(conversationId), eq(currentUserId))).thenReturn(3L);
         when(chatMessageReadCursorRepository.updateById(cursor)).thenReturn(true);
@@ -1456,11 +1459,13 @@ class UserChatServiceImplTest {
 
         when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
         when(chatConversationMemberRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(ownerMember);
+        when(chatConversationMemberRepository.findByConversationAndUser(conversationId, memberUserId)).thenReturn(inactiveMember);
         when(chatConversationMemberRepository.listActiveByConversationId(conversationId))
                 .thenReturn(List.of(ownerMember), List.of(ownerMember, inactiveMember));
         when(chatConversationMemberRepository.updateById(inactiveMember)).thenReturn(true);
 
         when(sysUserRepository.getById(memberUserId)).thenReturn(memberUser);
+        when(chatMessageReadCursorRepository.findByConversationAndUser(conversationId, memberUserId)).thenReturn(memberCursor);
         when(chatMessageReadCursorRepository.updateById(memberCursor)).thenReturn(true);
         when(sysUserRepository.listByIds(any())).thenReturn(List.of(ownerUser, memberUser));
         when(chatModelMapper.toMemberVO(ownerMember)).thenReturn(ownerVO);
@@ -1708,6 +1713,7 @@ class UserChatServiceImplTest {
 
         when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
         when(chatConversationMemberRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(ownerMember);
+        when(chatConversationMemberRepository.findByConversationAndUser(conversationId, memberUserId)).thenReturn(targetMember);
         when(chatConversationMemberRepository.listActiveByConversationId(conversationId))
                 .thenReturn(List.of(ownerMember, targetMember), List.of(ownerMember, targetMember), List.of(ownerMember, targetMember));
         when(chatConversationMemberRepository.updateById(ownerMember)).thenReturn(true);
@@ -1994,7 +2000,8 @@ class UserChatServiceImplTest {
         when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
         when(chatConversationMemberRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(selfMember);
         when(chatConversationMemberRepository.listActiveByConversationId(conversationId))
-                .thenReturn(List.of(selfMember, targetMember), List.of(selfMember, targetMember));
+                .thenReturn(List.of(selfMember, targetMember));
+        when(chatMessageRepository.findBySenderAndClientMessageId(currentUserId, "c-1")).thenReturn(existingMessage);
         when(chatMessageRepository.selectVisibleMessageById(conversationId, currentUserId, messageId)).thenReturn(historyItem);
         when(chatModelMapper.toMessageVO(historyItem)).thenReturn(messageVO);
         when(sysUserRepository.listByIds(any())).thenReturn(List.of(currentUser));
@@ -2068,6 +2075,7 @@ class UserChatServiceImplTest {
         when(chatConversationMemberRepository.listActiveByConversationId(conversationId)).thenReturn(List.of(selfMember, targetMember));
         when(chatModelMapper.toTextMessage(any(ChatSendTextRequest.class))).thenReturn(mappedMessage);
         when(chatMessageRepository.save(mappedMessage)).thenThrow(new org.springframework.dao.DuplicateKeyException("duplicate client message"));
+        when(chatMessageRepository.findBySenderAndClientMessageId(currentUserId, "dup-1")).thenReturn(existingMessage);
         when(chatMessageRepository.selectVisibleMessageById(conversationId, currentUserId, messageId)).thenReturn(historyItem);
         when(chatModelMapper.toMessageVO(historyItem)).thenReturn(messageVO);
         when(sysUserRepository.listByIds(any())).thenReturn(List.of(currentUser));
@@ -2127,6 +2135,7 @@ class UserChatServiceImplTest {
         when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
         when(chatConversationMemberRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(selfMember);
         when(chatConversationMemberRepository.listActiveByConversationId(conversationId)).thenReturn(List.of(selfMember, senderMember));
+        when(chatMessageReadCursorRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(cursor);
         when(chatMessageRepository.selectVisibleMessageById(conversationId, currentUserId, readMessageId)).thenReturn(historyItem);
         when(chatModelMapper.toReadStateVO(cursor)).thenAnswer(invocation -> {
             ChatMessageReadCursor source = invocation.getArgument(0);
@@ -2197,10 +2206,15 @@ class UserChatServiceImplTest {
         when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
         when(chatConversationMemberRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(selfMember);
         when(chatConversationMemberRepository.listActiveByConversationId(conversationId)).thenReturn(List.of(selfMember, senderMember));
+        when(chatMessageReadCursorRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(cursor);
         when(chatMessageRepository.countMessagePage(conversationId, currentUserId, null)).thenReturn(1L);
         when(chatMessageRepository.selectMessagePage(conversationId, currentUserId, null, 0L, 100L)).thenReturn(List.of(item));
         when(sysUserRepository.listByIds(any())).thenReturn(List.of(sender));
         when(chatModelMapper.toMessageVO(item)).thenReturn(messageVO);
+        when(chatConversationMemberRepository.updateById(selfMember)).thenReturn(true);
+        when(chatMessageRecipientRepository.batchMarkDelivered(eq(conversationId), eq(currentUserId), any(), any())).thenReturn(true);
+        when(chatMessageReadCursorRepository.advanceDeliveredState(eq(cursor.getId()), eq(messageId), any())).thenReturn(true);
+        when(chatConversationMemberRepository.advanceDeliveredState(eq(selfMember.getId()), eq(messageId), any())).thenReturn(true);
 
         ChatMessagePageQuery query = new ChatMessagePageQuery();
         query.setCurrent(0L);
@@ -2335,9 +2349,11 @@ class UserChatServiceImplTest {
         sender.setNickname("发送者");
 
         when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
+        when(chatConversationRepository.findGlobalConversation()).thenReturn(conversation);
         when(chatConversationMemberRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(inactiveMember);
         when(chatConversationMemberRepository.listActiveByConversationId(conversationId)).thenReturn(List.of(inactiveMember, senderMember));
         when(chatConversationMemberRepository.updateById(inactiveMember)).thenReturn(true);
+        when(chatMessageReadCursorRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(cursor);
         when(chatMessageReadCursorRepository.updateById(cursor)).thenReturn(true);
 
         when(chatMessageRepository.countMessagePage(conversationId, currentUserId, null)).thenReturn(1L);
@@ -2472,7 +2488,10 @@ class UserChatServiceImplTest {
         cursor.setUnreadCount(5);
         cursor.setReadMessageId(1L);
         cursor.setDeliveredMessageId(1L);
+        when(chatConversationRepository.findGlobalConversation()).thenReturn(conversation);
+        when(chatConversationMemberRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(inactiveMember);
         when(chatConversationMemberRepository.updateById(inactiveMember)).thenReturn(true);
+        when(chatMessageReadCursorRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(cursor);
         when(chatMessageReadCursorRepository.updateById(cursor)).thenReturn(true);
 
         when(chatConversationRepository.countConversationPage(currentUserId, null)).thenReturn(0L);
@@ -2904,6 +2923,7 @@ class UserChatServiceImplTest {
         when(chatMessageRecipientRepository.findVisibleByUserAndMessage(currentUserId, messageId)).thenReturn(recipient);
         when(chatMessageRepository.getById(messageId)).thenReturn(message);
         when(chatMessageRecipientRepository.hideMessage(eq(conversationId), eq(currentUserId), eq(messageId))).thenReturn(true);
+        when(chatMessageReadCursorRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(cursor);
         when(chatMessageRecipientRepository.countUnread(eq(conversationId), eq(currentUserId))).thenReturn(2L);
         when(chatMessageReadCursorRepository.updateById(any(ChatMessageReadCursor.class))).thenReturn(true);
 

@@ -8,10 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 文件上传属性配置
- *
- * @author system
- * @since 2025/12/28
+ * 文件上传属性配置。<p>映射 {@code file-upload} 前缀下的分片大小、过期天数、允许的扩展名及 MD5 校验等参数。</p>
  */
 @Component
 @ConfigurationProperties(prefix = "file-upload")

@@ -13,22 +13,24 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 /**
-* @author liujian
-* @description 针对表【sys_config(系统配置表)】的数据库操作Service实现
-* @createDate 2026-03-18 18:50:44
-*/
+ * 系统配置服务实现。
+ *
+ * <p>提供基于 Redis 缓存的配置查询、回写与缓存失效处理。
+ */
 @Service
 @RequiredArgsConstructor
 public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig>
     implements SysConfigService{
     private final RedisOperator redisOperator;
 
+    /** 根据配置键查询配置实体（不经过缓存）。 */
     @Override
     public SysConfig getByConfigKey(String configKey) {
         String normalizedKey = StrUtils.normalize(configKey);
         return StringUtils.hasText(normalizedKey) ? baseMapper.selectByConfigKey(normalizedKey) : null;
     }
 
+    /** 根据配置键查询配置值，优先从 Redis 缓存读取，未命中时回写缓存。 */
     @Override
     public String getValueByKey(String configKey) {
         String normalizedKey = StrUtils.normalize(configKey);
@@ -48,12 +50,14 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
         return config.getConfigValue();
     }
 
+    /** 根据配置键查询配置值，不存在时返回默认值。 */
     @Override
     public String getValueOrDefault(String configKey, String defaultValue) {
         String value = getValueByKey(configKey);
         return value != null ? value : defaultValue;
     }
 
+    /** 清除指定配置键的 Redis 缓存。 */
     @Override
     public void evictConfigCache(String configKey) {
         String normalizedKey = StrUtils.normalize(configKey);

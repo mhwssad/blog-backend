@@ -16,11 +16,12 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * 文件业务引用 Repository 实现。
+ * 文件业务引用 Repository 实现。<p>基于 MyBatis-Plus ServiceImpl 提供文件与业务对象关联引用的增删改查。
  */
 @Repository
 public class FileBusinessInfoRepositoryImpl extends ServiceImpl<FileBusinessInfoMapper, FileBusinessInfo>
         implements FileBusinessInfoRepository {
+    /** {@inheritDoc} */
     @Override
     public FileBusinessInfo findByFileUserReference(Long fileId, Long userId, String referenceType, Long referenceId) {
         return getOne(new LambdaQueryWrapper<FileBusinessInfo>()
@@ -31,6 +32,7 @@ public class FileBusinessInfoRepositoryImpl extends ServiceImpl<FileBusinessInfo
                 .last("limit 1"));
     }
 
+    /** {@inheritDoc} */
     @Override
     public FileBusinessInfo findLatestByFileUserReference(Long fileId, Long userId, String referenceType, Long referenceId) {
         LambdaQueryWrapper<FileBusinessInfo> wrapper = new LambdaQueryWrapper<FileBusinessInfo>()
@@ -45,6 +47,7 @@ public class FileBusinessInfoRepositoryImpl extends ServiceImpl<FileBusinessInfo
         return getOne(wrapper);
     }
 
+    /** {@inheritDoc} */
     @Override
     public Page<FileBusinessInfo> pageByUserAndFilters(Long userId, UserFilePageQuery query, Collection<Long> fileIds) {
         return page(new Page<>(query.getCurrent(), query.getSize()), new LambdaQueryWrapper<FileBusinessInfo>()
@@ -56,6 +59,7 @@ public class FileBusinessInfoRepositoryImpl extends ServiceImpl<FileBusinessInfo
                 .orderByDesc(FileBusinessInfo::getId));
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<FileBusinessInfo> listByFileId(Long fileId) {
         return list(new LambdaQueryWrapper<FileBusinessInfo>()
@@ -64,6 +68,7 @@ public class FileBusinessInfoRepositoryImpl extends ServiceImpl<FileBusinessInfo
                 .orderByDesc(FileBusinessInfo::getId));
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<FileBusinessInfo> listByReferenceTypeAndReferenceId(String referenceType, Long referenceId) {
         return list(new LambdaQueryWrapper<FileBusinessInfo>()
@@ -73,6 +78,7 @@ public class FileBusinessInfoRepositoryImpl extends ServiceImpl<FileBusinessInfo
                 .orderByDesc(FileBusinessInfo::getId));
     }
 
+    /** {@inheritDoc} */
     @Override
     public long countByFileId(Long fileId) {
         Long count = count(new LambdaQueryWrapper<FileBusinessInfo>()
@@ -80,6 +86,7 @@ public class FileBusinessInfoRepositoryImpl extends ServiceImpl<FileBusinessInfo
         return count == null ? 0L : count;
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean deleteByFileId(Long fileId) {
         return remove(new LambdaQueryWrapper<FileBusinessInfo>()

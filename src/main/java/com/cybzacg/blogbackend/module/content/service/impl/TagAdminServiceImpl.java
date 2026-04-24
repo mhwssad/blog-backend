@@ -28,6 +28,7 @@ public class TagAdminServiceImpl implements TagAdminService {
     private final SysTagRelationRepository sysTagRelationRepository;
     private final ContentModelMapper contentModelMapper;
 
+    /** 查询全部标签列表，按ID降序返回。 */
     @Override
     public List<TagVO> listTags() {
         return sysTagRepository.findAllOrderByIdDesc()
@@ -36,11 +37,13 @@ public class TagAdminServiceImpl implements TagAdminService {
                 .toList();
     }
 
+    /** 按ID获取标签详情。 */
     @Override
     public TagVO getTag(Long id) {
         return contentModelMapper.toTagVO(getTagOrThrow(id));
     }
 
+    /** 创建标签，校验名称唯一后持久化。 */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public TagVO createTag(TagSaveRequest request) {
@@ -50,6 +53,7 @@ public class TagAdminServiceImpl implements TagAdminService {
         return contentModelMapper.toTagVO(tag);
     }
 
+    /** 更新标签信息，校验名称唯一后写入。 */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public TagVO updateTag(Long id, TagSaveRequest request) {

@@ -14,7 +14,7 @@ import lombok.Data;
 @Data
 public class SysNotice {
     /**
-     *
+     * 主键ID
      */
     @TableId(type = IdType.AUTO)
     private Long id;

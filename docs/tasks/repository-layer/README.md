@@ -9,6 +9,29 @@
 
 **目标**：引入 Repository 层，将所有数据操作从 Service 剥离，使 Service 专注于业务逻辑。
 
+## 总体进度（2026-04-24 更新）
+
+| 轮次 | 模块 | Repository 创建 | 业务服务迁移 | 旧薄服务删除 | 测试更新 | 状态 |
+| ---- | ---- | --------------- | ------------ | ------------ | -------- | ---- |
+| 1 | follow | 1/1 | 3/3 | 已删除 | 已更新 | **已完成** |
+| 2 | content | 8/8 | 10/10 | 已删除(8个) | 已更新 | **已完成** |
+| 3 | auth | 9/9 | 8/8 | 已删除(8个,保留SysConfigService) | 已更新 | **已完成** |
+| 4 | file | 4/4 | 3/3 | 已删除 | 已更新 | **已完成** |
+| 5 | article | 3/3 | 4/4 | 已删除 | 已更新 | **已完成** |
+| 6 | chat | 6/6(+1额外) | 2/2 | 已删除(5个) | 已更新 | **已完成** |
+
+**统计**：
+- 已创建 Repository 接口：**31个**（含 chat 额外补充 1 个）
+- 已删除旧薄服务：**30个**（follow 1 + content 8 + auth 8 + file 4 + article 3 + chat 6，含接口+实现共 60 个文件）
+- 保留为真正业务服务：**SysConfigService**（含缓存逻辑 `getValueOrDefault`/`evictConfigCache`，非薄服务）
+- 遗留 `lambdaQuery()` 泄漏：**0处**
+
+### 注意事项
+
+- **SysConfigService** 保留为真正的业务服务（含缓存职责），被 `SysConfigAdminServiceImpl`、`ChatMessageGovernanceServiceImpl`、`IpRateLimitFilter` 注入，不删除。
+- `AuthUserDetailsServiceImpl` 已改为注入 `SysUserRepository`、`SysRoleRepository`、`SysMenuRepository`。
+- `SysLogAspect` 已改为注入 `SysLogRepository.saveLog()`（含 `REQUIRES_NEW` 传播）。
+
 ## 架构目标
 
 ```

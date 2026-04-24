@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * 分类 Repository。
+ * 分类 Repository。<p>封装分类表的持久化操作，提供按类型、父级、编码等维度的查询与校验。
  */
 public interface SysCategoryRepository extends IService<SysCategory> {
     /**

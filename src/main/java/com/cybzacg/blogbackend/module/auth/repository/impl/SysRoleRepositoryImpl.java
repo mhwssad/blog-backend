@@ -15,28 +15,32 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * 系统角色 Repository 实现。
+ * 系统角色 Repository 实现，基于 MyBatis-Plus。
  */
 @Repository
 public class SysRoleRepositoryImpl extends ServiceImpl<SysRoleMapper, SysRole>
         implements SysRoleRepository {
 
+    /** 根据用户 ID 查询关联的角色编码列表，无结果时返回空列表。 */
     @Override
     public List<String> findRoleCodesByUserId(Long userId) {
         List<String> roleCodes = baseMapper.selectRoleCodesByUserId(userId);
         return roleCodes != null ? roleCodes : List.of();
     }
 
+    /** 判断角色名称是否已被其他未删除角色占用。 */
     @Override
     public boolean existsActiveByName(String name, Long excludeId) {
         return existsActiveByUniqueField(SysRole::getName, name, excludeId);
     }
 
+    /** 判断角色编码是否已被其他未删除角色占用。 */
     @Override
     public boolean existsActiveByCode(String code, Long excludeId) {
         return existsActiveByUniqueField(SysRole::getCode, code, excludeId);
     }
 
+    /** 统计给定 ID 集合中未删除角色的数量。 */
     @Override
     public long countActiveByIds(Collection<Long> ids) {
         if (ids == null || ids.isEmpty()) {
@@ -47,6 +51,7 @@ public class SysRoleRepositoryImpl extends ServiceImpl<SysRoleMapper, SysRole>
                 .eq(SysRole::getIsDeleted, 0));
     }
 
+    /** 根据管理端查询条件进行分页，按排序字段和 ID 升序排列。 */
     @Override
     public Page<SysRole> pageByAdminConditions(SysRolePageQuery query) {
         return page(new Page<>(query.getCurrent(), query.getSize()), new LambdaQueryWrapper<SysRole>()
@@ -58,6 +63,9 @@ public class SysRoleRepositoryImpl extends ServiceImpl<SysRoleMapper, SysRole>
                 .orderByAsc(SysRole::getId));
     }
 
+    /**
+     * 通用的唯一字段存在性检查，排除指定 ID 后判断是否已有未删除记录占用该值。
+     */
     private <T> boolean existsActiveByUniqueField(SFunction<SysRole, T> field, T value, Long excludeId) {
         if (value == null) {
             return false;

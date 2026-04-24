@@ -14,6 +14,7 @@ import org.mapstruct.MappingTarget;
 import java.util.ArrayList;
 import java.util.List;
 
+/** 认证模块对象转换器，处理用户注册、登录信息及菜单树结构映射。 */
 @Mapper(componentModel = "spring", imports = StrUtils.class)
 public interface AuthModelMapper {
 

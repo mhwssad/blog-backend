@@ -6,7 +6,7 @@ import com.cybzacg.blogbackend.domain.BlogArticleAccess;
 import java.util.List;
 
 /**
- * 文章访问授权 Repository。
+ * 文章访问授权 Repository。<p>封装文章访问授权记录的持久化操作，提供按文章维度的查询与删除。
  */
 public interface BlogArticleAccessRepository extends IService<BlogArticleAccess> {
 

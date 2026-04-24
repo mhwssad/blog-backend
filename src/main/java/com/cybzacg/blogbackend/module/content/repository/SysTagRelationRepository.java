@@ -6,7 +6,7 @@ import com.cybzacg.blogbackend.domain.SysTagRelation;
 import java.util.List;
 
 /**
- * 标签关联 Repository。
+ * 标签关联 Repository。<p>封装标签与目标实体（文章等）多对多关联关系的持久化操作。
  */
 public interface SysTagRelationRepository extends IService<SysTagRelation> {
     /**

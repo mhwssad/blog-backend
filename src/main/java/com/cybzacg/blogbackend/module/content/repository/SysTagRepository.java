@@ -6,7 +6,7 @@ import com.cybzacg.blogbackend.domain.SysTag;
 import java.util.List;
 
 /**
- * 标签 Repository。
+ * 标签 Repository。<p>封装标签表的持久化操作，提供标签列表查询与重名校验。
  */
 public interface SysTagRepository extends IService<SysTag> {
     /**

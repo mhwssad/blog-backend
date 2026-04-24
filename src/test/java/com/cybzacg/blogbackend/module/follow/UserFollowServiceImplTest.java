@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.follow;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.domain.SysUserFollow;
-import com.cybzacg.blogbackend.module.auth.service.SysUserService;
+import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.follow.convert.FollowModelMapper;
 import com.cybzacg.blogbackend.module.follow.model.data.FollowRelationUserItem;
 import com.cybzacg.blogbackend.module.follow.repository.SysUserFollowRepository;
@@ -39,7 +39,7 @@ class UserFollowServiceImplTest {
     @Mock
     private SysUserFollowRepository sysUserFollowRepository;
     @Mock
-    private SysUserService sysUserService;
+    private SysUserRepository sysUserRepository;
     @Mock
     private FollowModelMapper followModelMapper;
     @Mock
@@ -51,7 +51,7 @@ class UserFollowServiceImplTest {
     void setUp() {
         userFollowService = new UserFollowServiceImpl(
                 sysUserFollowRepository,
-                sysUserService,
+                sysUserRepository,
                 followModelMapper,
                 followNoticeService
         );
@@ -65,7 +65,7 @@ class UserFollowServiceImplTest {
         created.setFollowingId(12L);
         created.setFollowStatus(1);
 
-        when(sysUserService.getById(12L)).thenReturn(targetUser);
+        when(sysUserRepository.getById(12L)).thenReturn(targetUser);
         when(sysUserFollowRepository.findByFollowerAndFollowing(7L, 12L)).thenReturn(null);
         when(followModelMapper.toNewFollow(eq(7L), eq(12L), any())).thenReturn(created);
         when(sysUserFollowRepository.save(created)).thenReturn(true);
@@ -89,7 +89,7 @@ class UserFollowServiceImplTest {
         relation.setFollowingId(12L);
         relation.setFollowStatus(0);
 
-        when(sysUserService.getById(12L)).thenReturn(targetUser);
+        when(sysUserRepository.getById(12L)).thenReturn(targetUser);
         when(sysUserFollowRepository.findByFollowerAndFollowing(7L, 12L)).thenReturn(relation);
         when(sysUserFollowRepository.updateById(relation)).thenReturn(true);
 
@@ -113,7 +113,7 @@ class UserFollowServiceImplTest {
         relation.setFollowingId(12L);
         relation.setFollowStatus(1);
 
-        when(sysUserService.getById(12L)).thenReturn(targetUser);
+        when(sysUserRepository.getById(12L)).thenReturn(targetUser);
         when(sysUserFollowRepository.findByFollowerAndFollowing(7L, 12L)).thenReturn(relation);
 
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(7L)) {
@@ -134,7 +134,7 @@ class UserFollowServiceImplTest {
         relation.setFollowingId(12L);
         relation.setFollowStatus(1);
 
-        when(sysUserService.getById(12L)).thenReturn(targetUser);
+        when(sysUserRepository.getById(12L)).thenReturn(targetUser);
         when(sysUserFollowRepository.findByFollowerAndFollowing(7L, 12L)).thenReturn(relation);
         when(sysUserFollowRepository.updateById(relation)).thenReturn(true);
 
@@ -180,7 +180,7 @@ class UserFollowServiceImplTest {
     @Test
     void getMutualFollowStatusShouldAssembleRelationFlags() {
         SysUser targetUser = activeUser(12L);
-        when(sysUserService.getById(12L)).thenReturn(targetUser);
+        when(sysUserRepository.getById(12L)).thenReturn(targetUser);
         when(sysUserFollowRepository.countActiveRelation(7L, 12L)).thenReturn(1L);
         when(sysUserFollowRepository.countActiveRelation(12L, 7L)).thenReturn(0L);
 
@@ -220,7 +220,7 @@ class UserFollowServiceImplTest {
         UserFollowRemarkUpdateRequest request = new UserFollowRemarkUpdateRequest();
         request.setRemark(" 前端联调 ");
 
-        when(sysUserService.getById(12L)).thenReturn(targetUser);
+        when(sysUserRepository.getById(12L)).thenReturn(targetUser);
         when(sysUserFollowRepository.findByFollowerAndFollowing(7L, 12L)).thenReturn(relation);
         when(sysUserFollowRepository.updateById(relation)).thenReturn(true);
 
@@ -244,7 +244,7 @@ class UserFollowServiceImplTest {
         UserFollowSpecialUpdateRequest request = new UserFollowSpecialUpdateRequest();
         request.setSpecialFollow(1);
 
-        when(sysUserService.getById(12L)).thenReturn(targetUser);
+        when(sysUserRepository.getById(12L)).thenReturn(targetUser);
         when(sysUserFollowRepository.findByFollowerAndFollowing(7L, 12L)).thenReturn(relation);
         when(sysUserFollowRepository.updateById(relation)).thenReturn(true);
 

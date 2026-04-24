@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * 文章 Repository。
+ * 文章 Repository。<p>封装文章表的持久化操作，提供后台多条件分页查询与已发布文章列表查询。
  */
 public interface BlogArticleRepository extends IService<BlogArticle> {
 

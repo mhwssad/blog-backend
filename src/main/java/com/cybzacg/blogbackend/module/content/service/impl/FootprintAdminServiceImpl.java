@@ -16,12 +16,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * 用户足迹后台管理服务实现。
+ *
+ * <p>负责后台足迹分页查询、单条删除以及按条件批量清理。
+ */
 @Service
 @RequiredArgsConstructor
 public class FootprintAdminServiceImpl implements FootprintAdminService {
     private final SysUserFootprintRepository sysUserFootprintRepository;
     private final ContentModelMapper contentModelMapper;
 
+    /** 按管理端条件分页查询用户足迹列表。 */
     @Override
     public PageResult<FootprintVO> pageFootprints(FootprintPageQuery query) {
         Page<SysUserFootprint> page = sysUserFootprintRepository.pageByAdminConditions(query);
@@ -31,6 +37,7 @@ public class FootprintAdminServiceImpl implements FootprintAdminService {
         return PageResult.of(page, records);
     }
 
+    /** 删除单条足迹记录。 */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteFootprint(Long id) {
@@ -39,6 +46,7 @@ public class FootprintAdminServiceImpl implements FootprintAdminService {
         sysUserFootprintRepository.removeById(id);
     }
 
+    /** 按管理端查询条件批量清理足迹记录。 */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void cleanFootprints(FootprintPageQuery query) {

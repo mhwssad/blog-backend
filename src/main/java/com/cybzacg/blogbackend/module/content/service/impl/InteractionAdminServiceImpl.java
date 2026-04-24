@@ -20,6 +20,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * 互动记录后台管理服务实现。
+ *
+ * <p>负责后台互动记录分页查询与删除，删除时同步回退对应目标的点赞计数。
+ */
 @Service
 @RequiredArgsConstructor
 public class InteractionAdminServiceImpl implements InteractionAdminService {
@@ -28,6 +33,7 @@ public class InteractionAdminServiceImpl implements InteractionAdminService {
     private final SysCommentRepository sysCommentRepository;
     private final ContentModelMapper contentModelMapper;
 
+    /** 按管理端条件分页查询互动记录列表。 */
     @Override
     public PageResult<InteractionVO> pageInteractions(InteractionPageQuery query) {
         Page<SysInteraction> page = sysInteractionRepository.pageByAdminConditions(query);
@@ -37,6 +43,7 @@ public class InteractionAdminServiceImpl implements InteractionAdminService {
         return PageResult.of(page, records);
     }
 
+    /** 删除互动记录，并根据目标类型回退文章或评论的点赞计数。 */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteInteraction(Long id) {

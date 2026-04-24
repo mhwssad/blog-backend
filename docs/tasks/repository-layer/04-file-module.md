@@ -1,13 +1,13 @@
 # File 模块 Repository 迁移计划
 
-## 当前状态
+## 当前状态（2026-04-24 更新）
 
-- 已完成 `FileInfoRepository`、`FileUploadTaskRepository`、`FileChunkRepository`、`FileBusinessInfoRepository` 及其实现。
-- 已完成 `UserFileServiceImpl`、`FileAdminServiceImpl`、`FileLifecycleServiceImpl` 的 Repository 迁移，`file` 模块业务服务内不再直接拼装 `lambdaQuery/lambdaUpdate/LambdaQueryWrapper`。
-- 已同步把 `ArticleAdminServiceImpl`、`ChatAdminServiceImpl`、`UserChatServiceImpl`、`ChatAttachmentAsyncProcessingServiceImpl` 的跨模块文件数据访问切到 Repository。
-- 已删除 `FileInfoService`、`FileUploadTaskService`、`FileChunkService`、`FileBusinessInfoService` 及对应薄实现。
-- 已同步调整 `UserFileServiceImplTest`、`FileAdminServiceImplTest`、`FileLifecycleServiceImplTest`，并更新受影响的 article/chat 测试依赖。
-- 仓库全量 Maven 校验仍被无关的 `auth` 编译错误阻塞：`src/main/java/com/cybzacg/blogbackend/module/auth/service/impl/AuthServiceImpl.java` 中 `org.springframework.security.authentication.AuthenticationException` 无法解析。
+- [x] 已完成 `FileInfoRepository`、`FileUploadTaskRepository`、`FileChunkRepository`、`FileBusinessInfoRepository` 及其实现。
+- [x] 已完成 `UserFileServiceImpl`、`FileAdminServiceImpl`、`FileLifecycleServiceImpl` 的 Repository 迁移，`file` 模块业务服务内不再直接拼装 `lambdaQuery/lambdaUpdate/LambdaQueryWrapper`。
+- [x] 已同步把 `ArticleAdminServiceImpl`、`ChatAdminServiceImpl`、`UserChatServiceImpl`、`ChatAttachmentAsyncProcessingServiceImpl` 的跨模块文件数据访问切到 Repository。
+- [x] 已删除 `FileInfoService`、`FileUploadTaskService`、`FileChunkService`、`FileBusinessInfoService` 及对应薄实现。
+- [x] 已同步调整 `UserFileServiceImplTest`、`FileAdminServiceImplTest`、`FileLifecycleServiceImplTest`，并更新受影响的 article/chat 测试依赖。
+- [x] **file 模块 Repository 迁移已全部完成**，无遗留问题。
 
 ## 模块信息
 

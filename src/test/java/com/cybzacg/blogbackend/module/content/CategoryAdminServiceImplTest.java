@@ -1,6 +1,5 @@
 package com.cybzacg.blogbackend.module.content;
 
-import com.cybzacg.blogbackend.domain.BlogArticleCategory;
 import com.cybzacg.blogbackend.domain.SysCategory;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
@@ -33,8 +32,6 @@ class CategoryAdminServiceImplTest {
     private BlogArticleCategoryRepository blogArticleCategoryService;
     @Mock
     private ContentModelMapper contentModelMapper;
-    @Mock
-    private com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper<BlogArticleCategory> articleBindingQuery;
 
     private CategoryAdminServiceImpl categoryAdminService;
 
@@ -172,9 +169,7 @@ class CategoryAdminServiceImplTest {
         SysCategory category = category(10L, 0L, "java", "article");
         when(sysCategoryRepository.getById(10L)).thenReturn(category);
         when(sysCategoryRepository.existsByParentId(10L)).thenReturn(false);
-        when(blogArticleCategoryService.lambdaQuery()).thenReturn(articleBindingQuery);
-        when(articleBindingQuery.eq(any(), any())).thenReturn(articleBindingQuery);
-        when(articleBindingQuery.exists()).thenReturn(false);
+        when(blogArticleCategoryService.existsByCategoryId(10L)).thenReturn(false);
 
         categoryAdminService.deleteCategory(10L);
 
@@ -191,7 +186,7 @@ class CategoryAdminServiceImplTest {
 
         assertEquals(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), exception.getCode());
         assertEquals("当前分类存在子分类，无法删除", exception.getMessage());
-        verify(blogArticleCategoryService, never()).lambdaQuery();
+        verify(blogArticleCategoryService, never()).existsByCategoryId(any());
         verify(sysCategoryRepository, never()).removeById(10L);
     }
 
@@ -200,9 +195,7 @@ class CategoryAdminServiceImplTest {
         SysCategory category = category(10L, 0L, "java", "article");
         when(sysCategoryRepository.getById(10L)).thenReturn(category);
         when(sysCategoryRepository.existsByParentId(10L)).thenReturn(false);
-        when(blogArticleCategoryService.lambdaQuery()).thenReturn(articleBindingQuery);
-        when(articleBindingQuery.eq(any(), any())).thenReturn(articleBindingQuery);
-        when(articleBindingQuery.exists()).thenReturn(true);
+        when(blogArticleCategoryService.existsByCategoryId(10L)).thenReturn(true);
 
         BusinessException exception = assertThrows(BusinessException.class, () -> categoryAdminService.deleteCategory(10L));
 

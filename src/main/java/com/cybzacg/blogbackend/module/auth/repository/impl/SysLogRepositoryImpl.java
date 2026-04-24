@@ -14,12 +14,13 @@ import org.springframework.util.StringUtils;
 import java.util.Date;
 
 /**
- * 系统日志 Repository 实现。
+ * 系统日志 Repository 实现，基于 MyBatis-Plus。
  */
 @Repository
 public class SysLogRepositoryImpl extends ServiceImpl<SysLogMapper, SysLog>
         implements SysLogRepository {
 
+    /** 根据管理端查询条件进行分页，按创建时间降序排列。 */
     @Override
     public Page<SysLog> pageByAdminConditions(SysLogPageQuery query) {
         return page(new Page<>(query.getCurrent(), query.getSize()), buildConditionWrapper(
@@ -34,6 +35,7 @@ public class SysLogRepositoryImpl extends ServiceImpl<SysLogMapper, SysLog>
                 .orderByDesc(SysLog::getId));
     }
 
+    /** 根据清理条件统计匹配的日志数量。 */
     @Override
     public long countByConditions(SysLogCleanRequest request) {
         return count(buildConditionWrapper(
@@ -46,6 +48,7 @@ public class SysLogRepositoryImpl extends ServiceImpl<SysLogMapper, SysLog>
                 request.getCreateTimeEnd()));
     }
 
+    /** 根据清理条件删除匹配的日志，先统计数量再执行删除。 */
     @Override
     public long removeByConditions(SysLogCleanRequest request) {
         LambdaQueryWrapper<SysLog> queryWrapper = buildConditionWrapper(
@@ -64,6 +67,9 @@ public class SysLogRepositoryImpl extends ServiceImpl<SysLogMapper, SysLog>
         return count;
     }
 
+    /**
+     * 构建通用的日志条件查询包装器，按模块、请求方法、URI、IP、操作人和时间范围进行过滤。
+     */
     private LambdaQueryWrapper<SysLog> buildConditionWrapper(String module,
                                                              String requestMethod,
                                                              String requestUri,

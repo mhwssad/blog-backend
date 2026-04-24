@@ -2,7 +2,7 @@ package com.cybzacg.blogbackend.module.follow;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.SysUser;
-import com.cybzacg.blogbackend.module.auth.service.SysUserService;
+import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.follow.convert.FollowModelMapper;
 import com.cybzacg.blogbackend.module.follow.model.data.PublicFollowUserItem;
 import com.cybzacg.blogbackend.module.follow.model.publics.PublicFollowPageQuery;
@@ -27,7 +27,7 @@ class PublicFollowServiceImplTest {
     @Mock
     private SysUserFollowRepository sysUserFollowRepository;
     @Mock
-    private SysUserService sysUserService;
+    private SysUserRepository sysUserRepository;
     @Mock
     private FollowModelMapper followModelMapper;
 
@@ -35,7 +35,7 @@ class PublicFollowServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        publicFollowService = new PublicFollowServiceImpl(sysUserFollowRepository, sysUserService, followModelMapper);
+        publicFollowService = new PublicFollowServiceImpl(sysUserFollowRepository, sysUserRepository, followModelMapper);
     }
 
     @Test
@@ -43,7 +43,7 @@ class PublicFollowServiceImplTest {
         PublicFollowPageQuery query = new PublicFollowPageQuery();
         query.setCurrent(2L);
         query.setSize(5L);
-        when(sysUserService.getById(12L)).thenReturn(activeUser(12L));
+        when(sysUserRepository.getById(12L)).thenReturn(activeUser(12L));
         when(sysUserFollowRepository.countPublicFollowPage(12L)).thenReturn(8L);
 
         PublicFollowUserItem item = new PublicFollowUserItem();
@@ -66,7 +66,7 @@ class PublicFollowServiceImplTest {
 
     @Test
     void pageUserFansShouldReturnEmptyPageWhenNoData() {
-        when(sysUserService.getById(12L)).thenReturn(activeUser(12L));
+        when(sysUserRepository.getById(12L)).thenReturn(activeUser(12L));
         when(sysUserFollowRepository.countPublicFanPage(12L)).thenReturn(0L);
 
         PageResult<PublicFollowUserVO> result = publicFollowService.pageUserFans(12L, null);

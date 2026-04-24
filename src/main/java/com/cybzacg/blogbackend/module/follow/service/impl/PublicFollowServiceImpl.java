@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.follow.service.impl;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.auth.service.SysUserService;
+import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.follow.convert.FollowModelMapper;
 import com.cybzacg.blogbackend.module.follow.model.publics.PublicFollowPageQuery;
 import com.cybzacg.blogbackend.module.follow.model.publics.PublicFollowUserVO;
@@ -25,9 +25,12 @@ public class PublicFollowServiceImpl implements PublicFollowService {
     private static final long MAX_PAGE_SIZE = 100L;
 
     private final SysUserFollowRepository sysUserFollowRepository;
-    private final SysUserService sysUserService;
+    private final SysUserRepository sysUserRepository;
     private final FollowModelMapper followModelMapper;
 
+    /**
+     * 分页查询指定用户的关注列表（公开接口）。
+     */
     @Override
     public PageResult<PublicFollowUserVO> pageUserFollows(Long userId, PublicFollowPageQuery query) {
         requireActiveUser(userId);
@@ -50,6 +53,9 @@ public class PublicFollowServiceImpl implements PublicFollowService {
                 .build();
     }
 
+    /**
+     * 分页查询指定用户的粉丝列表（公开接口）。
+     */
     @Override
     public PageResult<PublicFollowUserVO> pageUserFans(Long userId, PublicFollowPageQuery query) {
         requireActiveUser(userId);
@@ -74,7 +80,7 @@ public class PublicFollowServiceImpl implements PublicFollowService {
 
     private void requireActiveUser(Long userId) {
         ExceptionThrowerCore.throwBusinessIfNull(userId, ResultErrorCode.USER_NOT_FOUND, "用户不存在");
-        SysUser user = sysUserService.getById(userId);
+        SysUser user = sysUserRepository.getById(userId);
         ExceptionThrowerCore.throwBusinessIf(
                 user == null || !Objects.equals(user.getDeletedFlag(), 0) || !Objects.equals(user.getStatus(), 1),
                 ResultErrorCode.USER_NOT_FOUND,

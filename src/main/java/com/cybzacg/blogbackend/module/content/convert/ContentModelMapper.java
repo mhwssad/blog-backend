@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+/** 内容模块对象转换器，涵盖分类、标签、评论、收藏、互动及足迹的映射。 */
 @Mapper(componentModel = "spring", imports = StrUtils.class)
 public interface ContentModelMapper {
     CategoryAdminVO toCategoryAdminVO(SysCategory category);

@@ -1,5 +1,8 @@
 package com.cybzacg.blogbackend.common.constant;
 
+/**
+ * 系统配置项常量。<p>集中管理动态配置的缓存 Key、配置 Key 和默认值，便于统一维护。
+ */
 public final class ConfigConstants {
     public static final String CACHE_KEY_PREFIX = "sys:config";
     public static final String SECURITY_IP_RATE_LIMIT_PER_SECOND_NAME = "全局IP每秒请求限流阈值";

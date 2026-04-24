@@ -26,6 +26,9 @@ public class FollowAdminServiceImpl implements FollowAdminService {
     private final SysUserFollowRepository sysUserFollowRepository;
     private final FollowModelMapper followModelMapper;
 
+    /**
+     * 按关注/粉丝维度分页查询后台关注关系列表。
+     */
     @Override
     public PageResult<FollowAdminRelationVO> pageRelations(FollowAdminPageQuery query) {
         long current = normalizeCurrent(query == null ? null : query.getCurrent());

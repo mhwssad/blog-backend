@@ -7,7 +7,7 @@ import com.cybzacg.blogbackend.domain.SysComment;
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
-import com.cybzacg.blogbackend.module.auth.service.SysUserService;
+import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.admin.CommentPageQuery;
 import com.cybzacg.blogbackend.module.content.model.admin.CommentVO;
@@ -37,9 +37,10 @@ import java.util.stream.Collectors;
 public class CommentAdminServiceImpl implements CommentAdminService {
     private final SysCommentRepository sysCommentRepository;
     private final BlogArticleRepository blogArticleService;
-    private final SysUserService sysUserService;
+    private final SysUserRepository sysUserRepository;
     private final ContentModelMapper contentModelMapper;
 
+    /** 按管理端条件分页查询评论列表，并填充用户昵称与头像。 */
     @Override
     public PageResult<CommentVO> pageComments(CommentPageQuery query) {
         Page<SysComment> page = sysCommentRepository.pageByAdminConditions(query);
@@ -52,15 +53,17 @@ public class CommentAdminServiceImpl implements CommentAdminService {
         return PageResult.of(page, records);
     }
 
+    /** 按ID获取评论详情，并填充用户信息。 */
     @Override
     public CommentVO getComment(Long id) {
         SysComment comment = getCommentOrThrow(id);
         CommentVO vo = contentModelMapper.toCommentVO(comment);
-        fillUserInfo(vo, sysUserService.getById(comment.getUserId()));
+        fillUserInfo(vo, sysUserRepository.getById(comment.getUserId()));
         vo.setLiked(false);
         return vo;
     }
 
+    /** 修改评论状态（正常/隐藏/删除）。 */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, Integer status) {
@@ -128,7 +131,7 @@ public class CommentAdminServiceImpl implements CommentAdminService {
             return Map.of();
         }
         Map<Long, SysUser> map = new HashMap<>();
-        sysUserService.listByIds(userIds).forEach(user -> map.put(user.getId(), user));
+        sysUserRepository.listByIds(userIds).forEach(user -> map.put(user.getId(), user));
         return map;
     }
 

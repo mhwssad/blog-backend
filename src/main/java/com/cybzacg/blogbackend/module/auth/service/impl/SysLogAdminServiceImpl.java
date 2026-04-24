@@ -27,6 +27,7 @@ public class SysLogAdminServiceImpl implements SysLogAdminService {
     private final SysLogRepository sysLogRepository;
     private final SysLogModelMapper sysLogModelMapper;
 
+    /** 分页查询系统日志列表。 */
     @Override
     public PageResult<SysLogAdminVO> pageLogs(SysLogPageQuery query) {
         var page = sysLogRepository.pageByAdminConditions(query);
@@ -36,11 +37,13 @@ public class SysLogAdminServiceImpl implements SysLogAdminService {
         return PageResult.of(page, records);
     }
 
+    /** 根据 ID 获取日志详情。 */
     @Override
     public SysLogAdminVO getLog(Long id) {
         return sysLogModelMapper.toLogVO(getLogOrThrow(id));
     }
 
+    /** 物理删除单条日志。 */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteLog(Long id) {
@@ -48,6 +51,12 @@ public class SysLogAdminServiceImpl implements SysLogAdminService {
         sysLogRepository.removeById(id);
     }
 
+    /**
+     * 按条件批量清理日志，至少需指定一个筛选条件。
+     *
+     * @param request 清理条件（模块、请求方法、URI、IP、时间范围等）
+     * @return 实际删除的记录数
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public long cleanLogs(SysLogCleanRequest request) {

@@ -8,13 +8,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 
 /**
- * mybatis-plus 字段自动填充
- * <p>
- * 支持自动填充创建时间、更新时间
- * </p>
- *
- * @author Ray.Hao
- * @since 2022/10/14
+ * MyBatis-Plus 字段自动填充处理器。<p>在 INSERT 时自动填充创建时间和更新时间，UPDATE 时自动填充更新时间。</p>
  */
 @Component
 @RequiredArgsConstructor

@@ -15,10 +15,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import java.util.Properties;
 
 /**
- * mybatis-plus 配置类
- *
- * @author Ray.Hao
- * @since 2022/7/2
+ * MyBatis-Plus 全局配置。<p>注册分页插件、字段自动填充处理器和数据库类型自动识别提供器，并通过 MapperScan 指定 Mapper 扫描路径。</p>
  */
 @Configuration
 @EnableTransactionManagement
@@ -29,7 +26,9 @@ public class MybatisConfig {
     private String dbType;
 
     /**
-     * 分页插件和数据权限插件
+     * 注册 MyBatis-Plus 拦截器，包含分页插件（支持根据配置动态选择数据库类型）。
+     *
+     * @return MybatisPlusInterceptor 实例
      */
     @Bean
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
@@ -50,7 +49,9 @@ public class MybatisConfig {
     }
 
     /**
-     * 自动填充数据库创建人、创建时间、更新人、更新时间
+     * 注册全局配置，绑定字段自动填充处理器。
+     *
+     * @return GlobalConfig 实例
      */
     @Bean
     public GlobalConfig globalConfig() {
@@ -60,7 +61,9 @@ public class MybatisConfig {
     }
 
     /**
-     * 数据库类型自动识别
+     * 注册数据库类型自动识别提供器，用于 MyBatis 多数据库 SQL 适配。
+     *
+     * @return DatabaseIdProvider 实例
      */
     @Bean
     public DatabaseIdProvider databaseIdProvider() {

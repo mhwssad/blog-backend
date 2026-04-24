@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * 互动 Repository。
+ * 互动 Repository。<p>封装用户互动（点赞、收藏等）记录的持久化操作，提供多维度查询与批量删除。
  */
 public interface SysInteractionRepository extends IService<SysInteraction> {
     /**

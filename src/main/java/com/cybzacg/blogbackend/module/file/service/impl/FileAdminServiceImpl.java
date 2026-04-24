@@ -91,6 +91,9 @@ public class FileAdminServiceImpl implements FileAdminService {
         List<FileTaskAdminVO> records = page.getRecords().stream().map(this::toTaskAdminVO).toList();
         return PageResult.of(page, records);
     }
+    /**
+     * 更新文件状态，但不允许通过此接口将文件设为已删除或操作已删除文件。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, Integer status) {

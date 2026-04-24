@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * 业务异常
+ * 通用业务异常。<p>携带错误码和错误信息，用于在业务逻辑中抛出可预期的错误，由全局异常处理器统一捕获并返回给前端。</p>
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

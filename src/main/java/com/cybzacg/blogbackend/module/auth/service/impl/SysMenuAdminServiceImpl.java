@@ -33,16 +33,19 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
     private final SysRoleMenuRepository sysRoleMenuRepository;
     private final RbacAdminModelMapper rbacAdminModelMapper;
 
+    /** 查询全部菜单并组装为树形结构。 */
     @Override
     public List<SysMenuAdminVO> listMenuTree() {
         return buildMenuTree(sysMenuRepository.findAllOrdered());
     }
 
+    /** 根据 ID 获取菜单详情。 */
     @Override
     public SysMenuAdminVO getMenu(Long id) {
         return rbacAdminModelMapper.toMenuVO(getMenuOrThrow(id));
     }
 
+    /** 新建菜单，校验父菜单和类型后自动维护树路径。 */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public SysMenuAdminVO createMenu(SysMenuSaveRequest request) {
@@ -56,6 +59,7 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
         return rbacAdminModelMapper.toMenuVO(menu);
     }
 
+    /** 更新菜单，重新计算树路径并级联刷新子节点。 */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public SysMenuAdminVO updateMenu(Long id, SysMenuSaveRequest request) {
@@ -70,6 +74,7 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
         return rbacAdminModelMapper.toMenuVO(menu);
     }
 
+    /** 删除菜单，存在子菜单时拒绝删除并同步清理角色关联。 */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteMenu(Long id) {

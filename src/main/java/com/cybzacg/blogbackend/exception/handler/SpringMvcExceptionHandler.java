@@ -21,12 +21,18 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 import java.util.Arrays;
 
 /**
- * Spring MVC 异常处理器
+ * Spring MVC 异常处理器。<p>处理 HTTP 协议级别的异常，包括消息不可读、方法不支持、缺少参数/路径变量/请求头、文件上传超限和 404。</p>
  */
 @Slf4j
 @Order(1)
 @RestControllerAdvice
 public class SpringMvcExceptionHandler extends BaseExceptionHandler {
+    /**
+     * 处理 HTTP 消息不可读异常（请求体解析失败）。
+     *
+     * @param e 消息不可读异常
+     * @return 包含格式错误提示的统一响应
+     */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
@@ -41,6 +47,12 @@ public class SpringMvcExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理 HTTP 方法不支持异常。
+     *
+     * @param e 方法不支持异常
+     * @return 包含支持方法列表的统一响应
+     */
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
     public Result<Object> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException e) {
@@ -54,6 +66,12 @@ public class SpringMvcExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理媒体类型不支持异常。
+     *
+     * @param e 媒体类型不支持异常
+     * @return 包含支持媒体类型的统一响应
+     */
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     @ResponseStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
     public Result<Object> handleHttpMediaTypeNotSupported(HttpMediaTypeNotSupportedException e) {
@@ -67,6 +85,12 @@ public class SpringMvcExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理缺少 Servlet 请求参数异常。
+     *
+     * @param e 缺少参数异常
+     * @return 包含缺失参数名的统一响应
+     */
     @ExceptionHandler(MissingServletRequestParameterException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Object> handleMissingServletRequestParameter(MissingServletRequestParameterException e) {
@@ -78,6 +102,12 @@ public class SpringMvcExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理缺少请求头异常。
+     *
+     * @param e 缺少请求头异常
+     * @return 包含缺失请求头名的统一响应
+     */
     @ExceptionHandler(MissingRequestHeaderException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Object> handleMissingRequestHeader(MissingRequestHeaderException e) {
@@ -89,6 +119,12 @@ public class SpringMvcExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理缺少路径变量异常。
+     *
+     * @param e 缺少路径变量异常
+     * @return 包含缺失变量名的统一响应
+     */
     @ExceptionHandler(MissingPathVariableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Object> handleMissingPathVariable(MissingPathVariableException e) {
@@ -100,6 +136,12 @@ public class SpringMvcExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理缺少请求部分（如文件上传字段）异常。
+     *
+     * @param e 缺少请求部分异常
+     * @return 包含缺失部分名的统一响应
+     */
     @ExceptionHandler(MissingServletRequestPartException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Object> handleMissingServletRequestPart(MissingServletRequestPartException e) {
@@ -111,6 +153,12 @@ public class SpringMvcExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理文件上传大小超限异常。
+     *
+     * @param e 上传超限异常
+     * @return 包含最大允许大小的统一响应
+     */
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Object> handleMaxUploadSizeExceeded(MaxUploadSizeExceededException e) {
@@ -127,6 +175,12 @@ public class SpringMvcExceptionHandler extends BaseExceptionHandler {
                 "production".equals(profile) ? null : buildErrorDetail(e));
     }
 
+    /**
+     * 处理请求处理器未找到异常（404）。
+     *
+     * @param e 处理器未找到异常
+     * @return 包含请求路径的 404 响应
+     */
     @ExceptionHandler(NoHandlerFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Result<Object> handleNoHandlerFound(NoHandlerFoundException e) {

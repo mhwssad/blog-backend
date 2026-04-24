@@ -6,7 +6,7 @@ import com.cybzacg.blogbackend.domain.SysUserFootprint;
 import com.cybzacg.blogbackend.module.content.model.admin.FootprintPageQuery;
 
 /**
- * 用户足迹 Repository。
+ * 用户足迹 Repository。<p>封装用户浏览足迹的持久化操作，提供后台分页查询、用户足迹分页及 UPSERT 写入。
  */
 public interface SysUserFootprintRepository extends IService<SysUserFootprint> {
     /**

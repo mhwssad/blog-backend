@@ -8,7 +8,7 @@ import com.cybzacg.blogbackend.module.file.model.admin.FileAdminPageQuery;
 import java.util.Set;
 
 /**
- * 文件物理信息 Repository。
+ * 文件物理信息 Repository。<p>封装文件物理信息表的持久化操作，提供按 MD5 秒传检测、后台分页查询及引用元数据刷新。
  */
 public interface FileInfoRepository extends IService<FileInfo> {
     /**

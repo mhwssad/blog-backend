@@ -4,9 +4,9 @@ import com.cybzacg.blogbackend.common.constant.NoticeConstants;
 import com.cybzacg.blogbackend.domain.SysNotice;
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.domain.SysUserNotice;
-import com.cybzacg.blogbackend.module.auth.service.SysNoticeService;
-import com.cybzacg.blogbackend.module.auth.service.SysUserNoticeService;
-import com.cybzacg.blogbackend.module.auth.service.SysUserService;
+import com.cybzacg.blogbackend.module.auth.repository.SysNoticeRepository;
+import com.cybzacg.blogbackend.module.auth.repository.SysUserNoticeRepository;
+import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.follow.service.impl.FollowNoticeServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,17 +29,17 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class FollowNoticeServiceImplTest {
     @Mock
-    private SysNoticeService sysNoticeService;
+    private SysNoticeRepository sysNoticeRepository;
     @Mock
-    private SysUserNoticeService sysUserNoticeService;
+    private SysUserNoticeRepository sysUserNoticeRepository;
     @Mock
-    private SysUserService sysUserService;
+    private SysUserRepository sysUserRepository;
 
     private FollowNoticeServiceImpl followNoticeService;
 
     @BeforeEach
     void setUp() {
-        followNoticeService = new FollowNoticeServiceImpl(sysNoticeService, sysUserNoticeService, sysUserService);
+        followNoticeService = new FollowNoticeServiceImpl(sysNoticeRepository, sysUserNoticeRepository, sysUserRepository);
     }
 
     @AfterEach
@@ -52,17 +52,17 @@ class FollowNoticeServiceImplTest {
     @Test
     void notifyNewFollowerAfterCommitShouldRegisterCallbackInsideTransaction() {
         TransactionSynchronizationManager.initSynchronization();
-        when(sysUserService.getById(7L)).thenReturn(activeFollower(7L));
-        when(sysNoticeService.save(any(SysNotice.class))).thenAnswer(invocation -> {
+        when(sysUserRepository.getById(7L)).thenReturn(activeFollower(7L));
+        when(sysNoticeRepository.save(any(SysNotice.class))).thenAnswer(invocation -> {
             SysNotice notice = invocation.getArgument(0);
             notice.setId(100L);
             return true;
         });
-        when(sysUserNoticeService.save(any(SysUserNotice.class))).thenReturn(true);
+        when(sysUserNoticeRepository.save(any(SysUserNotice.class))).thenReturn(true);
 
         followNoticeService.notifyNewFollowerAfterCommit(12L, 7L);
 
-        verify(sysNoticeService, never()).save(any(SysNotice.class));
+        verify(sysNoticeRepository, never()).save(any(SysNotice.class));
         List<TransactionSynchronization> synchronizations = TransactionSynchronizationManager.getSynchronizations();
         assertEquals(1, synchronizations.size());
 
@@ -70,8 +70,8 @@ class FollowNoticeServiceImplTest {
 
         ArgumentCaptor<SysNotice> noticeCaptor = ArgumentCaptor.forClass(SysNotice.class);
         ArgumentCaptor<SysUserNotice> relationCaptor = ArgumentCaptor.forClass(SysUserNotice.class);
-        verify(sysNoticeService).save(noticeCaptor.capture());
-        verify(sysUserNoticeService).save(relationCaptor.capture());
+        verify(sysNoticeRepository).save(noticeCaptor.capture());
+        verify(sysUserNoticeRepository).save(relationCaptor.capture());
         assertEquals("你收到了一位新粉丝", noticeCaptor.getValue().getTitle());
         assertEquals(NoticeConstants.TARGET_SPECIFIED, noticeCaptor.getValue().getTargetType());
         assertEquals("12", noticeCaptor.getValue().getTargetUserIds());
@@ -82,18 +82,18 @@ class FollowNoticeServiceImplTest {
 
     @Test
     void notifyNewFollowerAfterCommitShouldRunImmediatelyWithoutTransaction() {
-        when(sysUserService.getById(7L)).thenReturn(activeFollower(7L));
-        when(sysNoticeService.save(any(SysNotice.class))).thenAnswer(invocation -> {
+        when(sysUserRepository.getById(7L)).thenReturn(activeFollower(7L));
+        when(sysNoticeRepository.save(any(SysNotice.class))).thenAnswer(invocation -> {
             SysNotice notice = invocation.getArgument(0);
             notice.setId(101L);
             return true;
         });
-        when(sysUserNoticeService.save(any(SysUserNotice.class))).thenReturn(true);
+        when(sysUserNoticeRepository.save(any(SysUserNotice.class))).thenReturn(true);
 
         followNoticeService.notifyNewFollowerAfterCommit(12L, 7L);
 
-        verify(sysNoticeService).save(any(SysNotice.class));
-        verify(sysUserNoticeService).save(any(SysUserNotice.class));
+        verify(sysNoticeRepository).save(any(SysNotice.class));
+        verify(sysUserNoticeRepository).save(any(SysUserNotice.class));
     }
 
     private SysUser activeFollower(Long userId) {

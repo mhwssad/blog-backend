@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
- * 存储管理器配置属性类
+ * 存储管理器配置属性。<p>映射 {@code storage.manager} 前缀下的策略选择、健康检查参数和负载均衡开关。</p>
  */
 @Data
 @Component

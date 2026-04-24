@@ -12,12 +12,13 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 /**
- * 评论 Repository 实现。
+ * 评论 Repository 实现。<p>基于 MyBatis-Plus ServiceImpl 提供评论数据的增删改查。
  */
 @Repository
 public class SysCommentRepositoryImpl extends ServiceImpl<SysCommentMapper, SysComment>
         implements SysCommentRepository {
 
+    /** {@inheritDoc} */
     @Override
     public Page<SysComment> pageByAdminConditions(CommentPageQuery query) {
         return page(new Page<>(query.getCurrent(), query.getSize()), new LambdaQueryWrapper<SysComment>()
@@ -31,6 +32,7 @@ public class SysCommentRepositoryImpl extends ServiceImpl<SysCommentMapper, SysC
                 .orderByDesc(SysComment::getId));
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<SysComment> findByTargetTypeAndTargetId(String targetType, Long targetId) {
         return list(new LambdaQueryWrapper<SysComment>()
@@ -38,16 +40,19 @@ public class SysCommentRepositoryImpl extends ServiceImpl<SysCommentMapper, SysC
                 .eq(SysComment::getTargetId, targetId));
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<SysComment> selectRootCommentsByTarget(Long targetId, String targetType) {
         return baseMapper.selectRootCommentsByTarget(targetId, targetType);
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<SysComment> selectRepliesByRootIds(List<Long> rootIds) {
         return baseMapper.selectRepliesByRootIds(rootIds);
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean removeByTargetTypeAndTargetId(String targetType, Long targetId) {
         return remove(new LambdaQueryWrapper<SysComment>()

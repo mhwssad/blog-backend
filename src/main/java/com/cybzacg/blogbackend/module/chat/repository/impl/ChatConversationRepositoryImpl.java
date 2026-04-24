@@ -19,36 +19,45 @@ import java.util.List;
 public class ChatConversationRepositoryImpl extends ServiceImpl<ChatConversationMapper, ChatConversation>
         implements ChatConversationRepository {
 
+    /** {@inheritDoc} */
     @Override
     public Long countConversationPage(Long userId, String keyword) {
         return baseMapper.countConversationPage(userId, keyword);
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<ChatConversationListItem> selectConversationPage(Long userId, String keyword, Long offset, Long size) {
         return baseMapper.selectConversationPage(userId, keyword, offset, size);
     }
 
+    /** {@inheritDoc} */
     @Override
     public ChatConversationListItem selectConversationDetail(Long conversationId, Long userId) {
         return baseMapper.selectConversationDetail(conversationId, userId);
     }
 
+    /** {@inheritDoc} */
     @Override
     public Long countAdminConversationPage(ChatAdminConversationPageQuery query) {
         return baseMapper.countAdminConversationPage(query);
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<ChatAdminConversationListItem> selectAdminConversationPage(ChatAdminConversationPageQuery query, Long offset, Long size) {
         return baseMapper.selectAdminConversationPage(query, offset, size);
     }
 
+    /** {@inheritDoc} */
     @Override
     public ChatAdminConversationListItem selectAdminConversationDetail(Long conversationId) {
         return baseMapper.selectAdminConversationDetail(conversationId);
     }
 
+    /**
+     * 根据 singlePairKey 查找会话，按 ID 降序取最新一条，防止脏数据。
+     */
     @Override
     public ChatConversation findBySinglePairKey(String singlePairKey) {
         return getOne(new LambdaQueryWrapper<ChatConversation>()
@@ -57,6 +66,9 @@ public class ChatConversationRepositoryImpl extends ServiceImpl<ChatConversation
                 .last("limit 1"), false);
     }
 
+    /**
+     * 查找全站广播会话，按 ID 降序取最新一条以确保唯一性。
+     */
     @Override
     public ChatConversation findGlobalConversation() {
         return getOne(new LambdaQueryWrapper<ChatConversation>()

@@ -21,8 +21,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 /**
- * 后台文件管理接口。
- * 主要用于文件查询、任务追踪和状态维护。
+ * 文件后台管理控制器。
+ *
+ * <p>负责文件查询、上传任务追踪、状态维护与删除等后台运营接口。
  */
 @RestController
 @RequestMapping("/api/sys/files")
