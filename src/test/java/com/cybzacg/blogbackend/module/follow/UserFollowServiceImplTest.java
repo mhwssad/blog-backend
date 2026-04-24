@@ -3,10 +3,10 @@ package com.cybzacg.blogbackend.module.follow;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.domain.SysUserFollow;
-import com.cybzacg.blogbackend.mapper.SysUserFollowMapper;
 import com.cybzacg.blogbackend.module.auth.service.SysUserService;
 import com.cybzacg.blogbackend.module.follow.convert.FollowModelMapper;
 import com.cybzacg.blogbackend.module.follow.model.data.FollowRelationUserItem;
+import com.cybzacg.blogbackend.module.follow.repository.SysUserFollowRepository;
 import com.cybzacg.blogbackend.module.follow.model.user.UserFollowCountVO;
 import com.cybzacg.blogbackend.module.follow.model.user.UserFollowMutualVO;
 import com.cybzacg.blogbackend.module.follow.model.user.UserFollowPageQuery;
@@ -37,7 +37,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class UserFollowServiceImplTest {
     @Mock
-    private SysUserFollowMapper sysUserFollowMapper;
+    private SysUserFollowRepository sysUserFollowRepository;
     @Mock
     private SysUserService sysUserService;
     @Mock
@@ -50,7 +50,7 @@ class UserFollowServiceImplTest {
     @BeforeEach
     void setUp() {
         userFollowService = new UserFollowServiceImpl(
-                sysUserFollowMapper,
+                sysUserFollowRepository,
                 sysUserService,
                 followModelMapper,
                 followNoticeService
@@ -66,17 +66,17 @@ class UserFollowServiceImplTest {
         created.setFollowStatus(1);
 
         when(sysUserService.getById(12L)).thenReturn(targetUser);
-        when(sysUserFollowMapper.selectOne(any())).thenReturn(null);
+        when(sysUserFollowRepository.findByFollowerAndFollowing(7L, 12L)).thenReturn(null);
         when(followModelMapper.toNewFollow(eq(7L), eq(12L), any())).thenReturn(created);
-        when(sysUserFollowMapper.insert(created)).thenReturn(1);
+        when(sysUserFollowRepository.save(created)).thenReturn(true);
 
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(7L)) {
             userFollowService.followUser(12L);
         }
 
         verify(followModelMapper).toNewFollow(eq(7L), eq(12L), any());
-        verify(sysUserFollowMapper).insert(created);
-        verify(sysUserFollowMapper, never()).updateById(any(SysUserFollow.class));
+        verify(sysUserFollowRepository).save(created);
+        verify(sysUserFollowRepository, never()).updateById(any(SysUserFollow.class));
         verify(followNoticeService).notifyNewFollowerAfterCommit(12L, 7L);
     }
 
@@ -90,8 +90,8 @@ class UserFollowServiceImplTest {
         relation.setFollowStatus(0);
 
         when(sysUserService.getById(12L)).thenReturn(targetUser);
-        when(sysUserFollowMapper.selectOne(any())).thenReturn(relation);
-        when(sysUserFollowMapper.updateById(relation)).thenReturn(1);
+        when(sysUserFollowRepository.findByFollowerAndFollowing(7L, 12L)).thenReturn(relation);
+        when(sysUserFollowRepository.updateById(relation)).thenReturn(true);
 
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(7L)) {
             userFollowService.followUser(12L);
@@ -99,8 +99,8 @@ class UserFollowServiceImplTest {
 
         assertEquals(Integer.valueOf(1), relation.getFollowStatus());
         assertEquals("manual", relation.getSource());
-        verify(sysUserFollowMapper).updateById(relation);
-        verify(sysUserFollowMapper, never()).insert(any(SysUserFollow.class));
+        verify(sysUserFollowRepository).updateById(relation);
+        verify(sysUserFollowRepository, never()).save(any(SysUserFollow.class));
         verify(followNoticeService).notifyNewFollowerAfterCommit(12L, 7L);
     }
 
@@ -114,14 +114,14 @@ class UserFollowServiceImplTest {
         relation.setFollowStatus(1);
 
         when(sysUserService.getById(12L)).thenReturn(targetUser);
-        when(sysUserFollowMapper.selectOne(any())).thenReturn(relation);
+        when(sysUserFollowRepository.findByFollowerAndFollowing(7L, 12L)).thenReturn(relation);
 
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(7L)) {
             userFollowService.followUser(12L);
         }
 
-        verify(sysUserFollowMapper, never()).insert(any(SysUserFollow.class));
-        verify(sysUserFollowMapper, never()).updateById(any(SysUserFollow.class));
+        verify(sysUserFollowRepository, never()).save(any(SysUserFollow.class));
+        verify(sysUserFollowRepository, never()).updateById(any(SysUserFollow.class));
         verify(followNoticeService, never()).notifyNewFollowerAfterCommit(any(), any());
     }
 
@@ -135,15 +135,15 @@ class UserFollowServiceImplTest {
         relation.setFollowStatus(1);
 
         when(sysUserService.getById(12L)).thenReturn(targetUser);
-        when(sysUserFollowMapper.selectOne(any())).thenReturn(relation);
-        when(sysUserFollowMapper.updateById(relation)).thenReturn(1);
+        when(sysUserFollowRepository.findByFollowerAndFollowing(7L, 12L)).thenReturn(relation);
+        when(sysUserFollowRepository.updateById(relation)).thenReturn(true);
 
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(7L)) {
             userFollowService.unfollowUser(12L);
         }
 
         assertEquals(Integer.valueOf(0), relation.getFollowStatus());
-        verify(sysUserFollowMapper).updateById(relation);
+        verify(sysUserFollowRepository).updateById(relation);
     }
 
     @Test
@@ -161,8 +161,8 @@ class UserFollowServiceImplTest {
         vo.setUserId(12L);
         vo.setUsername("target-user");
 
-        when(sysUserFollowMapper.countFollowPage(7L, true)).thenReturn(8L);
-        when(sysUserFollowMapper.selectFollowPage(7L, true, 5L, 5L)).thenReturn(List.of(item));
+        when(sysUserFollowRepository.countFollowPage(7L, true)).thenReturn(8L);
+        when(sysUserFollowRepository.selectFollowPage(7L, true, 5L, 5L)).thenReturn(List.of(item));
         when(followModelMapper.toUserFollowUserVO(item)).thenReturn(vo);
 
         PageResult<UserFollowUserVO> result;
@@ -181,8 +181,8 @@ class UserFollowServiceImplTest {
     void getMutualFollowStatusShouldAssembleRelationFlags() {
         SysUser targetUser = activeUser(12L);
         when(sysUserService.getById(12L)).thenReturn(targetUser);
-        when(sysUserFollowMapper.countActiveRelation(7L, 12L)).thenReturn(1L);
-        when(sysUserFollowMapper.countActiveRelation(12L, 7L)).thenReturn(0L);
+        when(sysUserFollowRepository.countActiveRelation(7L, 12L)).thenReturn(1L);
+        when(sysUserFollowRepository.countActiveRelation(12L, 7L)).thenReturn(0L);
 
         UserFollowMutualVO result;
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(7L)) {
@@ -196,8 +196,8 @@ class UserFollowServiceImplTest {
 
     @Test
     void getMyFollowCountShouldUseMapperCounts() {
-        when(sysUserFollowMapper.countActiveFollowing(7L)).thenReturn(3L);
-        when(sysUserFollowMapper.countActiveFans(7L)).thenReturn(5L);
+        when(sysUserFollowRepository.countActiveFollowing(7L)).thenReturn(3L);
+        when(sysUserFollowRepository.countActiveFans(7L)).thenReturn(5L);
 
         UserFollowCountVO result;
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(7L)) {
@@ -221,15 +221,15 @@ class UserFollowServiceImplTest {
         request.setRemark(" 前端联调 ");
 
         when(sysUserService.getById(12L)).thenReturn(targetUser);
-        when(sysUserFollowMapper.selectOne(any())).thenReturn(relation);
-        when(sysUserFollowMapper.updateById(relation)).thenReturn(1);
+        when(sysUserFollowRepository.findByFollowerAndFollowing(7L, 12L)).thenReturn(relation);
+        when(sysUserFollowRepository.updateById(relation)).thenReturn(true);
 
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(7L)) {
             userFollowService.updateRemark(12L, request);
         }
 
         verify(followModelMapper).updateRemark(request, relation);
-        verify(sysUserFollowMapper).updateById(relation);
+        verify(sysUserFollowRepository).updateById(relation);
     }
 
     @Test
@@ -245,15 +245,15 @@ class UserFollowServiceImplTest {
         request.setSpecialFollow(1);
 
         when(sysUserService.getById(12L)).thenReturn(targetUser);
-        when(sysUserFollowMapper.selectOne(any())).thenReturn(relation);
-        when(sysUserFollowMapper.updateById(relation)).thenReturn(1);
+        when(sysUserFollowRepository.findByFollowerAndFollowing(7L, 12L)).thenReturn(relation);
+        when(sysUserFollowRepository.updateById(relation)).thenReturn(true);
 
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(7L)) {
             userFollowService.updateSpecialFollow(12L, request);
         }
 
         verify(followModelMapper).updateSpecialFollow(request, relation);
-        verify(sysUserFollowMapper).updateById(relation);
+        verify(sysUserFollowRepository).updateById(relation);
     }
 
     private SysUser activeUser(Long userId) {

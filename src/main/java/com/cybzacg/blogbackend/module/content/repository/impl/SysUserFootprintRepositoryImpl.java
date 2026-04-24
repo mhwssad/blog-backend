@@ -48,6 +48,13 @@ public class SysUserFootprintRepositoryImpl extends ServiceImpl<SysUserFootprint
         return baseMapper.upsertFootprint(footprint);
     }
 
+    @Override
+    public boolean removeByTargetTypeAndTargetId(String targetType, Long targetId) {
+        return remove(new LambdaQueryWrapper<SysUserFootprint>()
+                .eq(SysUserFootprint::getTargetType, targetType)
+                .eq(SysUserFootprint::getTargetId, targetId));
+    }
+
     /**
      * 构建后台足迹筛选条件，统一收口管理端分页与批量删除的查询口径。
      *

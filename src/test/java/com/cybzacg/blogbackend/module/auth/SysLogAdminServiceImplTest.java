@@ -1,8 +1,5 @@
 package com.cybzacg.blogbackend.module.auth;
 
-import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
-import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
-import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.SysLog;
@@ -12,7 +9,7 @@ import com.cybzacg.blogbackend.module.auth.convert.SysLogModelMapper;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysLogAdminVO;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysLogCleanRequest;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysLogPageQuery;
-import com.cybzacg.blogbackend.module.auth.service.SysLogService;
+import com.cybzacg.blogbackend.module.auth.repository.SysLogRepository;
 import com.cybzacg.blogbackend.module.auth.service.impl.SysLogAdminServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,8 +22,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -34,19 +29,15 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class SysLogAdminServiceImplTest {
     @Mock
-    private SysLogService sysLogService;
+    private SysLogRepository sysLogRepository;
     @Mock
     private SysLogModelMapper sysLogModelMapper;
-    @Mock
-    private LambdaQueryChainWrapper<SysLog> logQuery;
-    @Mock
-    private LambdaUpdateChainWrapper<SysLog> logUpdate;
 
     private SysLogAdminServiceImpl sysLogAdminService;
 
     @BeforeEach
     void setUp() {
-        sysLogAdminService = new SysLogAdminServiceImpl(sysLogService, sysLogModelMapper);
+        sysLogAdminService = new SysLogAdminServiceImpl(sysLogRepository, sysLogModelMapper);
     }
 
     @Test
@@ -55,20 +46,12 @@ class SysLogAdminServiceImplTest {
         query.setCurrent(1L);
         query.setSize(10L);
         query.setModule("auth");
-        query.setRequestMethod("POST");
-        query.setRequestUri("/auth/login");
-        query.setIp("127.0.0.1");
-        query.setCreateBy(1L);
-        query.setCreateTimeStart(new Date(1_000L));
-        query.setCreateTimeEnd(new Date(2_000L));
 
         SysLog log = log(1L, "auth", "/auth/login");
         Page<SysLog> page = new Page<>(1, 10, 1);
         page.setRecords(List.of(log));
 
-        when(sysLogService.lambdaQuery()).thenReturn(logQuery);
-        stubPagedLogQueryChain();
-        when(logQuery.page(any())).thenReturn(page);
+        when(sysLogRepository.pageByAdminConditions(query)).thenReturn(page);
 
         SysLogAdminVO expected = logVO(1L, "auth", "/auth/login");
         when(sysLogModelMapper.toLogVO(log)).thenReturn(expected);
@@ -83,7 +66,7 @@ class SysLogAdminServiceImplTest {
     @Test
     void getLogShouldReturnMappedVO() {
         SysLog log = log(1L, "auth", "/auth/login");
-        when(sysLogService.getById(1L)).thenReturn(log);
+        when(sysLogRepository.getById(1L)).thenReturn(log);
 
         SysLogAdminVO expected = logVO(1L, "auth", "/auth/login");
         when(sysLogModelMapper.toLogVO(log)).thenReturn(expected);
@@ -96,7 +79,7 @@ class SysLogAdminServiceImplTest {
 
     @Test
     void getLogShouldThrowWhenNotFound() {
-        when(sysLogService.getById(99L)).thenReturn(null);
+        when(sysLogRepository.getById(99L)).thenReturn(null);
 
         BusinessException exception = assertThrows(BusinessException.class, () -> sysLogAdminService.getLog(99L));
 
@@ -107,11 +90,11 @@ class SysLogAdminServiceImplTest {
     @Test
     void deleteLogShouldRemoveLogWhenExists() {
         SysLog log = log(1L, "auth", "/auth/login");
-        when(sysLogService.getById(1L)).thenReturn(log);
+        when(sysLogRepository.getById(1L)).thenReturn(log);
 
         sysLogAdminService.deleteLog(1L);
 
-        verify(sysLogService).removeById(1L);
+        verify(sysLogRepository).removeById(1L);
     }
 
     @Test
@@ -122,60 +105,18 @@ class SysLogAdminServiceImplTest {
 
         assertEquals(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), exception.getCode());
         assertEquals("清理日志必须至少指定一个条件", exception.getMessage());
-        verify(sysLogService, never()).lambdaQuery();
-        verify(sysLogService, never()).lambdaUpdate();
+        verify(sysLogRepository, never()).removeByConditions(request);
     }
 
     @Test
-    void cleanLogsShouldReturnZeroWhenNothingMatches() {
+    void cleanLogsShouldDelegateToRepositoryAndReturnRemovedCount() {
         SysLogCleanRequest request = cleanRequest();
-        when(sysLogService.lambdaQuery()).thenReturn(logQuery);
-        stubCleanLogQueryChain();
-        when(logQuery.count()).thenReturn(0L);
-
-        long result = sysLogAdminService.cleanLogs(request);
-
-        assertEquals(0L, result);
-        verify(sysLogService, never()).lambdaUpdate();
-    }
-
-    @Test
-    void cleanLogsShouldRemoveMatchedLogsAndReturnCount() {
-        SysLogCleanRequest request = cleanRequest();
-        when(sysLogService.lambdaQuery()).thenReturn(logQuery);
-        stubCleanLogQueryChain();
-        when(logQuery.count()).thenReturn(3L);
-
-        when(sysLogService.lambdaUpdate()).thenReturn(logUpdate);
-        stubLogUpdateChain();
+        when(sysLogRepository.removeByConditions(request)).thenReturn(3L);
 
         long result = sysLogAdminService.cleanLogs(request);
 
         assertEquals(3L, result);
-        verify(logUpdate).remove();
-    }
-
-    private void stubPagedLogQueryChain() {
-        when(logQuery.like(anyBoolean(), any(SFunction.class), any())).thenReturn(logQuery);
-        when(logQuery.eq(anyBoolean(), any(SFunction.class), any())).thenReturn(logQuery);
-        when(logQuery.ge(anyBoolean(), any(SFunction.class), any())).thenReturn(logQuery);
-        when(logQuery.le(anyBoolean(), any(SFunction.class), any())).thenReturn(logQuery);
-        when(logQuery.orderByDesc(any(SFunction.class))).thenReturn(logQuery);
-    }
-
-    private void stubCleanLogQueryChain() {
-        when(logQuery.like(anyBoolean(), any(SFunction.class), any())).thenReturn(logQuery);
-        when(logQuery.eq(anyBoolean(), any(SFunction.class), any())).thenReturn(logQuery);
-        when(logQuery.ge(anyBoolean(), any(SFunction.class), any())).thenReturn(logQuery);
-        when(logQuery.le(anyBoolean(), any(SFunction.class), any())).thenReturn(logQuery);
-    }
-
-    private void stubLogUpdateChain() {
-        when(logUpdate.like(anyBoolean(), any(SFunction.class), any())).thenReturn(logUpdate);
-        when(logUpdate.eq(anyBoolean(), any(SFunction.class), any())).thenReturn(logUpdate);
-        when(logUpdate.ge(anyBoolean(), any(SFunction.class), any())).thenReturn(logUpdate);
-        when(logUpdate.le(anyBoolean(), any(SFunction.class), any())).thenReturn(logUpdate);
-        when(logUpdate.remove()).thenReturn(true);
+        verify(sysLogRepository).removeByConditions(request);
     }
 
     private SysLogCleanRequest cleanRequest() {

@@ -1,8 +1,5 @@
 package com.cybzacg.blogbackend.module.content;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
-import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.BlogArticle;
@@ -10,12 +7,12 @@ import com.cybzacg.blogbackend.domain.SysComment;
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleService;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.auth.service.SysUserService;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.admin.CommentPageQuery;
 import com.cybzacg.blogbackend.module.content.model.admin.CommentVO;
-import com.cybzacg.blogbackend.module.content.service.SysCommentService;
+import com.cybzacg.blogbackend.module.content.repository.SysCommentRepository;
 import com.cybzacg.blogbackend.module.content.service.impl.CommentAdminServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,22 +34,20 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class CommentAdminServiceImplTest {
     @Mock
-    private SysCommentService sysCommentService;
+    private SysCommentRepository sysCommentRepository;
     @Mock
-    private BlogArticleService blogArticleService;
+    private BlogArticleRepository blogArticleService;
     @Mock
     private SysUserService sysUserService;
     @Mock
     private ContentModelMapper contentModelMapper;
-    @Mock
-    private LambdaQueryChainWrapper<SysComment> commentTreeQuery;
 
     private CommentAdminServiceImpl commentAdminService;
 
     @BeforeEach
     void setUp() {
         commentAdminService = new CommentAdminServiceImpl(
-                sysCommentService,
+                sysCommentRepository,
                 blogArticleService,
                 sysUserService,
                 contentModelMapper
@@ -74,7 +69,7 @@ class CommentAdminServiceImplTest {
         SysUser user = user(7L, "Tom", "/avatar.png");
         CommentVO vo = commentVO(10L, 7L);
 
-        when(sysCommentService.page(any(Page.class), any(LambdaQueryWrapper.class))).thenReturn(page);
+        when(sysCommentRepository.pageByAdminConditions(query)).thenReturn(page);
         when(sysUserService.listByIds(any())).thenReturn(List.of(user));
         when(contentModelMapper.toCommentVO(comment)).thenReturn(vo);
 
@@ -97,7 +92,7 @@ class CommentAdminServiceImplTest {
         SysUser user = user(7L, "Tom", "/avatar.png");
         CommentVO vo = commentVO(10L, 7L);
 
-        when(sysCommentService.getById(10L)).thenReturn(comment);
+        when(sysCommentRepository.getById(10L)).thenReturn(comment);
         when(sysUserService.getById(7L)).thenReturn(user);
         when(contentModelMapper.toCommentVO(comment)).thenReturn(vo);
 
@@ -112,12 +107,12 @@ class CommentAdminServiceImplTest {
     @Test
     void updateStatusShouldUpdateCommentWhenStatusValid() {
         SysComment comment = comment(10L, 100L, 7L, 0L, 0L, 1);
-        when(sysCommentService.getById(10L)).thenReturn(comment);
+        when(sysCommentRepository.getById(10L)).thenReturn(comment);
 
         commentAdminService.updateStatus(10L, 2);
 
         assertEquals(Integer.valueOf(2), comment.getStatus());
-        verify(sysCommentService).updateById(comment);
+        verify(sysCommentRepository).updateById(comment);
     }
 
     @Test
@@ -126,7 +121,7 @@ class CommentAdminServiceImplTest {
 
         assertEquals(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), exception.getCode());
         assertEquals("评论状态非法", exception.getMessage());
-        verify(sysCommentService, never()).getById(10L);
+        verify(sysCommentRepository, never()).getById(10L);
     }
 
     @Test
@@ -141,20 +136,18 @@ class CommentAdminServiceImplTest {
         article.setId(100L);
         article.setCommentCount(4);
 
-        when(sysCommentService.getById(100L)).thenReturn(comment);
-        when(sysCommentService.getById(50L)).thenReturn(parent);
-        when(sysCommentService.lambdaQuery()).thenReturn(commentTreeQuery);
-        when(commentTreeQuery.eq(anySFunction(), any())).thenReturn(commentTreeQuery);
-        when(commentTreeQuery.list()).thenReturn(List.of(parent, comment, child));
+        when(sysCommentRepository.getById(100L)).thenReturn(comment);
+        when(sysCommentRepository.getById(50L)).thenReturn(parent);
+        when(sysCommentRepository.findByTargetTypeAndTargetId("article", 100L)).thenReturn(List.of(parent, comment, child));
         when(blogArticleService.getById(100L)).thenReturn(article);
 
         commentAdminService.deleteComment(100L);
 
         assertEquals(Integer.valueOf(2), article.getCommentCount());
         assertEquals(Integer.valueOf(1), parent.getReplyCount());
-        verify(sysCommentService).removeByIds(any());
+        verify(sysCommentRepository).removeByIds(any());
         verify(blogArticleService).updateById(article);
-        verify(sysCommentService).updateById(parent);
+        verify(sysCommentRepository).updateById(parent);
     }
 
     private SysComment comment(Long id, Long targetId, Long userId, Long parentId, Long rootId, Integer status) {
@@ -182,11 +175,6 @@ class CommentAdminServiceImplTest {
         vo.setId(id);
         vo.setUserId(userId);
         return vo;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> SFunction<T, ?> anySFunction() {
-        return (SFunction<T, ?>) any(SFunction.class);
     }
 }
 

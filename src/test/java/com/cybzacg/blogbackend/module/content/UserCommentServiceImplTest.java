@@ -1,19 +1,16 @@
 package com.cybzacg.blogbackend.module.content;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
-import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.SysComment;
 import com.cybzacg.blogbackend.domain.SysInteraction;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleService;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.user.CommentSaveRequest;
-import com.cybzacg.blogbackend.module.content.service.SysCommentService;
-import com.cybzacg.blogbackend.module.content.service.SysInteractionService;
+import com.cybzacg.blogbackend.module.content.repository.SysCommentRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysInteractionRepository;
 import com.cybzacg.blogbackend.module.content.service.impl.UserCommentServiceImpl;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,29 +33,23 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class UserCommentServiceImplTest {
     @Mock
-    private SysCommentService sysCommentService;
+    private SysCommentRepository sysCommentRepository;
     @Mock
-    private SysInteractionService sysInteractionService;
+    private SysInteractionRepository sysInteractionRepository;
     @Mock
-    private BlogArticleService blogArticleService;
+    private BlogArticleRepository blogArticleService;
     @Mock
     private ArticleAccessControlService articleAccessControlService;
     @Mock
     private ContentModelMapper contentModelMapper;
-    @Mock
-    private LambdaQueryChainWrapper<SysComment> commentTreeQuery;
-    @Mock
-    private LambdaQueryChainWrapper<SysInteraction> interactionExistsQuery;
-    @Mock
-    private LambdaQueryChainWrapper<SysInteraction> interactionLookupQuery;
 
     private UserCommentServiceImpl userCommentService;
 
     @BeforeEach
     void setUp() {
         userCommentService = new UserCommentServiceImpl(
-                sysCommentService,
-                sysInteractionService,
+                sysCommentRepository,
+                sysInteractionRepository,
                 blogArticleService,
                 articleAccessControlService,
                 contentModelMapper
@@ -90,12 +81,12 @@ class UserCommentServiceImplTest {
 
         when(blogArticleService.getById(10L)).thenReturn(article);
         when(contentModelMapper.toComment(request)).thenReturn(comment);
-        when(sysCommentService.getById(100L)).thenReturn(parent);
-        when(sysCommentService.save(comment)).thenAnswer(invocation -> {
+        when(sysCommentRepository.getById(100L)).thenReturn(parent);
+        when(sysCommentRepository.save(comment)).thenAnswer(invocation -> {
             comment.setId(101L);
             return true;
         });
-        when(sysCommentService.updateById(parent)).thenReturn(true);
+        when(sysCommentRepository.updateById(parent)).thenReturn(true);
         when(blogArticleService.updateById(article)).thenReturn(true);
 
         try (MockedStatic<?> securityUtils = SecurityTestUtils.mockUserId(7L)) {
@@ -111,8 +102,8 @@ class UserCommentServiceImplTest {
         assertEquals(Integer.valueOf(1), comment.getStatus());
         assertEquals(Integer.valueOf(2), parent.getReplyCount());
         assertEquals(Integer.valueOf(3), article.getCommentCount());
-        verify(sysCommentService).save(comment);
-        verify(sysCommentService).updateById(parent);
+        verify(sysCommentRepository).save(comment);
+        verify(sysCommentRepository).updateById(parent);
         verify(blogArticleService).updateById(article);
     }
 
@@ -138,7 +129,7 @@ class UserCommentServiceImplTest {
         }
 
         assertEquals(ResultErrorCode.FORBIDDEN.getCode(), exception.getCode());
-        verify(sysCommentService, never()).save(any(SysComment.class));
+        verify(sysCommentRepository, never()).save(any(SysComment.class));
         verify(blogArticleService, never()).updateById(any(BlogArticle.class));
     }
 
@@ -169,16 +160,14 @@ class UserCommentServiceImplTest {
         article.setId(10L);
         article.setCommentCount(4);
 
-        when(sysCommentService.getById(100L)).thenReturn(comment);
-        when(sysCommentService.getById(50L)).thenReturn(parent);
-        when(sysCommentService.lambdaQuery()).thenReturn(commentTreeQuery);
-        when(commentTreeQuery.eq(anySFunction(), any())).thenReturn(commentTreeQuery);
-        when(commentTreeQuery.list()).thenReturn(List.of(parent, comment, child));
-        when(sysCommentService.removeByIds(List.of(100L, 101L))).thenReturn(true);
-        when(sysInteractionService.remove(any(LambdaQueryWrapper.class))).thenReturn(true);
+        when(sysCommentRepository.getById(100L)).thenReturn(comment);
+        when(sysCommentRepository.getById(50L)).thenReturn(parent);
+        when(sysCommentRepository.findByTargetTypeAndTargetId("article", 10L)).thenReturn(List.of(parent, comment, child));
+        when(sysCommentRepository.removeByIds(List.of(100L, 101L))).thenReturn(true);
+        when(sysInteractionRepository.removeByTargetTypeAndTargetIds("comment", List.of(100L, 101L))).thenReturn(true);
         when(blogArticleService.getById(10L)).thenReturn(article);
         when(blogArticleService.updateById(article)).thenReturn(true);
-        when(sysCommentService.updateById(parent)).thenReturn(true);
+        when(sysCommentRepository.updateById(parent)).thenReturn(true);
 
         try (MockedStatic<?> securityUtils = SecurityTestUtils.mockUserId(7L)) {
             userCommentService.deleteComment(100L);
@@ -186,10 +175,10 @@ class UserCommentServiceImplTest {
 
         assertEquals(Integer.valueOf(2), article.getCommentCount());
         assertEquals(Integer.valueOf(1), parent.getReplyCount());
-        verify(sysCommentService).removeByIds(List.of(100L, 101L));
-        verify(sysInteractionService).remove(any(LambdaQueryWrapper.class));
+        verify(sysCommentRepository).removeByIds(List.of(100L, 101L));
+        verify(sysInteractionRepository).removeByTargetTypeAndTargetIds("comment", List.of(100L, 101L));
         verify(blogArticleService).updateById(article);
-        verify(sysCommentService).updateById(parent);
+        verify(sysCommentRepository).updateById(parent);
     }
 
     @Test
@@ -202,10 +191,8 @@ class UserCommentServiceImplTest {
         interaction.setUserId(7L);
         interaction.setTargetId(100L);
 
-        when(sysCommentService.getById(100L)).thenReturn(comment);
-        when(sysInteractionService.lambdaQuery()).thenReturn(interactionExistsQuery);
-        when(interactionExistsQuery.eq(anySFunction(), any())).thenReturn(interactionExistsQuery);
-        when(interactionExistsQuery.exists()).thenReturn(false);
+        when(sysCommentRepository.getById(100L)).thenReturn(comment);
+        when(sysInteractionRepository.existsByUserIdAndTargetIdAndTargetTypeAndActionType(7L, 100L, "comment", "like")).thenReturn(false);
         when(contentModelMapper.toInteraction(7L, 100L, "comment", "like")).thenReturn(interaction);
 
         try (MockedStatic<?> securityUtils = SecurityTestUtils.mockUserId(7L)) {
@@ -213,8 +200,8 @@ class UserCommentServiceImplTest {
         }
 
         assertEquals(Integer.valueOf(3), comment.getLikeCount());
-        verify(sysInteractionService).save(interaction);
-        verify(sysCommentService).updateById(comment);
+        verify(sysInteractionRepository).save(interaction);
+        verify(sysCommentRepository).updateById(comment);
     }
 
     @Test
@@ -223,18 +210,16 @@ class UserCommentServiceImplTest {
         comment.setId(100L);
         comment.setLikeCount(2);
 
-        when(sysCommentService.getById(100L)).thenReturn(comment);
-        when(sysInteractionService.lambdaQuery()).thenReturn(interactionExistsQuery);
-        when(interactionExistsQuery.eq(anySFunction(), any())).thenReturn(interactionExistsQuery);
-        when(interactionExistsQuery.exists()).thenReturn(true);
+        when(sysCommentRepository.getById(100L)).thenReturn(comment);
+        when(sysInteractionRepository.existsByUserIdAndTargetIdAndTargetTypeAndActionType(7L, 100L, "comment", "like")).thenReturn(true);
 
         try (MockedStatic<?> securityUtils = SecurityTestUtils.mockUserId(7L)) {
             userCommentService.likeComment(100L);
         }
 
         assertEquals(Integer.valueOf(2), comment.getLikeCount());
-        verify(sysInteractionService, never()).save(any(SysInteraction.class));
-        verify(sysCommentService, never()).updateById(comment);
+        verify(sysInteractionRepository, never()).save(any(SysInteraction.class));
+        verify(sysCommentRepository, never()).updateById(comment);
     }
 
     @Test
@@ -247,18 +232,16 @@ class UserCommentServiceImplTest {
         interaction.setId(200L);
         interaction.setTargetId(100L);
 
-        when(sysCommentService.getById(100L)).thenReturn(comment);
-        when(sysInteractionService.lambdaQuery()).thenReturn(interactionLookupQuery);
-        when(interactionLookupQuery.eq(anySFunction(), any())).thenReturn(interactionLookupQuery);
-        when(interactionLookupQuery.one()).thenReturn(interaction);
+        when(sysCommentRepository.getById(100L)).thenReturn(comment);
+        when(sysInteractionRepository.findOneByUserIdAndTargetIdAndTargetTypeAndActionType(7L, 100L, "comment", "like")).thenReturn(interaction);
 
         try (MockedStatic<?> securityUtils = SecurityTestUtils.mockUserId(7L)) {
             userCommentService.unlikeComment(100L);
         }
 
         assertEquals(Integer.valueOf(1), comment.getLikeCount());
-        verify(sysInteractionService).removeById(200L);
-        verify(sysCommentService).updateById(comment);
+        verify(sysInteractionRepository).removeById(200L);
+        verify(sysCommentRepository).updateById(comment);
     }
 
     @Test
@@ -267,23 +250,16 @@ class UserCommentServiceImplTest {
         comment.setId(100L);
         comment.setLikeCount(2);
 
-        when(sysCommentService.getById(100L)).thenReturn(comment);
-        when(sysInteractionService.lambdaQuery()).thenReturn(interactionLookupQuery);
-        when(interactionLookupQuery.eq(anySFunction(), any())).thenReturn(interactionLookupQuery);
-        when(interactionLookupQuery.one()).thenReturn(null);
+        when(sysCommentRepository.getById(100L)).thenReturn(comment);
+        when(sysInteractionRepository.findOneByUserIdAndTargetIdAndTargetTypeAndActionType(7L, 100L, "comment", "like")).thenReturn(null);
 
         try (MockedStatic<?> securityUtils = SecurityTestUtils.mockUserId(7L)) {
             userCommentService.unlikeComment(100L);
         }
 
         assertEquals(Integer.valueOf(2), comment.getLikeCount());
-        verify(sysInteractionService, never()).removeById(any(Long.class));
-        verify(sysCommentService, never()).updateById(comment);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> SFunction<T, ?> anySFunction() {
-        return (SFunction<T, ?>) any(SFunction.class);
+        verify(sysInteractionRepository, never()).removeById(any(Long.class));
+        verify(sysCommentRepository, never()).updateById(comment);
     }
 }
 

@@ -1,0 +1,36 @@
+package com.cybzacg.blogbackend.module.file.repository.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.cybzacg.blogbackend.domain.FileChunk;
+import com.cybzacg.blogbackend.mapper.FileChunkMapper;
+import com.cybzacg.blogbackend.module.file.repository.FileChunkRepository;
+import org.springframework.stereotype.Repository;
+
+/**
+ * 文件分片 Repository 实现。
+ */
+@Repository
+public class FileChunkRepositoryImpl extends ServiceImpl<FileChunkMapper, FileChunk> implements FileChunkRepository {
+    @Override
+    public FileChunk findByTaskIdAndChunkNumber(Long uploadTaskId, Integer chunkNumber) {
+        return getOne(new LambdaQueryWrapper<FileChunk>()
+                .eq(FileChunk::getUploadTaskId, uploadTaskId)
+                .eq(FileChunk::getChunkNumber, chunkNumber)
+                .last("limit 1"));
+    }
+
+    @Override
+    public long countByTaskIdAndStatus(Long uploadTaskId, Integer completedStatus) {
+        Long count = count(new LambdaQueryWrapper<FileChunk>()
+                .eq(FileChunk::getUploadTaskId, uploadTaskId)
+                .eq(FileChunk::getUploadStatus, completedStatus));
+        return count == null ? 0L : count;
+    }
+
+    @Override
+    public boolean deleteByUploadTaskId(Long uploadTaskId) {
+        return remove(new LambdaQueryWrapper<FileChunk>()
+                .eq(FileChunk::getUploadTaskId, uploadTaskId));
+    }
+}

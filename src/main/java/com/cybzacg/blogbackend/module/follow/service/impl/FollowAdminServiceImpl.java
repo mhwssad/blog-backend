@@ -2,11 +2,11 @@ package com.cybzacg.blogbackend.module.follow.service.impl;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.mapper.SysUserFollowMapper;
 import com.cybzacg.blogbackend.module.follow.convert.FollowModelMapper;
 import com.cybzacg.blogbackend.module.follow.model.admin.FollowAdminPageQuery;
 import com.cybzacg.blogbackend.module.follow.model.admin.FollowAdminRelationVO;
 import com.cybzacg.blogbackend.module.follow.model.admin.FollowRelationCleanRequest;
+import com.cybzacg.blogbackend.module.follow.repository.SysUserFollowRepository;
 import com.cybzacg.blogbackend.module.follow.service.FollowAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import java.util.List;
@@ -23,14 +23,14 @@ public class FollowAdminServiceImpl implements FollowAdminService {
     private static final long DEFAULT_PAGE_SIZE = 10L;
     private static final long MAX_PAGE_SIZE = 100L;
 
-    private final SysUserFollowMapper sysUserFollowMapper;
+    private final SysUserFollowRepository sysUserFollowRepository;
     private final FollowModelMapper followModelMapper;
 
     @Override
     public PageResult<FollowAdminRelationVO> pageRelations(FollowAdminPageQuery query) {
         long current = normalizeCurrent(query == null ? null : query.getCurrent());
         long size = normalizeSize(query == null ? null : query.getSize());
-        long total = defaultLong(sysUserFollowMapper.countAdminRelationPage(query));
+        long total = defaultLong(sysUserFollowRepository.countAdminRelationPage(query));
         if (total == 0L) {
             return PageResult.<FollowAdminRelationVO>builder()
                     .total(0L)
@@ -40,7 +40,7 @@ public class FollowAdminServiceImpl implements FollowAdminService {
                     .build();
         }
         long offset = (current - 1) * size;
-        List<FollowAdminRelationVO> records = sysUserFollowMapper.selectAdminRelationPage(query, offset, size)
+        List<FollowAdminRelationVO> records = sysUserFollowRepository.selectAdminRelationPage(query, offset, size)
                 .stream()
                 .map(followModelMapper::toFollowAdminRelationVO)
                 .toList();
@@ -59,7 +59,7 @@ public class FollowAdminServiceImpl implements FollowAdminService {
     @Transactional(rollbackFor = Exception.class)
     public long cleanRelations(FollowRelationCleanRequest request) {
         validateCleanRequest(request);
-        long count = defaultLong(sysUserFollowMapper.countCleanableRelations(
+        long count = defaultLong(sysUserFollowRepository.countCleanableRelations(
                 isTrue(request.getCleanInactive()),
                 isTrue(request.getCleanDeletedUsers()),
                 isTrue(request.getCleanDisabledUsers())
@@ -67,7 +67,7 @@ public class FollowAdminServiceImpl implements FollowAdminService {
         if (count == 0L) {
             return 0L;
         }
-        sysUserFollowMapper.deleteCleanableRelations(
+        sysUserFollowRepository.deleteCleanableRelations(
                 isTrue(request.getCleanInactive()),
                 isTrue(request.getCleanDeletedUsers()),
                 isTrue(request.getCleanDisabledUsers())

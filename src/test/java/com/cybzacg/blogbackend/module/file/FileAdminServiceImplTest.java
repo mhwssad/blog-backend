@@ -1,8 +1,5 @@
 package com.cybzacg.blogbackend.module.file;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
-import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.common.storage.StorageManager;
 import com.cybzacg.blogbackend.common.storage.StorageService;
@@ -19,10 +16,10 @@ import com.cybzacg.blogbackend.module.file.model.admin.FileAdminVO;
 import com.cybzacg.blogbackend.module.file.model.admin.FileDetailVO;
 import com.cybzacg.blogbackend.module.file.model.admin.FileTaskAdminVO;
 import com.cybzacg.blogbackend.module.file.model.admin.FileTaskPageQuery;
-import com.cybzacg.blogbackend.module.file.service.FileBusinessInfoService;
-import com.cybzacg.blogbackend.module.file.service.FileChunkService;
-import com.cybzacg.blogbackend.module.file.service.FileInfoService;
-import com.cybzacg.blogbackend.module.file.service.FileUploadTaskService;
+import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
+import com.cybzacg.blogbackend.module.file.repository.FileChunkRepository;
+import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
+import com.cybzacg.blogbackend.module.file.repository.FileUploadTaskRepository;
 import com.cybzacg.blogbackend.module.file.service.impl.FileAdminServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,31 +41,26 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class FileAdminServiceImplTest {
     @Mock
-    private FileInfoService fileInfoService;
+    private FileInfoRepository fileInfoRepository;
     @Mock
-    private FileUploadTaskService fileUploadTaskService;
+    private FileUploadTaskRepository fileUploadTaskRepository;
     @Mock
-    private FileChunkService fileChunkService;
+    private FileChunkRepository fileChunkRepository;
     @Mock
-    private FileBusinessInfoService fileBusinessInfoService;
+    private FileBusinessInfoRepository fileBusinessInfoRepository;
     @Mock
     private StorageManager storageManager;
     @Mock
     private StorageService storageService;
-    @Mock
-    private LambdaQueryChainWrapper<FileUploadTask> taskQuery;
-    @Mock
-    private LambdaQueryChainWrapper<FileBusinessInfo> businessQuery;
-
     private FileAdminServiceImpl fileAdminService;
 
     @BeforeEach
     void setUp() {
         fileAdminService = new FileAdminServiceImpl(
-                fileInfoService,
-                fileUploadTaskService,
-                fileChunkService,
-                fileBusinessInfoService,
+                fileInfoRepository,
+                fileUploadTaskRepository,
+                fileChunkRepository,
+                fileBusinessInfoRepository,
                 storageManager
         );
     }
@@ -82,8 +74,8 @@ class FileAdminServiceImplTest {
 
         assertEquals(FileResultCode.FILE_STATUS_INVALID.getCode(), exception.getCode());
         assertEquals("文件删除请使用删除接口，状态更新接口不支持设置为已删除", exception.getMessage());
-        verify(fileInfoService, never()).getById(any());
-        verify(fileInfoService, never()).updateById(any());
+        verify(fileInfoRepository, never()).getById(any());
+        verify(fileInfoRepository, never()).updateById(any());
     }
 
     @Test
@@ -92,13 +84,13 @@ class FileAdminServiceImplTest {
         file.setId(1L);
         file.setStatus(FileStatusEnum.NORMAL.getValue());
 
-        when(fileInfoService.getById(1L)).thenReturn(file);
-        when(fileInfoService.updateById(file)).thenReturn(true);
+        when(fileInfoRepository.getById(1L)).thenReturn(file);
+        when(fileInfoRepository.updateById(file)).thenReturn(true);
 
         fileAdminService.updateStatus(1L, FileStatusEnum.BLOCKED.getValue());
 
         assertEquals(FileStatusEnum.BLOCKED.getValue(), file.getStatus());
-        verify(fileInfoService).updateById(file);
+        verify(fileInfoRepository).updateById(file);
     }
 
     @Test
@@ -107,7 +99,7 @@ class FileAdminServiceImplTest {
         file.setId(9L);
         file.setStatus(FileStatusEnum.DELETED.getValue());
 
-        when(fileInfoService.getById(9L)).thenReturn(file);
+        when(fileInfoRepository.getById(9L)).thenReturn(file);
 
         BusinessException exception = assertThrows(
                 BusinessException.class,
@@ -115,7 +107,7 @@ class FileAdminServiceImplTest {
         );
 
         assertEquals(FileResultCode.FILE_STATUS_INVALID.getCode(), exception.getCode());
-        verify(fileInfoService, never()).updateById(any());
+        verify(fileInfoRepository, never()).updateById(any());
     }
 
     @Test
@@ -134,7 +126,7 @@ class FileAdminServiceImplTest {
         Page<FileInfo> page = new Page<>(2L, 5L);
         page.setTotal(1L);
         page.setRecords(List.of(file));
-        when(fileInfoService.page(any(Page.class), any(LambdaQueryWrapper.class))).thenReturn(page);
+        when(fileInfoRepository.pageAdminFiles(any(FileAdminPageQuery.class))).thenReturn(page);
 
         PageResult<FileAdminVO> result = fileAdminService.pageFiles(query);
 
@@ -157,7 +149,7 @@ class FileAdminServiceImplTest {
         BusinessException exception = assertThrows(BusinessException.class, () -> fileAdminService.pageFiles(query));
 
         assertEquals(com.cybzacg.blogbackend.enums.error.ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), exception.getCode());
-        verify(fileInfoService, never()).page(any(), any());
+        verify(fileInfoRepository, never()).pageAdminFiles(any());
     }
 
     @Test
@@ -185,16 +177,9 @@ class FileAdminServiceImplTest {
         task.setUploadedChunks(0);
         task.setTaskStatus(TaskStatusEnum.COMPLETED.getValue());
 
-        when(fileInfoService.getById(9L)).thenReturn(file);
-        when(fileBusinessInfoService.lambdaQuery()).thenReturn(businessQuery);
-        when(businessQuery.eq(anySFunction(), any())).thenReturn(businessQuery);
-        when(businessQuery.orderByDesc(anySFunction())).thenReturn(businessQuery);
-        when(businessQuery.list()).thenReturn(List.of(reference));
-        when(fileUploadTaskService.lambdaQuery()).thenReturn(taskQuery);
-        when(taskQuery.eq(anySFunction(), any())).thenReturn(taskQuery);
-        when(taskQuery.orderByDesc(anySFunction())).thenReturn(taskQuery);
-        when(taskQuery.last("limit 20")).thenReturn(taskQuery);
-        when(taskQuery.list()).thenReturn(List.of(task));
+        when(fileInfoRepository.getById(9L)).thenReturn(file);
+        when(fileBusinessInfoRepository.listByFileId(9L)).thenReturn(List.of(reference));
+        when(fileUploadTaskRepository.listRecentByFileId(9L, 20)).thenReturn(List.of(task));
 
         FileDetailVO detail = fileAdminService.getFile(9L);
 
@@ -236,7 +221,7 @@ class FileAdminServiceImplTest {
         Page<FileUploadTask> page = new Page<>(3L, 4L);
         page.setTotal(1L);
         page.setRecords(List.of(task));
-        when(fileUploadTaskService.page(any(Page.class), any(LambdaQueryWrapper.class))).thenReturn(page);
+        when(fileUploadTaskRepository.pageAdminTasks(any(FileTaskPageQuery.class))).thenReturn(page);
 
         PageResult<FileTaskAdminVO> result = fileAdminService.pageTasks(query);
 
@@ -260,7 +245,7 @@ class FileAdminServiceImplTest {
         BusinessException exception = assertThrows(BusinessException.class, () -> fileAdminService.pageTasks(query));
 
         assertEquals(FileResultCode.UPLOAD_TASK_STATUS_INVALID.getCode(), exception.getCode());
-        verify(fileUploadTaskService, never()).page(any(), any());
+        verify(fileUploadTaskRepository, never()).pageAdminTasks(any());
     }
 
     @Test
@@ -278,24 +263,22 @@ class FileAdminServiceImplTest {
         task.setStorageKey("local-test");
         task.setFileId(1L);
 
-        when(fileInfoService.getById(1L)).thenReturn(file);
-        when(fileBusinessInfoService.remove(any(LambdaQueryWrapper.class))).thenReturn(true);
-        when(fileUploadTaskService.lambdaQuery()).thenReturn(taskQuery);
-        when(taskQuery.eq(anySFunction(), any())).thenReturn(taskQuery);
-        when(taskQuery.list()).thenReturn(List.of(task));
-        when(fileChunkService.remove(any(LambdaQueryWrapper.class))).thenReturn(true);
+        when(fileInfoRepository.getById(1L)).thenReturn(file);
+        when(fileBusinessInfoRepository.deleteByFileId(1L)).thenReturn(true);
+        when(fileUploadTaskRepository.listByFileId(1L)).thenReturn(List.of(task));
+        when(fileChunkRepository.deleteByUploadTaskId(11L)).thenReturn(true);
         when(storageManager.getStorageService("local-test")).thenReturn(storageService);
-        when(fileUploadTaskService.removeByIds(List.of(11L))).thenReturn(true);
-        when(fileInfoService.updateById(file)).thenReturn(true);
+        when(fileUploadTaskRepository.removeByIds(List.of(11L))).thenReturn(true);
+        when(fileInfoRepository.updateById(file)).thenReturn(true);
 
         fileAdminService.deleteFile(1L);
 
-        verify(fileBusinessInfoService).remove(any(LambdaQueryWrapper.class));
-        verify(fileChunkService).remove(any(LambdaQueryWrapper.class));
+        verify(fileBusinessInfoRepository).deleteByFileId(1L);
+        verify(fileChunkRepository).deleteByUploadTaskId(11L);
         verify(storageService).deleteTempFiles("upload-11");
-        verify(fileUploadTaskService).removeByIds(List.of(11L));
+        verify(fileUploadTaskRepository).removeByIds(List.of(11L));
         verify(storageService).delete("attachment/2026/03/demo.png");
-        verify(fileInfoService).updateById(file);
+        verify(fileInfoRepository).updateById(file);
         assertEquals(Integer.valueOf(0), file.getReferenceCount());
         assertEquals(FileStatusEnum.DELETED.getValue(), file.getStatus());
     }
@@ -315,24 +298,22 @@ class FileAdminServiceImplTest {
         task.setStorageKey("local-test");
         task.setFileId(2L);
 
-        when(fileInfoService.getById(2L)).thenReturn(file);
-        when(fileBusinessInfoService.remove(any(LambdaQueryWrapper.class))).thenReturn(true);
-        when(fileUploadTaskService.lambdaQuery()).thenReturn(taskQuery);
-        when(taskQuery.eq(anySFunction(), any())).thenReturn(taskQuery);
-        when(taskQuery.list()).thenReturn(List.of(task));
-        when(fileChunkService.remove(any(LambdaQueryWrapper.class))).thenReturn(true);
+        when(fileInfoRepository.getById(2L)).thenReturn(file);
+        when(fileBusinessInfoRepository.deleteByFileId(2L)).thenReturn(true);
+        when(fileUploadTaskRepository.listByFileId(2L)).thenReturn(List.of(task));
+        when(fileChunkRepository.deleteByUploadTaskId(22L)).thenReturn(true);
         when(storageManager.getStorageService("local-test")).thenReturn(storageService);
-        when(fileUploadTaskService.removeByIds(List.of(22L))).thenReturn(true);
-        when(fileInfoService.updateById(file)).thenReturn(true);
+        when(fileUploadTaskRepository.removeByIds(List.of(22L))).thenReturn(true);
+        when(fileInfoRepository.updateById(file)).thenReturn(true);
         doThrow(new RuntimeException("temp cleanup failed")).when(storageService).deleteTempFiles("upload-22");
         doThrow(new RuntimeException("physical delete failed")).when(storageService).delete("attachment/2026/03/demo-2.png");
 
         assertDoesNotThrow(() -> fileAdminService.deleteFile(2L));
 
-        verify(fileBusinessInfoService).remove(any(LambdaQueryWrapper.class));
-        verify(fileChunkService).remove(any(LambdaQueryWrapper.class));
-        verify(fileUploadTaskService).removeByIds(List.of(22L));
-        verify(fileInfoService).updateById(file);
+        verify(fileBusinessInfoRepository).deleteByFileId(2L);
+        verify(fileChunkRepository).deleteByUploadTaskId(22L);
+        verify(fileUploadTaskRepository).removeByIds(List.of(22L));
+        verify(fileInfoRepository).updateById(file);
         assertEquals(Integer.valueOf(0), file.getReferenceCount());
         assertEquals(FileStatusEnum.DELETED.getValue(), file.getStatus());
     }
@@ -357,8 +338,4 @@ class FileAdminServiceImplTest {
         return file;
     }
 
-    @SuppressWarnings("unchecked")
-    private static <T> SFunction<T, ?> anySFunction() {
-        return (SFunction<T, ?>) any(SFunction.class);
-    }
 }

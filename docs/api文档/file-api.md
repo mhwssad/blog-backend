@@ -8,10 +8,10 @@
 
 ### 1.1 路由分组
 
-| 路由前缀 | 面向场景 | 是否需要登录 |
-| --- | --- | --- |
-| `/api/user/files/**` | 登录用户上传、查询我的文件、查询上传任务 | 是 |
-| `/api/sys/files/**` | 后台文件库、后台上传任务管理 | 是，且要求 `content:file:*` 权限 |
+| 路由前缀             | 面向场景                                 | 是否需要登录                     |
+| -------------------- | ---------------------------------------- | -------------------------------- |
+| `/api/user/files/**` | 登录用户上传、查询我的文件、查询上传任务 | 是                               |
+| `/api/sys/files/**`  | 后台文件库、后台上传任务管理             | 是，且要求 `content:file:*` 权限 |
 
 ### 1.2 统一响应
 
@@ -39,13 +39,13 @@
 
 ### 1.3 上传场景怎么选
 
-| 场景 | 推荐流程 |
-| --- | --- |
-| 小文件直接上传 | 初始化任务 -> 普通上传 |
-| 已算出 MD5，想先试秒传 | 初始化任务 -> 秒传检测 |
-| 大文件分片上传 | 初始化任务 -> 多次上传分片 -> 完成上传 |
-| 想展示上传历史 / 失败原因 | 查询上传任务列表 |
-| 想展示“我的资源库” | 查询我的文件列表 |
+| 场景                      | 推荐流程                               |
+| ------------------------- | -------------------------------------- |
+| 小文件直接上传            | 初始化任务 -> 普通上传                 |
+| 已算出 MD5，想先试秒传    | 初始化任务 -> 秒传检测                 |
+| 大文件分片上传            | 初始化任务 -> 多次上传分片 -> 完成上传 |
+| 想展示上传历史 / 失败原因 | 查询上传任务列表                       |
+| 想展示“我的资源库”        | 查询我的文件列表                       |
 
 ## 2. 用户上传接入流程
 
@@ -85,14 +85,14 @@ Authorization: Bearer <accessToken>
 
 ### 2.4 上传流程中的关键判断
 
-| 字段 | 位置 | 用途 |
-| --- | --- | --- |
-| `uploadId` | 初始化响应 | 后续所有上传接口都依赖它 |
-| `uploadMode` | 初始化响应 | 判断是秒传、分片还是全量上传 |
-| `completed` | 初始化响应 | 是否已在初始化阶段直接完成 |
-| `taskStatus` | 多个响应都有 | 用于展示当前任务状态 |
-| `fileId` / `fileUrl` | 完成类响应 | 上传成功后用于回填业务表单 |
-| `errorCode` / `errorMessage` | 上传任务列表 | 展示失败原因 |
+| 字段                         | 位置         | 用途                         |
+| ---------------------------- | ------------ | ---------------------------- |
+| `uploadId`                   | 初始化响应   | 后续所有上传接口都依赖它     |
+| `uploadMode`                 | 初始化响应   | 判断是秒传、分片还是全量上传 |
+| `completed`                  | 初始化响应   | 是否已在初始化阶段直接完成   |
+| `taskStatus`                 | 多个响应都有 | 用于展示当前任务状态         |
+| `fileId` / `fileUrl`         | 完成类响应   | 上传成功后用于回填业务表单   |
+| `errorCode` / `errorMessage` | 上传任务列表 | 展示失败原因                 |
 
 ## 3. 用户文件接口
 
@@ -102,19 +102,19 @@ Authorization: Bearer <accessToken>
 - 用途：任何上传流程的第一步
 - 请求体：`FileUploadInitRequest`
 
-| 字段 | 类型 | 必填 | 说明 |
-| --- | --- | --- | --- |
-| `originalName` | String | 是 | 原始文件名 |
-| `fileSize` | Long | 是 | 文件大小，字节 |
-| `fileMd5` | String | 条件必填 | 默认开启 MD5 校验时必填，建议始终传 |
-| `mimeType` | String | 否 | MIME 类型 |
-| `referenceType` | String | 否 | `avatar`、`article_attachment`、`comment_image`、`temp` |
-| `referenceId` | Long | 否 | 引用对象 ID，未传按 `0` 处理 |
-| `category` | String | 否 | 业务分类，如 `avatar`、`attachment`、`comment`、`temp` |
-| `isPublic` | Integer | 否 | `0` 私有，`1` 公开 |
-| `totalChunks` | Integer | 否 | 分片上传时传总分片数 |
-| `chunkSize` | Long | 否 | 分片大小 |
-| `remark` | String | 否 | 备注 |
+| 字段            | 类型    | 必填     | 说明                                                    |
+| --------------- | ------- | -------- | ------------------------------------------------------- |
+| `originalName`  | String  | 是       | 原始文件名                                              |
+| `fileSize`      | Long    | 是       | 文件大小，字节                                          |
+| `fileMd5`       | String  | 条件必填 | 默认开启 MD5 校验时必填，建议始终传                     |
+| `mimeType`      | String  | 否       | MIME 类型                                               |
+| `referenceType` | String  | 否       | `avatar`、`article_attachment`、`comment_image`、`temp` |
+| `referenceId`   | Long    | 否       | 引用对象 ID，未传按 `0` 处理                            |
+| `category`      | String  | 否       | 业务分类，如 `avatar`、`attachment`、`comment`、`temp`  |
+| `isPublic`      | Integer | 否       | `0` 私有，`1` 公开                                      |
+| `totalChunks`   | Integer | 否       | 分片上传时传总分片数                                    |
+| `chunkSize`     | Long    | 否       | 分片大小                                                |
+| `remark`        | String  | 否       | 备注                                                    |
 
 - 边界说明：
   - 默认部署下开启 MD5 校验，初始化时未传 `fileMd5` 会直接返回 `FILE_MD5_REQUIRED`。
@@ -126,19 +126,19 @@ Authorization: Bearer <accessToken>
 
 - 响应字段：`FileUploadInitVO`
 
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| `taskId` | Long | 上传任务 ID |
-| `uploadId` | String | 上传标识 |
-| `uploadMode` | Integer | `1` 秒传，`2` 分片上传，`3` 全量上传 |
-| `quickUploadAvailable` | Boolean | 是否具备秒传条件 |
-| `completed` | Boolean | 是否已在初始化阶段直接完成 |
-| `totalChunks` | Integer | 总分片数 |
-| `chunkSize` | Long | 分片大小 |
-| `taskStatus` | Integer | 任务状态 |
-| `fileId` | Long | 已命中的文件 ID |
-| `fileUrl` | String | 文件访问地址 |
-| `businessId` | Long | 业务引用 ID |
+| 字段                   | 类型    | 说明                                 |
+| ---------------------- | ------- | ------------------------------------ |
+| `taskId`               | Long    | 上传任务 ID                          |
+| `uploadId`             | String  | 上传标识                             |
+| `uploadMode`           | Integer | `1` 秒传，`2` 分片上传，`3` 全量上传 |
+| `quickUploadAvailable` | Boolean | 是否具备秒传条件                     |
+| `completed`            | Boolean | 是否已在初始化阶段直接完成           |
+| `totalChunks`          | Integer | 总分片数                             |
+| `chunkSize`            | Long    | 分片大小                             |
+| `taskStatus`           | Integer | 任务状态                             |
+| `fileId`               | Long    | 已命中的文件 ID                      |
+| `fileUrl`              | String  | 文件访问地址                         |
+| `businessId`           | Long    | 业务引用 ID                          |
 
 - 请求示例：
 
@@ -165,16 +165,16 @@ Authorization: Bearer <accessToken>
   - 若任务已过期，服务端会先把任务收口为 `5(已取消)`，并返回 `UPLOAD_TASK_EXPIRED`。
 - 响应字段：`FileUploadResultVO`
 
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| `uploadId` | String | 上传标识 |
-| `taskId` | Long | 任务 ID |
-| `fileId` | Long | 文件 ID |
-| `businessId` | Long | 业务引用 ID |
-| `quickUpload` | Boolean | 是否通过秒传完成 |
-| `taskStatus` | Integer | 任务状态 |
-| `fileUrl` | String | 文件访问地址 |
-| `referenceCount` | Integer | 当前引用数 |
+| 字段             | 类型    | 说明             |
+| ---------------- | ------- | ---------------- |
+| `uploadId`       | String  | 上传标识         |
+| `taskId`         | Long    | 任务 ID          |
+| `fileId`         | Long    | 文件 ID          |
+| `businessId`     | Long    | 业务引用 ID      |
+| `quickUpload`    | Boolean | 是否通过秒传完成 |
+| `taskStatus`     | Integer | 任务状态         |
+| `fileUrl`        | String  | 文件访问地址     |
+| `referenceCount` | Integer | 当前引用数       |
 
 ### 3.3 普通上传
 
@@ -209,13 +209,13 @@ Authorization: Bearer <accessToken>
   - 已完成、已取消或处于不允许续传状态的任务不能继续上传分片，继续调用会返回 `UPLOAD_TASK_STATUS_INVALID`。
 - 响应字段：`ChunkUploadVO`
 
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| `uploadId` | String | 上传标识 |
-| `chunkNumber` | Integer | 当前分片序号 |
+| 字段             | 类型    | 说明         |
+| ---------------- | ------- | ------------ |
+| `uploadId`       | String  | 上传标识     |
+| `chunkNumber`    | Integer | 当前分片序号 |
 | `uploadedChunks` | Integer | 已上传分片数 |
-| `totalChunks` | Integer | 总分片数 |
-| `taskStatus` | Integer | 当前任务状态 |
+| `totalChunks`    | Integer | 总分片数     |
+| `taskStatus`     | Integer | 当前任务状态 |
 
 ### 3.5 完成上传
 
@@ -240,14 +240,14 @@ Authorization: Bearer <accessToken>
 - 用途：我的资源库、上传结果选择器
 - 查询参数：`UserFilePageQuery`
 
-| 参数 | 类型 | 说明 |
-| --- | --- | --- |
-| `current` | Long | 页码，默认 `1` |
-| `size` | Long | 每页条数，默认 `10` |
-| `keyword` | String | 文件名关键字 |
-| `status` | Integer | 文件状态 |
-| `category` | String | 业务分类 |
-| `referenceType` | String | 引用类型 |
+| 参数            | 类型    | 说明                |
+| --------------- | ------- | ------------------- |
+| `current`       | Long    | 页码，默认 `1`      |
+| `size`          | Long    | 每页条数，默认 `10` |
+| `keyword`       | String  | 文件名关键字        |
+| `status`        | Integer | 文件状态            |
+| `category`      | String  | 业务分类            |
+| `referenceType` | String  | 引用类型            |
 
 - 边界说明：
   - `status` 过滤当前已生效。
@@ -255,22 +255,22 @@ Authorization: Bearer <accessToken>
 
 - 响应字段：`UserFileVO`
 
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| `businessId` | Long | 业务引用 ID |
-| `fileId` | Long | 文件 ID |
-| `fileName` | String | 文件名 |
-| `originalName` | String | 原始文件名 |
-| `fileUrl` | String | 文件地址 |
-| `fileSize` | Long | 文件大小 |
-| `fileType` | String | `image`、`video`、`document`、`other` |
-| `mimeType` | String | MIME 类型 |
-| `category` | String | 业务分类 |
-| `referenceType` | String | 引用类型 |
-| `referenceId` | Long | 引用对象 ID |
-| `isPublic` | Integer | 是否公开 |
-| `status` | Integer | 文件状态 |
-| `createdAt` | DateTime | 引用创建时间 |
+| 字段            | 类型     | 说明                                  |
+| --------------- | -------- | ------------------------------------- |
+| `businessId`    | Long     | 业务引用 ID                           |
+| `fileId`        | Long     | 文件 ID                               |
+| `fileName`      | String   | 文件名                                |
+| `originalName`  | String   | 原始文件名                            |
+| `fileUrl`       | String   | 文件地址                              |
+| `fileSize`      | Long     | 文件大小                              |
+| `fileType`      | String   | `image`、`video`、`document`、`other` |
+| `mimeType`      | String   | MIME 类型                             |
+| `category`      | String   | 业务分类                              |
+| `referenceType` | String   | 引用类型                              |
+| `referenceId`   | Long     | 引用对象 ID                           |
+| `isPublic`      | Integer  | 是否公开                              |
+| `status`        | Integer  | 文件状态                              |
+| `createdAt`     | DateTime | 引用创建时间                          |
 
 ### 3.7 查询我的上传任务
 
@@ -278,13 +278,13 @@ Authorization: Bearer <accessToken>
 - 用途：上传记录列表、失败重试提示
 - 查询参数：`UserFileTaskPageQuery`
 
-| 参数 | 类型 | 说明 |
-| --- | --- | --- |
-| `current` | Long | 页码，默认 `1` |
-| `size` | Long | 每页条数，默认 `10` |
-| `taskStatus` | Integer | 任务状态 |
-| `isQuickUpload` | Integer | 是否秒传，`0/1` |
-| `isChunked` | Integer | 是否分片，`0/1` |
+| 参数            | 类型    | 说明                |
+| --------------- | ------- | ------------------- |
+| `current`       | Long    | 页码，默认 `1`      |
+| `size`          | Long    | 每页条数，默认 `10` |
+| `taskStatus`    | Integer | 任务状态            |
+| `isQuickUpload` | Integer | 是否秒传，`0/1`     |
+| `isChunked`     | Integer | 是否分片，`0/1`     |
 
 - 边界说明：
   - 传入非法 `taskStatus` 时会直接返回 `UPLOAD_TASK_STATUS_INVALID`。
@@ -292,24 +292,25 @@ Authorization: Bearer <accessToken>
 
 - 响应字段：`UserFileTaskVO`
 
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| `id` | Long | 任务 ID |
-| `uploadId` | String | 上传标识 |
-| `fileId` | Long | 文件 ID |
-| `originalName` | String | 原始文件名 |
-| `fileSize` | Long | 文件大小 |
-| `isQuickUpload` | Integer | 是否秒传 |
-| `isChunked` | Integer | 是否分片 |
-| `chunkSize` | Long | 分片大小 |
-| `totalChunks` | Integer | 总分片数 |
-| `uploadedChunks` | Integer | 已上传分片数 |
-| `taskStatus` | Integer | 任务状态 |
-| `errorCode` | String | 错误码 |
-| `errorMessage` | String | 错误信息 |
-| `startTime` | DateTime | 开始时间 |
-| `completeTime` | DateTime | 完成时间 |
-| `createdAt` | DateTime | 创建时间 |
+| 字段             | 类型     | 说明         |
+| ---------------- | -------- | ------------ |
+| `id`             | Long     | 任务 ID      |
+| `uploadId`       | String   | 上传标识     |
+| `fileId`         | Long     | 文件 ID      |
+| `originalName`   | String   | 原始文件名   |
+| `fileSize`       | Long     | 文件大小     |
+| `isQuickUpload`  | Integer  | 是否秒传     |
+| `isChunked`      | Integer  | 是否分片     |
+| `chunkSize`      | Long     | 分片大小     |
+| `totalChunks`    | Integer  | 总分片数     |
+| `uploadedChunks` | Integer  | 已上传分片数 |
+| `taskStatus`     | Integer  | 任务状态     |
+| `errorCode`      | String   | 错误码       |
+| `errorMessage`   | String   | 错误信息     |
+| `startTime`      | DateTime | 开始时间     |
+| `completeTime`   | DateTime | 完成时间     |
+| `createdAt`      | DateTime | 创建时间     |
+
 ### 3.8 删除我的文件引用
 
 - 请求：`DELETE /api/user/files/{businessId}`
@@ -331,52 +332,52 @@ Authorization: Bearer <accessToken>
 
 #### 接口速览
 
-| 场景 | 方法 | 路径 | 权限 |
-| --- | --- | --- | --- |
-| 分页查询文件 | GET | `/api/sys/files` | `content:file:query` |
-| 查询文件详情 | GET | `/api/sys/files/{id}` | `content:file:query` |
-| 更新文件状态 | PUT | `/api/sys/files/{id}/status` | `content:file:update` |
-| 删除文件 | DELETE | `/api/sys/files/{id}` | `content:file:delete` |
+| 场景         | 方法   | 路径                         | 权限                  |
+| ------------ | ------ | ---------------------------- | --------------------- |
+| 分页查询文件 | GET    | `/api/sys/files`             | `content:file:query`  |
+| 查询文件详情 | GET    | `/api/sys/files/{id}`        | `content:file:query`  |
+| 更新文件状态 | PUT    | `/api/sys/files/{id}/status` | `content:file:update` |
+| 删除文件     | DELETE | `/api/sys/files/{id}`        | `content:file:delete` |
 
 #### 分页查询文件
 
 - 请求：`GET /api/sys/files`
 - 查询参数：`FileAdminPageQuery`
 
-| 参数 | 类型 | 说明 |
-| --- | --- | --- |
-| `current` | Long | 页码，默认 `1` |
-| `size` | Long | 每页条数，默认 `10` |
-| `keyword` | String | 文件名 / 原始文件名关键字 |
-| `uploadUserId` | Long | 上传用户 ID |
-| `status` | Integer | 文件状态 |
-| `category` | String | 业务分类 |
-| `referenceType` | String | 引用类型 |
-| `isPublic` | Integer | 是否公开 |
+| 参数            | 类型    | 说明                      |
+| --------------- | ------- | ------------------------- |
+| `current`       | Long    | 页码，默认 `1`            |
+| `size`          | Long    | 每页条数，默认 `10`       |
+| `keyword`       | String  | 文件名 / 原始文件名关键字 |
+| `uploadUserId`  | Long    | 上传用户 ID               |
+| `status`        | Integer | 文件状态                  |
+| `category`      | String  | 业务分类                  |
+| `referenceType` | String  | 引用类型                  |
+| `isPublic`      | Integer | 是否公开                  |
 
 - 边界说明：
   - 传入非法 `category`、`referenceType` 或 `status` 时会直接返回错误。
 
 - 响应字段：`FileAdminVO`
 
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| `id` | Long | 文件 ID |
-| `fileName` | String | 文件名称 |
-| `originalName` | String | 原始文件名 |
-| `filePath` | String | 文件路径 |
-| `fileUrl` | String | 文件地址 |
-| `storageKey` | String | 存储节点标识 |
-| `fileSize` | Long | 文件大小 |
-| `fileType` | String | 文件类型 |
-| `mimeType` | String | MIME 类型 |
-| `fileExtension` | String | 扩展名 |
-| `uploadUserId` | Long | 上传用户 ID |
-| `isPublic` | Integer | 是否公开 |
-| `category` | String | 业务分类 |
-| `status` | Integer | 文件状态 |
-| `referenceCount` | Integer | 引用数 |
-| `createdAt` | DateTime | 创建时间 |
+| 字段             | 类型     | 说明         |
+| ---------------- | -------- | ------------ |
+| `id`             | Long     | 文件 ID      |
+| `fileName`       | String   | 文件名称     |
+| `originalName`   | String   | 原始文件名   |
+| `filePath`       | String   | 文件路径     |
+| `fileUrl`        | String   | 文件地址     |
+| `storageKey`     | String   | 存储节点标识 |
+| `fileSize`       | Long     | 文件大小     |
+| `fileType`       | String   | 文件类型     |
+| `mimeType`       | String   | MIME 类型    |
+| `fileExtension`  | String   | 扩展名       |
+| `uploadUserId`   | Long     | 上传用户 ID  |
+| `isPublic`       | Integer  | 是否公开     |
+| `category`       | String   | 业务分类     |
+| `status`         | Integer  | 文件状态     |
+| `referenceCount` | Integer  | 引用数       |
+| `createdAt`      | DateTime | 创建时间     |
 
 #### 查询文件详情
 
@@ -388,63 +389,64 @@ Authorization: Bearer <accessToken>
 
 - `FileReferenceVO`
 
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| `id` | Long | 引用 ID |
-| `userId` | Long | 用户 ID |
-| `referenceType` | String | 引用类型 |
-| `referenceId` | Long | 引用对象 ID |
-| `isPublic` | Integer | 是否公开 |
-| `category` | String | 业务分类 |
-| `remark` | String | 备注 |
-| `createdAt` | DateTime | 创建时间 |
+| 字段            | 类型     | 说明        |
+| --------------- | -------- | ----------- |
+| `id`            | Long     | 引用 ID     |
+| `userId`        | Long     | 用户 ID     |
+| `referenceType` | String   | 引用类型    |
+| `referenceId`   | Long     | 引用对象 ID |
+| `isPublic`      | Integer  | 是否公开    |
+| `category`      | String   | 业务分类    |
+| `remark`        | String   | 备注        |
+| `createdAt`     | DateTime | 创建时间    |
 
 - `FileTaskAdminVO`
 
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| `id` | Long | 任务 ID |
-| `uploadId` | String | 上传标识 |
-| `fileId` | Long | 文件 ID |
-| `uploadUserId` | Long | 上传用户 ID |
-| `originalName` | String | 原始文件名 |
-| `fileSize` | Long | 文件大小 |
-| `storageKey` | String | 存储节点 |
-| `isQuickUpload` | Integer | 是否秒传 |
-| `isChunked` | Integer | 是否分片 |
-| `uploadedChunks` | Integer | 已上传分片数 |
-| `totalChunks` | Integer | 总分片数 |
-| `taskStatus` | Integer | 任务状态 |
-| `errorMessage` | String | 错误信息 |
-| `createdAt` | DateTime | 创建时间 |
-| `completeTime` | DateTime | 完成时间 |
+| 字段             | 类型     | 说明         |
+| ---------------- | -------- | ------------ |
+| `id`             | Long     | 任务 ID      |
+| `uploadId`       | String   | 上传标识     |
+| `fileId`         | Long     | 文件 ID      |
+| `uploadUserId`   | Long     | 上传用户 ID  |
+| `originalName`   | String   | 原始文件名   |
+| `fileSize`       | Long     | 文件大小     |
+| `storageKey`     | String   | 存储节点     |
+| `isQuickUpload`  | Integer  | 是否秒传     |
+| `isChunked`      | Integer  | 是否分片     |
+| `uploadedChunks` | Integer  | 已上传分片数 |
+| `totalChunks`    | Integer  | 总分片数     |
+| `taskStatus`     | Integer  | 任务状态     |
+| `errorMessage`   | String   | 错误信息     |
+| `createdAt`      | DateTime | 创建时间     |
+| `completeTime`   | DateTime | 完成时间     |
 
 ### 4.2 后台上传任务管理
 
 #### 接口速览
 
-| 场景 | 方法 | 路径 | 权限 |
-| --- | --- | --- | --- |
-| 分页查询上传任务 | GET | `/api/sys/files/upload-tasks` | `content:file:query` |
+| 场景             | 方法 | 路径                          | 权限                 |
+| ---------------- | ---- | ----------------------------- | -------------------- |
+| 分页查询上传任务 | GET  | `/api/sys/files/upload-tasks` | `content:file:query` |
 
 #### 分页查询上传任务
 
 - 请求：`GET /api/sys/files/upload-tasks`
 - 查询参数：`FileTaskPageQuery`
 
-| 参数 | 类型 | 说明 |
-| --- | --- | --- |
-| `current` | Long | 页码，默认 `1` |
-| `size` | Long | 每页条数，默认 `10` |
-| `uploadUserId` | Long | 上传用户 ID |
-| `taskStatus` | Integer | 任务状态 |
-| `isQuickUpload` | Integer | 是否秒传 |
-| `isChunked` | Integer | 是否分片 |
+| 参数            | 类型    | 说明                |
+| --------------- | ------- | ------------------- |
+| `current`       | Long    | 页码，默认 `1`      |
+| `size`          | Long    | 每页条数，默认 `10` |
+| `uploadUserId`  | Long    | 上传用户 ID         |
+| `taskStatus`    | Integer | 任务状态            |
+| `isQuickUpload` | Integer | 是否秒传            |
+| `isChunked`     | Integer | 是否分片            |
 
 - 边界说明：
   - 传入非法 `taskStatus` 时会直接返回 `UPLOAD_TASK_STATUS_INVALID`。
 
 - 响应字段：`FileTaskAdminVO`
+
 ### 4.3 更新文件状态
 
 - 请求：`PUT /api/sys/files/{id}/status`
@@ -477,55 +479,50 @@ Authorization: Bearer <accessToken>
 
 ### 5.1 上传模式
 
-| 值 | 说明 |
-| --- | --- |
-| `1` | 秒传 |
+| 值  | 说明     |
+| --- | -------- |
+| `1` | 秒传     |
 | `2` | 分片上传 |
 | `3` | 全量上传 |
 
 ### 5.2 任务状态
 
-| 值 | 说明 |
-| --- | --- |
-| `0` | 初始化 |
-| `1` | 上传中 |
-| `2` | 合并中 |
-| `3` | 已完成 |
-| `4` | 失败 |
+| 值  | 说明                             |
+| --- | -------------------------------- |
+| `0` | 初始化                           |
+| `1` | 上传中                           |
+| `2` | 合并中                           |
+| `3` | 已完成                           |
+| `4` | 失败                             |
 | `5` | 已取消，过期任务也会收口到该状态 |
 
 ### 5.3 文件状态
 
-| 值 | 说明 |
-| --- | --- |
-| `0` | 已删除 |
-| `1` | 正常 |
-| `2` | 审核中 |
+| 值  | 说明     |
+| --- | -------- |
+| `0` | 已删除   |
+| `1` | 正常     |
+| `2` | 审核中   |
 | `3` | 违规下架 |
 
 ### 5.4 引用类型
 
-| 值 | 说明 |
-| --- | --- |
-| `avatar` | 用户头像 |
+| 值                   | 说明     |
+| -------------------- | -------- |
+| `avatar`             | 用户头像 |
 | `article_attachment` | 文章附件 |
-| `comment_image` | 评论图片 |
-| `temp` | 临时文件 |
+| `comment_image`      | 评论图片 |
+| `temp`               | 临时文件 |
 
 ## 6. 常见联调问题
 
-| 问题 | 当前行为 |
-| --- | --- |
-| 初始化时命中同 `MD5 + 文件大小` 文件 | 可直接走秒传 |
-| 是否一定分片上传 | 不一定，客户端可显式传分片信息，也可能由服务端按阈值判断 |
-| 同一分片重复上传会怎样 | 会覆盖该分片的元数据与临时文件，不会新增重复分片记录 |
-| 整文件或分片 MD5 不匹配会怎样 | 服务端会直接拒绝本次上传，不继续落存储 |
-| 用户删除文件是否一定删掉底层物理文件 | 不一定，只有引用数归零才会尝试删除 |
-| 后台文件权限前缀是什么 | `content:file:query`、`content:file:update`、`content:file:delete` |
-| 分片完成后临时文件清理失败 | 上传结果仍保持成功，不回滚已完成任务 |
-| 上传任务过期后再继续调用上传接口会怎样 | 服务端会先把任务收口为已取消，再返回 `UPLOAD_TASK_EXPIRED` |
-
-
-
-
-
+| 问题                                   | 当前行为                                                           |
+| -------------------------------------- | ------------------------------------------------------------------ |
+| 初始化时命中同 `MD5 + 文件大小` 文件   | 可直接走秒传                                                       |
+| 是否一定分片上传                       | 不一定，客户端可显式传分片信息，也可能由服务端按阈值判断           |
+| 同一分片重复上传会怎样                 | 会覆盖该分片的元数据与临时文件，不会新增重复分片记录               |
+| 整文件或分片 MD5 不匹配会怎样          | 服务端会直接拒绝本次上传，不继续落存储                             |
+| 用户删除文件是否一定删掉底层物理文件   | 不一定，只有引用数归零才会尝试删除                                 |
+| 后台文件权限前缀是什么                 | `content:file:query`、`content:file:update`、`content:file:delete` |
+| 分片完成后临时文件清理失败             | 上传结果仍保持成功，不回滚已完成任务                               |
+| 上传任务过期后再继续调用上传接口会怎样 | 服务端会先把任务收口为已取消，再返回 `UPLOAD_TASK_EXPIRED`         |

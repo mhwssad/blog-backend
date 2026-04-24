@@ -1,8 +1,5 @@
 package com.cybzacg.blogbackend.module.content;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
-import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.BlogArticle;
@@ -11,14 +8,14 @@ import com.cybzacg.blogbackend.domain.SysCollectionFolder;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleService;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.user.CollectionFolderSaveRequest;
 import com.cybzacg.blogbackend.module.content.model.user.CollectionFolderVO;
 import com.cybzacg.blogbackend.module.content.model.user.CollectionSaveRequest;
 import com.cybzacg.blogbackend.module.content.model.user.CollectionVO;
-import com.cybzacg.blogbackend.module.content.service.SysCollectionFolderService;
-import com.cybzacg.blogbackend.module.content.service.SysCollectionService;
+import com.cybzacg.blogbackend.module.content.repository.SysCollectionFolderRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysCollectionRepository;
 import com.cybzacg.blogbackend.module.content.service.impl.UserCollectionServiceImpl;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,33 +38,23 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class UserCollectionServiceImplTest {
     @Mock
-    private SysCollectionFolderService sysCollectionFolderService;
+    private SysCollectionFolderRepository sysCollectionFolderRepository;
     @Mock
-    private SysCollectionService sysCollectionService;
+    private SysCollectionRepository sysCollectionRepository;
     @Mock
-    private BlogArticleService blogArticleService;
+    private BlogArticleRepository blogArticleService;
     @Mock
     private ArticleAccessControlService articleAccessControlService;
     @Mock
     private ContentModelMapper contentModelMapper;
-    @Mock
-    private LambdaQueryChainWrapper<SysCollectionFolder> folderLookupQuery;
-    @Mock
-    private LambdaQueryChainWrapper<SysCollectionFolder> defaultFolderCleanupQuery;
-    @Mock
-    private LambdaQueryChainWrapper<SysCollectionFolder> folderCollectionCleanupQuery;
-    @Mock
-    private LambdaQueryChainWrapper<SysCollection> collectionExistsQuery;
-    @Mock
-    private LambdaQueryChainWrapper<SysCollection> folderCollectionsQuery;
 
     private UserCollectionServiceImpl userCollectionService;
 
     @BeforeEach
     void setUp() {
         userCollectionService = new UserCollectionServiceImpl(
-                sysCollectionFolderService,
-                sysCollectionService,
+                sysCollectionFolderRepository,
+                sysCollectionRepository,
                 blogArticleService,
                 articleAccessControlService,
                 contentModelMapper
@@ -99,22 +86,17 @@ class UserCollectionServiceImplTest {
         collection.setTargetType("article");
 
         when(blogArticleService.getById(10L)).thenReturn(article);
-        when(sysCollectionFolderService.lambdaQuery()).thenReturn(folderLookupQuery, defaultFolderCleanupQuery);
-        when(folderLookupQuery.eq(anySFunction(), any())).thenReturn(folderLookupQuery);
-        when(folderLookupQuery.one()).thenReturn(null);
-        when(defaultFolderCleanupQuery.eq(anySFunction(), any())).thenReturn(defaultFolderCleanupQuery);
-        when(defaultFolderCleanupQuery.list()).thenReturn(List.of());
-        when(sysCollectionService.lambdaQuery()).thenReturn(collectionExistsQuery);
-        when(collectionExistsQuery.eq(anySFunction(), any())).thenReturn(collectionExistsQuery);
-        when(collectionExistsQuery.exists()).thenReturn(false);
+        when(sysCollectionFolderRepository.findDefaultByUserIdAndFolderType(7L, "article")).thenReturn(null);
+        when(sysCollectionFolderRepository.findDefaultsByUserIdAndFolderType(7L, "article")).thenReturn(List.of());
+        when(sysCollectionRepository.existsByUserIdAndFolderIdAndTargetIdAndTargetType(7L, 30L, 10L, "article")).thenReturn(false);
         when(contentModelMapper.toDefaultCollectionFolder(7L, "article")).thenReturn(folder);
-        when(sysCollectionFolderService.save(folder)).thenAnswer(invocation -> {
+        when(sysCollectionFolderRepository.save(folder)).thenAnswer(invocation -> {
             folder.setId(30L);
             return true;
         });
         when(contentModelMapper.toCollection(request, 7L, 30L, article)).thenReturn(collection);
-        when(sysCollectionService.save(collection)).thenReturn(true);
-        when(sysCollectionFolderService.updateById(folder)).thenReturn(true);
+        when(sysCollectionRepository.save(collection)).thenReturn(true);
+        when(sysCollectionFolderRepository.updateById(folder)).thenReturn(true);
         when(blogArticleService.updateById(article)).thenReturn(true);
 
         try (MockedStatic<?> securityUtils = SecurityTestUtils.mockUserId(7L)) {
@@ -125,10 +107,10 @@ class UserCollectionServiceImplTest {
         assertEquals(Integer.valueOf(1), folder.getCollectionCount());
         assertEquals(Integer.valueOf(3), article.getCollectCount());
         verify(contentModelMapper).toDefaultCollectionFolder(7L, "article");
-        verify(sysCollectionFolderService).save(folder);
+        verify(sysCollectionFolderRepository).save(folder);
         verify(contentModelMapper).toCollection(request, 7L, 30L, article);
-        verify(sysCollectionService).save(collection);
-        verify(sysCollectionFolderService).updateById(folder);
+        verify(sysCollectionRepository).save(collection);
+        verify(sysCollectionFolderRepository).updateById(folder);
         verify(blogArticleService).updateById(article);
     }
 
@@ -149,10 +131,8 @@ class UserCollectionServiceImplTest {
         vo.setId(30L);
 
         when(contentModelMapper.toCollectionFolder(request)).thenReturn(folder);
-        when(sysCollectionFolderService.lambdaQuery()).thenReturn(defaultFolderCleanupQuery);
-        when(defaultFolderCleanupQuery.eq(anySFunction(), any())).thenReturn(defaultFolderCleanupQuery);
-        when(defaultFolderCleanupQuery.list()).thenReturn(List.of(existingDefault));
-        when(sysCollectionFolderService.save(folder)).thenAnswer(invocation -> {
+        when(sysCollectionFolderRepository.findDefaultsByUserIdAndFolderType(7L, "article")).thenReturn(List.of(existingDefault));
+        when(sysCollectionFolderRepository.save(folder)).thenAnswer(invocation -> {
             folder.setId(30L);
             return true;
         });
@@ -171,8 +151,8 @@ class UserCollectionServiceImplTest {
         assertEquals(Integer.valueOf(1), folder.getIsDefault());
         assertEquals(Integer.valueOf(0), folder.getSortOrder());
         assertEquals(Integer.valueOf(0), folder.getCollectionCount());
-        verify(sysCollectionFolderService).updateById(existingDefault);
-        verify(sysCollectionFolderService).save(folder);
+        verify(sysCollectionFolderRepository).updateById(existingDefault);
+        verify(sysCollectionFolderRepository).save(folder);
     }
 
     @Test
@@ -198,10 +178,8 @@ class UserCollectionServiceImplTest {
         CollectionFolderVO vo = new CollectionFolderVO();
         vo.setId(30L);
 
-        when(sysCollectionFolderService.getById(30L)).thenReturn(folder);
-        when(sysCollectionFolderService.lambdaQuery()).thenReturn(defaultFolderCleanupQuery);
-        when(defaultFolderCleanupQuery.eq(anySFunction(), any())).thenReturn(defaultFolderCleanupQuery);
-        when(defaultFolderCleanupQuery.list()).thenReturn(List.of(folder, otherDefault));
+        when(sysCollectionFolderRepository.getById(30L)).thenReturn(folder);
+        when(sysCollectionFolderRepository.findDefaultsByUserIdAndFolderType(7L, "article")).thenReturn(List.of(folder, otherDefault));
         when(contentModelMapper.toCollectionFolderVO(folder)).thenReturn(vo);
         org.mockito.Mockito.doAnswer(invocation -> {
             CollectionFolderSaveRequest actualRequest = invocation.getArgument(0);
@@ -221,8 +199,8 @@ class UserCollectionServiceImplTest {
         assertEquals(Integer.valueOf(1), folder.getIsPublic());
         assertEquals(Integer.valueOf(8), folder.getSortOrder());
         assertEquals(Integer.valueOf(0), otherDefault.getIsDefault());
-        verify(sysCollectionFolderService).updateById(otherDefault);
-        verify(sysCollectionFolderService).updateById(folder);
+        verify(sysCollectionFolderRepository).updateById(otherDefault);
+        verify(sysCollectionFolderRepository).updateById(folder);
     }
 
     @Test
@@ -232,7 +210,7 @@ class UserCollectionServiceImplTest {
         folder.setUserId(7L);
         folder.setIsDefault(1);
 
-        when(sysCollectionFolderService.getById(30L)).thenReturn(folder);
+        when(sysCollectionFolderRepository.getById(30L)).thenReturn(folder);
 
         BusinessException exception;
         try (MockedStatic<?> securityUtils = SecurityTestUtils.mockUserId(7L)) {
@@ -241,8 +219,8 @@ class UserCollectionServiceImplTest {
 
         assertEquals(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), exception.getCode());
         assertEquals("默认收藏夹不可删除", exception.getMessage());
-        verify(sysCollectionService, never()).remove(any(LambdaQueryWrapper.class));
-        verify(sysCollectionFolderService, never()).removeById(30L);
+        verify(sysCollectionRepository, never()).removeByFolderId(30L);
+        verify(sysCollectionFolderRepository, never()).removeById(30L);
     }
 
     @Test
@@ -262,10 +240,8 @@ class UserCollectionServiceImplTest {
         article.setId(10L);
         article.setCollectCount(4);
 
-        when(sysCollectionFolderService.getById(30L)).thenReturn(folder);
-        when(sysCollectionService.lambdaQuery()).thenReturn(folderCollectionsQuery);
-        when(folderCollectionsQuery.eq(anySFunction(), any())).thenReturn(folderCollectionsQuery);
-        when(folderCollectionsQuery.list()).thenReturn(List.of(collection));
+        when(sysCollectionFolderRepository.getById(30L)).thenReturn(folder);
+        when(sysCollectionRepository.findByFolderId(30L)).thenReturn(List.of(collection));
         when(blogArticleService.getById(10L)).thenReturn(article);
         when(blogArticleService.updateById(article)).thenReturn(true);
 
@@ -274,8 +250,8 @@ class UserCollectionServiceImplTest {
         }
 
         assertEquals(Integer.valueOf(3), article.getCollectCount());
-        verify(sysCollectionService).remove(any(LambdaQueryWrapper.class));
-        verify(sysCollectionFolderService).removeById(30L);
+        verify(sysCollectionRepository).removeByFolderId(30L);
+        verify(sysCollectionFolderRepository).removeById(30L);
     }
 
     @Test
@@ -290,7 +266,7 @@ class UserCollectionServiceImplTest {
         Page<SysCollection> page = new Page<>(1, 100, 1);
         page.setRecords(List.of(collection));
 
-        when(sysCollectionService.page(any(Page.class), any(LambdaQueryWrapper.class))).thenReturn(page);
+        when(sysCollectionRepository.pageByUserId(7L, 1, 100)).thenReturn(page);
         when(contentModelMapper.toUserCollectionVO(collection)).thenReturn(vo);
 
         try (MockedStatic<?> securityUtils = SecurityTestUtils.mockUserId(7L)) {
@@ -318,12 +294,12 @@ class UserCollectionServiceImplTest {
         article.setId(10L);
         article.setCollectCount(4);
 
-        when(sysCollectionService.getById(1L)).thenReturn(collection);
-        when(sysCollectionFolderService.getById(30L)).thenReturn(folder);
-        when(sysCollectionFolderService.updateById(folder)).thenReturn(true);
+        when(sysCollectionRepository.getById(1L)).thenReturn(collection);
+        when(sysCollectionFolderRepository.getById(30L)).thenReturn(folder);
+        when(sysCollectionFolderRepository.updateById(folder)).thenReturn(true);
         when(blogArticleService.getById(10L)).thenReturn(article);
         when(blogArticleService.updateById(article)).thenReturn(true);
-        when(sysCollectionService.removeById(1L)).thenReturn(true);
+        when(sysCollectionRepository.removeById(1L)).thenReturn(true);
 
         try (MockedStatic<?> securityUtils = SecurityTestUtils.mockUserId(7L)) {
             userCollectionService.deleteCollection(1L);
@@ -331,13 +307,8 @@ class UserCollectionServiceImplTest {
 
         assertEquals(Integer.valueOf(2), folder.getCollectionCount());
         assertEquals(Integer.valueOf(3), article.getCollectCount());
-        verify(sysCollectionFolderService).updateById(folder);
+        verify(sysCollectionFolderRepository).updateById(folder);
         verify(blogArticleService).updateById(article);
-        verify(sysCollectionService).removeById(1L);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> SFunction<T, ?> anySFunction() {
-        return (SFunction<T, ?>) any(SFunction.class);
+        verify(sysCollectionRepository).removeById(1L);
     }
 }

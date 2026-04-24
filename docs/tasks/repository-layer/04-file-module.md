@@ -1,5 +1,14 @@
 # File 模块 Repository 迁移计划
 
+## 当前状态
+
+- 已完成 `FileInfoRepository`、`FileUploadTaskRepository`、`FileChunkRepository`、`FileBusinessInfoRepository` 及其实现。
+- 已完成 `UserFileServiceImpl`、`FileAdminServiceImpl`、`FileLifecycleServiceImpl` 的 Repository 迁移，`file` 模块业务服务内不再直接拼装 `lambdaQuery/lambdaUpdate/LambdaQueryWrapper`。
+- 已同步把 `ArticleAdminServiceImpl`、`ChatAdminServiceImpl`、`UserChatServiceImpl`、`ChatAttachmentAsyncProcessingServiceImpl` 的跨模块文件数据访问切到 Repository。
+- 已删除 `FileInfoService`、`FileUploadTaskService`、`FileChunkService`、`FileBusinessInfoService` 及对应薄实现。
+- 已同步调整 `UserFileServiceImplTest`、`FileAdminServiceImplTest`、`FileLifecycleServiceImplTest`，并更新受影响的 article/chat 测试依赖。
+- 仓库全量 Maven 校验仍被无关的 `auth` 编译错误阻塞：`src/main/java/com/cybzacg/blogbackend/module/auth/service/impl/AuthServiceImpl.java` 中 `org.springframework.security.authentication.AuthenticationException` 无法解析。
+
 ## 模块信息
 
 - **优先级**：第4轮
@@ -112,15 +121,21 @@ public interface FileBusinessInfoRepository extends IService<FileBusinessInfo> {
 
 ### Step 1: 创建4个 Repository 接口 + 4个实现
 
+- 已完成。
+
 ### Step 2: 修改3个业务服务
 
-1. `UserFileServiceImpl` — 注入 `FileInfoRepository`, `FileUploadTaskRepository`, `FileChunkRepository`, `FileBusinessInfoRepository`
-2. `FileAdminServiceImpl` — 注入 `FileInfoRepository`, `FileUploadTaskRepository`, `FileChunkRepository`, `FileBusinessInfoRepository`
-3. `FileLifecycleServiceImpl` — 注入 `FileInfoRepository`, `FileUploadTaskRepository`, `FileChunkRepository`, `FileBusinessInfoRepository`
+1. `UserFileServiceImpl` — 已完成
+2. `FileAdminServiceImpl` — 已完成
+3. `FileLifecycleServiceImpl` — 已完成
 
 ### Step 3: 更新测试
 
+- 已完成 file 模块核心服务测试切换，并同步更新受影响的 article/chat 测试依赖。
+
 ### Step 4: 删除旧薄服务
+
+- 已完成。
 
 ## 验证
 
@@ -128,3 +143,9 @@ public interface FileBusinessInfoRepository extends IService<FileBusinessInfo> {
 mvn compile -q
 mvn test -Dtest="com.cybzacg.blogbackend.module.file.*Test"
 ```
+
+当前验证结果：
+
+- `rg` 已确认 file 模块业务服务内无直接数据访问拼装。
+- `rg` 已确认仓库内无 `FileInfoService` / `FileUploadTaskService` / `FileChunkService` / `FileBusinessInfoService` 残留引用。
+- `mvn -q -Dtest="UserFileServiceImplTest,FileAdminServiceImplTest,FileLifecycleServiceImplTest,ArticleAdminServiceImplTest,ChatAdminServiceImplTest,UserChatServiceImplTest,ChatAttachmentAsyncProcessingServiceImplTest" test` 被无关的 `auth` 编译错误阻塞，未能完成全量验证。

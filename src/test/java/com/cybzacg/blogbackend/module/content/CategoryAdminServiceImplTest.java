@@ -4,7 +4,7 @@ import com.cybzacg.blogbackend.domain.BlogArticleCategory;
 import com.cybzacg.blogbackend.domain.SysCategory;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleCategoryService;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleCategoryRepository;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.admin.CategoryAdminVO;
 import com.cybzacg.blogbackend.module.content.model.admin.CategorySaveRequest;
@@ -30,7 +30,7 @@ class CategoryAdminServiceImplTest {
     @Mock
     private SysCategoryRepository sysCategoryRepository;
     @Mock
-    private BlogArticleCategoryService blogArticleCategoryService;
+    private BlogArticleCategoryRepository blogArticleCategoryService;
     @Mock
     private ContentModelMapper contentModelMapper;
     @Mock

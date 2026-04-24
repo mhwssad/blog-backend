@@ -2,7 +2,7 @@ package com.cybzacg.blogbackend.module.article;
 
 import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.BlogArticleAccess;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleAccessService;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleAccessRepository;
 import com.cybzacg.blogbackend.module.article.service.impl.ArticleAccessControlServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +27,7 @@ class ArticleAccessControlServiceTest {
 
     @Test
     void canAccessArticleShouldRespectBasicAccessLevels() {
-        ArticleAccessControlServiceImpl service = spy(new ArticleAccessControlServiceImpl(mock(BlogArticleAccessService.class)));
+        ArticleAccessControlServiceImpl service = spy(new ArticleAccessControlServiceImpl(mock(BlogArticleAccessRepository.class)));
 
         BlogArticle article = new BlogArticle();
         article.setId(1L);
@@ -51,7 +51,7 @@ class ArticleAccessControlServiceTest {
 
     @Test
     void canAccessArticleShouldAllowBackendPermissionBypass() {
-        ArticleAccessControlServiceImpl service = spy(new ArticleAccessControlServiceImpl(mock(BlogArticleAccessService.class)));
+        ArticleAccessControlServiceImpl service = spy(new ArticleAccessControlServiceImpl(mock(BlogArticleAccessRepository.class)));
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
                 1L,
                 "N/A",
@@ -66,7 +66,7 @@ class ArticleAccessControlServiceTest {
 
     @Test
     void canAccessArticleShouldRequireValidWhitelistForAccessLevelFour() {
-        ArticleAccessControlServiceImpl service = spy(new ArticleAccessControlServiceImpl(mock(BlogArticleAccessService.class)));
+        ArticleAccessControlServiceImpl service = spy(new ArticleAccessControlServiceImpl(mock(BlogArticleAccessRepository.class)));
         BlogArticle article = new BlogArticle();
         article.setId(1L);
         article.setAccessLevel(4);
@@ -84,7 +84,7 @@ class ArticleAccessControlServiceTest {
 
     @Test
     void canAccessArticleShouldRejectExpiredWhitelistAndBlacklist() {
-        ArticleAccessControlServiceImpl service = spy(new ArticleAccessControlServiceImpl(mock(BlogArticleAccessService.class)));
+        ArticleAccessControlServiceImpl service = spy(new ArticleAccessControlServiceImpl(mock(BlogArticleAccessRepository.class)));
         BlogArticle article = new BlogArticle();
         article.setId(1L);
         article.setAccessLevel(4);

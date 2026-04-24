@@ -4,10 +4,7 @@ import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.BlogArticleCategory;
 import com.cybzacg.blogbackend.domain.SysCategory;
-import com.cybzacg.blogbackend.domain.SysCollection;
-import com.cybzacg.blogbackend.domain.SysInteraction;
 import com.cybzacg.blogbackend.domain.SysTag;
-import com.cybzacg.blogbackend.domain.SysTagRelation;
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
@@ -16,18 +13,18 @@ import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleCardVO;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleDetailVO;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticlePageQuery;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleCategoryService;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleService;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleCategoryRepository;
 import com.cybzacg.blogbackend.module.article.service.PublicArticleService;
-import com.cybzacg.blogbackend.module.auth.service.SysUserService;
+import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicCategoryTreeVO;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicTagVO;
-import com.cybzacg.blogbackend.module.content.service.SysCategoryService;
-import com.cybzacg.blogbackend.module.content.service.SysCollectionService;
-import com.cybzacg.blogbackend.module.content.service.SysInteractionService;
-import com.cybzacg.blogbackend.module.content.service.SysTagRelationService;
-import com.cybzacg.blogbackend.module.content.service.SysTagService;
+import com.cybzacg.blogbackend.module.content.repository.SysCategoryRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysCollectionRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysInteractionRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysTagRelationRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysTagRepository;
 import com.cybzacg.blogbackend.module.content.service.UserFootprintService;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -54,14 +51,14 @@ import java.util.stream.Collectors;
 public class PublicArticleServiceImpl implements PublicArticleService {
     private static final String TARGET_TYPE_ARTICLE = "article";
 
-    private final BlogArticleService blogArticleService;
-    private final BlogArticleCategoryService blogArticleCategoryService;
-    private final SysTagRelationService sysTagRelationService;
-    private final SysCategoryService sysCategoryService;
-    private final SysTagService sysTagService;
-    private final SysUserService sysUserService;
-    private final SysInteractionService sysInteractionService;
-    private final SysCollectionService sysCollectionService;
+    private final BlogArticleRepository blogArticleRepository;
+    private final BlogArticleCategoryRepository blogArticleCategoryRepository;
+    private final SysTagRelationRepository sysTagRelationRepository;
+    private final SysCategoryRepository sysCategoryRepository;
+    private final SysTagRepository sysTagRepository;
+    private final SysUserRepository sysUserRepository;
+    private final SysInteractionRepository sysInteractionRepository;
+    private final SysCollectionRepository sysCollectionRepository;
     private final ArticleAccessControlService articleAccessControlService;
     private final ArticleModelMapper articleModelMapper;
     private final ContentModelMapper contentModelMapper;
@@ -74,9 +71,7 @@ public class PublicArticleServiceImpl implements PublicArticleService {
     public PageResult<PublicArticleCardVO> pageArticles(PublicArticlePageQuery query) {
         Long currentUserId = SecurityUtils.getUserId();
         Set<Long> filteredIds = resolveArticleIdsByRelations(query);
-        List<BlogArticle> publishedArticles = blogArticleService.lambdaQuery()
-                .eq(BlogArticle::getStatus, 1)
-                .list();
+        List<BlogArticle> publishedArticles = blogArticleRepository.listAllPublished();
 
         List<BlogArticle> matched = publishedArticles.stream()
                 .filter(article -> filteredIds == null || filteredIds.contains(article.getId()))
@@ -111,7 +106,7 @@ public class PublicArticleServiceImpl implements PublicArticleService {
      */
     @Override
     public PublicArticleDetailVO getArticle(Long id) {
-        BlogArticle article = blogArticleService.getById(id);
+        BlogArticle article = blogArticleRepository.getById(id);
         ExceptionThrowerCore.throwBusinessIf(article == null || !Integer.valueOf(1).equals(article.getStatus()), ResultErrorCode.NO_HANDLER_FOUND, "文章不存在");
 
         Long userId = SecurityUtils.getUserId();
@@ -137,21 +132,13 @@ public class PublicArticleServiceImpl implements PublicArticleService {
     private Set<Long> resolveArticleIdsByRelations(PublicArticlePageQuery query) {
         Set<Long> ids = null;
         if (query.getCategoryId() != null) {
-            ids = blogArticleCategoryService.lambdaQuery()
-                    .eq(BlogArticleCategory::getCategoryId, query.getCategoryId())
-                    .list()
+            ids = blogArticleCategoryRepository.listArticleIdsByCategoryId(query.getCategoryId())
                     .stream()
                     .map(BlogArticleCategory::getArticleId)
                     .collect(Collectors.toCollection(LinkedHashSet::new));
         }
         if (query.getTagId() != null) {
-            Set<Long> tagIds = sysTagRelationService.lambdaQuery()
-                    .eq(SysTagRelation::getTargetType, TARGET_TYPE_ARTICLE)
-                    .eq(SysTagRelation::getTagId, query.getTagId())
-                    .list()
-                    .stream()
-                    .map(SysTagRelation::getTargetId)
-                    .collect(Collectors.toCollection(LinkedHashSet::new));
+            Set<Long> tagIds = new LinkedHashSet<>(sysTagRelationRepository.listTargetIdsByTargetTypeAndTagId(TARGET_TYPE_ARTICLE, query.getTagId()));
             if (ids == null) {
                 ids = tagIds;
             } else {
@@ -183,18 +170,14 @@ public class PublicArticleServiceImpl implements PublicArticleService {
      * 按文章分类绑定顺序组装前台展示分类列表。
      */
     private List<PublicCategoryTreeVO> loadArticleCategories(Long articleId) {
-        List<Long> categoryIds = blogArticleCategoryService.lambdaQuery()
-                .eq(BlogArticleCategory::getArticleId, articleId)
-                .orderByAsc(BlogArticleCategory::getSortOrder)
-                .orderByAsc(BlogArticleCategory::getId)
-                .list()
+        List<Long> categoryIds = blogArticleCategoryRepository.listByArticleIdOrdered(articleId)
                 .stream()
                 .map(BlogArticleCategory::getCategoryId)
                 .toList();
         if (categoryIds.isEmpty()) {
             return List.of();
         }
-        Map<Long, SysCategory> categoryMap = sysCategoryService.listByIds(categoryIds).stream()
+        Map<Long, SysCategory> categoryMap = sysCategoryRepository.listByIds(categoryIds).stream()
                 .collect(Collectors.toMap(SysCategory::getId, category -> category));
         List<PublicCategoryTreeVO> categories = new ArrayList<>();
         for (Long categoryId : categoryIds) {
@@ -210,18 +193,11 @@ public class PublicArticleServiceImpl implements PublicArticleService {
      * 按标签关联顺序读取文章标签，保证前台展示顺序稳定。
      */
     private List<PublicTagVO> loadArticleTags(Long articleId) {
-        List<Long> tagIds = sysTagRelationService.lambdaQuery()
-                .eq(SysTagRelation::getTargetType, TARGET_TYPE_ARTICLE)
-                .eq(SysTagRelation::getTargetId, articleId)
-                .orderByAsc(SysTagRelation::getId)
-                .list()
-                .stream()
-                .map(SysTagRelation::getTagId)
-                .toList();
+        List<Long> tagIds = sysTagRelationRepository.listTagIdsByTargetTypeAndTargetId(TARGET_TYPE_ARTICLE, articleId);
         if (tagIds.isEmpty()) {
             return List.of();
         }
-        Map<Long, SysTag> tagMap = sysTagService.listByIds(tagIds).stream()
+        Map<Long, SysTag> tagMap = sysTagRepository.listByIds(tagIds).stream()
                 .collect(Collectors.toMap(SysTag::getId, tag -> tag));
         List<PublicTagVO> tags = new ArrayList<>();
         for (Long tagId : tagIds) {
@@ -240,12 +216,7 @@ public class PublicArticleServiceImpl implements PublicArticleService {
         if (userId == null) {
             return false;
         }
-        return sysInteractionService.lambdaQuery()
-                .eq(SysInteraction::getUserId, userId)
-                .eq(SysInteraction::getTargetId, articleId)
-                .eq(SysInteraction::getTargetType, TARGET_TYPE_ARTICLE)
-                .eq(SysInteraction::getActionType, "like")
-                .exists();
+        return sysInteractionRepository.existsByUserIdAndTargetIdAndTargetTypeAndActionType(userId, articleId, TARGET_TYPE_ARTICLE, "like");
     }
 
     /**
@@ -255,11 +226,7 @@ public class PublicArticleServiceImpl implements PublicArticleService {
         if (userId == null) {
             return false;
         }
-        return sysCollectionService.lambdaQuery()
-                .eq(SysCollection::getUserId, userId)
-                .eq(SysCollection::getTargetId, articleId)
-                .eq(SysCollection::getTargetType, TARGET_TYPE_ARTICLE)
-                .exists();
+        return sysCollectionRepository.existsByUserIdAndTargetTypeAndTargetId(userId, TARGET_TYPE_ARTICLE, articleId);
     }
 
     /**
@@ -270,7 +237,7 @@ public class PublicArticleServiceImpl implements PublicArticleService {
             return Map.of();
         }
         Map<Long, String> authorNameMap = new HashMap<>();
-        sysUserService.listByIds(authorIds).forEach(user -> authorNameMap.put(user.getId(), buildAuthorName(user)));
+        sysUserRepository.listByIds(authorIds).forEach(user -> authorNameMap.put(user.getId(), buildAuthorName(user)));
         return authorNameMap;
     }
 
@@ -281,7 +248,7 @@ public class PublicArticleServiceImpl implements PublicArticleService {
         if (authorId == null) {
             return null;
         }
-        SysUser user = sysUserService.getById(authorId);
+        SysUser user = sysUserRepository.getById(authorId);
         return user == null ? null : buildAuthorName(user);
     }
 

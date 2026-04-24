@@ -2,7 +2,8 @@
 
 `blog-backend` 是一个基于 Spring Boot 4、Spring Security、MyBatis-Plus、MySQL、Redis 的博客后端项目，当前仓库重点已经落地认证鉴权、RBAC 后台管理、通知中心、内容域接口以及文件上传管理能力。
 
-文档入口优先看 [`docs/README.md`](docs/README.md)。
+文档入口优先看 [docs/README.md](docs/README.md)。
+项目结构与代码落位约束见 [docs/项目结构规范.md](docs/项目结构规范.md)。
 
 ## 项目情况
 
@@ -35,7 +36,7 @@ src/main/java/com/cybzacg/blogbackend
 │  ├─ content       分类/标签/评论/收藏/互动/足迹
 │  ├─ file          文件上传与后台管理
 │  ├─ chat          聊天会话、消息与实时推送
-│  └─ follow        关注关系预留骨架
+│  └─ follow        用户关注关系与后台治理
 └─ utils            通用工具类
 ```
 
@@ -157,6 +158,7 @@ mvn test
 - 内容域接口说明：`docs/api文档/content-api.md`
 - 文件模块接口说明：`docs/api文档/file-api.md`
 - 聊天 / WebSocket 预留说明：`docs/api文档/chat-api.md`
+- 关注关系接口说明：`docs/api文档/follow-api.md`
 - 项目进度文档：`docs/项目进度文档.md`
 - 后续更新计划：`docs/后续更新计划.md`
 - 数据库修复说明：`docs/db-schema-repair.md`
@@ -170,8 +172,5 @@ mvn test
 - 优先复用 `docs/README.md` 中的正式入口文档，不再在 README 外散落平行说明。
 - 继续把更多真正依赖 Spring 上下文的测试接入 `test` profile，并优先抽公共测试支撑，减少重复样板代码。
 - 在 `P2` 阶段保持“先整理公共能力与历史遗留，再进入聊天 / WebSocket 业务实现”的推进节奏。
-
-
-
 
 

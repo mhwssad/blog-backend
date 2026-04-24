@@ -4,17 +4,15 @@ import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.SysComment;
 import com.cybzacg.blogbackend.domain.SysInteraction;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleService;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.user.CommentSaveRequest;
-import com.cybzacg.blogbackend.module.content.service.SysCommentService;
-import com.cybzacg.blogbackend.module.content.service.SysInteractionService;
+import com.cybzacg.blogbackend.module.content.repository.SysCommentRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysInteractionRepository;
 import com.cybzacg.blogbackend.module.content.service.UserCommentService;
-import com.cybzacg.blogbackend.utils.JsonUtils;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
-import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,9 +31,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class UserCommentServiceImpl implements UserCommentService {
-    private final SysCommentService sysCommentService;
-    private final SysInteractionService sysInteractionService;
-    private final BlogArticleService blogArticleService;
+    private final SysCommentRepository sysCommentRepository;
+    private final SysInteractionRepository sysInteractionRepository;
+    private final BlogArticleRepository blogArticleService;
     private final ArticleAccessControlService articleAccessControlService;
     private final ContentModelMapper contentModelMapper;
 
@@ -47,19 +45,18 @@ public class UserCommentServiceImpl implements UserCommentService {
     public void likeComment(Long commentId) {
         Long userId = SecurityUtils.requireUserId();
         SysComment comment = getCommentOrThrow(commentId);
-        boolean exists = sysInteractionService.lambdaQuery()
-                .eq(SysInteraction::getUserId, userId)
-                .eq(SysInteraction::getTargetId, commentId)
-                .eq(SysInteraction::getTargetType, "comment")
-                .eq(SysInteraction::getActionType, "like")
-                .exists();
+        boolean exists = sysInteractionRepository.existsByUserIdAndTargetIdAndTargetTypeAndActionType(
+                userId,
+                commentId,
+                "comment",
+                "like");
         if (exists) {
             return;
         }
         SysInteraction interaction = contentModelMapper.toInteraction(userId, commentId, "comment", "like");
-        sysInteractionService.save(interaction);
+        sysInteractionRepository.save(interaction);
         comment.setLikeCount((comment.getLikeCount() == null ? 0 : comment.getLikeCount()) + 1);
-        sysCommentService.updateById(comment);
+        sysCommentRepository.updateById(comment);
     }
 
     /**
@@ -70,18 +67,17 @@ public class UserCommentServiceImpl implements UserCommentService {
     public void unlikeComment(Long commentId) {
         Long userId = SecurityUtils.requireUserId();
         SysComment comment = getCommentOrThrow(commentId);
-        SysInteraction interaction = sysInteractionService.lambdaQuery()
-                .eq(SysInteraction::getUserId, userId)
-                .eq(SysInteraction::getTargetId, commentId)
-                .eq(SysInteraction::getTargetType, "comment")
-                .eq(SysInteraction::getActionType, "like")
-                .one();
+        SysInteraction interaction = sysInteractionRepository.findOneByUserIdAndTargetIdAndTargetTypeAndActionType(
+                userId,
+                commentId,
+                "comment",
+                "like");
         if (interaction == null) {
             return;
         }
-        sysInteractionService.removeById(interaction.getId());
+        sysInteractionRepository.removeById(interaction.getId());
         comment.setLikeCount(Math.max(0, (comment.getLikeCount() == null ? 0 : comment.getLikeCount()) - 1));
-        sysCommentService.updateById(comment);
+        sysCommentRepository.updateById(comment);
     }
 
     /**
@@ -112,13 +108,13 @@ public class UserCommentServiceImpl implements UserCommentService {
                 comment.setRootId(parent.getRootId() == null || parent.getRootId() == 0L ? parent.getId() : parent.getRootId());
             }
             parent.setReplyCount((parent.getReplyCount() == null ? 0 : parent.getReplyCount()) + 1);
-            sysCommentService.updateById(parent);
+            sysCommentRepository.updateById(parent);
         } else {
             comment.setRootId(0L);
             comment.setParentId(0L);
         }
 
-        sysCommentService.save(comment);
+        sysCommentRepository.save(comment);
         article.setCommentCount((article.getCommentCount() == null ? 0 : article.getCommentCount()) + 1);
         blogArticleService.updateById(article);
     }
@@ -133,10 +129,9 @@ public class UserCommentServiceImpl implements UserCommentService {
         SysComment comment = getCommentOrThrow(commentId);
         ExceptionThrowerCore.throwBusinessIfNot(userId.equals(comment.getUserId()), ResultErrorCode.FORBIDDEN, "只能删除自己的评论");
         List<SysComment> subtree = collectSubtree(comment);
-        sysCommentService.removeByIds(subtree.stream().map(SysComment::getId).toList());
-        sysInteractionService.remove(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<SysInteraction>()
-                .eq(SysInteraction::getTargetType, "comment")
-                .in(SysInteraction::getTargetId, subtree.stream().map(SysComment::getId).toList()));
+        List<Long> subtreeIds = subtree.stream().map(SysComment::getId).toList();
+        sysCommentRepository.removeByIds(subtreeIds);
+        sysInteractionRepository.removeByTargetTypeAndTargetIds("comment", subtreeIds);
 
         BlogArticle article = blogArticleService.getById(comment.getTargetId());
         if (article != null) {
@@ -144,10 +139,10 @@ public class UserCommentServiceImpl implements UserCommentService {
             blogArticleService.updateById(article);
         }
         if (comment.getParentId() != null && comment.getParentId() > 0) {
-            SysComment parent = sysCommentService.getById(comment.getParentId());
+            SysComment parent = sysCommentRepository.getById(comment.getParentId());
             if (parent != null) {
                 parent.setReplyCount(Math.max(0, (parent.getReplyCount() == null ? 0 : parent.getReplyCount()) - 1));
-                sysCommentService.updateById(parent);
+                sysCommentRepository.updateById(parent);
             }
         }
     }
@@ -156,10 +151,7 @@ public class UserCommentServiceImpl implements UserCommentService {
      * 通过广度优先遍历收集评论子树，便于删除评论时一并清理其所有后代节点。
      */
     private List<SysComment> collectSubtree(SysComment root) {
-        List<SysComment> allComments = sysCommentService.lambdaQuery()
-                .eq(SysComment::getTargetType, root.getTargetType())
-                .eq(SysComment::getTargetId, root.getTargetId())
-                .list();
+        List<SysComment> allComments = sysCommentRepository.findByTargetTypeAndTargetId(root.getTargetType(), root.getTargetId());
         java.util.Map<Long, List<SysComment>> byParent = allComments.stream().collect(Collectors.groupingBy(SysComment::getParentId));
         ArrayDeque<SysComment> queue = new ArrayDeque<>();
         queue.add(root);
@@ -182,7 +174,7 @@ public class UserCommentServiceImpl implements UserCommentService {
      * 按 ID 获取评论，不存在时抛出统一业务异常。
      */
     private SysComment getCommentOrThrow(Long commentId) {
-        SysComment comment = sysCommentService.getById(commentId);
+        SysComment comment = sysCommentRepository.getById(commentId);
         ExceptionThrowerCore.throwBusinessIfNull(comment, ResultErrorCode.ILLEGAL_ARGUMENT, "评论不存在");
         return comment;
     }

@@ -7,6 +7,7 @@ import com.cybzacg.blogbackend.mapper.SysCategoryMapper;
 import com.cybzacg.blogbackend.module.content.repository.SysCategoryRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -20,6 +21,15 @@ public class SysCategoryRepositoryImpl extends ServiceImpl<SysCategoryMapper, Sy
     public List<SysCategory> findByTypeOrderBySortOrderAndId(String type) {
         return list(new LambdaQueryWrapper<SysCategory>()
                 .eq(SysCategory::getType, type)
+                .orderByAsc(SysCategory::getSortOrder)
+                .orderByAsc(SysCategory::getId));
+    }
+
+    @Override
+    public List<SysCategory> findByTypeAndStatusOrderBySortOrderAndId(String type, Integer status) {
+        return list(new LambdaQueryWrapper<SysCategory>()
+                .eq(SysCategory::getType, type)
+                .eq(SysCategory::getStatus, status)
                 .orderByAsc(SysCategory::getSortOrder)
                 .orderByAsc(SysCategory::getId));
     }
@@ -42,5 +52,12 @@ public class SysCategoryRepositoryImpl extends ServiceImpl<SysCategoryMapper, Sy
                 .eq(SysCategory::getType, type)
                 .eq(SysCategory::getCode, code)
                 .ne(excludeId != null, SysCategory::getId, excludeId));
+    }
+
+    @Override
+    public List<SysCategory> listByTypeAndIds(String type, Collection<Long> ids) {
+        return list(new LambdaQueryWrapper<SysCategory>()
+                .in(SysCategory::getId, ids)
+                .eq(SysCategory::getType, type));
     }
 }

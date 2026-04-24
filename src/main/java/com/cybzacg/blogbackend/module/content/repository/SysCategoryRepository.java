@@ -3,6 +3,7 @@ package com.cybzacg.blogbackend.module.content.repository;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.cybzacg.blogbackend.domain.SysCategory;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -16,6 +17,15 @@ public interface SysCategoryRepository extends IService<SysCategory> {
      * @return 分类列表
      */
     List<SysCategory> findByTypeOrderBySortOrderAndId(String type);
+
+    /**
+     * 按类型和状态查询分类列表，并按排序值和 ID 升序返回。
+     *
+     * @param type 分类类型
+     * @param status 分类状态
+     * @return 分类列表
+     */
+    List<SysCategory> findByTypeAndStatusOrderBySortOrderAndId(String type, Integer status);
 
     /**
      * 查询指定父分类下的直接子分类。
@@ -42,4 +52,13 @@ public interface SysCategoryRepository extends IService<SysCategory> {
      * @return 是否存在重复编码
      */
     boolean existsByTypeAndCodeExcludingId(String type, String code, Long excludeId);
+
+    /**
+     * 按类型和 ID 集合查询分类，用于校验指定 ID 是否属于该类型。
+     *
+     * @param type 分类类型
+     * @param ids 分类 ID 集合
+     * @return 匹配的分类列表
+     */
+    List<SysCategory> listByTypeAndIds(String type, Collection<Long> ids);
 }

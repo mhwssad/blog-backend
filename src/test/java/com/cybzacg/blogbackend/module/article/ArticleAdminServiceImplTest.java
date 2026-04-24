@@ -1,10 +1,5 @@
 package com.cybzacg.blogbackend.module.article;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.MybatisConfiguration;
-import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
-import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
-import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.BlogArticle;
@@ -27,22 +22,21 @@ import com.cybzacg.blogbackend.module.article.model.admin.ArticleAdminVO;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleDetailVO;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleSaveRequest;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleAccessService;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleCategoryService;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleService;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleAccessRepository;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleCategoryRepository;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.article.service.impl.ArticleAdminServiceImpl;
-import com.cybzacg.blogbackend.module.auth.service.SysUserService;
-import com.cybzacg.blogbackend.module.content.service.SysCategoryService;
-import com.cybzacg.blogbackend.module.content.service.SysCollectionFolderService;
-import com.cybzacg.blogbackend.module.content.service.SysCollectionService;
-import com.cybzacg.blogbackend.module.content.service.SysCommentService;
-import com.cybzacg.blogbackend.module.content.service.SysInteractionService;
-import com.cybzacg.blogbackend.module.content.service.SysTagRelationService;
-import com.cybzacg.blogbackend.module.content.service.SysTagService;
-import com.cybzacg.blogbackend.module.content.service.SysUserFootprintService;
-import com.cybzacg.blogbackend.module.file.service.FileBusinessInfoService;
+import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysCategoryRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysCollectionFolderRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysCollectionRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysCommentRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysInteractionRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysTagRelationRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysTagRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysUserFootprintRepository;
+import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
-import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,12 +44,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -63,10 +55,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doAnswer;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -74,97 +65,82 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ArticleAdminServiceImplTest {
     @Mock
-    private BlogArticleService blogArticleService;
+    private BlogArticleRepository blogArticleRepository;
     @Mock
-    private BlogArticleCategoryService blogArticleCategoryService;
+    private BlogArticleCategoryRepository blogArticleCategoryRepository;
     @Mock
-    private BlogArticleAccessService blogArticleAccessService;
+    private BlogArticleAccessRepository blogArticleAccessRepository;
     @Mock
-    private SysTagRelationService sysTagRelationService;
+    private SysTagRelationRepository sysTagRelationRepository;
     @Mock
-    private SysCategoryService sysCategoryService;
+    private SysCategoryRepository sysCategoryRepository;
     @Mock
-    private SysTagService sysTagService;
+    private SysTagRepository sysTagRepository;
     @Mock
-    private SysCommentService sysCommentService;
+    private SysCommentRepository sysCommentRepository;
     @Mock
-    private SysCollectionFolderService sysCollectionFolderService;
+    private SysCollectionFolderRepository sysCollectionFolderRepository;
     @Mock
-    private SysCollectionService sysCollectionService;
+    private SysCollectionRepository sysCollectionRepository;
     @Mock
-    private SysInteractionService sysInteractionService;
+    private SysInteractionRepository sysInteractionRepository;
     @Mock
-    private SysUserFootprintService sysUserFootprintService;
+    private SysUserFootprintRepository sysUserFootprintRepository;
     @Mock
-    private FileBusinessInfoService fileBusinessInfoService;
+    private FileBusinessInfoRepository fileBusinessInfoRepository;
     @Mock
     private FileLifecycleService fileLifecycleService;
     @Mock
-    private SysUserService sysUserService;
+    private SysUserRepository sysUserRepository;
     @Mock
     private ArticleModelMapper articleModelMapper;
     @Mock
     private ArticleAccessControlService articleAccessControlService;
-    @Mock
-    private LambdaQueryChainWrapper<SysComment> commentQuery;
-    @Mock
-    private LambdaQueryChainWrapper<SysCollection> articleCollectionQuery;
-    @Mock
-    private LambdaQueryChainWrapper<SysCollection> folderCollectionCountQuery;
-    @Mock
-    private LambdaQueryChainWrapper<FileBusinessInfo> attachmentQuery;
-    @Mock
-    private LambdaQueryChainWrapper<SysCategory> categoryValidationQuery;
-    @Mock
-    private LambdaQueryChainWrapper<BlogArticleCategory> categoryListQuery;
-    @Mock
-    private LambdaQueryChainWrapper<SysTagRelation> tagListQuery;
 
     private ArticleAdminServiceImpl articleAdminService;
 
     @BeforeEach
     void setUp() {
-        initTableInfo(BlogArticle.class);
         articleAdminService = new ArticleAdminServiceImpl(
-                blogArticleService,
-                blogArticleCategoryService,
-                blogArticleAccessService,
-                sysTagRelationService,
-                sysCategoryService,
-                sysTagService,
-                sysCommentService,
-                sysCollectionFolderService,
-                sysCollectionService,
-                sysInteractionService,
-                sysUserFootprintService,
-                fileBusinessInfoService,
+                blogArticleRepository,
+                blogArticleCategoryRepository,
+                blogArticleAccessRepository,
+                sysTagRelationRepository,
+                sysCategoryRepository,
+                sysTagRepository,
+                sysCommentRepository,
+                sysCollectionFolderRepository,
+                sysCollectionRepository,
+                sysInteractionRepository,
+                sysUserFootprintRepository,
+                fileBusinessInfoRepository,
                 fileLifecycleService,
-                sysUserService,
+                sysUserRepository,
                 articleModelMapper,
                 articleAccessControlService
         );
         mockMapperDefaults();
-        lenient().when(blogArticleCategoryService.remove(any(LambdaQueryWrapper.class))).thenReturn(true);
-        lenient().when(blogArticleCategoryService.saveBatch(anyCollection())).thenReturn(true);
-        lenient().when(sysTagRelationService.remove(any(LambdaQueryWrapper.class))).thenReturn(true);
-        lenient().when(sysTagRelationService.saveBatch(anyCollection())).thenReturn(true);
-        lenient().when(blogArticleAccessService.remove(any(LambdaQueryWrapper.class))).thenReturn(true);
-        lenient().when(blogArticleAccessService.saveBatch(anyCollection())).thenReturn(true);
-        lenient().when(blogArticleService.updateById(any(BlogArticle.class))).thenReturn(true);
-        lenient().when(blogArticleService.removeById(anyLong())).thenReturn(true);
-        lenient().when(sysCollectionFolderService.updateById(any(SysCollectionFolder.class))).thenReturn(true);
-        lenient().when(sysCommentService.remove(any(LambdaQueryWrapper.class))).thenReturn(true);
-        lenient().when(sysCollectionService.remove(any(LambdaQueryWrapper.class))).thenReturn(true);
-        lenient().when(sysInteractionService.remove(any(LambdaQueryWrapper.class))).thenReturn(true);
-        lenient().when(sysUserFootprintService.remove(any(LambdaQueryWrapper.class))).thenReturn(true);
-        lenient().when(fileBusinessInfoService.removeByIds(anyCollection())).thenReturn(true);
+        lenient().when(blogArticleCategoryRepository.removeByArticleId(anyLong())).thenReturn(true);
+        lenient().when(blogArticleCategoryRepository.saveBatch(anyCollection())).thenReturn(true);
+        lenient().when(sysTagRelationRepository.removeByTargetTypeAndTargetId(anyString(), anyLong())).thenReturn(true);
+        lenient().when(sysTagRelationRepository.saveBatch(anyCollection())).thenReturn(true);
+        lenient().when(blogArticleAccessRepository.removeByArticleId(anyLong())).thenReturn(true);
+        lenient().when(blogArticleAccessRepository.saveBatch(anyCollection())).thenReturn(true);
+        lenient().when(blogArticleRepository.updateById(any(BlogArticle.class))).thenReturn(true);
+        lenient().when(blogArticleRepository.removeById(anyLong())).thenReturn(true);
+        lenient().when(sysCollectionFolderRepository.updateById(any(SysCollectionFolder.class))).thenReturn(true);
+        lenient().when(sysCommentRepository.removeByTargetTypeAndTargetId(anyString(), anyLong())).thenReturn(true);
+        lenient().when(sysCollectionRepository.removeByTargetTypeAndTargetId(anyString(), anyLong())).thenReturn(true);
+        lenient().when(sysInteractionRepository.removeByTargetTypeAndTargetId(anyString(), anyLong())).thenReturn(true);
+        lenient().when(sysUserFootprintRepository.removeByTargetTypeAndTargetId(anyString(), anyLong())).thenReturn(true);
+        lenient().when(fileBusinessInfoRepository.removeByIds(anyCollection())).thenReturn(true);
         lenient().doAnswer(invocation -> {
             BlogArticle article = invocation.getArgument(0);
             if (article.getId() == null) {
                 article.setId(100L);
             }
             return true;
-        }).when(blogArticleService).save(any(BlogArticle.class));
+        }).when(blogArticleRepository).save(any(BlogArticle.class));
     }
 
     @Test
@@ -192,27 +168,21 @@ class ArticleAdminServiceImplTest {
         folder.setId(301L);
         folder.setCollectionCount(1);
 
-        when(blogArticleService.getById(1L)).thenReturn(article);
-        when(sysCommentService.lambdaQuery()).thenReturn(commentQuery);
-        when(commentQuery.eq(anySFunction(), any())).thenReturn(commentQuery);
-        when(commentQuery.list()).thenReturn(List.of(comment));
-        when(sysCollectionService.lambdaQuery()).thenReturn(articleCollectionQuery, folderCollectionCountQuery);
-        when(articleCollectionQuery.eq(anySFunction(), any())).thenReturn(articleCollectionQuery);
-        when(articleCollectionQuery.list()).thenReturn(List.of(collection));
-        when(folderCollectionCountQuery.eq(anySFunction(), any())).thenReturn(folderCollectionCountQuery);
-        when(folderCollectionCountQuery.count()).thenReturn(0L);
-        when(fileBusinessInfoService.lambdaQuery()).thenReturn(attachmentQuery);
-        when(attachmentQuery.eq(anySFunction(), any())).thenReturn(attachmentQuery);
-        when(attachmentQuery.list()).thenReturn(List.of(reference));
-        when(sysCollectionFolderService.getById(301L)).thenReturn(folder);
+        when(blogArticleRepository.getById(1L)).thenReturn(article);
+        when(sysCommentRepository.findByTargetTypeAndTargetId("article", 1L)).thenReturn(List.of(comment));
+        when(sysCollectionRepository.listByTargetTypeAndTargetId("article", 1L)).thenReturn(List.of(collection));
+        when(sysCollectionRepository.countByFolderId(301L)).thenReturn(0L);
+        when(fileBusinessInfoRepository.listByReferenceTypeAndReferenceId("article_attachment", 1L)).thenReturn(List.of(reference));
+        when(sysCollectionFolderRepository.getById(301L)).thenReturn(folder);
 
         articleAdminService.deleteArticle(1L);
 
-        verify(fileBusinessInfoService).removeByIds(List.of(401L));
+        verify(fileBusinessInfoRepository).removeByIds(List.of(401L));
         verify(fileLifecycleService).syncFileAfterReferenceRemoval(501L);
-        verify(sysCollectionFolderService).updateById(folder);
-        verify(sysInteractionService, times(2)).remove(any(LambdaQueryWrapper.class));
-        verify(blogArticleService).removeById(1L);
+        verify(sysCollectionFolderRepository).updateById(folder);
+        verify(sysInteractionRepository).removeByTargetTypeAndTargetId("article", 1L);
+        verify(sysInteractionRepository).removeByTargetTypeAndTargetIds(eq("comment"), any(List.class));
+        verify(blogArticleRepository).removeById(1L);
         assertEquals(0, folder.getCollectionCount());
     }
 
@@ -221,20 +191,20 @@ class ArticleAdminServiceImplTest {
         BlogArticle article = article(1L, "草稿", 1L, 0, 0);
         article.setPublishTime(null);
 
-        when(blogArticleService.getById(1L)).thenReturn(article);
+        when(blogArticleRepository.getById(1L)).thenReturn(article);
 
         articleAdminService.updateStatus(1L, 1);
 
         assertEquals(1, article.getStatus());
         assertNotNull(article.getPublishTime());
-        verify(blogArticleService).updateById(article);
+        verify(blogArticleRepository).updateById(article);
     }
 
     @Test
     void assignAccessShouldRejectWhenArticleAccessLevelIsNotSpecifiedUser() {
         BlogArticle article = article(2L, "普通文章", 1L, 1, 0);
         article.setAccessLevel(0);
-        when(blogArticleService.getById(2L)).thenReturn(article);
+        when(blogArticleRepository.getById(2L)).thenReturn(article);
 
         BusinessException exception = assertThrows(
                 BusinessException.class,
@@ -243,7 +213,7 @@ class ArticleAdminServiceImplTest {
 
         assertEquals(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), exception.getCode());
         assertEquals("当前文章访问级别不是指定用户可见", exception.getMessage());
-        verifyNoInteractions(sysUserService);
+        verifyNoInteractions(sysUserRepository);
     }
 
     @Test
@@ -252,30 +222,30 @@ class ArticleAdminServiceImplTest {
         ArticleAccessItem accessItem = accessItem(9L, 1);
         SysUser user = user(9L, "user9", "用户9");
 
-        when(blogArticleService.getById(3L)).thenReturn(article);
-        when(sysUserService.listByIds(anyCollection())).thenReturn(List.of(user));
+        when(blogArticleRepository.getById(3L)).thenReturn(article);
+        when(sysUserRepository.listByIds(anyCollection())).thenReturn(List.of(user));
 
         articleAdminService.assignAccess(3L, List.of(accessItem));
 
         assertEquals(1, accessItem.getAccessType());
-        verify(blogArticleAccessService).remove(any(LambdaQueryWrapper.class));
-        verify(blogArticleAccessService).saveBatch(anyCollection());
+        verify(blogArticleAccessRepository).removeByArticleId(3L);
+        verify(blogArticleAccessRepository).saveBatch(anyCollection());
     }
 
     @Test
     void createArticleShouldCreateWithCategoryTagAndAccessBindings() {
         ArticleSaveRequest request = saveRequest(1L, 1, 4, List.of(11L, 12L), List.of(21L, 22L), List.of(accessItem(9L, 1)));
-        when(sysUserService.getById(1L)).thenReturn(user(1L, "author", "作者甲"));
-        stubCategoryValidation(List.of(category(11L, "后端"), category(12L, "Java")));
-        when(sysTagService.listByIds(List.of(21L, 22L))).thenReturn(List.of(tag(21L, "Spring"), tag(22L, "Boot")));
-        when(sysUserService.listByIds(anyCollection())).thenReturn(List.of(user(9L, "reader9", "读者9")));
+        when(sysUserRepository.getById(1L)).thenReturn(user(1L, "author", "作者甲"));
+        when(sysCategoryRepository.listByTypeAndIds(eq("article"), anyCollection())).thenReturn(List.of(category(11L, "后端"), category(12L, "Java")));
+        when(sysTagRepository.listByIds(List.of(21L, 22L))).thenReturn(List.of(tag(21L, "Spring"), tag(22L, "Boot")));
+        when(sysUserRepository.listByIds(anyCollection())).thenReturn(List.of(user(9L, "reader9", "读者9")));
         stubDetailLookups(100L, 1L, List.of(11L, 12L), List.of(21L, 22L), List.of(accessRecord(100L, 9L, 1)));
 
         ArgumentCaptor<BlogArticle> articleCaptor = ArgumentCaptor.forClass(BlogArticle.class);
 
         ArticleDetailVO detail = articleAdminService.createArticle(request);
 
-        verify(blogArticleService).save(articleCaptor.capture());
+        verify(blogArticleRepository).save(articleCaptor.capture());
         BlogArticle savedArticle = articleCaptor.getValue();
         assertEquals(100L, detail.getId());
         assertEquals("文章标题", detail.getTitle());
@@ -287,15 +257,15 @@ class ArticleAdminServiceImplTest {
         assertEquals(0, savedArticle.getCommentCount());
         assertEquals(4, savedArticle.getAccessLevel());
         assertNotNull(savedArticle.getPublishTime());
-        verify(blogArticleCategoryService).saveBatch(anyCollection());
-        verify(sysTagRelationService).saveBatch(anyCollection());
-        verify(blogArticleAccessService).saveBatch(anyCollection());
+        verify(blogArticleCategoryRepository).saveBatch(anyCollection());
+        verify(sysTagRelationRepository).saveBatch(anyCollection());
+        verify(blogArticleAccessRepository).saveBatch(anyCollection());
     }
 
     @Test
     void createArticleShouldAllowEmptyCategoryAndTagBindings() {
         ArticleSaveRequest request = saveRequest(1L, 0, 0, List.of(), List.of(), List.of());
-        when(sysUserService.getById(1L)).thenReturn(user(1L, "author", "作者甲"));
+        when(sysUserRepository.getById(1L)).thenReturn(user(1L, "author", "作者甲"));
         stubDetailLookups(100L, 1L, List.of(), List.of(), List.of());
 
         ArticleDetailVO detail = articleAdminService.createArticle(request);
@@ -303,26 +273,26 @@ class ArticleAdminServiceImplTest {
         assertTrue(detail.getCategoryIds().isEmpty());
         assertTrue(detail.getTagIds().isEmpty());
         assertTrue(detail.getAccessList().isEmpty());
-        verify(blogArticleCategoryService, never()).saveBatch(anyCollection());
-        verify(sysTagRelationService, never()).saveBatch(anyCollection());
-        verify(blogArticleAccessService, never()).saveBatch(anyCollection());
-        verify(blogArticleAccessService).remove(any(LambdaQueryWrapper.class));
+        verify(blogArticleCategoryRepository, never()).saveBatch(anyCollection());
+        verify(sysTagRelationRepository, never()).saveBatch(anyCollection());
+        verify(blogArticleAccessRepository, never()).saveBatch(anyCollection());
+        verify(blogArticleAccessRepository).removeByArticleId(100L);
     }
 
     @Test
     void updateArticleShouldUpdateAndRebuildRelations() {
         BlogArticle existing = article(200L, "旧标题", 1L, 0, 0);
         existing.setAuthorId(1L);
-        when(blogArticleService.getById(200L)).thenReturn(existing);
+        when(blogArticleRepository.getById(200L)).thenReturn(existing);
 
         ArticleSaveRequest request = saveRequest(2L, 1, 4, List.of(31L, 32L), List.of(41L), List.of(accessItem(9L, 2)));
         request.setTitle("新标题");
         request.setSummary("新摘要");
         request.setContent("新内容");
-        when(sysUserService.getById(2L)).thenReturn(user(2L, "author2", "作者乙"));
-        stubCategoryValidation(List.of(category(31L, "后端"), category(32L, "Spring")));
-        when(sysTagService.listByIds(List.of(41L))).thenReturn(List.of(tag(41L, "测试")));
-        when(sysUserService.listByIds(anyCollection())).thenReturn(List.of(user(9L, "reader9", "读者9")));
+        when(sysUserRepository.getById(2L)).thenReturn(user(2L, "author2", "作者乙"));
+        when(sysCategoryRepository.listByTypeAndIds(eq("article"), anyCollection())).thenReturn(List.of(category(31L, "后端"), category(32L, "Spring")));
+        when(sysTagRepository.listByIds(List.of(41L))).thenReturn(List.of(tag(41L, "测试")));
+        when(sysUserRepository.listByIds(anyCollection())).thenReturn(List.of(user(9L, "reader9", "读者9")));
         stubDetailLookups(200L, 2L, List.of(31L, 32L), List.of(41L), List.of(accessRecord(200L, 9L, 2)));
 
         ArticleDetailVO detail = articleAdminService.updateArticle(200L, request);
@@ -333,21 +303,21 @@ class ArticleAdminServiceImplTest {
         assertEquals(List.of(41L), detail.getTagIds());
         assertEquals(1, detail.getAccessList().size());
         assertEquals("作者乙", detail.getAuthorName());
-        verify(blogArticleService).updateById(existing);
-        verify(blogArticleCategoryService).saveBatch(anyCollection());
-        verify(sysTagRelationService).saveBatch(anyCollection());
-        verify(blogArticleAccessService).saveBatch(anyCollection());
+        verify(blogArticleRepository).updateById(existing);
+        verify(blogArticleCategoryRepository).saveBatch(anyCollection());
+        verify(sysTagRelationRepository).saveBatch(anyCollection());
+        verify(blogArticleAccessRepository).saveBatch(anyCollection());
     }
 
     @Test
     void updateArticleShouldClearCategoryAndTagBindings() {
         BlogArticle existing = article(201L, "旧标题", 1L, 1, 4);
         existing.setAuthorId(1L);
-        when(blogArticleService.getById(201L)).thenReturn(existing);
+        when(blogArticleRepository.getById(201L)).thenReturn(existing);
 
         ArticleSaveRequest request = saveRequest(1L, 0, 0, List.of(), List.of(), List.of());
         request.setTitle("清空绑定");
-        when(sysUserService.getById(1L)).thenReturn(user(1L, "author", "作者甲"));
+        when(sysUserRepository.getById(1L)).thenReturn(user(1L, "author", "作者甲"));
         stubDetailLookups(201L, 1L, List.of(), List.of(), List.of());
 
         ArticleDetailVO detail = articleAdminService.updateArticle(201L, request);
@@ -355,24 +325,24 @@ class ArticleAdminServiceImplTest {
         assertTrue(detail.getCategoryIds().isEmpty());
         assertTrue(detail.getTagIds().isEmpty());
         assertTrue(detail.getAccessList().isEmpty());
-        verify(blogArticleService).updateById(existing);
-        verify(blogArticleCategoryService, never()).saveBatch(anyCollection());
-        verify(sysTagRelationService, never()).saveBatch(anyCollection());
-        verify(blogArticleAccessService, never()).saveBatch(anyCollection());
-        verify(blogArticleAccessService).remove(any(LambdaQueryWrapper.class));
+        verify(blogArticleRepository).updateById(existing);
+        verify(blogArticleCategoryRepository, never()).saveBatch(anyCollection());
+        verify(sysTagRelationRepository, never()).saveBatch(anyCollection());
+        verify(blogArticleAccessRepository, never()).saveBatch(anyCollection());
+        verify(blogArticleAccessRepository).removeByArticleId(201L);
     }
 
     @Test
     void updateArticleShouldRemoveSpecifiedAccessBindingsWhenDowngradingToPublic() {
         BlogArticle existing = article(202L, "旧标题", 1L, 1, 4);
         existing.setAuthorId(1L);
-        when(blogArticleService.getById(202L)).thenReturn(existing);
+        when(blogArticleRepository.getById(202L)).thenReturn(existing);
 
         ArticleSaveRequest request = saveRequest(1L, 1, 0, List.of(71L), List.of(81L), List.of());
         request.setTitle("降级公开");
-        when(sysUserService.getById(1L)).thenReturn(user(1L, "author", "作者甲"));
-        stubCategoryValidation(List.of(category(71L, "公开分类")));
-        when(sysTagService.listByIds(List.of(81L))).thenReturn(List.of(tag(81L, "公开标签")));
+        when(sysUserRepository.getById(1L)).thenReturn(user(1L, "author", "作者甲"));
+        when(sysCategoryRepository.listByTypeAndIds(eq("article"), anyCollection())).thenReturn(List.of(category(71L, "公开分类")));
+        when(sysTagRepository.listByIds(List.of(81L))).thenReturn(List.of(tag(81L, "公开标签")));
         stubDetailLookups(202L, 1L, List.of(71L), List.of(81L), List.of());
 
         ArticleDetailVO detail = articleAdminService.updateArticle(202L, request);
@@ -381,11 +351,11 @@ class ArticleAdminServiceImplTest {
         assertEquals(List.of(71L), detail.getCategoryIds());
         assertEquals(List.of(81L), detail.getTagIds());
         assertTrue(detail.getAccessList().isEmpty());
-        verify(blogArticleService).updateById(existing);
-        verify(blogArticleCategoryService).saveBatch(anyCollection());
-        verify(sysTagRelationService).saveBatch(anyCollection());
-        verify(blogArticleAccessService, never()).saveBatch(anyCollection());
-        verify(blogArticleAccessService).remove(any(LambdaQueryWrapper.class));
+        verify(blogArticleRepository).updateById(existing);
+        verify(blogArticleCategoryRepository).saveBatch(anyCollection());
+        verify(sysTagRelationRepository).saveBatch(anyCollection());
+        verify(blogArticleAccessRepository, never()).saveBatch(anyCollection());
+        verify(blogArticleAccessRepository).removeByArticleId(202L);
     }
 
     @Test
@@ -401,8 +371,8 @@ class ArticleAdminServiceImplTest {
         Page<BlogArticle> page = new Page<>(2, 5);
         page.setTotal(12);
         page.setRecords(List.of(first, second));
-        when(blogArticleService.page(any(Page.class), any(LambdaQueryWrapper.class))).thenReturn(page);
-        when(sysUserService.listByIds(anyCollection())).thenReturn(List.of(
+        when(blogArticleRepository.pageAdminArticles(any(ArticleAdminPageQuery.class), any())).thenReturn(page);
+        when(sysUserRepository.listByIds(anyCollection())).thenReturn(List.of(
                 user(11L, "u11", "作者一"),
                 user(12L, "u12", "作者二")
         ));
@@ -429,26 +399,24 @@ class ArticleAdminServiceImplTest {
         Page<BlogArticle> page = new Page<>(1, 10);
         page.setTotal(0);
         page.setRecords(List.of());
-        when(blogArticleService.page(any(Page.class), any(LambdaQueryWrapper.class))).thenReturn(page);
+        when(blogArticleRepository.pageAdminArticles(any(ArticleAdminPageQuery.class), any())).thenReturn(page);
 
-        ArgumentCaptor<Page<BlogArticle>> pageCaptor = ArgumentCaptor.forClass(Page.class);
-        ArgumentCaptor<LambdaQueryWrapper<BlogArticle>> wrapperCaptor = ArgumentCaptor.forClass(LambdaQueryWrapper.class);
+        ArgumentCaptor<ArticleAdminPageQuery> queryCaptor = ArgumentCaptor.forClass(ArticleAdminPageQuery.class);
 
         PageResult<ArticleAdminVO> result = articleAdminService.pageArticles(query);
 
         assertTrue(result.getRecords().isEmpty());
-        verify(blogArticleService).page(pageCaptor.capture(), wrapperCaptor.capture());
-        assertEquals(1L, pageCaptor.getValue().getCurrent());
-        assertEquals(10L, pageCaptor.getValue().getSize());
-        Collection<Object> params = wrapperCaptor.getValue().getParamNameValuePairs().values();
-        assertTrue(wrapperCaptor.getValue().getSqlSegment().contains("LIKE"));
-        assertTrue(params.contains(7L));
-        assertTrue(params.contains(1));
+        verify(blogArticleRepository).pageAdminArticles(queryCaptor.capture(), any());
+        assertEquals(1L, queryCaptor.getValue().getCurrent());
+        assertEquals(10L, queryCaptor.getValue().getSize());
+        assertEquals("Java", queryCaptor.getValue().getKeyword());
+        assertEquals(7L, queryCaptor.getValue().getAuthorId());
+        assertEquals(1, queryCaptor.getValue().getStatus());
     }
 
     @Test
     void getArticleShouldThrowWhenNotFound() {
-        when(blogArticleService.getById(999L)).thenReturn(null);
+        when(blogArticleRepository.getById(999L)).thenReturn(null);
 
         BusinessException exception = assertThrows(BusinessException.class, () -> articleAdminService.getArticle(999L));
 
@@ -460,7 +428,7 @@ class ArticleAdminServiceImplTest {
     void getArticleShouldReturnDetailWithCategoryTagAndAccessList() {
         BlogArticle article = article(300L, "详情文章", 1L, 1, 4);
         article.setAuthorId(1L);
-        when(blogArticleService.getById(300L)).thenReturn(article);
+        when(blogArticleRepository.getById(300L)).thenReturn(article);
         stubDetailLookups(300L, 1L, List.of(51L, 52L), List.of(61L, 62L), List.of(
                 accessRecord(300L, 9L, 1),
                 accessRecord(300L, 10L, 2)
@@ -550,24 +518,14 @@ class ArticleAdminServiceImplTest {
         });
     }
 
-    private void stubCategoryValidation(List<SysCategory> categories) {
-        when(sysCategoryService.lambdaQuery()).thenReturn(categoryValidationQuery);
-        when(categoryValidationQuery.in(anySFunction(), anyCollection())).thenReturn(categoryValidationQuery);
-        when(categoryValidationQuery.eq(anySFunction(), any())).thenReturn(categoryValidationQuery);
-        when(categoryValidationQuery.list()).thenReturn(categories);
-    }
-
     private void stubDetailLookups(Long articleId,
                                    Long authorId,
                                    List<Long> categoryIds,
                                    List<Long> tagIds,
                                    List<BlogArticleAccess> accesses) {
-        when(sysUserService.getById(authorId)).thenReturn(user(authorId, "author-" + authorId, defaultAuthorName(authorId)));
+        when(sysUserRepository.getById(authorId)).thenReturn(user(authorId, "author-" + authorId, defaultAuthorName(authorId)));
 
-        when(blogArticleCategoryService.lambdaQuery()).thenReturn(categoryListQuery);
-        when(categoryListQuery.eq(anySFunction(), any())).thenReturn(categoryListQuery);
-        when(categoryListQuery.orderByAsc(anySFunction())).thenReturn(categoryListQuery);
-        when(categoryListQuery.list()).thenReturn(categoryIds.stream()
+        when(blogArticleCategoryRepository.listByArticleIdOrdered(articleId)).thenReturn(categoryIds.stream()
                 .map(categoryId -> {
                     BlogArticleCategory relation = new BlogArticleCategory();
                     relation.setArticleId(articleId);
@@ -576,18 +534,7 @@ class ArticleAdminServiceImplTest {
                 })
                 .toList());
 
-        when(sysTagRelationService.lambdaQuery()).thenReturn(tagListQuery);
-        when(tagListQuery.eq(anySFunction(), any())).thenReturn(tagListQuery);
-        when(tagListQuery.orderByAsc(anySFunction())).thenReturn(tagListQuery);
-        when(tagListQuery.list()).thenReturn(tagIds.stream()
-                .map(tagId -> {
-                    SysTagRelation relation = new SysTagRelation();
-                    relation.setTargetId(articleId);
-                    relation.setTargetType("article");
-                    relation.setTagId(tagId);
-                    return relation;
-                })
-                .toList());
+        when(sysTagRelationRepository.listTagIdsByTargetTypeAndTargetId("article", articleId)).thenReturn(tagIds);
 
         when(articleAccessControlService.listArticleAccesses(articleId)).thenReturn(accesses);
     }
@@ -702,19 +649,5 @@ class ArticleAdminServiceImplTest {
             return "作者乙";
         }
         return "作者甲";
-    }
-
-    private static void initTableInfo(Class<?> entityClass) {
-        if (TableInfoHelper.getTableInfo(entityClass) != null) {
-            return;
-        }
-        MapperBuilderAssistant assistant = new MapperBuilderAssistant(new MybatisConfiguration(), "test");
-        assistant.setCurrentNamespace(entityClass.getName());
-        TableInfoHelper.initTableInfo(assistant, entityClass);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> SFunction<T, ?> anySFunction() {
-        return (SFunction<T, ?>) any(SFunction.class);
     }
 }

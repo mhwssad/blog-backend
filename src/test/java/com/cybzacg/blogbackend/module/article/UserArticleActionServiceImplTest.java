@@ -1,16 +1,14 @@
 package com.cybzacg.blogbackend.module.article;
 
-import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
-import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.SysInteraction;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleService;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.article.service.impl.UserArticleActionServiceImpl;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
-import com.cybzacg.blogbackend.module.content.service.SysInteractionService;
+import com.cybzacg.blogbackend.module.content.repository.SysInteractionRepository;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,8 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -33,36 +31,32 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class UserArticleActionServiceImplTest {
     @Mock
-    private BlogArticleService blogArticleService;
+    private BlogArticleRepository blogArticleRepository;
     @Mock
-    private SysInteractionService sysInteractionService;
+    private SysInteractionRepository sysInteractionRepository;
     @Mock
     private ArticleAccessControlService articleAccessControlService;
     @Mock
     private ContentModelMapper contentModelMapper;
-    @Mock
-    private LambdaQueryChainWrapper<SysInteraction> interactionQuery;
 
     private UserArticleActionServiceImpl userArticleActionService;
 
     @BeforeEach
     void setUp() {
         userArticleActionService = new UserArticleActionServiceImpl(
-                blogArticleService,
-                sysInteractionService,
+                blogArticleRepository,
+                sysInteractionRepository,
                 articleAccessControlService,
                 contentModelMapper
         );
-        lenient().when(sysInteractionService.lambdaQuery()).thenReturn(interactionQuery);
-        lenient().when(interactionQuery.eq(anySFunction(), any())).thenReturn(interactionQuery);
     }
 
     @Test
     void likeArticleShouldCreateInteractionAndIncreaseCount() {
         BlogArticle article = publishedArticle(1L, 2);
         SysInteraction interaction = interaction(100L, 7L, 1L);
-        when(blogArticleService.getById(1L)).thenReturn(article);
-        when(interactionQuery.exists()).thenReturn(false);
+        when(blogArticleRepository.getById(1L)).thenReturn(article);
+        when(sysInteractionRepository.existsByUserIdAndTargetIdAndTargetTypeAndActionType(7L, 1L, "article", "like")).thenReturn(false);
         when(contentModelMapper.toInteraction(7L, 1L, "article", "like")).thenReturn(interaction);
 
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(7L)) {
@@ -70,29 +64,29 @@ class UserArticleActionServiceImplTest {
 
             assertEquals(3, article.getLikeCount());
             verify(articleAccessControlService).validateArticleAccess(article, 7L);
-            verify(sysInteractionService).save(interaction);
-            verify(blogArticleService).updateById(article);
+            verify(sysInteractionRepository).save(interaction);
+            verify(blogArticleRepository).updateById(article);
         }
     }
 
     @Test
     void likeArticleShouldBeIdempotentWhenAlreadyLiked() {
         BlogArticle article = publishedArticle(1L, 2);
-        when(blogArticleService.getById(1L)).thenReturn(article);
-        when(interactionQuery.exists()).thenReturn(true);
+        when(blogArticleRepository.getById(1L)).thenReturn(article);
+        when(sysInteractionRepository.existsByUserIdAndTargetIdAndTargetTypeAndActionType(7L, 1L, "article", "like")).thenReturn(true);
 
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(7L)) {
             userArticleActionService.likeArticle(1L);
 
             assertEquals(2, article.getLikeCount());
-            verify(sysInteractionService, never()).save(any(SysInteraction.class));
-            verify(blogArticleService, never()).updateById(article);
+            verify(sysInteractionRepository, never()).save(any(SysInteraction.class));
+            verify(blogArticleRepository, never()).updateById(article);
         }
     }
 
     @Test
     void likeArticleShouldThrowWhenArticleMissing() {
-        when(blogArticleService.getById(1L)).thenReturn(null);
+        when(blogArticleRepository.getById(1L)).thenReturn(null);
 
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(7L)) {
             BusinessException exception = assertThrows(BusinessException.class, () -> userArticleActionService.likeArticle(1L));
@@ -107,7 +101,7 @@ class UserArticleActionServiceImplTest {
     void likeArticleShouldThrowWhenArticleUnpublished() {
         BlogArticle article = publishedArticle(1L, 2);
         article.setStatus(0);
-        when(blogArticleService.getById(1L)).thenReturn(article);
+        when(blogArticleRepository.getById(1L)).thenReturn(article);
 
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(7L)) {
             BusinessException exception = assertThrows(BusinessException.class, () -> userArticleActionService.likeArticle(1L));
@@ -121,7 +115,7 @@ class UserArticleActionServiceImplTest {
     @Test
     void likeArticleShouldThrowWhenNoAccess() {
         BlogArticle article = publishedArticle(1L, 2);
-        when(blogArticleService.getById(1L)).thenReturn(article);
+        when(blogArticleRepository.getById(1L)).thenReturn(article);
         doThrow(new BusinessException(ResultErrorCode.FORBIDDEN.getCode(), "无权访问"))
                 .when(articleAccessControlService).validateArticleAccess(article, 7L);
 
@@ -130,7 +124,7 @@ class UserArticleActionServiceImplTest {
 
             assertEquals(ResultErrorCode.FORBIDDEN.getCode(), exception.getCode());
             assertEquals("无权访问", exception.getMessage());
-            verify(sysInteractionService, never()).lambdaQuery();
+            verify(sysInteractionRepository, never()).existsByUserIdAndTargetIdAndTargetTypeAndActionType(anyLong(), anyLong(), anyString(), anyString());
         }
     }
 
@@ -138,30 +132,30 @@ class UserArticleActionServiceImplTest {
     void unlikeArticleShouldRemoveInteractionAndDecreaseCount() {
         BlogArticle article = publishedArticle(1L, 3);
         SysInteraction interaction = interaction(100L, 7L, 1L);
-        when(blogArticleService.getById(1L)).thenReturn(article);
-        when(interactionQuery.one()).thenReturn(interaction);
+        when(blogArticleRepository.getById(1L)).thenReturn(article);
+        when(sysInteractionRepository.findOneByUserIdAndTargetIdAndTargetTypeAndActionType(7L, 1L, "article", "like")).thenReturn(interaction);
 
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(7L)) {
             userArticleActionService.unlikeArticle(1L);
 
             assertEquals(2, article.getLikeCount());
-            verify(sysInteractionService).removeById(100L);
-            verify(blogArticleService).updateById(article);
+            verify(sysInteractionRepository).removeById(100L);
+            verify(blogArticleRepository).updateById(article);
         }
     }
 
     @Test
     void unlikeArticleShouldBeIdempotentWhenNotLiked() {
         BlogArticle article = publishedArticle(1L, 3);
-        when(blogArticleService.getById(1L)).thenReturn(article);
-        when(interactionQuery.one()).thenReturn(null);
+        when(blogArticleRepository.getById(1L)).thenReturn(article);
+        when(sysInteractionRepository.findOneByUserIdAndTargetIdAndTargetTypeAndActionType(7L, 1L, "article", "like")).thenReturn(null);
 
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(7L)) {
             userArticleActionService.unlikeArticle(1L);
 
             assertEquals(3, article.getLikeCount());
-            verify(sysInteractionService, never()).removeById(anyLong());
-            verify(blogArticleService, never()).updateById(article);
+            verify(sysInteractionRepository, never()).removeById(anyLong());
+            verify(blogArticleRepository, never()).updateById(article);
         }
     }
 
@@ -169,15 +163,15 @@ class UserArticleActionServiceImplTest {
     void unlikeArticleShouldNotDecreaseBelowZero() {
         BlogArticle article = publishedArticle(1L, 0);
         SysInteraction interaction = interaction(100L, 7L, 1L);
-        when(blogArticleService.getById(1L)).thenReturn(article);
-        when(interactionQuery.one()).thenReturn(interaction);
+        when(blogArticleRepository.getById(1L)).thenReturn(article);
+        when(sysInteractionRepository.findOneByUserIdAndTargetIdAndTargetTypeAndActionType(7L, 1L, "article", "like")).thenReturn(interaction);
 
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(7L)) {
             userArticleActionService.unlikeArticle(1L);
 
             assertEquals(0, article.getLikeCount());
-            verify(sysInteractionService).removeById(100L);
-            verify(blogArticleService).updateById(article);
+            verify(sysInteractionRepository).removeById(100L);
+            verify(blogArticleRepository).updateById(article);
         }
     }
 
@@ -197,10 +191,5 @@ class UserArticleActionServiceImplTest {
         interaction.setTargetType("article");
         interaction.setActionType("like");
         return interaction;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> SFunction<T, ?> anySFunction() {
-        return (SFunction<T, ?>) any(SFunction.class);
     }
 }

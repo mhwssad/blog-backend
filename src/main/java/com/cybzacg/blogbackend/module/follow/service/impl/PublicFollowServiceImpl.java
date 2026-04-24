@@ -3,11 +3,11 @@ package com.cybzacg.blogbackend.module.follow.service.impl;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.mapper.SysUserFollowMapper;
 import com.cybzacg.blogbackend.module.auth.service.SysUserService;
 import com.cybzacg.blogbackend.module.follow.convert.FollowModelMapper;
 import com.cybzacg.blogbackend.module.follow.model.publics.PublicFollowPageQuery;
 import com.cybzacg.blogbackend.module.follow.model.publics.PublicFollowUserVO;
+import com.cybzacg.blogbackend.module.follow.repository.SysUserFollowRepository;
 import com.cybzacg.blogbackend.module.follow.service.PublicFollowService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import java.util.List;
@@ -24,7 +24,7 @@ public class PublicFollowServiceImpl implements PublicFollowService {
     private static final long DEFAULT_PAGE_SIZE = 10L;
     private static final long MAX_PAGE_SIZE = 100L;
 
-    private final SysUserFollowMapper sysUserFollowMapper;
+    private final SysUserFollowRepository sysUserFollowRepository;
     private final SysUserService sysUserService;
     private final FollowModelMapper followModelMapper;
 
@@ -33,12 +33,12 @@ public class PublicFollowServiceImpl implements PublicFollowService {
         requireActiveUser(userId);
         long current = normalizeCurrent(query == null ? null : query.getCurrent());
         long size = normalizeSize(query == null ? null : query.getSize());
-        long total = defaultLong(sysUserFollowMapper.countPublicFollowPage(userId));
+        long total = defaultLong(sysUserFollowRepository.countPublicFollowPage(userId));
         if (total == 0L) {
             return emptyPage(current, size);
         }
         long offset = (current - 1) * size;
-        List<PublicFollowUserVO> records = sysUserFollowMapper.selectPublicFollowPage(userId, offset, size)
+        List<PublicFollowUserVO> records = sysUserFollowRepository.selectPublicFollowPage(userId, offset, size)
                 .stream()
                 .map(followModelMapper::toPublicFollowUserVO)
                 .toList();
@@ -55,12 +55,12 @@ public class PublicFollowServiceImpl implements PublicFollowService {
         requireActiveUser(userId);
         long current = normalizeCurrent(query == null ? null : query.getCurrent());
         long size = normalizeSize(query == null ? null : query.getSize());
-        long total = defaultLong(sysUserFollowMapper.countPublicFanPage(userId));
+        long total = defaultLong(sysUserFollowRepository.countPublicFanPage(userId));
         if (total == 0L) {
             return emptyPage(current, size);
         }
         long offset = (current - 1) * size;
-        List<PublicFollowUserVO> records = sysUserFollowMapper.selectPublicFanPage(userId, offset, size)
+        List<PublicFollowUserVO> records = sysUserFollowRepository.selectPublicFanPage(userId, offset, size)
                 .stream()
                 .map(followModelMapper::toPublicFollowUserVO)
                 .toList();

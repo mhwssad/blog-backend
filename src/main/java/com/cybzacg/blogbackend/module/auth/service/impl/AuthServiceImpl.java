@@ -1,11 +1,11 @@
 package com.cybzacg.blogbackend.module.auth.service.impl;
 
-import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.cybzacg.blogbackend.common.constant.AuthConstants;
 import com.cybzacg.blogbackend.common.constant.ConfigConstants;
 import com.cybzacg.blogbackend.common.constant.MenuConstants;
 import com.cybzacg.blogbackend.common.redis.RedisKeyUtils;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
+import com.cybzacg.blogbackend.domain.SysConfig;
 import com.cybzacg.blogbackend.domain.SysMenu;
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
@@ -20,11 +20,11 @@ import com.cybzacg.blogbackend.module.auth.model.AuthRefreshRequest;
 import com.cybzacg.blogbackend.module.auth.model.AuthRegisterRequest;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserInfo;
 import com.cybzacg.blogbackend.module.auth.model.AuthenticationToken;
+import com.cybzacg.blogbackend.module.auth.repository.SysConfigRepository;
+import com.cybzacg.blogbackend.module.auth.repository.SysMenuRepository;
+import com.cybzacg.blogbackend.module.auth.repository.SysRoleRepository;
+import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.service.AuthService;
-import com.cybzacg.blogbackend.module.auth.service.SysMenuService;
-import com.cybzacg.blogbackend.module.auth.service.SysConfigService;
-import com.cybzacg.blogbackend.module.auth.service.SysRoleService;
-import com.cybzacg.blogbackend.module.auth.service.SysUserService;
 import com.cybzacg.blogbackend.module.auth.token.TokenManager;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
@@ -32,14 +32,14 @@ import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.mail.autoconfigure.MailProperties;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.LockedException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,12 +60,16 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
+    private static final String USER_FIELD_USERNAME = "username";
+    private static final String USER_FIELD_EMAIL = "email";
+    private static final String USER_FIELD_PHONE = "phone";
+
     private final AuthenticationManager authenticationManager;
     private final TokenManager tokenManager;
-    private final SysUserService sysUserService;
-    private final SysRoleService sysRoleService;
-    private final SysMenuService sysMenuService;
-    private final SysConfigService sysConfigService;
+    private final SysUserRepository sysUserRepository;
+    private final SysRoleRepository sysRoleRepository;
+    private final SysMenuRepository sysMenuRepository;
+    private final SysConfigRepository sysConfigRepository;
     private final AuthModelMapper authModelMapper;
     private final RedisOperator redisOperator;
     private final JavaMailSender javaMailSender;
@@ -73,14 +77,11 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final SecureRandom secureRandom = new SecureRandom();
 
-    /**
-     * 执行账号密码登录，并在认证成功后刷新最后登录信息。
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AuthenticationToken login(AuthLoginRequest request, String loginIp) {
         String account = StrUtils.trim(request.getUsername());
-        SysUser loginUser = sysUserService.getByUsername(account);
+        SysUser loginUser = sysUserRepository.findByUsername(account);
         ensureLoginNotLocked(account, loginUser);
 
         Authentication authentication;
@@ -95,14 +96,11 @@ public class AuthServiceImpl implements AuthService {
         Long userId = SecurityUtils.getUserId(authentication);
         clearLoginFailureState(account, userId != null ? userId : loginUser != null ? loginUser.getId() : null);
         if (userId != null) {
-            sysUserService.updateLoginInfo(userId, loginIp);
+            sysUserRepository.updateLoginInfo(userId, loginIp);
         }
         return tokenManager.generateToken(authentication);
     }
 
-    /**
-     * 注册新用户并立即完成一次登录，返回首组访问令牌。
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AuthenticationToken register(AuthRegisterRequest request, String loginIp) {
@@ -122,7 +120,7 @@ public class AuthServiceImpl implements AuthService {
         user.setStatus(1);
         user.setDeletedFlag(0);
         try {
-            sysUserService.save(user);
+            sysUserRepository.save(user);
         } catch (DuplicateKeyException ex) {
             throw buildRegisterDuplicateException(username, email, phone, ex);
         }
@@ -132,18 +130,15 @@ public class AuthServiceImpl implements AuthService {
         );
         Long userId = SecurityUtils.getUserId(authentication);
         if (userId != null) {
-            sysUserService.updateLoginInfo(userId, loginIp);
+            sysUserRepository.updateLoginInfo(userId, loginIp);
         }
         return tokenManager.generateToken(authentication);
     }
 
-    /**
-     * 发送邮箱登录验证码，并把验证码写入 Redis 供后续校验。
-     */
     @Override
     public void sendEmailLoginCode(AuthEmailCodeRequest request) {
         String email = StrUtils.trimToLowerCase(request.getEmail());
-        SysUser user = sysUserService.getByEmail(email);
+        SysUser user = sysUserRepository.findByEmail(email);
         ExceptionThrowerCore.throwBusinessIfNull(user, ResultErrorCode.USER_NOT_FOUND);
         ExceptionThrowerCore.throwBusinessIfNot(Integer.valueOf(1).equals(user.getStatus()), ResultErrorCode.ACCOUNT_DISABLED);
 
@@ -167,9 +162,6 @@ public class AuthServiceImpl implements AuthService {
         redisOperator.set(emailLoginCodeKey(email), code, AuthConstants.EMAIL_LOGIN_CODE_TTL);
     }
 
-    /**
-     * 使用邮箱验证码完成登录，并在认证成功后同步刷新最后登录信息。
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AuthenticationToken emailLogin(AuthEmailLoginRequest request, String loginIp) {
@@ -179,14 +171,11 @@ public class AuthServiceImpl implements AuthService {
         );
         Long userId = SecurityUtils.getUserId(authentication);
         if (userId != null) {
-            sysUserService.updateLoginInfo(userId, loginIp);
+            sysUserRepository.updateLoginInfo(userId, loginIp);
         }
         return tokenManager.generateToken(authentication);
     }
 
-    /**
-     * 校验刷新令牌有效性并换发新的访问令牌。
-     */
     @Override
     public AuthenticationToken refresh(AuthRefreshRequest request) {
         ExceptionThrowerCore.throwBusinessIfNot(tokenManager.validateRefreshToken(request.getRefreshToken()),
@@ -194,9 +183,6 @@ public class AuthServiceImpl implements AuthService {
         return tokenManager.refreshToken(request.getRefreshToken());
     }
 
-    /**
-     * 注销当前访问令牌；若未传令牌则直接忽略，兼容幂等退出。
-     */
     @Override
     public void logout(String token) {
         if (!StringUtils.hasText(token)) {
@@ -205,21 +191,15 @@ public class AuthServiceImpl implements AuthService {
         tokenManager.invalidateToken(token);
     }
 
-    /**
-     * 汇总当前登录用户的基础信息、角色编码与权限标识，供前端初始化登录态使用。
-     */
     @Override
     public AuthUserInfo getCurrentUser() {
         Authentication authentication = SecurityUtils.requireAuthentication();
         SysUser user = getCurrentSysUser(authentication);
-        List<String> roleCodes = sysRoleService.listRoleCodesByUserId(user.getId());
-        List<String> permissions = sysMenuService.listPermissionsByUserId(user.getId());
+        List<String> roleCodes = sysRoleRepository.findRoleCodesByUserId(user.getId());
+        List<String> permissions = sysMenuRepository.findPermissionsByUserId(user.getId());
         return authModelMapper.toAuthUserInfo(user, roleCodes, permissions);
     }
 
-    /**
-     * 获取当前用户菜单树，必要时回退到用户名解析用户 ID，兼容不同认证上下文。
-     */
     @Override
     public List<AuthMenuInfo> getCurrentUserMenus() {
         Authentication authentication = SecurityUtils.requireAuthentication();
@@ -228,18 +208,15 @@ public class AuthServiceImpl implements AuthService {
             SysUser user = getCurrentSysUser(authentication);
             userId = user.getId();
         }
-        List<SysMenu> menus = sysMenuService.listMenusByUserId(userId);
+        List<SysMenu> menus = sysMenuRepository.findMenusByUserId(userId);
         return buildMenuTree(menus);
     }
 
-    /**
-     * 优先根据用户 ID 获取当前用户，必要时回退到用户名查询，保证上下文兼容性。
-     */
     private SysUser getCurrentSysUser(Authentication authentication) {
         Long userId = SecurityUtils.getUserId(authentication);
-        SysUser user = userId != null ? sysUserService.getById(userId) : null;
+        SysUser user = userId != null ? sysUserRepository.getById(userId) : null;
         if (user == null) {
-            user = sysUserService.getByUsername(SecurityUtils.getUsername(authentication));
+            user = sysUserRepository.findByUsername(SecurityUtils.getUsername(authentication));
         }
         ExceptionThrowerCore.throwBusinessIf(user == null
                         || (!Integer.valueOf(0).equals(user.getDeletedFlag()) && user.getDeletedFlag() != null),
@@ -247,9 +224,6 @@ public class AuthServiceImpl implements AuthService {
         return user;
     }
 
-    /**
-     * 将平铺菜单列表转换为树结构，并过滤按钮类型节点。
-     */
     private List<AuthMenuInfo> buildMenuTree(List<SysMenu> menus) {
         if (menus == null || menus.isEmpty()) {
             return List.of();
@@ -278,59 +252,33 @@ public class AuthServiceImpl implements AuthService {
         return roots;
     }
 
-
-    /**
-     * 生成 6 位数字邮箱验证码，供登录验证码链路复用。
-     */
     private String generateEmailCode() {
         int number = secureRandom.nextInt(900000) + 100000;
         return String.valueOf(number);
     }
 
-    /**
-     * 解析当前发件人地址；未配置时按统一业务异常收口。
-     */
     private String resolveMailFrom() {
         String from = mailProperties.getUsername();
         ExceptionThrowerCore.throwBusinessIfBlank(from, ResultErrorCode.EMAIL_CAPTCHA_SEND_FAILED);
         return from;
     }
 
-    /**
-     * 统一拼装邮箱验证码正文，避免邮件文案在服务内散落。
-     */
     private String buildEmailCodeContent(String code) {
         return "您的登录验证码为：" + code + "，5分钟内有效。";
     }
 
-    /**
-     * 生成邮箱验证码缓存键，保证发送与校验阶段使用同一口径。
-     */
     private String emailLoginCodeKey(String email) {
         return RedisKeyUtils.build(AuthConstants.EMAIL_LOGIN_CODE_PREFIX, email);
     }
 
-    /**
-     * 统一校验用户名、邮箱或手机号是否已被占用。
-     */
     private void validateRegisterIdentity(String identity, String message) {
         if (!StringUtils.hasText(identity)) {
             return;
         }
-        boolean exists = sysUserService.lambdaQuery()
-                .eq(SysUser::getDeletedFlag, 0)
-                .and(wrapper -> wrapper.eq(SysUser::getUsername, identity)
-                        .or()
-                        .eq(SysUser::getEmail, identity)
-                        .or()
-                        .eq(SysUser::getPhone, identity))
-                .exists();
+        boolean exists = sysUserRepository.existsActiveByIdentity(identity);
         ExceptionThrowerCore.throwBusinessIf(exists, ResultErrorCode.ILLEGAL_ARGUMENT, message);
     }
 
-    /**
-     * 在认证前检查账号是否已进入临时锁定期，避免重复触发认证链路。
-     */
     private void ensureLoginNotLocked(String account, SysUser loginUser) {
         if (loginUser != null && !Integer.valueOf(1).equals(loginUser.getStatus())) {
             return;
@@ -339,9 +287,6 @@ public class AuthServiceImpl implements AuthService {
         ExceptionThrowerCore.throwBusinessIf(redisOperator.hasKey(lockKey), ResultErrorCode.ACCOUNT_LOCKED);
     }
 
-    /**
-     * 在账号密码认证失败后累计失败次数，并在达到阈值时写入锁定态。
-     */
     private AuthenticationException handleLoginFailure(String account,
                                                        SysUser loginUser,
                                                        BadCredentialsException cause) {
@@ -372,9 +317,6 @@ public class AuthServiceImpl implements AuthService {
         return new LockedException(ResultErrorCode.ACCOUNT_LOCKED.getMessage(), cause);
     }
 
-    /**
-     * 登录成功后清理失败计数和锁定态，避免历史失败影响后续正常登录。
-     */
     private void clearLoginFailureState(String account, Long userId) {
         redisOperator.delete(loginFailCountKey(account, userId));
         redisOperator.delete(loginFailLockKey(account, userId));
@@ -384,43 +326,29 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-    /**
-     * 将并发注册时落到数据库唯一键的冲突重新翻译为前端可识别的业务提示。
-     */
     private BusinessException buildRegisterDuplicateException(String username,
                                                              String email,
                                                              String phone,
                                                              DuplicateKeyException cause) {
-        if (existsActiveUser(SysUser::getUsername, username)) {
+        if (existsActiveUser(USER_FIELD_USERNAME, username)) {
             return new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "用户名已存在", cause);
         }
-        if (existsActiveUser(SysUser::getEmail, email)) {
+        if (existsActiveUser(USER_FIELD_EMAIL, email)) {
             return new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "邮箱已存在", cause);
         }
-        if (existsActiveUser(SysUser::getPhone, phone)) {
+        if (existsActiveUser(USER_FIELD_PHONE, phone)) {
             return new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "手机号已存在", cause);
         }
         return new BusinessException(ResultErrorCode.DATA_ALREADY_EXISTS.getCode(), "注册信息已存在", cause);
     }
 
-    /**
-     * 精确按字段检查有效用户是否已存在，用于并发唯一键冲突后的提示回填。
-     */
-    private boolean existsActiveUser(SFunction<SysUser, ?> field, String identity) {
-        if (!StringUtils.hasText(identity)) {
-            return false;
-        }
-        return sysUserService.lambdaQuery()
-                .eq(SysUser::getDeletedFlag, 0)
-                .eq(field, identity)
-                .exists();
+    private boolean existsActiveUser(String fieldName, String identity) {
+        return sysUserRepository.existsActiveByField(fieldName, identity);
     }
 
-    /**
-     * 读取整型系统配置；非法值回退到默认值，并保证不低于指定下限。
-     */
     private int resolveIntConfig(String configKey, int defaultValue, int minValue) {
-        String configuredValue = sysConfigService.getValueOrDefault(configKey, String.valueOf(defaultValue));
+        SysConfig config = sysConfigRepository.findByConfigKey(configKey);
+        String configuredValue = config != null ? config.getConfigValue() : String.valueOf(defaultValue);
         if (!StringUtils.hasText(configuredValue)) {
             return defaultValue;
         }
@@ -446,5 +374,4 @@ public class AuthServiceImpl implements AuthService {
         return RedisKeyUtils.build(AuthConstants.LOGIN_FAIL_SCOPE_ACCOUNT, StrUtils.trim(account));
     }
 }
-
 

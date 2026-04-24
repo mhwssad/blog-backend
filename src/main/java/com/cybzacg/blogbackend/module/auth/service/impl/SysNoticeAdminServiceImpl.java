@@ -1,28 +1,25 @@
 package com.cybzacg.blogbackend.module.auth.service.impl;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.common.constant.NoticeConstants;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.SysNotice;
-import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.domain.SysUserNotice;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.module.auth.convert.SysNoticeModelMapper;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysNoticeAdminVO;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysNoticePageQuery;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysNoticeSaveRequest;
+import com.cybzacg.blogbackend.module.auth.repository.SysNoticeRepository;
+import com.cybzacg.blogbackend.module.auth.repository.SysUserNoticeRepository;
+import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.service.SysNoticeAdminService;
-import com.cybzacg.blogbackend.module.auth.service.SysNoticeService;
-import com.cybzacg.blogbackend.module.auth.service.SysUserNoticeService;
-import com.cybzacg.blogbackend.module.auth.service.SysUserService;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.IdCollectionUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.Date;
 import java.util.List;
@@ -36,22 +33,14 @@ import java.util.Objects;
 @Service
 @RequiredArgsConstructor
 public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
-    private final SysNoticeService sysNoticeService;
-    private final SysUserNoticeService sysUserNoticeService;
-    private final SysUserService sysUserService;
+    private final SysNoticeRepository sysNoticeRepository;
+    private final SysUserNoticeRepository sysUserNoticeRepository;
+    private final SysUserRepository sysUserRepository;
     private final SysNoticeModelMapper sysNoticeModelMapper;
 
     @Override
     public PageResult<SysNoticeAdminVO> pageNotices(SysNoticePageQuery query) {
-        Page<SysNotice> page = sysNoticeService.lambdaQuery()
-                .like(StringUtils.hasText(query.getTitle()), SysNotice::getTitle, query.getTitle())
-                .eq(query.getPublishStatus() != null, SysNotice::getPublishStatus, query.getPublishStatus())
-                .eq(query.getTargetType() != null, SysNotice::getTargetType, query.getTargetType())
-                .eq(SysNotice::getIsDeleted, 0)
-                .orderByDesc(SysNotice::getCreateTime)
-                .orderByDesc(SysNotice::getId)
-                .page(new Page<>(query.getCurrent(), query.getSize()));
-
+        var page = sysNoticeRepository.pageByAdminConditions(query);
         List<SysNoticeAdminVO> records = page.getRecords().stream()
                 .map(notice -> sysNoticeModelMapper.toNoticeAdminVO(notice, sysNoticeModelMapper.toIdList(notice.getTargetUserIds())))
                 .toList();
@@ -72,7 +61,7 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         applyFields(notice, request, targetUserIds);
         notice.setPublishStatus(NoticeConstants.PUBLISH_STATUS_DRAFT);
         notice.setIsDeleted(0);
-        sysNoticeService.save(notice);
+        sysNoticeRepository.save(notice);
         return sysNoticeModelMapper.toNoticeAdminVO(notice, targetUserIds);
     }
 
@@ -82,13 +71,10 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         SysNotice notice = getEditableNotice(id);
         List<Long> targetUserIds = validateTargetUsers(request);
         applyFields(notice, request, targetUserIds);
-        sysNoticeService.updateById(notice);
+        sysNoticeRepository.updateById(notice);
         return sysNoticeModelMapper.toNoticeAdminVO(notice, targetUserIds);
     }
 
-    /**
-     * 发布草稿通知，并在指定用户通知场景下同步生成收件关系。
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void publishNotice(Long id) {
@@ -100,13 +86,10 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         notice.setPublishTime(now);
         notice.setRevokeTime(null);
         notice.setPublisherId(SecurityUtils.getUserId());
-        sysNoticeService.updateById(notice);
+        sysNoticeRepository.updateById(notice);
         deliverNotice(notice, now);
     }
 
-    /**
-     * 撤回已发布通知，阻止后续继续作为有效通知对外可见。
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void revokeNotice(Long id) {
@@ -114,27 +97,19 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         ExceptionThrowerCore.throwBusinessIfNot(Objects.equals(NoticeConstants.PUBLISH_STATUS_PUBLISHED, notice.getPublishStatus()), ResultErrorCode.ILLEGAL_ARGUMENT, "仅已发布通知允许撤回");
         notice.setPublishStatus(NoticeConstants.PUBLISH_STATUS_REVOKED);
         notice.setRevokeTime(new Date());
-        sysNoticeService.updateById(notice);
+        sysNoticeRepository.updateById(notice);
     }
 
-    /**
-     * 逻辑删除通知元数据，保留既有投递记录供后续排查使用。
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteNotice(Long id) {
         SysNotice notice = getAvailableNotice(id);
         notice.setIsDeleted(1);
-        sysNoticeService.updateById(notice);
+        sysNoticeRepository.updateById(notice);
     }
 
-    /**
-     * 按目标用户生成通知投递关系，确保指定用户通知在发布后可进入收件箱。
-     */
     private void deliverNotice(SysNotice notice, Date now) {
-        sysUserNoticeService.lambdaUpdate()
-                .eq(SysUserNotice::getNoticeId, notice.getId())
-                .remove();
+        sysUserNoticeRepository.deleteByNoticeId(notice.getId());
         if (!Objects.equals(NoticeConstants.TARGET_SPECIFIED, notice.getTargetType())) {
             return;
         }
@@ -153,12 +128,9 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
                     return userNotice;
                 })
                 .toList();
-        sysUserNoticeService.saveBatch(records);
+        sysUserNoticeRepository.saveBatch(records);
     }
 
-    /**
-     * 将通知请求字段统一回填到实体，并处理目标用户 ID 的持久化格式。
-     */
     private void applyFields(SysNotice notice, SysNoticeSaveRequest request, List<Long> targetUserIds) {
         notice.setTitle(StrUtils.normalize(request.getTitle()));
         notice.setContent(request.getContent());
@@ -168,9 +140,6 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         notice.setTargetUserIds(IdCollectionUtils.toCommaSeparatedIds(targetUserIds));
     }
 
-    /**
-     * 校验通知目标用户范围是否合法，并返回去重后的目标用户列表。
-     */
     private List<Long> validateTargetUsers(SysNoticeSaveRequest request) {
         Integer targetType = request.getTargetType();
         ExceptionThrowerCore.throwBusinessIf(!Objects.equals(NoticeConstants.TARGET_ALL, targetType) && !Objects.equals(NoticeConstants.TARGET_SPECIFIED, targetType), ResultErrorCode.ILLEGAL_ARGUMENT, "通知目标类型非法");
@@ -182,39 +151,20 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
                 request.getTargetUserIds(),
                 ResultErrorCode.ILLEGAL_ARGUMENT,
                 "目标用户ID不能为空");
-        long count = sysUserService.lambdaQuery()
-                .in(SysUser::getId, distinctUserIds)
-                .eq(SysUser::getDeletedFlag, 0)
-                .count();
+        long count = sysUserRepository.countActiveByIds(distinctUserIds);
         ExceptionThrowerCore.throwBusinessIf(count != distinctUserIds.size(), ResultErrorCode.ILLEGAL_ARGUMENT, "存在无效目标用户");
         return distinctUserIds;
     }
 
-    /**
-     * 获取允许编辑的通知，仅草稿状态通知可修改。
-     */
     private SysNotice getEditableNotice(Long id) {
         SysNotice notice = getAvailableNotice(id);
         ExceptionThrowerCore.throwBusinessIfNot(Objects.equals(NoticeConstants.PUBLISH_STATUS_DRAFT, notice.getPublishStatus()), ResultErrorCode.ILLEGAL_ARGUMENT, "已发布或已撤回通知不允许修改");
         return notice;
     }
 
-    /**
-     * 获取有效通知，不存在或已删除时抛出统一业务异常。
-     */
     private SysNotice getAvailableNotice(Long id) {
-        SysNotice notice = sysNoticeService.getById(id);
+        SysNotice notice = sysNoticeRepository.getById(id);
         ExceptionThrowerCore.throwBusinessIf(notice == null || Integer.valueOf(1).equals(notice.getIsDeleted()), ResultErrorCode.ILLEGAL_ARGUMENT, "通知不存在");
         return notice;
     }
-
 }
-
-
-
-
-
-
-
-
-

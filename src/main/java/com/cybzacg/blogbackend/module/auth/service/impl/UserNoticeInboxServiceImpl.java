@@ -1,24 +1,22 @@
 package com.cybzacg.blogbackend.module.auth.service.impl;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.common.constant.NoticeConstants;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.SysNotice;
 import com.cybzacg.blogbackend.domain.SysUserNotice;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.module.auth.convert.SysNoticeModelMapper;
 import com.cybzacg.blogbackend.module.auth.model.admin.UserNoticePageQuery;
 import com.cybzacg.blogbackend.module.auth.model.admin.UserNoticeVO;
-import com.cybzacg.blogbackend.module.auth.service.SysNoticeService;
-import com.cybzacg.blogbackend.module.auth.service.SysUserNoticeService;
+import com.cybzacg.blogbackend.module.auth.repository.SysNoticeRepository;
+import com.cybzacg.blogbackend.module.auth.repository.SysUserNoticeRepository;
 import com.cybzacg.blogbackend.module.auth.service.UserNoticeInboxService;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -26,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 用户通知收件箱服务实现。
@@ -35,13 +34,10 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
-    private final SysNoticeService sysNoticeService;
-    private final SysUserNoticeService sysUserNoticeService;
+    private final SysNoticeRepository sysNoticeRepository;
+    private final SysUserNoticeRepository sysUserNoticeRepository;
     private final SysNoticeModelMapper sysNoticeModelMapper;
 
-    /**
-     * 分页查询当前用户收件箱，统一处理全员通知与指定通知的已读过滤逻辑。
-     */
     @Override
     public PageResult<UserNoticeVO> pageMyNotices(UserNoticePageQuery query) {
         Long userId = SecurityUtils.requireUserId();
@@ -59,51 +55,7 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
                 .distinct()
                 .toList();
 
-        Page<SysNotice> emptyPage = new Page<>(query.getCurrent(), query.getSize());
-        Page<SysNotice> page;
-        if (Objects.equals(NoticeConstants.READ_READ, query.getIsRead()) && readNoticeIds.isEmpty()) {
-            page = emptyPage;
-        } else {
-            var wrapper = sysNoticeService.lambdaQuery()
-                    .eq(SysNotice::getIsDeleted, 0)
-                    .eq(SysNotice::getPublishStatus, NoticeConstants.PUBLISH_STATUS_PUBLISHED)
-                    .like(StringUtils.hasText(query.getTitle()), SysNotice::getTitle, query.getTitle());
-
-            if (query.getIsRead() == null) {
-                if (targetNoticeIds.isEmpty()) {
-                    wrapper.eq(SysNotice::getTargetType, NoticeConstants.TARGET_ALL);
-                } else {
-                    wrapper.and(w -> w.eq(SysNotice::getTargetType, NoticeConstants.TARGET_ALL)
-                            .or()
-                            .in(SysNotice::getId, targetNoticeIds));
-                }
-            } else if (Objects.equals(NoticeConstants.READ_READ, query.getIsRead())) {
-                wrapper.in(SysNotice::getId, readNoticeIds);
-            } else {
-                if (readNoticeIds.isEmpty()) {
-                    if (unreadTargetNoticeIds.isEmpty()) {
-                        wrapper.eq(SysNotice::getTargetType, NoticeConstants.TARGET_ALL);
-                    } else {
-                        wrapper.and(w -> w.eq(SysNotice::getTargetType, NoticeConstants.TARGET_ALL)
-                                .or()
-                                .in(SysNotice::getId, unreadTargetNoticeIds));
-                    }
-                } else if (unreadTargetNoticeIds.isEmpty()) {
-                    wrapper.eq(SysNotice::getTargetType, NoticeConstants.TARGET_ALL)
-                            .notIn(SysNotice::getId, readNoticeIds);
-                } else {
-                    wrapper.and(w -> w.eq(SysNotice::getTargetType, NoticeConstants.TARGET_ALL)
-                                    .notIn(SysNotice::getId, readNoticeIds)
-                                    .or()
-                                    .in(SysNotice::getId, unreadTargetNoticeIds));
-                }
-            }
-
-            page = wrapper.orderByDesc(SysNotice::getPublishTime)
-                    .orderByDesc(SysNotice::getId)
-                    .page(new Page<>(query.getCurrent(), query.getSize()));
-        }
-
+        var page = sysNoticeRepository.pageInboxNotices(query, targetNoticeIds, readNoticeIds, unreadTargetNoticeIds);
         List<UserNoticeVO> records = page.getRecords().stream()
                 .map(notice -> {
                     SysUserNotice relation = relationMap.get(notice.getId());
@@ -115,9 +67,6 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
         return PageResult.of(page, records);
     }
 
-    /**
-     * 读取当前用户可见通知详情，并在首次访问时收口已读状态。
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public UserNoticeVO getMyNotice(Long noticeId) {
@@ -127,9 +76,6 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
         return sysNoticeModelMapper.toUserNoticeVO(notice, true, relation.getReadTime());
     }
 
-    /**
-     * 统计当前用户未读通知数量，并合并全员通知与指定通知两类来源。
-     */
     @Override
     public long countUnreadNotices() {
         Long userId = SecurityUtils.requireUserId();
@@ -145,26 +91,11 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
                 .distinct()
                 .toList();
 
-        long globalUnread = sysNoticeService.lambdaQuery()
-                .eq(SysNotice::getIsDeleted, 0)
-                .eq(SysNotice::getPublishStatus, NoticeConstants.PUBLISH_STATUS_PUBLISHED)
-                .eq(SysNotice::getTargetType, NoticeConstants.TARGET_ALL)
-                .notIn(!readNoticeIds.isEmpty(), SysNotice::getId, readNoticeIds)
-                .count();
-        if (unreadTargetNoticeIds.isEmpty()) {
-            return globalUnread;
-        }
-        long targetedUnread = sysNoticeService.lambdaQuery()
-                .eq(SysNotice::getIsDeleted, 0)
-                .eq(SysNotice::getPublishStatus, NoticeConstants.PUBLISH_STATUS_PUBLISHED)
-                .in(SysNotice::getId, unreadTargetNoticeIds)
-                .count();
+        long globalUnread = sysNoticeRepository.countGlobalUnread(readNoticeIds);
+        long targetedUnread = sysNoticeRepository.countTargetedUnread(unreadTargetNoticeIds);
         return globalUnread + targetedUnread;
     }
 
-    /**
-     * 标记单条通知为已读，兼容全员通知首次读取时自动补建用户关系。
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void markRead(Long noticeId) {
@@ -173,9 +104,6 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
         markReadInternal(userId, notice);
     }
 
-    /**
-     * 将当前用户可见的通知批量标记为已读，必要时为全员通知补建关系记录。
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void markAllRead() {
@@ -188,37 +116,23 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
                     item.setIsRead(NoticeConstants.READ_READ);
                     item.setReadTime(now);
                     item.setUpdateTime(now);
-                    sysUserNoticeService.updateById(item);
+                    sysUserNoticeRepository.updateById(item);
                 });
 
         Set<Long> existingNoticeIds = relations.stream()
                 .map(SysUserNotice::getNoticeId)
                 .filter(Objects::nonNull)
-                .collect(java.util.stream.Collectors.toSet());
-        List<SysNotice> unreadGlobalNotices = sysNoticeService.lambdaQuery()
-                .eq(SysNotice::getIsDeleted, 0)
-                .eq(SysNotice::getPublishStatus, NoticeConstants.PUBLISH_STATUS_PUBLISHED)
-                .eq(SysNotice::getTargetType, NoticeConstants.TARGET_ALL)
-                .notIn(!existingNoticeIds.isEmpty(), SysNotice::getId, existingNoticeIds)
-                .list();
+                .collect(Collectors.toSet());
+        List<SysNotice> unreadGlobalNotices = sysNoticeRepository.findGlobalUnread(existingNoticeIds);
         for (SysNotice notice : unreadGlobalNotices) {
             markReadInternal(userId, notice);
         }
     }
 
-    /**
-     * 读取用户与通知的关联记录，作为已读状态和指定通知可见性的基础数据。
-     */
     private List<SysUserNotice> listUserNoticeRelations(Long userId) {
-        return sysUserNoticeService.lambdaQuery()
-                .eq(SysUserNotice::getUserId, userId)
-                .eq(SysUserNotice::getIsDeleted, 0)
-                .list();
+        return sysUserNoticeRepository.findByUserId(userId);
     }
 
-    /**
-     * 将关联记录转换为以通知 ID 为键的映射，便于分页结果快速回填已读状态。
-     */
     private Map<Long, SysUserNotice> buildRelationMap(List<SysUserNotice> relations) {
         Map<Long, SysUserNotice> relationMap = new LinkedHashMap<>();
         for (SysUserNotice relation : relations) {
@@ -227,27 +141,21 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
         return relationMap;
     }
 
-    /**
-     * 校验当前用户是否有权访问通知，兼容全员通知与指定用户通知两种场景。
-     */
     private SysNotice getAccessibleNotice(Long userId, Long noticeId) {
-        SysNotice notice = sysNoticeService.getById(noticeId);
-        ExceptionThrowerCore.throwBusinessIf(notice == null || Integer.valueOf(1).equals(notice.getIsDeleted()) || !Objects.equals(NoticeConstants.PUBLISH_STATUS_PUBLISHED, notice.getPublishStatus()), ResultErrorCode.ILLEGAL_ARGUMENT, "通知不存在");
+        SysNotice notice = sysNoticeRepository.getById(noticeId);
+        ExceptionThrowerCore.throwBusinessIf(notice == null
+                        || Integer.valueOf(1).equals(notice.getIsDeleted())
+                        || !Objects.equals(NoticeConstants.PUBLISH_STATUS_PUBLISHED, notice.getPublishStatus()),
+                ResultErrorCode.ILLEGAL_ARGUMENT,
+                "通知不存在");
         if (Objects.equals(NoticeConstants.TARGET_ALL, notice.getTargetType())) {
             return notice;
         }
-        boolean exists = sysUserNoticeService.lambdaQuery()
-                .eq(SysUserNotice::getNoticeId, noticeId)
-                .eq(SysUserNotice::getUserId, userId)
-                .eq(SysUserNotice::getIsDeleted, 0)
-                .exists();
+        boolean exists = sysUserNoticeRepository.existsByNoticeIdAndUserId(noticeId, userId);
         ExceptionThrowerCore.throwBusinessIfNot(exists, ResultErrorCode.FORBIDDEN);
         return notice;
     }
 
-    /**
-     * 将通知标记为已读；若是首次读取全员通知，则自动补建用户通知关系记录。
-     */
     private SysUserNotice markReadInternal(Long userId, SysNotice notice) {
         Date now = new Date();
         SysUserNotice relation = findActiveRelation(userId, notice.getId());
@@ -261,7 +169,7 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
             relation.setUpdateTime(now);
             relation.setIsDeleted(0);
             try {
-                sysUserNoticeService.save(relation);
+                sysUserNoticeRepository.save(relation);
                 return relation;
             } catch (DuplicateKeyException ex) {
                 relation = findActiveRelation(userId, notice.getId());
@@ -272,24 +180,12 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
             relation.setIsRead(NoticeConstants.READ_READ);
             relation.setReadTime(now);
             relation.setUpdateTime(now);
-            sysUserNoticeService.updateById(relation);
+            sysUserNoticeRepository.updateById(relation);
         }
         return relation;
     }
 
-    /**
-     * 读取当前用户对指定通知的有效关系；若历史上存在重复记录，优先取最新一条参与状态收口。
-     */
     private SysUserNotice findActiveRelation(Long userId, Long noticeId) {
-        return sysUserNoticeService.lambdaQuery()
-                .eq(SysUserNotice::getNoticeId, noticeId)
-                .eq(SysUserNotice::getUserId, userId)
-                .eq(SysUserNotice::getIsDeleted, 0)
-                .orderByDesc(SysUserNotice::getId)
-                .last("limit 1")
-                .one();
+        return sysUserNoticeRepository.findLatestByNoticeIdAndUserId(noticeId, userId).orElse(null);
     }
 }
-
-
-

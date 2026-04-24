@@ -6,7 +6,17 @@
 - **复杂度**：低
 - **前置依赖**：无
 - **涉及薄服务**：1个
-- **涉及业务服务**：1个
+- **涉及业务服务**：3个
+
+## 当前进展（2026-03-31）
+
+- [x] 已新增 `SysUserFollowRepository` 与 `SysUserFollowRepositoryImpl`，统一收口关注关系的 Repository 访问入口。
+- [x] 已将 `UserFollowServiceImpl` 改为注入 `SysUserFollowRepository`，关注关系读写、互关判断、关注/粉丝分页和计数统计都已改走 Repository。
+- [x] 已将 `PublicFollowServiceImpl` 改为注入 `SysUserFollowRepository`，公开关注/粉丝分页已改走 Repository。
+- [x] 已将 `FollowAdminServiceImpl` 改为注入 `SysUserFollowRepository`，后台关系分页与无效关系清理已改走 Repository。
+- [x] 已同步更新 `UserFollowServiceImplTest`、`PublicFollowServiceImplTest`、`FollowAdminServiceImplTest`，测试 mock 已切换到 Repository。
+- [x] 已删除 `SysUserFollowService`、`SysUserFollowServiceImpl` 两个未再被引用的薄服务。
+- [x] follow 模块 Repository 迁移已完成。
 
 ## 当前数据访问现状
 
@@ -40,6 +50,24 @@
 | 197 | `sysUserFollowMapper.updateById(relation)` | Mapper直接调用 | `updateById(relation)` — 继承自IService |
 | 212 | `sysUserFollowMapper.selectOne(Wrappers.lambdaQuery(SysUserFollow.class).eq(...).eq(...).last("limit 1"))` | Wrapper查询 | `findByFollowerAndFollowing(followerId, followingId)` |
 
+**`PublicFollowServiceImpl`**（`module/follow/service/impl/PublicFollowServiceImpl.java`）
+
+| 当前调用 | 操作类型 | 迁移到 Repository 方法 |
+|---|---|---|
+| `sysUserFollowMapper.countPublicFollowPage(userId)` | Mapper XML | `countPublicFollowPage(userId)` |
+| `sysUserFollowMapper.selectPublicFollowPage(userId, offset, size)` | Mapper XML | `selectPublicFollowPage(userId, offset, size)` |
+| `sysUserFollowMapper.countPublicFanPage(userId)` | Mapper XML | `countPublicFanPage(userId)` |
+| `sysUserFollowMapper.selectPublicFanPage(userId, offset, size)` | Mapper XML | `selectPublicFanPage(userId, offset, size)` |
+
+**`FollowAdminServiceImpl`**（`module/follow/service/impl/FollowAdminServiceImpl.java`）
+
+| 当前调用 | 操作类型 | 迁移到 Repository 方法 |
+|---|---|---|
+| `sysUserFollowMapper.countAdminRelationPage(query)` | Mapper XML | `countAdminRelationPage(query)` |
+| `sysUserFollowMapper.selectAdminRelationPage(query, offset, size)` | Mapper XML | `selectAdminRelationPage(query, offset, size)` |
+| `sysUserFollowMapper.countCleanableRelations(...)` | Mapper XML | `countCleanableRelations(...)` |
+| `sysUserFollowMapper.deleteCleanableRelations(...)` | Mapper XML | `deleteCleanableRelations(...)` |
+
 ### 跨模块依赖
 
 - `SysUserService`（auth模块）：调用 `getById()` 检查目标用户是否存在 — **注入 `SysUserRepository`**
@@ -55,7 +83,10 @@ package com.cybzacg.blogbackend.module.follow.repository;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.cybzacg.blogbackend.domain.SysUserFollow;
+import com.cybzacg.blogbackend.module.follow.model.admin.FollowAdminPageQuery;
+import com.cybzacg.blogbackend.module.follow.model.data.FollowAdminRelationItem;
 import com.cybzacg.blogbackend.module.follow.model.data.FollowRelationUserItem;
+import com.cybzacg.blogbackend.module.follow.model.data.PublicFollowUserItem;
 import java.util.List;
 
 /**
@@ -78,6 +109,14 @@ public interface SysUserFollowRepository extends IService<SysUserFollow> {
     Long countActiveRelation(Long followerId, Long followingId);
     Long countActiveFollowing(Long userId);
     Long countActiveFans(Long userId);
+    Long countPublicFollowPage(Long userId);
+    List<PublicFollowUserItem> selectPublicFollowPage(Long userId, Long offset, Long size);
+    Long countPublicFanPage(Long userId);
+    List<PublicFollowUserItem> selectPublicFanPage(Long userId, Long offset, Long size);
+    Long countAdminRelationPage(FollowAdminPageQuery query);
+    List<FollowAdminRelationItem> selectAdminRelationPage(FollowAdminPageQuery query, Long offset, Long size);
+    Long countCleanableRelations(boolean cleanInactive, boolean cleanDeletedUsers, boolean cleanDisabledUsers);
+    int deleteCleanableRelations(boolean cleanInactive, boolean cleanDeletedUsers, boolean cleanDisabledUsers);
 }
 ```
 
@@ -146,12 +185,56 @@ public class SysUserFollowRepositoryImpl extends ServiceImpl<SysUserFollowMapper
     public Long countActiveFans(Long userId) {
         return baseMapper.countActiveFans(userId);
     }
+
+    @Override
+    public Long countPublicFollowPage(Long userId) {
+        return baseMapper.countPublicFollowPage(userId);
+    }
+
+    @Override
+    public List<PublicFollowUserItem> selectPublicFollowPage(Long userId, Long offset, Long size) {
+        return baseMapper.selectPublicFollowPage(userId, offset, size);
+    }
+
+    @Override
+    public Long countPublicFanPage(Long userId) {
+        return baseMapper.countPublicFanPage(userId);
+    }
+
+    @Override
+    public List<PublicFollowUserItem> selectPublicFanPage(Long userId, Long offset, Long size) {
+        return baseMapper.selectPublicFanPage(userId, offset, size);
+    }
+
+    @Override
+    public Long countAdminRelationPage(FollowAdminPageQuery query) {
+        return baseMapper.countAdminRelationPage(query);
+    }
+
+    @Override
+    public List<FollowAdminRelationItem> selectAdminRelationPage(FollowAdminPageQuery query, Long offset, Long size) {
+        return baseMapper.selectAdminRelationPage(query, offset, size);
+    }
+
+    @Override
+    public Long countCleanableRelations(boolean cleanInactive, boolean cleanDeletedUsers, boolean cleanDisabledUsers) {
+        return baseMapper.countCleanableRelations(cleanInactive, cleanDeletedUsers, cleanDisabledUsers);
+    }
+
+    @Override
+    public int deleteCleanableRelations(boolean cleanInactive, boolean cleanDeletedUsers, boolean cleanDisabledUsers) {
+        return baseMapper.deleteCleanableRelations(cleanInactive, cleanDeletedUsers, cleanDisabledUsers);
+    }
 }
 ```
 
 ### Step 3: 修改业务服务
 
-**文件**：`src/main/java/com/cybzacg/blogbackend/module/follow/service/impl/UserFollowServiceImpl.java`
+**文件**：
+
+- `src/main/java/com/cybzacg/blogbackend/module/follow/service/impl/UserFollowServiceImpl.java`
+- `src/main/java/com/cybzacg/blogbackend/module/follow/service/impl/PublicFollowServiceImpl.java`
+- `src/main/java/com/cybzacg/blogbackend/module/follow/service/impl/FollowAdminServiceImpl.java`
 
 **变更清单**：
 
@@ -204,7 +287,9 @@ public class SysUserFollowRepositoryImpl extends ServiceImpl<SysUserFollowMapper
 | 新建 | `module/follow/repository/SysUserFollowRepository.java` |
 | 新建 | `module/follow/repository/impl/SysUserFollowRepositoryImpl.java` |
 | 修改 | `module/follow/service/impl/UserFollowServiceImpl.java` |
-| 修改 | 对应测试文件 |
+| 修改 | `module/follow/service/impl/PublicFollowServiceImpl.java` |
+| 修改 | `module/follow/service/impl/FollowAdminServiceImpl.java` |
+| 修改 | `module/follow` 对应测试文件 |
 | 删除 | `module/follow/service/SysUserFollowService.java` |
 | 删除 | `module/follow/service/impl/SysUserFollowServiceImpl.java` |
 
@@ -215,7 +300,15 @@ mvn compile -q
 mvn test -Dtest="com.cybzacg.blogbackend.module.follow.*Test"
 ```
 
-确认 `UserFollowServiceImpl` 中：
+本轮已额外验证：
+
+```bash
+mvn -q -Dtest="UserFollowServiceImplTest,PublicFollowServiceImplTest,FollowAdminServiceImplTest" test
+```
+
+> 说明：`mvn -q -DskipTests compile` 当前会被无关的 `target/generated-sources/annotations/com/cybzacg/blogbackend/module/auth/convert/SysNoticeModelMapperImpl.java` 语法错误阻塞，需在 auth 模块另行修复。
+
+确认 `follow` 模块业务服务中：
 - 无 `lambdaQuery()` / `lambdaUpdate()` 调用
 - 无 `LambdaQueryWrapper` / `Wrappers` 使用
 - 无 Mapper 直接注入

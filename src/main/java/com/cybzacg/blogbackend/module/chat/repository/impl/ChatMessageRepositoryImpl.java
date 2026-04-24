@@ -1,0 +1,72 @@
+package com.cybzacg.blogbackend.module.chat.repository.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.cybzacg.blogbackend.domain.ChatMessage;
+import com.cybzacg.blogbackend.mapper.ChatMessageMapper;
+import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessagePageQuery;
+import com.cybzacg.blogbackend.module.chat.model.data.ChatAdminMessageItem;
+import com.cybzacg.blogbackend.module.chat.model.data.ChatMessageHistoryItem;
+import com.cybzacg.blogbackend.module.chat.repository.ChatMessageRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Collection;
+import java.util.List;
+
+/**
+ * 聊天消息 Repository 实现。
+ */
+@Repository
+public class ChatMessageRepositoryImpl extends ServiceImpl<ChatMessageMapper, ChatMessage>
+        implements ChatMessageRepository {
+
+    @Override
+    public Long countMessagePage(Long conversationId, Long userId, Long beforeMessageId) {
+        return baseMapper.countMessagePage(conversationId, userId, beforeMessageId);
+    }
+
+    @Override
+    public List<ChatMessageHistoryItem> selectMessagePage(Long conversationId, Long userId, Long beforeMessageId, Long offset, Long size) {
+        return baseMapper.selectMessagePage(conversationId, userId, beforeMessageId, offset, size);
+    }
+
+    @Override
+    public ChatMessageHistoryItem selectVisibleMessageById(Long conversationId, Long userId, Long messageId) {
+        return baseMapper.selectVisibleMessageById(conversationId, userId, messageId);
+    }
+
+    @Override
+    public List<ChatMessageHistoryItem> selectVisibleMessagesByIds(Long conversationId, Long userId, Collection<Long> messageIds) {
+        if (messageIds == null || messageIds.isEmpty()) {
+            return List.of();
+        }
+        return baseMapper.selectVisibleMessagesByIds(conversationId, userId, messageIds.stream().toList());
+    }
+
+    @Override
+    public Long countAdminMessagePage(Long conversationId, ChatAdminMessagePageQuery query) {
+        return baseMapper.countAdminMessagePage(conversationId, query);
+    }
+
+    @Override
+    public List<ChatAdminMessageItem> selectAdminMessagePage(Long conversationId, ChatAdminMessagePageQuery query, Long offset, Long size) {
+        return baseMapper.selectAdminMessagePage(conversationId, query, offset, size);
+    }
+
+    @Override
+    public List<ChatAdminMessageItem> selectAdminMessagesByIds(Long conversationId, Collection<Long> messageIds) {
+        if (messageIds == null || messageIds.isEmpty()) {
+            return List.of();
+        }
+        return baseMapper.selectAdminMessagesByIds(conversationId, messageIds.stream().toList());
+    }
+
+    @Override
+    public ChatMessage findBySenderAndClientMessageId(Long senderId, String clientMessageId) {
+        return getOne(new LambdaQueryWrapper<ChatMessage>()
+                .eq(ChatMessage::getSenderId, senderId)
+                .eq(ChatMessage::getClientMessageId, clientMessageId)
+                .orderByDesc(ChatMessage::getId)
+                .last("limit 1"), false);
+    }
+}

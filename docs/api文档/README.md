@@ -19,17 +19,19 @@
 | 后台文章、分类、标签、评论、互动、足迹管理                | `content-api.md` | `后台内容管理接口`                                                  |
 | 用户头像上传、文章附件上传、评论图片上传                  | `file-api.md`    | `用户上传接入流程`、`用户文件接口`                                  |
 | 聊天会话、后台聊天管理、消息发送、群管理与 WebSocket 推送 | `chat-api.md`    | `HTTP 接口`、`后台聊天管理接口`、`WebSocket 协议`、`服务端推送事件` |
+| WebSocket 连接、认证、心跳、实时收发与推送事件处理        | `chat-api.md`    | 详见 `websocket-api.md`                                             |
 | 后台文件库、上传任务管理                                  | `file-api.md`    | `后台文件管理接口`                                                  |
 
 ## 2. 各份文档分别覆盖什么
 
-| 文档             | 面向页面 / 模块                                   | 主要路由范围                                                                                                                                  |
-| ---------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `auth-api.md`    | 登录注册、后台权限框架、系统管理、用户通知中心    | `/api/auth/**`、`/api/sys/**` 中的认证/系统管理接口、`/api/user/notices/**`                                                                   |
-| `content-api.md` | 前台内容页、登录后内容行为、后台内容管理          | `/api/articles/**`、`/api/categories/**`、`/api/tags/**`、`/api/comments/**`、`/api/user/**` 中的内容行为接口、`/api/sys/**` 中的内容管理接口 |
-| `file-api.md`    | 上传流程、我的文件、后台文件库                    | `/api/user/files/**`、`/api/sys/files/**`                                                                                                     |
-| `chat-api.md`    | 聊天 HTTP 接口、后台聊天管理与 WebSocket 实时协议 | `/api/user/chat/**`、`/api/sys/chats/**`、`/ws/chat`                                                                                          |
-| `follow-api.md`  | 关注、粉丝、互关状态、公开查看与后台治理          | `/api/user/follows/**`、`/api/users/{userId}/**`、`/api/sys/follows/**`                                                                       |
+| 文档               | 面向页面 / 模块                                   | 主要路由范围                                                                                                                                  |
+| ------------------ | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `auth-api.md`      | 登录注册、后台权限框架、系统管理、用户通知中心    | `/api/auth/**`、`/api/sys/**` 中的认证/系统管理接口、`/api/user/notices/**`                                                                   |
+| `content-api.md`   | 前台内容页、登录后内容行为、后台内容管理          | `/api/articles/**`、`/api/categories/**`、`/api/tags/**`、`/api/comments/**`、`/api/user/**` 中的内容行为接口、`/api/sys/**` 中的内容管理接口 |
+| `file-api.md`      | 上传流程、我的文件、后台文件库                    | `/api/user/files/**`、`/api/sys/files/**`                                                                                                     |
+| `chat-api.md`      | 聊天 HTTP 接口、后台聊天管理与 WebSocket 实时协议 | `/api/user/chat/**`、`/api/sys/chats/**`、`/ws/chat`                                                                                          |
+| `websocket-api.md` | WebSocket 连接、认证、心跳、收发消息与推送事件    | `/ws/chat`                                                                                                                                    |
+| `follow-api.md`    | 关注、粉丝、互关状态、公开查看与后台治理          | `/api/user/follows/**`、`/api/users/{userId}/**`、`/api/sys/follows/**`                                                                       |
 
 ## 3. 联调统一约定
 
@@ -106,14 +108,15 @@ Authorization: Bearer <accessToken>
 
 本目录按 `src/main/java/com/cybzacg/blogbackend/module` 下现有控制器整理，覆盖关系如下：
 
-| 模块      | 当前文档归属     | 说明                                                          |
-| --------- | ---------------- | ------------------------------------------------------------- |
-| `auth`    | `auth-api.md`    | 认证、用户、角色、菜单、系统配置、通知、日志                  |
-| `article` | `content-api.md` | 后台文章、前台文章、文章点赞                                  |
-| `content` | `content-api.md` | 分类、标签、评论、收藏、互动、足迹                            |
-| `file`    | `file-api.md`    | 用户上传、我的文件、后台文件管理                              |
-| `chat`    | `chat-api.md`    | 会话列表、后台聊天管理、消息发送、群管理与 WebSocket 实时推送 |
-| `follow`  | `follow-api.md`  | 关注、取关、粉丝列表、互关判断、公开查看、后台治理            |
+| 模块      | 当前文档归属       | 说明                                                          |
+| --------- | ------------------ | ------------------------------------------------------------- |
+| `auth`    | `auth-api.md`      | 认证、用户、角色、菜单、系统配置、通知、日志                  |
+| `article` | `content-api.md`   | 后台文章、前台文章、文章点赞                                  |
+| `content` | `content-api.md`   | 分类、标签、评论、收藏、互动、足迹                            |
+| `file`    | `file-api.md`      | 用户上传、我的文件、后台文件管理                              |
+| `chat`    | `chat-api.md`      | 会话列表、后台聊天管理、消息发送、群管理与 WebSocket 实时推送 |
+| `chat`    | `websocket-api.md` | WebSocket 连接、认证、心跳、收发消息与推送事件                |
+| `follow`  | `follow-api.md`    | 关注、取关、粉丝列表、互关判断、公开查看、后台治理            |
 
 ## 5. 推荐阅读顺序
 

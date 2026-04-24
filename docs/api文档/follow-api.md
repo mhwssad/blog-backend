@@ -6,14 +6,14 @@
 
 ### 1.1 路由范围
 
-| 路由 | 用途 | 是否需要登录 |
-| --- | --- | --- |
-| `/api/user/follows/**` | 用户自己的关注操作、互关判断、统计、特别关注、备注 | 是 |
-| `/api/user/fans` | 用户自己的粉丝列表 | 是 |
-| `/api/users/{userId}/follows` | 公开查看指定用户的关注列表 | 否 |
-| `/api/users/{userId}/fans` | 公开查看指定用户的粉丝列表 | 否 |
-| `/api/sys/follows` | 后台关注关系分页查询 | 需要后台权限 |
-| `/api/sys/follows/clean` | 后台异常关系清理 | 需要后台权限 |
+| 路由                          | 用途                                               | 是否需要登录 |
+| ----------------------------- | -------------------------------------------------- | ------------ |
+| `/api/user/follows/**`        | 用户自己的关注操作、互关判断、统计、特别关注、备注 | 是           |
+| `/api/user/fans`              | 用户自己的粉丝列表                                 | 是           |
+| `/api/users/{userId}/follows` | 公开查看指定用户的关注列表                         | 否           |
+| `/api/users/{userId}/fans`    | 公开查看指定用户的粉丝列表                         | 否           |
+| `/api/sys/follows`            | 后台关注关系分页查询                               | 需要后台权限 |
+| `/api/sys/follows/clean`      | 后台异常关系清理                                   | 需要后台权限 |
 
 ### 1.2 当前实现规则
 
@@ -57,16 +57,16 @@ Authorization: Bearer <accessToken>
 
 ### 2.1 接口速览
 
-| 场景 | 方法 | 路径 | 说明 |
-| --- | --- | --- | --- |
-| 关注用户 | POST | `/api/user/follows/{userId}` | 幂等 |
-| 取消关注 | DELETE | `/api/user/follows/{userId}` | 幂等 |
-| 查询我的关注 | GET | `/api/user/follows` | 支持特别关注筛选 |
-| 查询我的粉丝 | GET | `/api/user/fans` | 返回互关状态 |
-| 查询互关状态 | GET | `/api/user/follows/mutual` | `targetUserId` 查询参数 |
-| 查询关注统计 | GET | `/api/user/follows/count` | 返回关注数、粉丝数 |
-| 设置/取消特别关注 | PUT | `/api/user/follows/{userId}/special` | 仅对有效关注关系生效 |
-| 更新关注备注 | PUT | `/api/user/follows/{userId}/remark` | 空白字符串会被清空 |
+| 场景              | 方法   | 路径                                 | 说明                    |
+| ----------------- | ------ | ------------------------------------ | ----------------------- |
+| 关注用户          | POST   | `/api/user/follows/{userId}`         | 幂等                    |
+| 取消关注          | DELETE | `/api/user/follows/{userId}`         | 幂等                    |
+| 查询我的关注      | GET    | `/api/user/follows`                  | 支持特别关注筛选        |
+| 查询我的粉丝      | GET    | `/api/user/fans`                     | 返回互关状态            |
+| 查询互关状态      | GET    | `/api/user/follows/mutual`           | `targetUserId` 查询参数 |
+| 查询关注统计      | GET    | `/api/user/follows/count`            | 返回关注数、粉丝数      |
+| 设置/取消特别关注 | PUT    | `/api/user/follows/{userId}/special` | 仅对有效关注关系生效    |
+| 更新关注备注      | PUT    | `/api/user/follows/{userId}/remark`  | 空白字符串会被清空      |
 
 ### 2.2 关注与取消关注
 
@@ -97,25 +97,25 @@ Authorization: Bearer <accessToken>
 - 请求：`GET /api/user/follows`
 - 查询参数：
 
-| 参数 | 类型 | 说明 |
-| --- | --- | --- |
-| `current` | Long | 页码，默认 `1` |
-| `size` | Long | 每页条数，默认 `10`，最大 `100` |
-| `specialOnly` | Boolean | `true` 时仅返回特别关注 |
+| 参数          | 类型    | 说明                            |
+| ------------- | ------- | ------------------------------- |
+| `current`     | Long    | 页码，默认 `1`                  |
+| `size`        | Long    | 每页条数，默认 `10`，最大 `100` |
+| `specialOnly` | Boolean | `true` 时仅返回特别关注         |
 
 - 响应字段：`UserFollowUserVO`
 
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| `relationId` | Long | 关注关系 ID |
-| `userId` | Long | 被关注用户 ID |
-| `username` | String | 用户名 |
-| `nickname` | String | 昵称 |
-| `avatar` | String | 头像 |
-| `isSpecialFollow` | Integer | 是否特别关注：`0/1` |
-| `remark` | String | 备注 |
-| `mutualFollow` | Integer | 是否互关：`0/1` |
-| `followTime` | DateTime | 最近关注时间 |
+| 字段              | 类型     | 说明                |
+| ----------------- | -------- | ------------------- |
+| `relationId`      | Long     | 关注关系 ID         |
+| `userId`          | Long     | 被关注用户 ID       |
+| `username`        | String   | 用户名              |
+| `nickname`        | String   | 昵称                |
+| `avatar`          | String   | 头像                |
+| `isSpecialFollow` | Integer  | 是否特别关注：`0/1` |
+| `remark`          | String   | 备注                |
+| `mutualFollow`    | Integer  | 是否互关：`0/1`     |
+| `followTime`      | DateTime | 最近关注时间        |
 
 当前行为：
 
@@ -140,22 +140,22 @@ Authorization: Bearer <accessToken>
 - 请求：`GET /api/user/follows/mutual?targetUserId={id}`
 - 响应字段：`UserFollowMutualVO`
 
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| `targetUserId` | Long | 目标用户 ID |
-| `following` | Boolean | 当前用户是否已关注目标用户 |
-| `followedBy` | Boolean | 目标用户是否已关注当前用户 |
-| `mutualFollow` | Boolean | 是否互相关注 |
+| 字段           | 类型    | 说明                       |
+| -------------- | ------- | -------------------------- |
+| `targetUserId` | Long    | 目标用户 ID                |
+| `following`    | Boolean | 当前用户是否已关注目标用户 |
+| `followedBy`   | Boolean | 目标用户是否已关注当前用户 |
+| `mutualFollow` | Boolean | 是否互相关注               |
 
 ### 2.6 关注统计
 
 - 请求：`GET /api/user/follows/count`
 - 响应字段：`UserFollowCountVO`
 
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
+| 字段             | 类型 | 说明   |
+| ---------------- | ---- | ------ |
 | `followingCount` | Long | 关注数 |
-| `fanCount` | Long | 粉丝数 |
+| `fanCount`       | Long | 粉丝数 |
 
 说明：
 
@@ -199,28 +199,28 @@ Authorization: Bearer <accessToken>
 
 ### 3.1 接口速览
 
-| 场景 | 方法 | 路径 | 说明 |
-| --- | --- | --- | --- |
-| 查看指定用户关注列表 | GET | `/api/users/{userId}/follows` | 匿名可访问 |
-| 查看指定用户粉丝列表 | GET | `/api/users/{userId}/fans` | 匿名可访问 |
+| 场景                 | 方法 | 路径                          | 说明       |
+| -------------------- | ---- | ----------------------------- | ---------- |
+| 查看指定用户关注列表 | GET  | `/api/users/{userId}/follows` | 匿名可访问 |
+| 查看指定用户粉丝列表 | GET  | `/api/users/{userId}/fans`    | 匿名可访问 |
 
 ### 3.2 查询参数
 
-| 参数 | 类型 | 说明 |
-| --- | --- | --- |
-| `current` | Long | 页码，默认 `1` |
-| `size` | Long | 每页条数，默认 `10`，最大 `100` |
+| 参数      | 类型 | 说明                            |
+| --------- | ---- | ------------------------------- |
+| `current` | Long | 页码，默认 `1`                  |
+| `size`    | Long | 每页条数，默认 `10`，最大 `100` |
 
 ### 3.3 响应字段
 
 响应字段：`PublicFollowUserVO`
 
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| `userId` | Long | 用户 ID |
-| `username` | String | 用户名 |
-| `nickname` | String | 昵称 |
-| `avatar` | String | 头像 |
+| 字段         | 类型     | 说明         |
+| ------------ | -------- | ------------ |
+| `userId`     | Long     | 用户 ID      |
+| `username`   | String   | 用户名       |
+| `nickname`   | String   | 昵称         |
+| `avatar`     | String   | 头像         |
 | `followTime` | DateTime | 关注发生时间 |
 
 关键规则：
@@ -244,40 +244,40 @@ Authorization: Bearer <adminAccessToken>
 
 查询参数：
 
-| 参数 | 类型 | 说明 |
-| --- | --- | --- |
-| `current` | Long | 页码，默认 `1` |
-| `size` | Long | 每页条数，默认 `10`，最大 `100` |
-| `followerId` | Long | 关注者用户 ID |
-| `followingId` | Long | 被关注者用户 ID |
-| `followStatus` | Integer | 关注状态：`0/1` |
-| `specialFollow` | Integer | 是否特别关注：`0/1` |
-| `source` | String | 关注来源 |
-| `keyword` | String | 匹配双方用户名或昵称 |
+| 参数            | 类型    | 说明                            |
+| --------------- | ------- | ------------------------------- |
+| `current`       | Long    | 页码，默认 `1`                  |
+| `size`          | Long    | 每页条数，默认 `10`，最大 `100` |
+| `followerId`    | Long    | 关注者用户 ID                   |
+| `followingId`   | Long    | 被关注者用户 ID                 |
+| `followStatus`  | Integer | 关注状态：`0/1`                 |
+| `specialFollow` | Integer | 是否特别关注：`0/1`             |
+| `source`        | String  | 关注来源                        |
+| `keyword`       | String  | 匹配双方用户名或昵称            |
 
 响应字段：`FollowAdminRelationVO`
 
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| `relationId` | Long | 关系 ID |
-| `followerId` | Long | 关注者 ID |
-| `followerUsername` | String | 关注者用户名 |
-| `followerNickname` | String | 关注者昵称 |
-| `followerStatus` | Integer | 关注者状态 |
-| `followerDeletedFlag` | Integer | 关注者是否已删除 |
-| `followingId` | Long | 被关注者 ID |
-| `followingUsername` | String | 被关注者用户名 |
-| `followingNickname` | String | 被关注者昵称 |
-| `followingStatus` | Integer | 被关注者状态 |
-| `followingDeletedFlag` | Integer | 被关注者是否已删除 |
-| `followStatus` | Integer | 关系状态 |
-| `isSpecialFollow` | Integer | 是否特别关注 |
-| `source` | String | 来源 |
-| `remark` | String | 备注 |
-| `followTime` | DateTime | 最近关注时间 |
-| `unfollowTime` | DateTime | 最近取关时间 |
-| `createdAt` | DateTime | 创建时间 |
-| `updatedAt` | DateTime | 更新时间 |
+| 字段                   | 类型     | 说明               |
+| ---------------------- | -------- | ------------------ |
+| `relationId`           | Long     | 关系 ID            |
+| `followerId`           | Long     | 关注者 ID          |
+| `followerUsername`     | String   | 关注者用户名       |
+| `followerNickname`     | String   | 关注者昵称         |
+| `followerStatus`       | Integer  | 关注者状态         |
+| `followerDeletedFlag`  | Integer  | 关注者是否已删除   |
+| `followingId`          | Long     | 被关注者 ID        |
+| `followingUsername`    | String   | 被关注者用户名     |
+| `followingNickname`    | String   | 被关注者昵称       |
+| `followingStatus`      | Integer  | 被关注者状态       |
+| `followingDeletedFlag` | Integer  | 被关注者是否已删除 |
+| `followStatus`         | Integer  | 关系状态           |
+| `isSpecialFollow`      | Integer  | 是否特别关注       |
+| `source`               | String   | 来源               |
+| `remark`               | String   | 备注               |
+| `followTime`           | DateTime | 最近关注时间       |
+| `unfollowTime`         | DateTime | 最近取关时间       |
+| `createdAt`            | DateTime | 创建时间           |
+| `updatedAt`            | DateTime | 更新时间           |
 
 说明：
 
@@ -299,11 +299,11 @@ Authorization: Bearer <adminAccessToken>
 
 字段说明：
 
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| `cleanInactive` | Boolean | 是否清理已取关关系 |
-| `cleanDeletedUsers` | Boolean | 是否清理任一端已删除或缺失用户的关系 |
-| `cleanDisabledUsers` | Boolean | 是否清理任一端已禁用用户的关系 |
+| 字段                 | 类型    | 说明                                 |
+| -------------------- | ------- | ------------------------------------ |
+| `cleanInactive`      | Boolean | 是否清理已取关关系                   |
+| `cleanDeletedUsers`  | Boolean | 是否清理任一端已删除或缺失用户的关系 |
+| `cleanDisabledUsers` | Boolean | 是否清理任一端已禁用用户的关系       |
 
 关键规则：
 
@@ -313,13 +313,13 @@ Authorization: Bearer <adminAccessToken>
 
 ## 5. 常见联调问题
 
-| 问题 | 当前行为 |
-| --- | --- |
-| 匿名访问 `/api/user/**` 关注接口 | HTTP `401` |
-| 匿名访问 `/api/users/{userId}/follows`、`/fans` | 允许 |
-| 无后台权限访问 `/api/sys/follows` | HTTP `403` |
-| 关注自己 | 返回业务错误 |
-| 关注已禁用用户 | 返回业务错误 |
-| 对未关注用户设置特别关注或备注 | 返回业务错误 |
-| 重复关注同一用户 | 幂等成功，不新增第二条记录 |
-| 关注成功后通知投递失败 | 不回滚关注主链路 |
+| 问题                                            | 当前行为                   |
+| ----------------------------------------------- | -------------------------- |
+| 匿名访问 `/api/user/**` 关注接口                | HTTP `401`                 |
+| 匿名访问 `/api/users/{userId}/follows`、`/fans` | 允许                       |
+| 无后台权限访问 `/api/sys/follows`               | HTTP `403`                 |
+| 关注自己                                        | 返回业务错误               |
+| 关注已禁用用户                                  | 返回业务错误               |
+| 对未关注用户设置特别关注或备注                  | 返回业务错误               |
+| 重复关注同一用户                                | 幂等成功，不新增第二条记录 |
+| 关注成功后通知投递失败                          | 不回滚关注主链路           |

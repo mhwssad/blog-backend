@@ -1,7 +1,5 @@
 package com.cybzacg.blogbackend.module.chat;
 
-import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
-import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.domain.ChatConversation;
 import com.cybzacg.blogbackend.domain.ChatConversationMember;
@@ -11,9 +9,7 @@ import com.cybzacg.blogbackend.domain.FileBusinessInfo;
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.mapper.ChatConversationMapper;
-import com.cybzacg.blogbackend.mapper.ChatMessageMapper;
-import com.cybzacg.blogbackend.module.auth.service.SysUserService;
+import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.chat.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.convert.ChatModelMapper;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminConversationPageQuery;
@@ -31,13 +27,13 @@ import com.cybzacg.blogbackend.module.chat.model.data.ChatAdminConversationListI
 import com.cybzacg.blogbackend.module.chat.model.data.ChatAdminMessageItem;
 import com.cybzacg.blogbackend.module.chat.model.user.ChatConversationLastMessageVO;
 import com.cybzacg.blogbackend.module.chat.model.user.ChatMemberVO;
-import com.cybzacg.blogbackend.module.chat.service.ChatConversationMemberService;
-import com.cybzacg.blogbackend.module.chat.service.ChatConversationService;
+import com.cybzacg.blogbackend.module.chat.repository.ChatConversationMemberRepository;
+import com.cybzacg.blogbackend.module.chat.repository.ChatConversationRepository;
+import com.cybzacg.blogbackend.module.chat.repository.ChatMessageRecipientRepository;
+import com.cybzacg.blogbackend.module.chat.repository.ChatMessageRepository;
 import com.cybzacg.blogbackend.module.chat.service.ChatPushService;
-import com.cybzacg.blogbackend.module.chat.service.ChatMessageRecipientService;
-import com.cybzacg.blogbackend.module.chat.service.ChatMessageService;
 import com.cybzacg.blogbackend.module.chat.service.impl.ChatAdminServiceImpl;
-import com.cybzacg.blogbackend.module.file.service.FileBusinessInfoService;
+import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
 import com.cybzacg.blogbackend.utils.JsonUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,46 +60,37 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ChatAdminServiceImplTest {
     @Mock
-    private ChatConversationMapper chatConversationMapper;
+    private ChatConversationRepository chatConversationRepository;
     @Mock
-    private ChatMessageMapper chatMessageMapper;
+    private ChatMessageRepository chatMessageRepository;
     @Mock
-    private ChatConversationService chatConversationService;
+    private ChatConversationMemberRepository chatConversationMemberRepository;
     @Mock
-    private ChatConversationMemberService chatConversationMemberService;
+    private ChatMessageRecipientRepository chatMessageRecipientRepository;
     @Mock
-    private ChatMessageService chatMessageService;
-    @Mock
-    private ChatMessageRecipientService chatMessageRecipientService;
-    @Mock
-    private SysUserService sysUserService;
+    private SysUserRepository sysUserService;
     @Mock
     private ChatModelMapper chatModelMapper;
     @Mock
     private ChatPushService chatPushService;
     @Mock
-    private FileBusinessInfoService fileBusinessInfoService;
+    private FileBusinessInfoRepository fileBusinessInfoRepository;
     @Mock
     private FileLifecycleService fileLifecycleService;
-
-    @Mock
-    private LambdaQueryChainWrapper<ChatConversationMember> memberListQuery;
 
     private ChatAdminServiceImpl chatAdminService;
 
     @BeforeEach
     void setUp() {
         chatAdminService = new ChatAdminServiceImpl(
-                chatConversationMapper,
-                chatMessageMapper,
-                chatConversationService,
-                chatConversationMemberService,
-                chatMessageService,
-                chatMessageRecipientService,
+                chatConversationRepository,
+                chatMessageRepository,
+                chatConversationMemberRepository,
+                chatMessageRecipientRepository,
                 sysUserService,
                 chatModelMapper,
                 chatPushService,
-                fileBusinessInfoService,
+                fileBusinessInfoRepository,
                 fileLifecycleService
         );
     }
@@ -139,11 +126,9 @@ class ChatAdminServiceImplTest {
         vo.setId(1001L);
         vo.setConversationType(ChatConstants.CONVERSATION_TYPE_SINGLE);
 
-        when(chatConversationMapper.countAdminConversationPage(query)).thenReturn(1L);
-        when(chatConversationMapper.selectAdminConversationPage(query, 0L, 10L)).thenReturn(List.of(item));
-        when(chatConversationMemberService.lambdaQuery()).thenReturn(memberListQuery);
-        when(memberListQuery.in(anySFunction(), anyCollection())).thenReturn(memberListQuery);
-        when(memberListQuery.list()).thenReturn(List.of(selfMember, targetMember));
+        when(chatConversationRepository.countAdminConversationPage(query)).thenReturn(1L);
+        when(chatConversationRepository.selectAdminConversationPage(query, 0L, 10L)).thenReturn(List.of(item));
+        when(chatConversationMemberRepository.listByConversationIds(anyCollection())).thenReturn(List.of(selfMember, targetMember));
         when(sysUserService.listByIds(any())).thenReturn(List.of(selfUser, targetUser));
         when(chatModelMapper.toAdminConversationVO(item)).thenReturn(vo);
 
@@ -182,9 +167,9 @@ class ChatAdminServiceImplTest {
         vo.setId(9001L);
         vo.setConversationId(2001L);
 
-        when(chatConversationService.getById(2001L)).thenReturn(conversation);
-        when(chatMessageMapper.countAdminMessagePage(2001L, query)).thenReturn(1L);
-        when(chatMessageMapper.selectAdminMessagePage(2001L, query, 0L, 20L)).thenReturn(List.of(item));
+        when(chatConversationRepository.getById(2001L)).thenReturn(conversation);
+        when(chatMessageRepository.countAdminMessagePage(2001L, query)).thenReturn(1L);
+        when(chatMessageRepository.selectAdminMessagePage(2001L, query, 0L, 20L)).thenReturn(List.of(item));
         when(sysUserService.listByIds(any())).thenReturn(List.of(sender));
         when(chatModelMapper.toAdminMessageVO(item)).thenReturn(vo);
 
@@ -223,9 +208,9 @@ class ChatAdminServiceImplTest {
         vo.setId(9004L);
         vo.setConversationId(conversationId);
 
-        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
-        when(chatMessageMapper.countAdminMessagePage(conversationId, query)).thenReturn(1L);
-        when(chatMessageMapper.selectAdminMessagePage(conversationId, query, 0L, 20L)).thenReturn(List.of(item));
+        when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
+        when(chatMessageRepository.countAdminMessagePage(conversationId, query)).thenReturn(1L);
+        when(chatMessageRepository.selectAdminMessagePage(conversationId, query, 0L, 20L)).thenReturn(List.of(item));
         when(sysUserService.listByIds(any())).thenReturn(List.of(sender));
         when(chatModelMapper.toAdminMessageVO(item)).thenReturn(vo);
 
@@ -283,10 +268,10 @@ class ChatAdminServiceImplTest {
         vo.setId(9003L);
         vo.setConversationId(conversationId);
 
-        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
-        when(chatMessageMapper.countAdminMessagePage(conversationId, query)).thenReturn(1L);
-        when(chatMessageMapper.selectAdminMessagePage(conversationId, query, 0L, 20L)).thenReturn(List.of(item));
-        when(chatMessageMapper.selectAdminMessagesByIds(conversationId, List.of(replyMessageId))).thenReturn(List.of(replyItem));
+        when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
+        when(chatMessageRepository.countAdminMessagePage(conversationId, query)).thenReturn(1L);
+        when(chatMessageRepository.selectAdminMessagePage(conversationId, query, 0L, 20L)).thenReturn(List.of(item));
+        when(chatMessageRepository.selectAdminMessagesByIds(conversationId, List.of(replyMessageId))).thenReturn(List.of(replyItem));
         when(sysUserService.listByIds(any())).thenReturn(List.of(sender, replySender));
         when(chatModelMapper.toAdminMessageVO(item)).thenReturn(vo);
 
@@ -350,10 +335,10 @@ class ChatAdminServiceImplTest {
         vo.setId(9004L);
         vo.setConversationId(conversationId);
 
-        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
-        when(chatMessageMapper.countAdminMessagePage(conversationId, query)).thenReturn(1L);
-        when(chatMessageMapper.selectAdminMessagePage(conversationId, query, 0L, 20L)).thenReturn(List.of(item));
-        when(chatMessageMapper.selectAdminMessagesByIds(conversationId, List.of(replyMessageId))).thenReturn(List.of(replyItem));
+        when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
+        when(chatMessageRepository.countAdminMessagePage(conversationId, query)).thenReturn(1L);
+        when(chatMessageRepository.selectAdminMessagePage(conversationId, query, 0L, 20L)).thenReturn(List.of(item));
+        when(chatMessageRepository.selectAdminMessagesByIds(conversationId, List.of(replyMessageId))).thenReturn(List.of(replyItem));
         when(sysUserService.listByIds(any())).thenReturn(List.of(sender, replySender));
         when(chatModelMapper.toAdminMessageVO(item)).thenReturn(vo);
 
@@ -390,9 +375,9 @@ class ChatAdminServiceImplTest {
         vo.setId(9002L);
         vo.setConversationId(conversationId);
 
-        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
-        when(chatMessageMapper.countAdminMessagePage(conversationId, query)).thenReturn(1L);
-        when(chatMessageMapper.selectAdminMessagePage(conversationId, query, 0L, 20L)).thenReturn(List.of(item));
+        when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
+        when(chatMessageRepository.countAdminMessagePage(conversationId, query)).thenReturn(1L);
+        when(chatMessageRepository.selectAdminMessagePage(conversationId, query, 0L, 20L)).thenReturn(List.of(item));
         when(sysUserService.listByIds(any())).thenReturn(List.of(sender));
         when(chatModelMapper.toAdminMessageVO(item)).thenReturn(vo);
 
@@ -410,7 +395,7 @@ class ChatAdminServiceImplTest {
 
         assertEquals(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), exception.getCode());
         assertEquals("后台只支持将会话状态更新为禁用或正常", exception.getMessage());
-        verify(chatConversationService, never()).getById(any());
+        verify(chatConversationRepository, never()).getById(any());
     }
 
     @Test
@@ -419,18 +404,14 @@ class ChatAdminServiceImplTest {
         conversation.setId(3001L);
         conversation.setStatus(ChatConstants.CONVERSATION_STATUS_NORMAL);
 
-        LambdaQueryChainWrapper<ChatConversationMember> activeMembersQuery = org.mockito.Mockito.mock(LambdaQueryChainWrapper.class);
-
-        when(chatConversationService.getById(3001L)).thenReturn(conversation);
-        when(chatConversationService.updateById(conversation)).thenReturn(true);
-        when(chatConversationMemberService.lambdaQuery()).thenReturn(activeMembersQuery);
-        when(activeMembersQuery.eq(anySFunction(), any())).thenReturn(activeMembersQuery);
-        when(activeMembersQuery.list()).thenReturn(List.of());
+        when(chatConversationRepository.getById(3001L)).thenReturn(conversation);
+        when(chatConversationRepository.updateById(conversation)).thenReturn(true);
+        when(chatConversationMemberRepository.listActiveByConversationId(3001L)).thenReturn(List.of());
 
         chatAdminService.updateConversationStatus(3001L, ChatConstants.CONVERSATION_STATUS_DISABLED);
 
         assertEquals(ChatConstants.CONVERSATION_STATUS_DISABLED, conversation.getStatus());
-        verify(chatConversationService).updateById(conversation);
+        verify(chatConversationRepository).updateById(conversation);
     }
 
     @Test
@@ -480,13 +461,9 @@ class ChatAdminServiceImplTest {
         lastMessageVO.setMessageType(ChatConstants.MESSAGE_TYPE_TEXT);
         lastMessageVO.setContent("hello");
 
-        LambdaQueryChainWrapper<ChatConversationMember> detailMemberQuery = org.mockito.Mockito.mock(LambdaQueryChainWrapper.class);
-
-        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
-        when(chatConversationMapper.selectAdminConversationDetail(conversationId)).thenReturn(item);
-        when(chatConversationMemberService.lambdaQuery()).thenReturn(detailMemberQuery);
-        when(detailMemberQuery.in(anySFunction(), anyCollection())).thenReturn(detailMemberQuery);
-        when(detailMemberQuery.list()).thenReturn(List.of(ownerMember, senderMember));
+        when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
+        when(chatConversationRepository.selectAdminConversationDetail(conversationId)).thenReturn(item);
+        when(chatConversationMemberRepository.listByConversationIds(List.of(conversationId))).thenReturn(List.of(ownerMember, senderMember));
         when(sysUserService.listByIds(any())).thenReturn(List.of(owner, sender));
         when(chatModelMapper.toAdminConversationVO(item)).thenReturn(vo);
         when(chatModelMapper.toConversationLastMessageVO(item)).thenReturn(lastMessageVO);
@@ -526,13 +503,9 @@ class ChatAdminServiceImplTest {
         lastMessageVO.setSenderId(9L);
         lastMessageVO.setContent("notice");
 
-        LambdaQueryChainWrapper<ChatConversationMember> detailMemberQuery = org.mockito.Mockito.mock(LambdaQueryChainWrapper.class);
-
-        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
-        when(chatConversationMapper.selectAdminConversationDetail(conversationId)).thenReturn(item);
-        when(chatConversationMemberService.lambdaQuery()).thenReturn(detailMemberQuery);
-        when(detailMemberQuery.in(anySFunction(), anyCollection())).thenReturn(detailMemberQuery);
-        when(detailMemberQuery.list()).thenReturn(List.of());
+        when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
+        when(chatConversationRepository.selectAdminConversationDetail(conversationId)).thenReturn(item);
+        when(chatConversationMemberRepository.listByConversationIds(List.of(conversationId))).thenReturn(List.of());
         when(sysUserService.listByIds(any())).thenReturn(List.of());
         when(chatModelMapper.toAdminConversationVO(item)).thenReturn(vo);
         when(chatModelMapper.toConversationLastMessageVO(item)).thenReturn(lastMessageVO);
@@ -592,12 +565,8 @@ class ChatAdminServiceImplTest {
         ChatMemberVO adminVO = new ChatMemberVO();
         ChatMemberVO memberVO = new ChatMemberVO();
 
-        LambdaQueryChainWrapper<ChatConversationMember> memberQuery = org.mockito.Mockito.mock(LambdaQueryChainWrapper.class);
-
-        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
-        when(chatConversationMemberService.lambdaQuery()).thenReturn(memberQuery);
-        when(memberQuery.eq(anySFunction(), any())).thenReturn(memberQuery);
-        when(memberQuery.list()).thenReturn(List.of(normalMember, adminMember, ownerMember));
+        when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
+        when(chatConversationMemberRepository.listByConversationId(conversationId)).thenReturn(List.of(normalMember, adminMember, ownerMember));
         when(sysUserService.listByIds(any())).thenReturn(List.of(owner, admin, member));
         when(chatModelMapper.toMemberVO(ownerMember)).thenReturn(ownerVO);
         when(chatModelMapper.toMemberVO(adminMember)).thenReturn(adminVO);
@@ -671,12 +640,8 @@ class ChatAdminServiceImplTest {
         memberDisabled.setStatus(ChatConstants.MEMBER_STATUS_DISABLED);
         memberDisabled.setJoinedAt(new Date(500L));
 
-        LambdaQueryChainWrapper<ChatConversationMember> memberQuery = org.mockito.Mockito.mock(LambdaQueryChainWrapper.class);
-
-        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
-        when(chatConversationMemberService.lambdaQuery()).thenReturn(memberQuery);
-        when(memberQuery.eq(anySFunction(), any())).thenReturn(memberQuery);
-        when(memberQuery.list()).thenReturn(List.of(
+        when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
+        when(chatConversationMemberRepository.listByConversationId(conversationId)).thenReturn(List.of(
                 memberDisabled,
                 adminWithoutJoinTime,
                 memberNormalHigherUserId,
@@ -721,7 +686,7 @@ class ChatAdminServiceImplTest {
         query.setCurrent(3L);
         query.setSize(15L);
 
-        when(chatConversationMapper.countAdminConversationPage(query)).thenReturn(0L);
+        when(chatConversationRepository.countAdminConversationPage(query)).thenReturn(0L);
 
         var result = chatAdminService.pageConversations(query);
 
@@ -742,8 +707,8 @@ class ChatAdminServiceImplTest {
         query.setCurrent(2L);
         query.setSize(5L);
 
-        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
-        when(chatMessageMapper.countAdminMessagePage(conversationId, query)).thenReturn(0L);
+        when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
+        when(chatMessageRepository.countAdminMessagePage(conversationId, query)).thenReturn(0L);
 
         var result = chatAdminService.pageMessages(conversationId, query);
 
@@ -759,7 +724,7 @@ class ChatAdminServiceImplTest {
         query.setCurrent(0L);
         query.setSize(999L);
 
-        when(chatConversationMapper.countAdminConversationPage(query)).thenReturn(0L);
+        when(chatConversationRepository.countAdminConversationPage(query)).thenReturn(0L);
 
         var result = chatAdminService.pageConversations(query);
 
@@ -784,11 +749,9 @@ class ChatAdminServiceImplTest {
         vo.setId(6101L);
         vo.setConversationType(ChatConstants.CONVERSATION_TYPE_GROUP);
 
-        when(chatConversationMapper.countAdminConversationPage(query)).thenReturn(1L);
-        when(chatConversationMapper.selectAdminConversationPage(query, 200L, 100L)).thenReturn(List.of(item));
-        when(chatConversationMemberService.lambdaQuery()).thenReturn(memberListQuery);
-        when(memberListQuery.in(anySFunction(), anyCollection())).thenReturn(memberListQuery);
-        when(memberListQuery.list()).thenReturn(List.of());
+        when(chatConversationRepository.countAdminConversationPage(query)).thenReturn(1L);
+        when(chatConversationRepository.selectAdminConversationPage(query, 200L, 100L)).thenReturn(List.of(item));
+        when(chatConversationMemberRepository.listByConversationIds(anyCollection())).thenReturn(List.of());
         when(sysUserService.listByIds(any())).thenReturn(List.of());
         when(chatModelMapper.toAdminConversationVO(item)).thenReturn(vo);
 
@@ -797,7 +760,7 @@ class ChatAdminServiceImplTest {
         assertEquals(3L, result.getCurrent());
         assertEquals(100L, result.getSize());
         assertEquals(1, result.getRecords().size());
-        verify(chatConversationMapper).selectAdminConversationPage(query, 200L, 100L);
+        verify(chatConversationRepository).selectAdminConversationPage(query, 200L, 100L);
     }
 
     @Test
@@ -840,11 +803,9 @@ class ChatAdminServiceImplTest {
         vo.setId(6102L);
         vo.setConversationType(ChatConstants.CONVERSATION_TYPE_SINGLE);
 
-        when(chatConversationMapper.countAdminConversationPage(query)).thenReturn(1L);
-        when(chatConversationMapper.selectAdminConversationPage(query, 10L, 10L)).thenReturn(List.of(item));
-        when(chatConversationMemberService.lambdaQuery()).thenReturn(memberListQuery);
-        when(memberListQuery.in(anySFunction(), anyCollection())).thenReturn(memberListQuery);
-        when(memberListQuery.list()).thenReturn(List.of(selfMember, targetMember));
+        when(chatConversationRepository.countAdminConversationPage(query)).thenReturn(1L);
+        when(chatConversationRepository.selectAdminConversationPage(query, 10L, 10L)).thenReturn(List.of(item));
+        when(chatConversationMemberRepository.listByConversationIds(anyCollection())).thenReturn(List.of(selfMember, targetMember));
         when(sysUserService.listByIds(any())).thenReturn(List.of(owner, target));
         when(chatModelMapper.toAdminConversationVO(item)).thenReturn(vo);
 
@@ -852,8 +813,8 @@ class ChatAdminServiceImplTest {
 
         assertEquals(1L, result.getTotal());
         assertEquals("群主 / 张三", result.getRecords().get(0).getName());
-        verify(chatConversationMapper).countAdminConversationPage(query);
-        verify(chatConversationMapper).selectAdminConversationPage(query, 10L, 10L);
+        verify(chatConversationRepository).countAdminConversationPage(query);
+        verify(chatConversationRepository).selectAdminConversationPage(query, 10L, 10L);
     }
 
     @Test
@@ -875,11 +836,9 @@ class ChatAdminServiceImplTest {
         vo.setConversationType(ChatConstants.CONVERSATION_TYPE_GROUP);
         vo.setName("测试群");
 
-        when(chatConversationMapper.countAdminConversationPage(query)).thenReturn(1L);
-        when(chatConversationMapper.selectAdminConversationPage(query, 0L, 10L)).thenReturn(List.of(item));
-        when(chatConversationMemberService.lambdaQuery()).thenReturn(memberListQuery);
-        when(memberListQuery.in(anySFunction(), anyCollection())).thenReturn(memberListQuery);
-        when(memberListQuery.list()).thenReturn(List.of());
+        when(chatConversationRepository.countAdminConversationPage(query)).thenReturn(1L);
+        when(chatConversationRepository.selectAdminConversationPage(query, 0L, 10L)).thenReturn(List.of(item));
+        when(chatConversationMemberRepository.listByConversationIds(anyCollection())).thenReturn(List.of());
         when(chatModelMapper.toAdminConversationVO(item)).thenReturn(vo);
 
         var result = chatAdminService.pageConversations(query);
@@ -887,7 +846,7 @@ class ChatAdminServiceImplTest {
         assertEquals(1L, result.getCurrent());
         assertEquals(10L, result.getSize());
         assertEquals(1L, result.getTotal());
-        verify(chatConversationMapper).selectAdminConversationPage(query, 0L, 10L);
+        verify(chatConversationRepository).selectAdminConversationPage(query, 0L, 10L);
     }
 
     @Test
@@ -900,8 +859,8 @@ class ChatAdminServiceImplTest {
         query.setCurrent(0L);
         query.setSize(999L);
 
-        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
-        when(chatMessageMapper.countAdminMessagePage(conversationId, query)).thenReturn(0L);
+        when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
+        when(chatMessageRepository.countAdminMessagePage(conversationId, query)).thenReturn(0L);
 
         var result = chatAdminService.pageMessages(conversationId, query);
 
@@ -931,9 +890,9 @@ class ChatAdminServiceImplTest {
         ChatAdminMessageVO vo = new ChatAdminMessageVO();
         vo.setId(9101L);
 
-        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
-        when(chatMessageMapper.countAdminMessagePage(conversationId, query)).thenReturn(1L);
-        when(chatMessageMapper.selectAdminMessagePage(conversationId, query, 0L, 100L)).thenReturn(List.of(item));
+        when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
+        when(chatMessageRepository.countAdminMessagePage(conversationId, query)).thenReturn(1L);
+        when(chatMessageRepository.selectAdminMessagePage(conversationId, query, 0L, 100L)).thenReturn(List.of(item));
         when(sysUserService.listByIds(any())).thenReturn(List.of());
         when(chatModelMapper.toAdminMessageVO(item)).thenReturn(vo);
 
@@ -942,7 +901,7 @@ class ChatAdminServiceImplTest {
         assertEquals(1L, result.getCurrent());
         assertEquals(100L, result.getSize());
         assertEquals("用户9", result.getRecords().get(0).getSenderNickname());
-        verify(chatMessageMapper).selectAdminMessagePage(conversationId, query, 0L, 100L);
+        verify(chatMessageRepository).selectAdminMessagePage(conversationId, query, 0L, 100L);
     }
 
     @Test
@@ -966,9 +925,9 @@ class ChatAdminServiceImplTest {
         ChatAdminMessageVO vo = new ChatAdminMessageVO();
         vo.setId(9103L);
 
-        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
-        when(chatMessageMapper.countAdminMessagePage(conversationId, query)).thenReturn(1L);
-        when(chatMessageMapper.selectAdminMessagePage(conversationId, query, 0L, 20L)).thenReturn(List.of(item));
+        when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
+        when(chatMessageRepository.countAdminMessagePage(conversationId, query)).thenReturn(1L);
+        when(chatMessageRepository.selectAdminMessagePage(conversationId, query, 0L, 20L)).thenReturn(List.of(item));
         when(sysUserService.listByIds(any())).thenReturn(List.of());
         when(chatModelMapper.toAdminMessageVO(item)).thenReturn(vo);
 
@@ -977,7 +936,7 @@ class ChatAdminServiceImplTest {
         assertEquals(1L, result.getCurrent());
         assertEquals(20L, result.getSize());
         assertEquals(1L, result.getTotal());
-        verify(chatMessageMapper).selectAdminMessagePage(conversationId, query, 0L, 20L);
+        verify(chatMessageRepository).selectAdminMessagePage(conversationId, query, 0L, 20L);
     }
 
     @Test
@@ -1010,9 +969,9 @@ class ChatAdminServiceImplTest {
         ChatAdminMessageVO vo = new ChatAdminMessageVO();
         vo.setId(9102L);
 
-        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
-        when(chatMessageMapper.countAdminMessagePage(conversationId, query)).thenReturn(1L);
-        when(chatMessageMapper.selectAdminMessagePage(conversationId, query, 5L, 5L)).thenReturn(List.of(item));
+        when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
+        when(chatMessageRepository.countAdminMessagePage(conversationId, query)).thenReturn(1L);
+        when(chatMessageRepository.selectAdminMessagePage(conversationId, query, 5L, 5L)).thenReturn(List.of(item));
         when(sysUserService.listByIds(any())).thenReturn(List.of(sender));
         when(chatModelMapper.toAdminMessageVO(item)).thenReturn(vo);
 
@@ -1020,13 +979,13 @@ class ChatAdminServiceImplTest {
 
         assertEquals(1L, result.getTotal());
         assertEquals("发送者", result.getRecords().get(0).getSenderNickname());
-        verify(chatMessageMapper).countAdminMessagePage(conversationId, query);
-        verify(chatMessageMapper).selectAdminMessagePage(conversationId, query, 5L, 5L);
+        verify(chatMessageRepository).countAdminMessagePage(conversationId, query);
+        verify(chatMessageRepository).selectAdminMessagePage(conversationId, query, 5L, 5L);
     }
 
     @Test
     void getConversationShouldRejectMissingConversation() {
-        when(chatConversationService.getById(7001L)).thenReturn(null);
+        when(chatConversationRepository.getById(7001L)).thenReturn(null);
 
         BusinessException exception = assertThrows(BusinessException.class,
                 () -> chatAdminService.getConversation(7001L));
@@ -1042,7 +1001,7 @@ class ChatAdminServiceImplTest {
 
         assertEquals(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), exception.getCode());
         assertEquals("会话ID不能为空", exception.getMessage());
-        verify(chatConversationService, never()).getById(any());
+        verify(chatConversationRepository, never()).getById(any());
     }
 
     @Test
@@ -1051,11 +1010,11 @@ class ChatAdminServiceImplTest {
         conversation.setId(7101L);
         conversation.setStatus(ChatConstants.CONVERSATION_STATUS_NORMAL);
 
-        when(chatConversationService.getById(7101L)).thenReturn(conversation);
+        when(chatConversationRepository.getById(7101L)).thenReturn(conversation);
 
         chatAdminService.updateConversationStatus(7101L, ChatConstants.CONVERSATION_STATUS_NORMAL);
 
-        verify(chatConversationService, never()).updateById(any(ChatConversation.class));
+        verify(chatConversationRepository, never()).updateById(any(ChatConversation.class));
     }
 
     @Test
@@ -1108,13 +1067,9 @@ class ChatAdminServiceImplTest {
         sender.setUsername("zhangsan");
         sender.setNickname("张三");
 
-        LambdaQueryChainWrapper<ChatMessageRecipient> recipientQuery = org.mockito.Mockito.mock(LambdaQueryChainWrapper.class);
-
-        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
-        when(chatMessageService.getById(messageId)).thenReturn(message);
-        when(chatMessageRecipientService.lambdaQuery()).thenReturn(recipientQuery);
-        when(recipientQuery.eq(anySFunction(), any())).thenReturn(recipientQuery);
-        when(recipientQuery.list()).thenReturn(List.of(deliveredRecipient, readRecipient));
+        when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
+        when(chatMessageRepository.getById(messageId)).thenReturn(message);
+        when(chatMessageRecipientRepository.listByMessageId(messageId)).thenReturn(List.of(deliveredRecipient, readRecipient));
         when(sysUserService.listByIds(any())).thenReturn(List.of(sender));
 
         ChatAdminMessageDetailVO result = chatAdminService.getMessageDetail(conversationId, messageId);
@@ -1166,9 +1121,9 @@ class ChatAdminServiceImplTest {
         receiptPage.setTotal(1L);
         receiptPage.setRecords(List.of(recipient));
 
-        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
-        when(chatMessageService.getById(messageId)).thenReturn(message);
-        when(chatMessageRecipientService.page(any(Page.class), any())).thenReturn(receiptPage);
+        when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
+        when(chatMessageRepository.getById(messageId)).thenReturn(message);
+        when(chatMessageRecipientRepository.pageAdminReceipts(conversationId, messageId, query)).thenReturn(receiptPage);
         when(sysUserService.listByIds(any())).thenReturn(List.of(user));
 
         var result = chatAdminService.pageMessageReceipts(conversationId, messageId, query);
@@ -1176,7 +1131,7 @@ class ChatAdminServiceImplTest {
         assertEquals(1L, result.getTotal());
         assertEquals("lisi", result.getRecords().get(0).getRecipientUsername());
         assertEquals("李四", result.getRecords().get(0).getRecipientNickname());
-        verify(chatMessageRecipientService).page(any(Page.class), any());
+        verify(chatMessageRecipientRepository).pageAdminReceipts(conversationId, messageId, query);
     }
 
     @Test
@@ -1202,19 +1157,13 @@ class ChatAdminServiceImplTest {
         reference.setReferenceType(ChatConstants.FILE_MESSAGE_REFERENCE_TYPE);
         reference.setReferenceId(messageId);
 
-        LambdaQueryChainWrapper<FileBusinessInfo> fileReferenceQuery = org.mockito.Mockito.mock(LambdaQueryChainWrapper.class);
-        LambdaQueryChainWrapper<ChatConversationMember> activeMembersQuery = org.mockito.Mockito.mock(LambdaQueryChainWrapper.class);
-
-        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
-        when(chatMessageService.getById(messageId)).thenReturn(message);
-        when(chatMessageService.updateById(message)).thenReturn(true);
-        when(fileBusinessInfoService.lambdaQuery()).thenReturn(fileReferenceQuery);
-        when(fileReferenceQuery.eq(anySFunction(), any())).thenReturn(fileReferenceQuery);
-        when(fileReferenceQuery.list()).thenReturn(List.of(reference));
-        when(fileBusinessInfoService.removeByIds(List.of(501L))).thenReturn(true);
-        when(chatConversationMemberService.lambdaQuery()).thenReturn(activeMembersQuery);
-        when(activeMembersQuery.eq(anySFunction(), any())).thenReturn(activeMembersQuery);
-        when(activeMembersQuery.list()).thenReturn(List.of());
+        when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
+        when(chatMessageRepository.getById(messageId)).thenReturn(message);
+        when(chatMessageRepository.updateById(message)).thenReturn(true);
+        when(fileBusinessInfoRepository.listByReferenceTypeAndReferenceId(ChatConstants.FILE_MESSAGE_REFERENCE_TYPE, messageId))
+                .thenReturn(List.of(reference));
+        when(fileBusinessInfoRepository.removeByIds(List.of(501L))).thenReturn(true);
+        when(chatConversationMemberRepository.listActiveByConversationId(conversationId)).thenReturn(List.of());
         when(sysUserService.listByIds(any())).thenReturn(List.of());
 
         chatAdminService.revokeMessage(conversationId, messageId);
@@ -1248,19 +1197,13 @@ class ChatAdminServiceImplTest {
 
         ChatMemberVO memberVO = new ChatMemberVO();
 
-        LambdaQueryChainWrapper<ChatConversationMember> targetQuery = org.mockito.Mockito.mock(LambdaQueryChainWrapper.class);
-        LambdaQueryChainWrapper<ChatConversationMember> ownerQuery = org.mockito.Mockito.mock(LambdaQueryChainWrapper.class);
-        LambdaQueryChainWrapper<ChatConversationMember> listQuery = org.mockito.Mockito.mock(LambdaQueryChainWrapper.class);
-
-        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
-        when(chatConversationMemberService.lambdaQuery()).thenReturn(targetQuery, ownerQuery, listQuery);
-        mockMemberFindQuery(targetQuery, targetMember);
-        mockMemberRoleQuery(ownerQuery, oldOwner);
-        when(listQuery.eq(anySFunction(), any())).thenReturn(listQuery);
-        when(listQuery.list()).thenReturn(List.of(oldOwner, targetMember));
-        when(chatConversationService.updateById(conversation)).thenReturn(true);
-        when(chatConversationMemberService.updateById(oldOwner)).thenReturn(true);
-        when(chatConversationMemberService.updateById(targetMember)).thenReturn(true);
+        when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
+        when(chatConversationMemberRepository.findByConversationAndUser(conversationId, 2L)).thenReturn(targetMember);
+        when(chatConversationMemberRepository.findOwnerByConversationId(conversationId)).thenReturn(oldOwner);
+        when(chatConversationMemberRepository.listActiveByConversationId(conversationId)).thenReturn(List.of(oldOwner, targetMember));
+        when(chatConversationRepository.updateById(conversation)).thenReturn(true);
+        when(chatConversationMemberRepository.updateById(oldOwner)).thenReturn(true);
+        when(chatConversationMemberRepository.updateById(targetMember)).thenReturn(true);
         when(sysUserService.listByIds(any())).thenReturn(List.of());
         when(chatModelMapper.toMemberVO(any(ChatConversationMember.class))).thenReturn(memberVO);
 
@@ -1283,7 +1226,7 @@ class ChatAdminServiceImplTest {
         conversation.setConversationType(ChatConstants.CONVERSATION_TYPE_SINGLE);
         conversation.setIsAllSite(0);
 
-        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
+        when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
 
         ChatAdminMemberRoleUpdateRequest request = new ChatAdminMemberRoleUpdateRequest();
         request.setRole(ChatConstants.MEMBER_ROLE_ADMIN);
@@ -1318,18 +1261,10 @@ class ChatAdminServiceImplTest {
         ownerMember.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
         ownerMember.setMemberRole(ChatConstants.MEMBER_ROLE_OWNER);
 
-        LambdaQueryChainWrapper<ChatConversationMember> targetQuery = org.mockito.Mockito.mock(LambdaQueryChainWrapper.class);
-        LambdaQueryChainWrapper<ChatConversationMember> listBeforeQuery = org.mockito.Mockito.mock(LambdaQueryChainWrapper.class);
-        LambdaQueryChainWrapper<ChatConversationMember> listAfterQuery = org.mockito.Mockito.mock(LambdaQueryChainWrapper.class);
-
-        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
-        when(chatConversationMemberService.lambdaQuery()).thenReturn(targetQuery, listBeforeQuery, listAfterQuery);
-        mockMemberFindQuery(targetQuery, targetMember);
-        when(listBeforeQuery.eq(anySFunction(), any())).thenReturn(listBeforeQuery);
-        when(listBeforeQuery.list()).thenReturn(List.of(ownerMember, targetMember));
-        when(listAfterQuery.eq(anySFunction(), any())).thenReturn(listAfterQuery);
-        when(listAfterQuery.list()).thenReturn(List.of(ownerMember));
-        when(chatConversationMemberService.updateById(targetMember)).thenReturn(true);
+        when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
+        when(chatConversationMemberRepository.findByConversationAndUser(conversationId, memberUserId)).thenReturn(targetMember);
+        when(chatConversationMemberRepository.listActiveByConversationId(conversationId)).thenReturn(List.of(ownerMember, targetMember), List.of(ownerMember));
+        when(chatConversationMemberRepository.updateById(targetMember)).thenReturn(true);
         when(sysUserService.listByIds(any())).thenReturn(List.of());
         when(chatModelMapper.toMemberVO(any(ChatConversationMember.class))).thenAnswer(invocation -> {
             ChatConversationMember source = invocation.getArgument(0);
@@ -1364,7 +1299,7 @@ class ChatAdminServiceImplTest {
         conversation.setConversationType(ChatConstants.CONVERSATION_TYPE_GROUP);
         conversation.setIsAllSite(1);
 
-        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
+        when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
 
         var request = new com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMemberStatusUpdateRequest();
         request.setStatus(ChatConstants.MEMBER_STATUS_DISABLED);
@@ -1401,15 +1336,10 @@ class ChatAdminServiceImplTest {
         ownerMember.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
         ownerMember.setMemberRole(ChatConstants.MEMBER_ROLE_OWNER);
 
-        LambdaQueryChainWrapper<ChatConversationMember> targetQuery = org.mockito.Mockito.mock(LambdaQueryChainWrapper.class);
-        LambdaQueryChainWrapper<ChatConversationMember> listQuery = org.mockito.Mockito.mock(LambdaQueryChainWrapper.class);
-
-        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
-        when(chatConversationMemberService.lambdaQuery()).thenReturn(targetQuery, listQuery);
-        mockMemberFindQuery(targetQuery, targetMember);
-        when(listQuery.eq(anySFunction(), any())).thenReturn(listQuery);
-        when(listQuery.list()).thenReturn(List.of(ownerMember, targetMember));
-        when(chatConversationMemberService.updateById(targetMember)).thenReturn(true);
+        when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
+        when(chatConversationMemberRepository.findByConversationAndUser(conversationId, memberUserId)).thenReturn(targetMember);
+        when(chatConversationMemberRepository.listActiveByConversationId(conversationId)).thenReturn(List.of(ownerMember, targetMember));
+        when(chatConversationMemberRepository.updateById(targetMember)).thenReturn(true);
         when(sysUserService.listByIds(any())).thenReturn(List.of());
         when(chatModelMapper.toMemberVO(any(ChatConversationMember.class))).thenAnswer(invocation -> {
             ChatConversationMember source = invocation.getArgument(0);
@@ -1443,7 +1373,7 @@ class ChatAdminServiceImplTest {
         conversation.setConversationType(ChatConstants.CONVERSATION_TYPE_SINGLE);
         conversation.setIsAllSite(0);
 
-        when(chatConversationService.getById(conversationId)).thenReturn(conversation);
+        when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
 
         var request = new ChatAdminMemberMuteUpdateRequest();
         request.setMuteUntil(new Date(System.currentTimeMillis() + 60_000L));
@@ -1455,27 +1385,6 @@ class ChatAdminServiceImplTest {
         assertEquals("后台成员治理仅支持普通群聊会话", exception.getMessage());
     }
 
-    @SuppressWarnings("unchecked")
-    private static <T> SFunction<T, ?> anySFunction() {
-        return (SFunction<T, ?>) any(SFunction.class);
-    }
-
-    private static void mockMemberFindQuery(LambdaQueryChainWrapper<ChatConversationMember> query,
-                                            ChatConversationMember result) {
-        when(query.eq(anySFunction(), any())).thenReturn(query);
-        when(query.orderByDesc(anySFunction())).thenReturn(query);
-        when(query.last(any())).thenReturn(query);
-        when(query.one()).thenReturn(result);
-    }
-
-    private static void mockMemberRoleQuery(LambdaQueryChainWrapper<ChatConversationMember> query,
-                                            ChatConversationMember result) {
-        when(query.eq(anySFunction(), any())).thenReturn(query);
-        when(query.orderByDesc(anySFunction())).thenReturn(query);
-        when(query.last(any())).thenReturn(query);
-        when(query.one()).thenReturn(result);
-    }
-
     private static SysUser buildUser(Long userId, String username, String nickname) {
         SysUser user = new SysUser();
         user.setId(userId);
@@ -1484,3 +1393,11 @@ class ChatAdminServiceImplTest {
         return user;
     }
 }
+
+
+
+
+
+
+
+

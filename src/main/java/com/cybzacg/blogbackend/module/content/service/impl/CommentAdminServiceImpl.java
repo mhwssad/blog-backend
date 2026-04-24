@@ -1,20 +1,19 @@
 package com.cybzacg.blogbackend.module.content.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.SysComment;
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleService;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.auth.service.SysUserService;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.admin.CommentPageQuery;
 import com.cybzacg.blogbackend.module.content.model.admin.CommentVO;
+import com.cybzacg.blogbackend.module.content.repository.SysCommentRepository;
 import com.cybzacg.blogbackend.module.content.service.CommentAdminService;
-import com.cybzacg.blogbackend.module.content.service.SysCommentService;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,23 +35,14 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class CommentAdminServiceImpl implements CommentAdminService {
-    private final SysCommentService sysCommentService;
-    private final BlogArticleService blogArticleService;
+    private final SysCommentRepository sysCommentRepository;
+    private final BlogArticleRepository blogArticleService;
     private final SysUserService sysUserService;
     private final ContentModelMapper contentModelMapper;
 
     @Override
     public PageResult<CommentVO> pageComments(CommentPageQuery query) {
-        LambdaQueryWrapper<SysComment> wrapper = new LambdaQueryWrapper<SysComment>()
-                .eq(query.getTargetId() != null, SysComment::getTargetId, query.getTargetId())
-                .eq(query.getTargetType() != null, SysComment::getTargetType, query.getTargetType())
-                .eq(query.getUserId() != null, SysComment::getUserId, query.getUserId())
-                .eq(query.getRootId() != null, SysComment::getRootId, query.getRootId())
-                .eq(query.getParentId() != null, SysComment::getParentId, query.getParentId())
-                .eq(query.getStatus() != null, SysComment::getStatus, query.getStatus())
-                .orderByDesc(SysComment::getCreatedAt)
-                .orderByDesc(SysComment::getId);
-        Page<SysComment> page = sysCommentService.page(new Page<>(query.getCurrent(), query.getSize()), wrapper);
+        Page<SysComment> page = sysCommentRepository.pageByAdminConditions(query);
         Map<Long, SysUser> userMap = loadUserMap(page.getRecords().stream().map(SysComment::getUserId).collect(Collectors.toSet()));
         List<CommentVO> records = page.getRecords().stream()
                 .map(contentModelMapper::toCommentVO)
@@ -77,7 +67,7 @@ public class CommentAdminServiceImpl implements CommentAdminService {
         validateStatus(status);
         SysComment comment = getCommentOrThrow(id);
         comment.setStatus(status);
-        sysCommentService.updateById(comment);
+        sysCommentRepository.updateById(comment);
     }
 
     /**
@@ -89,7 +79,7 @@ public class CommentAdminServiceImpl implements CommentAdminService {
         SysComment comment = getCommentOrThrow(id);
         List<SysComment> subtree = collectSubtree(comment);
         Set<Long> deleteIds = subtree.stream().map(SysComment::getId).collect(Collectors.toSet());
-        sysCommentService.removeByIds(deleteIds);
+        sysCommentRepository.removeByIds(deleteIds);
 
         if ("article".equals(comment.getTargetType())) {
             BlogArticle article = blogArticleService.getById(comment.getTargetId());
@@ -101,11 +91,11 @@ public class CommentAdminServiceImpl implements CommentAdminService {
         }
 
         if (comment.getParentId() != null && comment.getParentId() > 0) {
-            SysComment parent = sysCommentService.getById(comment.getParentId());
+            SysComment parent = sysCommentRepository.getById(comment.getParentId());
             if (parent != null) {
                 int nextReplyCount = Math.max(0, (parent.getReplyCount() == null ? 0 : parent.getReplyCount()) - 1);
                 parent.setReplyCount(nextReplyCount);
-                sysCommentService.updateById(parent);
+                sysCommentRepository.updateById(parent);
             }
         }
     }
@@ -114,10 +104,7 @@ public class CommentAdminServiceImpl implements CommentAdminService {
      * 通过广度优先遍历收集整棵评论子树，确保批量删除时不会遗漏后代节点。
      */
     private List<SysComment> collectSubtree(SysComment root) {
-        List<SysComment> allComments = sysCommentService.lambdaQuery()
-                .eq(SysComment::getTargetType, root.getTargetType())
-                .eq(SysComment::getTargetId, root.getTargetId())
-                .list();
+        List<SysComment> allComments = sysCommentRepository.findByTargetTypeAndTargetId(root.getTargetType(), root.getTargetId());
         Map<Long, List<SysComment>> byParent = allComments.stream().collect(Collectors.groupingBy(SysComment::getParentId));
         ArrayDeque<SysComment> queue = new ArrayDeque<>();
         queue.add(root);
@@ -164,7 +151,7 @@ public class CommentAdminServiceImpl implements CommentAdminService {
      * 按 ID 获取评论，不存在时抛出统一业务异常。
      */
     private SysComment getCommentOrThrow(Long id) {
-        SysComment comment = sysCommentService.getById(id);
+        SysComment comment = sysCommentRepository.getById(id);
         ExceptionThrowerCore.throwBusinessIfNull(comment, ResultErrorCode.ILLEGAL_ARGUMENT, "评论不存在");
         return comment;
     }

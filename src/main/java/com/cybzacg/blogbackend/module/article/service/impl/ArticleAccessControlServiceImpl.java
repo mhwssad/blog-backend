@@ -4,7 +4,7 @@ import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.BlogArticleAccess;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleAccessService;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleAccessRepository;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class ArticleAccessControlServiceImpl implements ArticleAccessControlService {
-    private final BlogArticleAccessService blogArticleAccessService;
+    private final BlogArticleAccessRepository blogArticleAccessRepository;
 
     @Override
     public boolean canAccessArticle(BlogArticle article, Long userId) {
@@ -94,11 +94,7 @@ public class ArticleAccessControlServiceImpl implements ArticleAccessControlServ
      */
     @Override
     public List<BlogArticleAccess> listArticleAccesses(Long articleId) {
-        return blogArticleAccessService.lambdaQuery()
-                .eq(BlogArticleAccess::getArticleId, articleId)
-                .orderByAsc(BlogArticleAccess::getAccessType)
-                .orderByAsc(BlogArticleAccess::getUserId)
-                .list();
+        return blogArticleAccessRepository.listByArticleIdOrdered(articleId);
     }
 }
 

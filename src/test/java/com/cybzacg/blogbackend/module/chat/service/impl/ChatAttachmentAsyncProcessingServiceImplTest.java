@@ -12,11 +12,11 @@ import com.cybzacg.blogbackend.module.chat.model.common.ChatFilePayloadVO;
 import com.cybzacg.blogbackend.module.chat.model.common.ChatMessagePayloadVO;
 import com.cybzacg.blogbackend.module.chat.model.user.ChatMessageVO;
 import com.cybzacg.blogbackend.module.chat.service.ChatAttachmentMetadataResolver;
-import com.cybzacg.blogbackend.module.chat.service.ChatAttachmentProcessTaskService;
-import com.cybzacg.blogbackend.module.chat.service.ChatMessageService;
+import com.cybzacg.blogbackend.module.chat.repository.ChatAttachmentProcessTaskRepository;
+import com.cybzacg.blogbackend.module.chat.repository.ChatMessageRepository;
 import com.cybzacg.blogbackend.module.chat.service.ChatMetricsService;
 import com.cybzacg.blogbackend.module.chat.service.ChatPushService;
-import com.cybzacg.blogbackend.module.file.service.FileInfoService;
+import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
 import com.cybzacg.blogbackend.utils.JsonUtils;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -51,11 +51,11 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ChatAttachmentAsyncProcessingServiceImplTest {
     @Mock
-    private ChatAttachmentProcessTaskService chatAttachmentProcessTaskService;
+    private ChatAttachmentProcessTaskRepository chatAttachmentProcessTaskService;
     @Mock
-    private ChatMessageService chatMessageService;
+    private ChatMessageRepository chatMessageService;
     @Mock
-    private FileInfoService fileInfoService;
+    private FileInfoRepository fileInfoRepository;
     @Mock
     private StorageManager storageManager;
     @Mock
@@ -79,7 +79,7 @@ class ChatAttachmentAsyncProcessingServiceImplTest {
                 chatAttachmentProcessTaskService,
                 properties,
                 chatMessageService,
-                fileInfoService,
+                fileInfoRepository,
                 storageManager,
                 chatAttachmentMetadataResolver,
                 chatPushService,
@@ -117,7 +117,7 @@ class ChatAttachmentAsyncProcessingServiceImplTest {
         when(chatAttachmentProcessTaskService.claimTask(eq(taskId), any(Date.class), any(Date.class))).thenReturn(true);
         when(chatAttachmentProcessTaskService.markSuccess(eq(taskId), any(Date.class))).thenReturn(true);
         when(chatMessageService.getById(messageId)).thenReturn(message);
-        when(fileInfoService.getById(7001L)).thenReturn(fileInfo);
+        when(fileInfoRepository.getById(7001L)).thenReturn(fileInfo);
         when(storageManager.getStorageService("local")).thenReturn(storageService);
         when(chatMessageService.updateById(any(ChatMessage.class))).thenReturn(true);
 
@@ -178,7 +178,7 @@ class ChatAttachmentAsyncProcessingServiceImplTest {
         when(chatAttachmentProcessTaskService.claimTask(eq(taskId), any(Date.class), any(Date.class))).thenReturn(true);
         when(chatAttachmentProcessTaskService.markSuccess(eq(taskId), any(Date.class))).thenReturn(true);
         when(chatMessageService.getById(messageId)).thenReturn(message);
-        when(fileInfoService.getById(7002L)).thenReturn(fileInfo);
+        when(fileInfoRepository.getById(7002L)).thenReturn(fileInfo);
         when(storageManager.getStorageService("local")).thenReturn(storageService);
         when(chatAttachmentMetadataResolver.resolve(fileInfo, ChatConstants.MESSAGE_TYPE_VOICE))
                 .thenReturn(new ChatAttachmentMetadataResolver.ChatAttachmentMetadata(null, null, 12, List.of(5, 15, 25)));
@@ -238,7 +238,7 @@ class ChatAttachmentAsyncProcessingServiceImplTest {
         when(chatAttachmentProcessTaskService.claimTask(eq(taskId), any(Date.class), any(Date.class))).thenReturn(true);
         when(chatAttachmentProcessTaskService.markSuccess(eq(taskId), any(Date.class))).thenReturn(true);
         when(chatMessageService.getById(messageId)).thenReturn(message);
-        when(fileInfoService.getById(7003L)).thenReturn(fileInfo);
+        when(fileInfoRepository.getById(7003L)).thenReturn(fileInfo);
         when(storageManager.getStorageService("local")).thenReturn(storageService);
         when(chatMessageService.updateById(any(ChatMessage.class))).thenReturn(true);
 
@@ -346,7 +346,7 @@ class ChatAttachmentAsyncProcessingServiceImplTest {
         when(chatAttachmentProcessTaskService.claimTask(eq(taskId), any(Date.class), any(Date.class))).thenReturn(true);
         when(chatAttachmentProcessTaskService.markRetry(eq(taskId), eq(1), any(Date.class), any(String.class))).thenReturn(true);
         when(chatMessageService.getById(messageId)).thenReturn(message);
-        when(fileInfoService.getById(7004L)).thenReturn(fileInfo);
+        when(fileInfoRepository.getById(7004L)).thenReturn(fileInfo);
         when(storageManager.getStorageService("local")).thenReturn(failingStorageService);
 
         asyncProcessingService.dispatchDueTasks();

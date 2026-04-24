@@ -13,11 +13,11 @@ import com.cybzacg.blogbackend.module.chat.model.common.ChatMessagePayloadVO;
 import com.cybzacg.blogbackend.module.chat.model.user.ChatMessageVO;
 import com.cybzacg.blogbackend.module.chat.service.ChatAttachmentAsyncProcessingService;
 import com.cybzacg.blogbackend.module.chat.service.ChatAttachmentMetadataResolver;
-import com.cybzacg.blogbackend.module.chat.service.ChatAttachmentProcessTaskService;
-import com.cybzacg.blogbackend.module.chat.service.ChatMessageService;
+import com.cybzacg.blogbackend.module.chat.repository.ChatAttachmentProcessTaskRepository;
+import com.cybzacg.blogbackend.module.chat.repository.ChatMessageRepository;
 import com.cybzacg.blogbackend.module.chat.service.ChatMetricsService;
 import com.cybzacg.blogbackend.module.chat.service.ChatPushService;
-import com.cybzacg.blogbackend.module.file.service.FileInfoService;
+import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
 import com.cybzacg.blogbackend.utils.JsonUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -60,10 +60,10 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
     private static final String LEASE_EXPIRED_REASON = "processing lease expired";
 
     private final java.util.concurrent.Executor asyncTaskExecutor;
-    private final ChatAttachmentProcessTaskService chatAttachmentProcessTaskService;
+    private final ChatAttachmentProcessTaskRepository chatAttachmentProcessTaskRepository;
     private final ChatAttachmentProcessingProperties chatAttachmentProcessingProperties;
-    private final ChatMessageService chatMessageService;
-    private final FileInfoService fileInfoService;
+    private final ChatMessageRepository chatMessageRepository;
+    private final FileInfoRepository fileInfoRepository;
     private final StorageManager storageManager;
     private final ChatAttachmentMetadataResolver chatAttachmentMetadataResolver;
     private final ChatPushService chatPushService;
@@ -71,19 +71,19 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
 
     public ChatAttachmentAsyncProcessingServiceImpl(
             @Qualifier("asyncTaskExecutor") java.util.concurrent.Executor asyncTaskExecutor,
-            ChatAttachmentProcessTaskService chatAttachmentProcessTaskService,
+            ChatAttachmentProcessTaskRepository chatAttachmentProcessTaskRepository,
             ChatAttachmentProcessingProperties chatAttachmentProcessingProperties,
-            ChatMessageService chatMessageService,
-            FileInfoService fileInfoService,
+            ChatMessageRepository chatMessageRepository,
+            FileInfoRepository fileInfoRepository,
             StorageManager storageManager,
             ChatAttachmentMetadataResolver chatAttachmentMetadataResolver,
             ChatPushService chatPushService,
             ChatMetricsService chatMetricsService) {
         this.asyncTaskExecutor = asyncTaskExecutor;
-        this.chatAttachmentProcessTaskService = chatAttachmentProcessTaskService;
+        this.chatAttachmentProcessTaskRepository = chatAttachmentProcessTaskRepository;
         this.chatAttachmentProcessingProperties = chatAttachmentProcessingProperties;
-        this.chatMessageService = chatMessageService;
-        this.fileInfoService = fileInfoService;
+        this.chatMessageRepository = chatMessageRepository;
+        this.fileInfoRepository = fileInfoRepository;
         this.storageManager = storageManager;
         this.chatAttachmentMetadataResolver = chatAttachmentMetadataResolver;
         this.chatPushService = chatPushService;
@@ -97,7 +97,7 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
                 || !isSupportedAsyncMessageType(messageSnapshot.getMessageType())) {
             return;
         }
-        ChatAttachmentProcessTask task = chatAttachmentProcessTaskService.saveOrResetPendingTask(
+        ChatAttachmentProcessTask task = chatAttachmentProcessTaskRepository.saveOrResetPendingTask(
                 messageId,
                 messageSnapshot.getMessageType(),
                 serializeMessageSnapshot(messageSnapshot),
@@ -120,7 +120,7 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
 
     @Override
     public void dispatchDueTasks() {
-        List<ChatAttachmentProcessTask> tasks = chatAttachmentProcessTaskService.listDispatchableTasks(
+        List<ChatAttachmentProcessTask> tasks = chatAttachmentProcessTaskRepository.listDispatchableTasks(
                 new Date(),
                 chatAttachmentProcessingProperties.getBatchSize()
         );
@@ -131,7 +131,7 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
 
     @Override
     public int recoverExpiredTasks() {
-        return chatAttachmentProcessTaskService.resetExpiredTasks(new Date(), LEASE_EXPIRED_REASON);
+        return chatAttachmentProcessTaskRepository.resetExpiredTasks(new Date(), LEASE_EXPIRED_REASON);
     }
 
     /**
@@ -148,13 +148,13 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
      * 读取并抢占单个持久化任务，避免多个节点同时处理同一条消息。
      */
     private void processTask(Long taskId) {
-        ChatAttachmentProcessTask task = chatAttachmentProcessTaskService.getById(taskId);
+        ChatAttachmentProcessTask task = chatAttachmentProcessTaskRepository.getById(taskId);
         if (task == null) {
             return;
         }
         Date now = new Date();
         Date leaseExpireAt = new Date(now.getTime() + chatAttachmentProcessingProperties.getLeaseSeconds() * 1000L);
-        if (!chatAttachmentProcessTaskService.claimTask(taskId, now, leaseExpireAt)) {
+        if (!chatAttachmentProcessTaskRepository.claimTask(taskId, now, leaseExpireAt)) {
             return;
         }
         processClaimedTask(task);
@@ -168,7 +168,7 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
         String messageType = task.getMessageType();
         String result = "skipped";
         try {
-            ChatMessage message = chatMessageService.getById(task.getMessageId());
+            ChatMessage message = chatMessageRepository.getById(task.getMessageId());
             if (message == null
                     || !isSupportedAsyncMessageType(message.getMessageType())
                     || Objects.equals(message.getRevokeStatus(), ChatConstants.REVOKE_STATUS_REVOKED)) {
@@ -181,7 +181,7 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
                 markTaskSuccess(task.getId());
                 return;
             }
-            FileInfo fileInfo = fileInfoService.getById(payload.getFile().getFileId());
+            FileInfo fileInfo = fileInfoRepository.getById(payload.getFile().getFileId());
             if (fileInfo == null) {
                 markTaskSuccess(task.getId());
                 return;
@@ -200,7 +200,7 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
 
             payload.setFile(updatedFilePayload);
             message.setPayloadJson(JsonUtils.toJson(payload));
-            if (!chatMessageService.updateById(message)) {
+            if (!chatMessageRepository.updateById(message)) {
                 throw new IllegalStateException("update chat attachment payload failed");
             }
 
@@ -417,7 +417,7 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
      * 任务成功或确认无需继续处理时，统一收口为成功态，避免调度器重复扫描。
      */
     private void markTaskSuccess(Long taskId) {
-        if (!chatAttachmentProcessTaskService.markSuccess(taskId, new Date())) {
+        if (!chatAttachmentProcessTaskRepository.markSuccess(taskId, new Date())) {
             log.warn("mark chat attachment task success skipped: taskId={}", taskId);
         }
     }
@@ -435,9 +435,9 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
         Date now = new Date();
         boolean updated;
         if (currentRetryCount >= maxRetryCount) {
-            updated = chatAttachmentProcessTaskService.markFailed(task.getId(), currentRetryCount, now, errorMessage);
+            updated = chatAttachmentProcessTaskRepository.markFailed(task.getId(), currentRetryCount, now, errorMessage);
         } else {
-            updated = chatAttachmentProcessTaskService.markRetry(
+            updated = chatAttachmentProcessTaskRepository.markRetry(
                     task.getId(),
                     currentRetryCount,
                     buildNextRetryAt(now, currentRetryCount),

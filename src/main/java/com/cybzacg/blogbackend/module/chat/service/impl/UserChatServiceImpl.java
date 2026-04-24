@@ -12,9 +12,7 @@ import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.enums.file.FileStatusEnum;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.mapper.ChatConversationMapper;
-import com.cybzacg.blogbackend.mapper.ChatMessageMapper;
-import com.cybzacg.blogbackend.module.auth.service.SysUserService;
+import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.chat.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.convert.ChatModelMapper;
 import com.cybzacg.blogbackend.module.chat.model.common.ChatFilePayloadVO;
@@ -41,19 +39,19 @@ import com.cybzacg.blogbackend.module.chat.model.user.ChatTransferGroupOwnerRequ
 import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsConversationUpdatedPayload;
 import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsMembersUpdatedPayload;
 import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsMessageDeletedPayload;
+import com.cybzacg.blogbackend.module.chat.repository.ChatConversationMemberRepository;
+import com.cybzacg.blogbackend.module.chat.repository.ChatConversationRepository;
+import com.cybzacg.blogbackend.module.chat.repository.ChatMessageReadCursorRepository;
+import com.cybzacg.blogbackend.module.chat.repository.ChatMessageRecipientRepository;
+import com.cybzacg.blogbackend.module.chat.repository.ChatMessageRepository;
 import com.cybzacg.blogbackend.module.chat.service.ChatAttachmentAsyncProcessingService;
-import com.cybzacg.blogbackend.module.chat.service.ChatConversationMemberService;
-import com.cybzacg.blogbackend.module.chat.service.ChatConversationService;
 import com.cybzacg.blogbackend.module.chat.service.ChatMessageGovernanceService;
 import com.cybzacg.blogbackend.module.chat.service.ChatMetricsService;
-import com.cybzacg.blogbackend.module.chat.service.ChatMessageReadCursorService;
-import com.cybzacg.blogbackend.module.chat.service.ChatMessageRecipientService;
-import com.cybzacg.blogbackend.module.chat.service.ChatMessageService;
 import com.cybzacg.blogbackend.module.chat.service.ChatPushService;
 import com.cybzacg.blogbackend.module.chat.service.ChatWebSocketSessionRegistry;
 import com.cybzacg.blogbackend.module.chat.service.UserChatService;
-import com.cybzacg.blogbackend.module.file.service.FileBusinessInfoService;
-import com.cybzacg.blogbackend.module.file.service.FileInfoService;
+import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
+import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.JsonUtils;
@@ -84,19 +82,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class UserChatServiceImpl implements UserChatService {
-    private final ChatConversationService chatConversationService;
-    private final ChatConversationMemberService chatConversationMemberService;
-    private final ChatMessageService chatMessageService;
-    private final ChatMessageRecipientService chatMessageRecipientService;
-    private final ChatMessageReadCursorService chatMessageReadCursorService;
-    private final SysUserService sysUserService;
-    private final ChatConversationMapper chatConversationMapper;
-    private final ChatMessageMapper chatMessageMapper;
+    private final ChatConversationRepository chatConversationRepository;
+    private final ChatConversationMemberRepository chatConversationMemberRepository;
+    private final ChatMessageRepository chatMessageRepository;
+    private final ChatMessageRecipientRepository chatMessageRecipientRepository;
+    private final ChatMessageReadCursorRepository chatMessageReadCursorRepository;
+    private final SysUserRepository sysUserRepository;
     private final ChatModelMapper chatModelMapper;
     private final ChatPushService chatPushService;
     private final ChatWebSocketSessionRegistry chatWebSocketSessionRegistry;
-    private final FileBusinessInfoService fileBusinessInfoService;
-    private final FileInfoService fileInfoService;
+    private final FileBusinessInfoRepository fileBusinessInfoRepository;
+    private final FileInfoRepository fileInfoRepository;
     private final FileLifecycleService fileLifecycleService;
     private final ChatAttachmentAsyncProcessingService chatAttachmentAsyncProcessingService;
     private final ChatMessageGovernanceService chatMessageGovernanceService;
@@ -109,7 +105,7 @@ public class UserChatServiceImpl implements UserChatService {
         long current = normalizeCurrent(query.getCurrent());
         long size = normalizeSize(query.getSize(), 20L, 100L);
         String keyword = trimKeyword(query.getKeyword());
-        long total = Objects.requireNonNullElse(chatConversationMapper.countConversationPage(userId, keyword), 0L);
+        long total = Objects.requireNonNullElse(chatConversationRepository.countConversationPage(userId, keyword), 0L);
         if (total == 0L) {
             return PageResult.<ChatConversationVO>builder()
                     .total(0L)
@@ -119,7 +115,7 @@ public class UserChatServiceImpl implements UserChatService {
                     .build();
         }
         long offset = (current - 1) * size;
-        List<ChatConversationListItem> items = chatConversationMapper.selectConversationPage(userId, keyword, offset, size);
+        List<ChatConversationListItem> items = chatConversationRepository.selectConversationPage(userId, keyword, offset, size);
         return PageResult.<ChatConversationVO>builder()
                 .total(total)
                 .current(current)
@@ -182,7 +178,7 @@ public class UserChatServiceImpl implements UserChatService {
             message.setReplyMessageId(replyMessage != null ? replyMessage.getId() : null);
             message.setPayloadJson(buildMessagePayloadJson(null, buildReplySnapshot(replyMessage)));
             try {
-                chatMessageService.save(message);
+                chatMessageRepository.save(message);
             } catch (DuplicateKeyException ex) {
                 ChatMessageVO existingMessage = resolveDuplicateClientMessage(userId, request.getClientMessageId(), conversation.getId(), ex);
                 chatMetricsService.recordSend(ChatConstants.MESSAGE_TYPE_TEXT, "success");
@@ -192,7 +188,7 @@ public class UserChatServiceImpl implements UserChatService {
             Date now = message.getCreatedAt() != null ? message.getCreatedAt() : new Date();
             conversation.setLastMessageId(message.getId());
             conversation.setLastMessageTime(now);
-            chatConversationService.updateById(conversation);
+            chatConversationRepository.updateById(conversation);
 
             List<Long> activeUserIds = activeMembers.stream().map(ChatConversationMember::getUserId).distinct().toList();
             persistRecipients(message, activeUserIds, userId, now);
@@ -236,7 +232,7 @@ public class UserChatServiceImpl implements UserChatService {
             Long replyMessageId = replyMessage != null ? replyMessage.getId() : null;
             ChatMessage message = buildFileMessage(conversation.getId(), userId, request.getClientMessageId(), replyMessageId, preparedFile.fileInfo());
             try {
-                chatMessageService.save(message);
+                chatMessageRepository.save(message);
             } catch (DuplicateKeyException ex) {
                 ChatMessageVO existingMessage = resolveDuplicateClientMessage(userId, request.getClientMessageId(), conversation.getId(), ex);
                 chatMetricsService.recordSend(existingMessage.getMessageType(), "success");
@@ -244,12 +240,12 @@ public class UserChatServiceImpl implements UserChatService {
             }
             ChatFilePayloadVO filePayload = bindFileReferenceToMessage(preparedFile, message.getId(), message.getMessageType());
             message.setPayloadJson(buildMessagePayloadJson(filePayload, buildReplySnapshot(replyMessage)));
-            chatMessageService.updateById(message);
+            chatMessageRepository.updateById(message);
 
             Date now = message.getCreatedAt() != null ? message.getCreatedAt() : new Date();
             conversation.setLastMessageId(message.getId());
             conversation.setLastMessageTime(now);
-            chatConversationService.updateById(conversation);
+            chatConversationRepository.updateById(conversation);
 
             List<Long> activeUserIds = activeMembers.stream().map(ChatConversationMember::getUserId).distinct().toList();
             persistRecipients(message, activeUserIds, userId, now);
@@ -277,7 +273,7 @@ public class UserChatServiceImpl implements UserChatService {
         ExceptionThrowerCore.throwBusinessIfBlank(StrUtils.trimToNull(request.getContent()), ResultErrorCode.ILLEGAL_ARGUMENT, "消息内容不能为空");
         ChatMessage message = requireEditableOwnTextMessage(userId, messageId);
         message.setContent(StrUtils.trim(request.getContent()));
-        chatMessageService.updateById(message);
+        chatMessageRepository.updateById(message);
         ChatMessageHistoryItem item = requireVisibleMessage(userId, message.getConversationId(), messageId);
         ChatMessageVO messageVO = buildMessageVO(userId, item, loadUsers(Set.of(message.getSenderId())));
         chatPushService.pushMessageUpdated(messageVO, listActiveUserIds(message.getConversationId()));
@@ -301,12 +297,7 @@ public class UserChatServiceImpl implements UserChatService {
     public void deleteMessage(Long messageId) {
         Long userId = SecurityUtils.requireUserId();
         ChatMessage message = requireVisibleMessageEntity(userId, messageId);
-        chatMessageRecipientService.lambdaUpdate()
-                .eq(ChatMessageRecipient::getConversationId, message.getConversationId())
-                .eq(ChatMessageRecipient::getRecipientUserId, userId)
-                .eq(ChatMessageRecipient::getMessageId, messageId)
-                .set(ChatMessageRecipient::getVisibleStatus, ChatConstants.VISIBLE_STATUS_HIDDEN)
-                .update();
+        chatMessageRecipientRepository.hideMessage(message.getConversationId(), userId, messageId);
         ChatMessageReadCursor cursor = getOrCreateCursor(message.getConversationId(), userId, null, null);
         int unreadCount = (int) countUnread(message.getConversationId(), userId);
         cursor.setUnreadCount(unreadCount);
@@ -342,15 +333,7 @@ public class UserChatServiceImpl implements UserChatService {
         }
 
         Date now = new Date();
-        chatMessageRecipientService.lambdaUpdate()
-                .eq(ChatMessageRecipient::getConversationId, conversationId)
-                .eq(ChatMessageRecipient::getRecipientUserId, userId)
-                .eq(ChatMessageRecipient::getVisibleStatus, ChatConstants.VISIBLE_STATUS_VISIBLE)
-                .le(ChatMessageRecipient::getMessageId, message.getId())
-                .set(ChatMessageRecipient::getDeliveryStatus, ChatConstants.DELIVERY_STATUS_READ)
-                .set(ChatMessageRecipient::getDeliveredAt, now)
-                .set(ChatMessageRecipient::getReadAt, now)
-                .update();
+        chatMessageRecipientRepository.markReadUpTo(conversationId, userId, message.getId(), now);
 
         long unread = countUnread(conversationId, userId);
         cursor.setReadMessageId(message.getId());
@@ -377,7 +360,7 @@ public class UserChatServiceImpl implements UserChatService {
         requireActiveUsers(memberUserIds, true);
         ChatConversation conversation = chatModelMapper.toGroupConversation(request);
         conversation.setOwnerId(userId);
-        chatConversationService.save(conversation);
+        chatConversationRepository.save(conversation);
         upsertConversationMembership(conversation, userId, ChatConstants.MEMBER_ROLE_OWNER, ChatConstants.JOIN_SOURCE_MANUAL, true);
         for (Long memberUserId : memberUserIds) {
             upsertConversationMembership(conversation, memberUserId, ChatConstants.MEMBER_ROLE_MEMBER, ChatConstants.JOIN_SOURCE_MANUAL, true);
@@ -424,7 +407,7 @@ public class UserChatServiceImpl implements UserChatService {
         ChatConversationMember member = requireActiveGroupMember(conversationId, memberUserId);
         ExceptionThrowerCore.throwBusinessIf(Objects.equals(member.getMemberRole(), ChatConstants.MEMBER_ROLE_OWNER), ResultErrorCode.ILLEGAL_ARGUMENT, "群主无需重复设置为管理员");
         member.setMemberRole(ChatConstants.MEMBER_ROLE_ADMIN);
-        chatConversationMemberService.updateById(member);
+        chatConversationMemberRepository.updateById(member);
         List<ChatConversationMember> members = listActiveMembers(conversationId);
         List<ChatMemberVO> records = buildMemberRecords(members);
         chatPushService.pushMembersUpdated(buildMembersUpdatedPayload("admin_appointed", conversationId, memberUserId, records), activeUserIds(members));
@@ -439,7 +422,7 @@ public class UserChatServiceImpl implements UserChatService {
         ChatConversationMember member = requireActiveGroupMember(conversationId, memberUserId);
         ExceptionThrowerCore.throwBusinessIf(Objects.equals(member.getMemberRole(), ChatConstants.MEMBER_ROLE_OWNER), ResultErrorCode.ILLEGAL_ARGUMENT, "不能取消群主角色");
         member.setMemberRole(ChatConstants.MEMBER_ROLE_MEMBER);
-        chatConversationMemberService.updateById(member);
+        chatConversationMemberRepository.updateById(member);
         List<ChatConversationMember> members = listActiveMembers(conversationId);
         List<ChatMemberVO> records = buildMemberRecords(members);
         chatPushService.pushMembersUpdated(buildMembersUpdatedPayload("admin_removed", conversationId, memberUserId, records), activeUserIds(members));
@@ -457,9 +440,9 @@ public class UserChatServiceImpl implements UserChatService {
         context.selfMember().setMemberRole(ChatConstants.MEMBER_ROLE_ADMIN);
         targetMember.setMemberRole(ChatConstants.MEMBER_ROLE_OWNER);
         context.conversation().setOwnerId(targetMember.getUserId());
-        chatConversationMemberService.updateById(context.selfMember());
-        chatConversationMemberService.updateById(targetMember);
-        chatConversationService.updateById(context.conversation());
+        chatConversationMemberRepository.updateById(context.selfMember());
+        chatConversationMemberRepository.updateById(targetMember);
+        chatConversationRepository.updateById(context.conversation());
         List<ChatConversationMember> members = listActiveMembers(conversationId);
         List<ChatMemberVO> memberRecords = buildMemberRecords(members);
         List<Long> activeUserIds = activeUserIds(members);
@@ -478,7 +461,7 @@ public class UserChatServiceImpl implements UserChatService {
         validateManagerCanOperateMember(context.selfMember(), targetMember);
         Date muteUntil = request == null ? null : request.getMuteUntil();
         targetMember.setMuteUntil(muteUntil != null && muteUntil.after(new Date()) ? muteUntil : null);
-        chatConversationMemberService.updateById(targetMember);
+        chatConversationMemberRepository.updateById(targetMember);
         List<ChatConversationMember> members = listActiveMembers(conversationId);
         List<ChatMemberVO> records = buildMemberRecords(members);
         chatPushService.pushMembersUpdated(buildMembersUpdatedPayload("member_mute_updated", conversationId, memberUserId, records), activeUserIds(members));
@@ -491,7 +474,7 @@ public class UserChatServiceImpl implements UserChatService {
         Long userId = SecurityUtils.requireUserId();
         ConversationAccessContext context = requireGroupManager(userId, conversationId);
         context.conversation().setRemark(request == null ? null : StrUtils.trimToNull(request.getNotice()));
-        chatConversationService.updateById(context.conversation());
+        chatConversationRepository.updateById(context.conversation());
         chatPushService.pushConversationUpdated(buildConversationUpdatedPayload("notice_updated", context.conversation(), listActiveMembers(conversationId)), context.activeUserIds());
         return getConversationVO(userId, conversationId);
     }
@@ -506,7 +489,7 @@ public class UserChatServiceImpl implements UserChatService {
         ChatConversationMember member = requireActiveGroupMember(conversationId, memberUserId);
         validateManagerCanOperateMember(context.selfMember(), member);
         member.setStatus(ChatConstants.MEMBER_STATUS_REMOVED);
-        chatConversationMemberService.updateById(member);
+        chatConversationMemberRepository.updateById(member);
         List<ChatMemberVO> records = buildMemberRecords(listActiveMembers(conversationId));
         chatPushService.pushMembersUpdated(buildMembersUpdatedPayload("member_removed", conversationId, memberUserId, records), notifyUserIds);
     }
@@ -519,7 +502,7 @@ public class UserChatServiceImpl implements UserChatService {
         List<Long> notifyUserIds = context.activeUserIds();
         ExceptionThrowerCore.throwBusinessIf(Objects.equals(context.selfMember().getMemberRole(), ChatConstants.MEMBER_ROLE_OWNER), ResultErrorCode.UNSUPPORTED_OPERATION, "群主不能直接退群，请先解散群聊");
         context.selfMember().setStatus(ChatConstants.MEMBER_STATUS_LEFT);
-        chatConversationMemberService.updateById(context.selfMember());
+        chatConversationMemberRepository.updateById(context.selfMember());
         List<ChatMemberVO> records = buildMemberRecords(listActiveMembers(conversationId));
         chatPushService.pushMembersUpdated(buildMembersUpdatedPayload("member_left", conversationId, userId, records), notifyUserIds);
     }
@@ -531,12 +514,8 @@ public class UserChatServiceImpl implements UserChatService {
         ConversationAccessContext context = requireGroupOwner(userId, conversationId);
         List<Long> notifyUserIds = context.activeUserIds();
         context.conversation().setStatus(ChatConstants.CONVERSATION_STATUS_DISSOLVED);
-        chatConversationService.updateById(context.conversation());
-        chatConversationMemberService.lambdaUpdate()
-                .eq(ChatConversationMember::getConversationId, conversationId)
-                .eq(ChatConversationMember::getStatus, ChatConstants.MEMBER_STATUS_NORMAL)
-                .set(ChatConversationMember::getStatus, ChatConstants.MEMBER_STATUS_REMOVED)
-                .update();
+        chatConversationRepository.updateById(context.conversation());
+        chatConversationMemberRepository.removeAllActiveMembers(conversationId);
         chatPushService.pushConversationUpdated(buildConversationUpdatedPayload("conversation_dissolved", context.conversation(), List.of()), notifyUserIds);
     }
 
@@ -548,7 +527,7 @@ public class UserChatServiceImpl implements UserChatService {
         long current = normalizeCurrent(query.getCurrent());
         long size = normalizeSize(query.getSize(), 20L, 100L);
         Long beforeMessageId = query.getBeforeMessageId();
-        long total = Objects.requireNonNullElse(chatMessageMapper.countMessagePage(conversationId, userId, beforeMessageId), 0L);
+        long total = Objects.requireNonNullElse(chatMessageRepository.countMessagePage(conversationId, userId, beforeMessageId), 0L);
         if (total == 0L) {
             return PageResult.<ChatMessageVO>builder()
                     .total(0L)
@@ -558,7 +537,7 @@ public class UserChatServiceImpl implements UserChatService {
                     .build();
         }
         long offset = (current - 1) * size;
-        List<ChatMessageHistoryItem> items = new ArrayList<>(chatMessageMapper.selectMessagePage(conversationId, userId, beforeMessageId, offset, size));
+        List<ChatMessageHistoryItem> items = new ArrayList<>(chatMessageRepository.selectMessagePage(conversationId, userId, beforeMessageId, offset, size));
         markMessagesDelivered(userId, conversationId, items);
         Collections.reverse(items);
         Map<Long, SysUser> userMap = loadUsers(collectSenderIds(items));
@@ -577,7 +556,7 @@ public class UserChatServiceImpl implements UserChatService {
      */
     private ConversationAccessContext requireConversationAccess(Long userId, Long conversationId) {
         ExceptionThrowerCore.throwBusinessIfNull(conversationId, ResultErrorCode.ILLEGAL_ARGUMENT, "会话ID不能为空");
-        ChatConversation conversation = chatConversationService.getById(conversationId);
+        ChatConversation conversation = chatConversationRepository.getById(conversationId);
         ExceptionThrowerCore.throwBusinessIf(conversation == null || !Objects.equals(conversation.getStatus(), ChatConstants.CONVERSATION_STATUS_NORMAL), ResultErrorCode.ILLEGAL_ARGUMENT, "会话不存在或不可用");
         if (Objects.equals(conversation.getIsAllSite(), 1)) {
             ensureGlobalConversationMembership(userId);
@@ -646,10 +625,7 @@ public class UserChatServiceImpl implements UserChatService {
     private ChatConversation ensureSingleConversation(Long userId, Long targetUserId) {
         ExceptionThrowerCore.throwBusinessIf(Objects.equals(userId, targetUserId), ResultErrorCode.ILLEGAL_ARGUMENT, "不能给自己发送单聊消息");
         String pairKey = buildSinglePairKey(userId, targetUserId);
-        ChatConversation conversation = chatConversationService.lambdaQuery()
-                .eq(ChatConversation::getSinglePairKey, pairKey)
-                .last("limit 1")
-                .one();
+        ChatConversation conversation = chatConversationRepository.findBySinglePairKey(pairKey);
         if (conversation == null) {
             conversation = new ChatConversation();
             conversation.setConversationType(ChatConstants.CONVERSATION_TYPE_SINGLE);
@@ -657,18 +633,15 @@ public class UserChatServiceImpl implements UserChatService {
             conversation.setIsAllSite(0);
             conversation.setStatus(ChatConstants.CONVERSATION_STATUS_NORMAL);
             try {
-                chatConversationService.save(conversation);
+                chatConversationRepository.save(conversation);
             } catch (DuplicateKeyException ex) {
-                conversation = chatConversationService.lambdaQuery()
-                        .eq(ChatConversation::getSinglePairKey, pairKey)
-                        .last("limit 1")
-                        .one();
+                conversation = chatConversationRepository.findBySinglePairKey(pairKey);
             }
         }
         ExceptionThrowerCore.throwBusinessIfNull(conversation, ResultErrorCode.ILLEGAL_ARGUMENT, "单聊会话创建失败");
         if (!Objects.equals(conversation.getStatus(), ChatConstants.CONVERSATION_STATUS_NORMAL)) {
             conversation.setStatus(ChatConstants.CONVERSATION_STATUS_NORMAL);
-            chatConversationService.updateById(conversation);
+            chatConversationRepository.updateById(conversation);
         }
         upsertConversationMembership(conversation, userId, ChatConstants.MEMBER_ROLE_MEMBER, ChatConstants.JOIN_SOURCE_MANUAL, true);
         upsertConversationMembership(conversation, targetUserId, ChatConstants.MEMBER_ROLE_MEMBER, ChatConstants.JOIN_SOURCE_MANUAL, true);
@@ -679,10 +652,7 @@ public class UserChatServiceImpl implements UserChatService {
      * 确保全站群存在，并为当前用户补建活跃成员和游标记录。
      */
     private ChatConversation ensureGlobalConversationMembership(Long userId) {
-        ChatConversation conversation = chatConversationService.lambdaQuery()
-                .eq(ChatConversation::getIsAllSite, 1)
-                .last("limit 1")
-                .one();
+        ChatConversation conversation = chatConversationRepository.findGlobalConversation();
         if (conversation == null) {
             conversation = new ChatConversation();
             conversation.setConversationType(ChatConstants.CONVERSATION_TYPE_GLOBAL);
@@ -690,12 +660,9 @@ public class UserChatServiceImpl implements UserChatService {
             conversation.setIsAllSite(1);
             conversation.setStatus(ChatConstants.CONVERSATION_STATUS_NORMAL);
             try {
-                chatConversationService.save(conversation);
+                chatConversationRepository.save(conversation);
             } catch (DuplicateKeyException ex) {
-                conversation = chatConversationService.lambdaQuery()
-                        .eq(ChatConversation::getIsAllSite, 1)
-                        .last("limit 1")
-                        .one();
+                conversation = chatConversationRepository.findGlobalConversation();
             }
         }
         ExceptionThrowerCore.throwBusinessIfNull(conversation, ResultErrorCode.ILLEGAL_ARGUMENT, "全站群初始化失败");
@@ -717,7 +684,7 @@ public class UserChatServiceImpl implements UserChatService {
         boolean wasInactive = member == null || !Objects.equals(member.getStatus(), ChatConstants.MEMBER_STATUS_NORMAL);
         if (member == null) {
             member = chatModelMapper.toConversationMember(conversation.getId(), memberUserId, memberRole, joinSource, referenceMessageId, referenceMessageTime);
-            chatConversationMemberService.save(member);
+            chatConversationMemberRepository.save(member);
         } else {
             member.setMemberRole(memberRole);
             member.setJoinSource(joinSource);
@@ -732,7 +699,7 @@ public class UserChatServiceImpl implements UserChatService {
                 member.setLastDeliveredMessageId(referenceMessageId);
                 member.setLastDeliveredAt(referenceMessageTime);
             }
-            chatConversationMemberService.updateById(member);
+            chatConversationMemberRepository.updateById(member);
         }
         ChatMessageReadCursor cursor = getOrCreateCursor(conversation.getId(), memberUserId, referenceMessageId, referenceMessageTime);
         if (resetCursorToLatest) {
@@ -763,7 +730,7 @@ public class UserChatServiceImpl implements UserChatService {
             }
             recipients.add(recipient);
         }
-        chatMessageRecipientService.saveBatch(recipients);
+        chatMessageRecipientRepository.saveBatch(recipients);
     }
 
     private void updateSenderCursorAfterSend(ChatConversation conversation, Long senderId, Long messageId, Date now) {
@@ -780,7 +747,7 @@ public class UserChatServiceImpl implements UserChatService {
             member.setLastReadAt(now);
             member.setLastDeliveredMessageId(messageId);
             member.setLastDeliveredAt(now);
-            chatConversationMemberService.updateById(member);
+            chatConversationMemberRepository.updateById(member);
         }
     }
 
@@ -804,14 +771,7 @@ public class UserChatServiceImpl implements UserChatService {
             if (Objects.equals(recipientUserId, senderId) || chatWebSocketSessionRegistry.getSessions(recipientUserId).isEmpty()) {
                 continue;
             }
-            chatMessageRecipientService.lambdaUpdate()
-                    .eq(ChatMessageRecipient::getConversationId, conversationId)
-                    .eq(ChatMessageRecipient::getRecipientUserId, recipientUserId)
-                    .eq(ChatMessageRecipient::getMessageId, messageId)
-                    .eq(ChatMessageRecipient::getDeliveryStatus, ChatConstants.DELIVERY_STATUS_PENDING)
-                    .set(ChatMessageRecipient::getDeliveryStatus, ChatConstants.DELIVERY_STATUS_DELIVERED)
-                    .set(ChatMessageRecipient::getDeliveredAt, now)
-                    .update();
+            chatMessageRecipientRepository.markDelivered(conversationId, recipientUserId, messageId, now);
             advanceCursorDeliveredState(conversationId, recipientUserId, messageId, now);
             ChatConversationMember member = findMember(conversationId, recipientUserId);
             advanceMemberDeliveredState(member, messageId, now);
@@ -828,14 +788,7 @@ public class UserChatServiceImpl implements UserChatService {
             return;
         }
         Date now = new Date();
-        chatMessageRecipientService.lambdaUpdate()
-                .eq(ChatMessageRecipient::getConversationId, conversationId)
-                .eq(ChatMessageRecipient::getRecipientUserId, userId)
-                .in(ChatMessageRecipient::getMessageId, messageIds)
-                .lt(ChatMessageRecipient::getDeliveryStatus, ChatConstants.DELIVERY_STATUS_DELIVERED)
-                .set(ChatMessageRecipient::getDeliveryStatus, ChatConstants.DELIVERY_STATUS_DELIVERED)
-                .set(ChatMessageRecipient::getDeliveredAt, now)
-                .update();
+        chatMessageRecipientRepository.batchMarkDelivered(conversationId, userId, messageIds, now);
         Long maxMessageId = Collections.max(messageIds);
         advanceCursorDeliveredState(conversationId, userId, maxMessageId, now);
         ChatConversationMember member = findMember(conversationId, userId);
@@ -848,16 +801,11 @@ public class UserChatServiceImpl implements UserChatService {
     }
 
     private long countUnread(Long conversationId, Long userId) {
-        return chatMessageRecipientService.lambdaQuery()
-                .eq(ChatMessageRecipient::getConversationId, conversationId)
-                .eq(ChatMessageRecipient::getRecipientUserId, userId)
-                .eq(ChatMessageRecipient::getVisibleStatus, ChatConstants.VISIBLE_STATUS_VISIBLE)
-                .lt(ChatMessageRecipient::getDeliveryStatus, ChatConstants.DELIVERY_STATUS_READ)
-                .count();
+        return chatMessageRecipientRepository.countUnread(conversationId, userId);
     }
 
     private ChatMessageHistoryItem requireVisibleMessage(Long userId, Long conversationId, Long messageId) {
-        ChatMessageHistoryItem item = chatMessageMapper.selectVisibleMessageById(conversationId, userId, messageId);
+        ChatMessageHistoryItem item = chatMessageRepository.selectVisibleMessageById(conversationId, userId, messageId);
         ExceptionThrowerCore.throwBusinessIfNull(item, ResultErrorCode.ILLEGAL_ARGUMENT, "消息不存在或不可访问");
         return item;
     }
@@ -866,7 +814,7 @@ public class UserChatServiceImpl implements UserChatService {
      * 校验文件引用是否可被聊天消息消费，并收口到文件模块统一的真实文件实体。
      */
     private PreparedFileMessage prepareFileMessage(Long userId, Long businessId) {
-        FileBusinessInfo sourceReference = fileBusinessInfoService.getById(businessId);
+        FileBusinessInfo sourceReference = fileBusinessInfoRepository.getById(businessId);
         ExceptionThrowerCore.throwBusinessIfNull(sourceReference, ResultErrorCode.ILLEGAL_ARGUMENT, "文件业务引用不存在");
         ExceptionThrowerCore.throwBusinessIf(!Objects.equals(sourceReference.getUserId(), userId), ResultErrorCode.FORBIDDEN, "不能发送他人的文件");
         String referenceType = StrUtils.trimToNull(sourceReference.getReferenceType());
@@ -876,7 +824,7 @@ public class UserChatServiceImpl implements UserChatService {
         ExceptionThrowerCore.throwBusinessIf(chatReference && sourceReference.getReferenceId() != null && sourceReference.getReferenceId() > 0L,
                 ResultErrorCode.ILLEGAL_ARGUMENT,
                 "当前文件已经绑定到聊天消息");
-        FileInfo fileInfo = fileInfoService.getById(sourceReference.getFileId());
+        FileInfo fileInfo = fileInfoRepository.getById(sourceReference.getFileId());
         ExceptionThrowerCore.throwBusinessIf(fileInfo == null || !Objects.equals(fileInfo.getStatus(), FileStatusEnum.NORMAL.getValue()),
                 ResultErrorCode.ILLEGAL_ARGUMENT,
                 "文件不存在或不可发送");
@@ -908,14 +856,12 @@ public class UserChatServiceImpl implements UserChatService {
     private ChatFilePayloadVO bindFileReferenceToMessage(PreparedFileMessage preparedFile, Long messageId, String messageType) {
         FileBusinessInfo sourceReference = preparedFile.sourceReference();
         FileInfo fileInfo = preparedFile.fileInfo();
-        FileBusinessInfo chatReference = fileBusinessInfoService.lambdaQuery()
-                .eq(FileBusinessInfo::getFileId, fileInfo.getId())
-                .eq(FileBusinessInfo::getUserId, sourceReference.getUserId())
-                .eq(FileBusinessInfo::getReferenceType, ChatConstants.FILE_MESSAGE_REFERENCE_TYPE)
-                .eq(FileBusinessInfo::getReferenceId, messageId)
-                .orderByDesc(FileBusinessInfo::getId)
-                .last("limit 1")
-                .one();
+        FileBusinessInfo chatReference = fileBusinessInfoRepository.findLatestByFileUserReference(
+                fileInfo.getId(),
+                sourceReference.getUserId(),
+                ChatConstants.FILE_MESSAGE_REFERENCE_TYPE,
+                messageId
+        );
         if (chatReference == null) {
             chatReference = new FileBusinessInfo();
             chatReference.setFileId(fileInfo.getId());
@@ -927,20 +873,18 @@ public class UserChatServiceImpl implements UserChatService {
             chatReference.setCategory(ChatConstants.FILE_MESSAGE_CATEGORY);
             chatReference.setRemark(sourceReference.getRemark());
             try {
-                fileBusinessInfoService.save(chatReference);
+                fileBusinessInfoRepository.save(chatReference);
             } catch (DuplicateKeyException ex) {
-                chatReference = fileBusinessInfoService.lambdaQuery()
-                        .eq(FileBusinessInfo::getFileId, fileInfo.getId())
-                        .eq(FileBusinessInfo::getUserId, sourceReference.getUserId())
-                        .eq(FileBusinessInfo::getReferenceType, ChatConstants.FILE_MESSAGE_REFERENCE_TYPE)
-                        .eq(FileBusinessInfo::getReferenceId, messageId)
-                        .orderByDesc(FileBusinessInfo::getId)
-                        .last("limit 1")
-                        .one();
+                chatReference = fileBusinessInfoRepository.findLatestByFileUserReference(
+                        fileInfo.getId(),
+                        sourceReference.getUserId(),
+                        ChatConstants.FILE_MESSAGE_REFERENCE_TYPE,
+                        messageId
+                );
             }
         }
         if (sourceReference.getId() != null && !Objects.equals(sourceReference.getId(), chatReference.getId())) {
-            fileBusinessInfoService.removeById(sourceReference.getId());
+            fileBusinessInfoRepository.removeById(sourceReference.getId());
         }
         fileLifecycleService.refreshReferenceMetadata(fileInfo.getId(), Integer.valueOf(1).equals(chatReference.getIsPublic()));
         return buildFilePayload(chatReference, fileInfo, messageType);
@@ -981,14 +925,14 @@ public class UserChatServiceImpl implements UserChatService {
         message.setRevokedAt(now);
         message.setContent(ChatConstants.MESSAGE_REVOKED_PLACEHOLDER);
         message.setPayloadJson(null);
-        chatMessageService.updateById(message);
+        chatMessageRepository.updateById(message);
         if (!isAttachmentMessageType(message.getMessageType())) {
             return;
         }
-        List<FileBusinessInfo> references = fileBusinessInfoService.lambdaQuery()
-                .eq(FileBusinessInfo::getReferenceType, ChatConstants.FILE_MESSAGE_REFERENCE_TYPE)
-                .eq(FileBusinessInfo::getReferenceId, message.getId())
-                .list();
+        List<FileBusinessInfo> references = fileBusinessInfoRepository.listByReferenceTypeAndReferenceId(
+                ChatConstants.FILE_MESSAGE_REFERENCE_TYPE,
+                message.getId()
+        );
         if (references.isEmpty()) {
             return;
         }
@@ -996,21 +940,15 @@ public class UserChatServiceImpl implements UserChatService {
                 .map(FileBusinessInfo::getFileId)
                 .filter(Objects::nonNull)
                 .collect(LinkedHashSet::new, Set::add, Set::addAll);
-        fileBusinessInfoService.removeByIds(references.stream().map(FileBusinessInfo::getId).toList());
+        fileBusinessInfoRepository.removeByIds(references.stream().map(FileBusinessInfo::getId).toList());
         fileIds.forEach(fileLifecycleService::syncFileAfterReferenceRemoval);
     }
 
     private ChatMessage requireVisibleMessageEntity(Long userId, Long messageId) {
         ExceptionThrowerCore.throwBusinessIfNull(messageId, ResultErrorCode.ILLEGAL_ARGUMENT, "消息ID不能为空");
-        ChatMessageRecipient recipient = chatMessageRecipientService.lambdaQuery()
-                .eq(ChatMessageRecipient::getRecipientUserId, userId)
-                .eq(ChatMessageRecipient::getMessageId, messageId)
-                .eq(ChatMessageRecipient::getVisibleStatus, ChatConstants.VISIBLE_STATUS_VISIBLE)
-                .orderByDesc(ChatMessageRecipient::getId)
-                .last("limit 1")
-                .one();
+        ChatMessageRecipient recipient = chatMessageRecipientRepository.findVisibleByUserAndMessage(userId, messageId);
         ExceptionThrowerCore.throwBusinessIfNull(recipient, ResultErrorCode.ILLEGAL_ARGUMENT, "消息不存在或不可访问");
-        ChatMessage message = chatMessageService.getById(messageId);
+        ChatMessage message = chatMessageRepository.getById(messageId);
         ExceptionThrowerCore.throwBusinessIfNull(message, ResultErrorCode.ILLEGAL_ARGUMENT, "消息不存在或不可访问");
         return message;
     }
@@ -1047,15 +985,11 @@ public class UserChatServiceImpl implements UserChatService {
         if (!StrUtils.hasText(clientMessageId)) {
             return null;
         }
-        ChatMessage message = chatMessageService.lambdaQuery()
-                .eq(ChatMessage::getSenderId, userId)
-                .eq(ChatMessage::getClientMessageId, clientMessageId)
-                .last("limit 1")
-                .one();
+        ChatMessage message = chatMessageRepository.findBySenderAndClientMessageId(userId, clientMessageId);
         if (message == null || !Objects.equals(message.getConversationId(), conversationId)) {
             return null;
         }
-        return chatMessageMapper.selectVisibleMessageById(conversationId, userId, message.getId());
+        return chatMessageRepository.selectVisibleMessageById(conversationId, userId, message.getId());
     }
 
     private ChatMessageVO resolveDuplicateClientMessage(Long userId,
@@ -1070,7 +1004,7 @@ public class UserChatServiceImpl implements UserChatService {
     }
 
     private ChatConversationVO getConversationVO(Long userId, Long conversationId) {
-        ChatConversationListItem item = chatConversationMapper.selectConversationDetail(conversationId, userId);
+        ChatConversationListItem item = chatConversationRepository.selectConversationDetail(conversationId, userId);
         ExceptionThrowerCore.throwBusinessIfNull(item, ResultErrorCode.ILLEGAL_ARGUMENT, "会话不存在或不可访问");
         List<ChatConversationMember> members = listActiveMembers(conversationId);
         Map<Long, List<ChatConversationMember>> memberMap = Map.of(conversationId, members);
@@ -1179,10 +1113,7 @@ public class UserChatServiceImpl implements UserChatService {
         if (conversationIds == null || conversationIds.isEmpty()) {
             return Map.of();
         }
-        List<ChatConversationMember> members = chatConversationMemberService.lambdaQuery()
-                .in(ChatConversationMember::getConversationId, conversationIds)
-                .eq(ChatConversationMember::getStatus, ChatConstants.MEMBER_STATUS_NORMAL)
-                .list();
+        List<ChatConversationMember> members = chatConversationMemberRepository.listActiveByConversationIds(conversationIds);
         Map<Long, List<ChatConversationMember>> result = new LinkedHashMap<>();
         for (ChatConversationMember member : members) {
             result.computeIfAbsent(member.getConversationId(), key -> new ArrayList<>()).add(member);
@@ -1191,10 +1122,7 @@ public class UserChatServiceImpl implements UserChatService {
     }
 
     private List<ChatConversationMember> listActiveMembers(Long conversationId) {
-        return chatConversationMemberService.lambdaQuery()
-                .eq(ChatConversationMember::getConversationId, conversationId)
-                .eq(ChatConversationMember::getStatus, ChatConstants.MEMBER_STATUS_NORMAL)
-                .list();
+        return chatConversationMemberRepository.listActiveByConversationId(conversationId);
     }
 
     private Set<Long> collectConversationUserIds(List<ChatConversationListItem> items,
@@ -1224,7 +1152,7 @@ public class UserChatServiceImpl implements UserChatService {
             return Map.of();
         }
         Map<Long, SysUser> userMap = new HashMap<>();
-        for (SysUser user : sysUserService.listByIds(userIds)) {
+        for (SysUser user : sysUserRepository.listByIds(userIds)) {
             userMap.put(user.getId(), user);
         }
         return userMap;
@@ -1236,7 +1164,7 @@ public class UserChatServiceImpl implements UserChatService {
         if (!allowSelf && Objects.equals(currentUserId, userId)) {
             throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "不能操作自己");
         }
-        SysUser user = sysUserService.getById(userId);
+        SysUser user = sysUserRepository.getById(userId);
         ExceptionThrowerCore.throwBusinessIf(user == null || !Objects.equals(user.getDeletedFlag(), 0), ResultErrorCode.USER_NOT_FOUND, "用户不存在");
         ExceptionThrowerCore.throwBusinessIf(!Objects.equals(user.getStatus(), 1), ResultErrorCode.ILLEGAL_ARGUMENT, "目标用户不可用");
         return user;
@@ -1266,12 +1194,7 @@ public class UserChatServiceImpl implements UserChatService {
     }
 
     private ChatConversationMember findMember(Long conversationId, Long userId) {
-        return chatConversationMemberService.lambdaQuery()
-                .eq(ChatConversationMember::getConversationId, conversationId)
-                .eq(ChatConversationMember::getUserId, userId)
-                .orderByDesc(ChatConversationMember::getId)
-                .last("limit 1")
-                .one();
+        return chatConversationMemberRepository.findByConversationAndUser(conversationId, userId);
     }
 
     private ChatMessageReadCursor getOrCreateCursor(Long conversationId, Long userId, Long referenceMessageId, Date referenceTime) {
@@ -1291,7 +1214,7 @@ public class UserChatServiceImpl implements UserChatService {
         cursor.setDeliveredAt(referenceTime);
         cursor.setUnreadCount(0);
         try {
-            chatMessageReadCursorService.save(cursor);
+            chatMessageReadCursorRepository.save(cursor);
         } catch (DuplicateKeyException ex) {
             ChatMessageReadCursor existing = findCursor(conversationId, userId);
             if (existing != null) {
@@ -1307,19 +1230,14 @@ public class UserChatServiceImpl implements UserChatService {
 
     private void saveOrUpdateCursor(ChatMessageReadCursor cursor) {
         if (cursor.getId() == null) {
-            chatMessageReadCursorService.save(cursor);
+            chatMessageReadCursorRepository.save(cursor);
         } else {
-            chatMessageReadCursorService.updateById(cursor);
+            chatMessageReadCursorRepository.updateById(cursor);
         }
     }
 
     private ChatMessageReadCursor findCursor(Long conversationId, Long userId) {
-        return chatMessageReadCursorService.lambdaQuery()
-                .eq(ChatMessageReadCursor::getConversationId, conversationId)
-                .eq(ChatMessageReadCursor::getUserId, userId)
-                .orderByDesc(ChatMessageReadCursor::getId)
-                .last("limit 1")
-                .one();
+        return chatMessageReadCursorRepository.findByConversationAndUser(conversationId, userId);
     }
 
     /**
@@ -1333,14 +1251,7 @@ public class UserChatServiceImpl implements UserChatService {
         if (cursor.getId() == null || (cursor.getDeliveredMessageId() != null && cursor.getDeliveredMessageId() >= messageId)) {
             return;
         }
-        boolean updated = chatMessageReadCursorService.lambdaUpdate()
-                .eq(ChatMessageReadCursor::getId, cursor.getId())
-                .and(wrapper -> wrapper.isNull(ChatMessageReadCursor::getDeliveredMessageId)
-                        .or()
-                        .lt(ChatMessageReadCursor::getDeliveredMessageId, messageId))
-                .set(ChatMessageReadCursor::getDeliveredMessageId, messageId)
-                .set(ChatMessageReadCursor::getDeliveredAt, deliveredAt)
-                .update();
+        boolean updated = chatMessageReadCursorRepository.advanceDeliveredState(cursor.getId(), messageId, deliveredAt);
         if (updated) {
             cursor.setDeliveredMessageId(messageId);
             cursor.setDeliveredAt(deliveredAt);
@@ -1354,14 +1265,7 @@ public class UserChatServiceImpl implements UserChatService {
         if (member.getLastDeliveredMessageId() != null && member.getLastDeliveredMessageId() >= messageId) {
             return;
         }
-        boolean updated = chatConversationMemberService.lambdaUpdate()
-                .eq(ChatConversationMember::getId, member.getId())
-                .and(wrapper -> wrapper.isNull(ChatConversationMember::getLastDeliveredMessageId)
-                        .or()
-                        .lt(ChatConversationMember::getLastDeliveredMessageId, messageId))
-                .set(ChatConversationMember::getLastDeliveredMessageId, messageId)
-                .set(ChatConversationMember::getLastDeliveredAt, deliveredAt)
-                .update();
+        boolean updated = chatConversationMemberRepository.advanceDeliveredState(member.getId(), messageId, deliveredAt);
         if (updated) {
             member.setLastDeliveredMessageId(messageId);
             member.setLastDeliveredAt(deliveredAt);
@@ -1375,7 +1279,7 @@ public class UserChatServiceImpl implements UserChatService {
             member.setLastDeliveredMessageId(messageId);
             member.setLastDeliveredAt(readAt);
         }
-        chatConversationMemberService.updateById(member);
+        chatConversationMemberRepository.updateById(member);
     }
 
     private String buildSinglePairKey(Long userId, Long targetUserId) {
@@ -1594,7 +1498,7 @@ public class UserChatServiceImpl implements UserChatService {
             return Map.of();
         }
         List<ChatMessageHistoryItem> replyItems = Objects.requireNonNullElse(
-                chatMessageMapper.selectVisibleMessagesByIds(conversationId, userId, ids),
+                chatMessageRepository.selectVisibleMessagesByIds(conversationId, userId, ids),
                 List.of()
         );
         Map<Long, SysUser> userMap = loadUsers(collectSenderIds(replyItems));

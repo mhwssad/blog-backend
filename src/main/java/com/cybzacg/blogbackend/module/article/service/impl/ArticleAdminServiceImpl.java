@@ -1,6 +1,5 @@
 package com.cybzacg.blogbackend.module.article.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.BlogArticle;
@@ -18,21 +17,21 @@ import com.cybzacg.blogbackend.module.article.model.admin.ArticleAdminPageQuery;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleAdminVO;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleDetailVO;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleSaveRequest;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleAccessRepository;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleCategoryRepository;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.article.service.ArticleAdminService;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleAccessService;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleCategoryService;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleService;
-import com.cybzacg.blogbackend.module.auth.service.SysUserService;
-import com.cybzacg.blogbackend.module.content.service.SysCategoryService;
-import com.cybzacg.blogbackend.module.content.service.SysCollectionFolderService;
-import com.cybzacg.blogbackend.module.content.service.SysCollectionService;
-import com.cybzacg.blogbackend.module.content.service.SysCommentService;
-import com.cybzacg.blogbackend.module.content.service.SysInteractionService;
-import com.cybzacg.blogbackend.module.content.service.SysTagRelationService;
-import com.cybzacg.blogbackend.module.content.service.SysTagService;
-import com.cybzacg.blogbackend.module.content.service.SysUserFootprintService;
-import com.cybzacg.blogbackend.module.file.service.FileBusinessInfoService;
+import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysCategoryRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysCollectionFolderRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysCollectionRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysCommentRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysInteractionRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysTagRelationRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysTagRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysUserFootprintRepository;
+import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.IdCollectionUtils;
@@ -42,6 +41,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -63,20 +63,20 @@ import java.util.stream.Collectors;
 public class ArticleAdminServiceImpl implements ArticleAdminService {
     private static final String TARGET_TYPE_ARTICLE = "article";
 
-    private final BlogArticleService blogArticleService;
-    private final BlogArticleCategoryService blogArticleCategoryService;
-    private final BlogArticleAccessService blogArticleAccessService;
-    private final SysTagRelationService sysTagRelationService;
-    private final SysCategoryService sysCategoryService;
-    private final SysTagService sysTagService;
-    private final SysCommentService sysCommentService;
-    private final SysCollectionFolderService sysCollectionFolderService;
-    private final SysCollectionService sysCollectionService;
-    private final SysInteractionService sysInteractionService;
-    private final SysUserFootprintService sysUserFootprintService;
-    private final FileBusinessInfoService fileBusinessInfoService;
+    private final BlogArticleRepository blogArticleRepository;
+    private final BlogArticleCategoryRepository blogArticleCategoryRepository;
+    private final BlogArticleAccessRepository blogArticleAccessRepository;
+    private final SysTagRelationRepository sysTagRelationRepository;
+    private final SysCategoryRepository sysCategoryRepository;
+    private final SysTagRepository sysTagRepository;
+    private final SysCommentRepository sysCommentRepository;
+    private final SysCollectionFolderRepository sysCollectionFolderRepository;
+    private final SysCollectionRepository sysCollectionRepository;
+    private final SysInteractionRepository sysInteractionRepository;
+    private final SysUserFootprintRepository sysUserFootprintRepository;
+    private final FileBusinessInfoRepository fileBusinessInfoRepository;
     private final FileLifecycleService fileLifecycleService;
-    private final SysUserService sysUserService;
+    private final SysUserRepository sysUserRepository;
     private final ArticleModelMapper articleModelMapper;
     private final ArticleAccessControlService articleAccessControlService;
 
@@ -95,23 +95,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
                     .build();
         }
 
-        LambdaQueryWrapper<BlogArticle> wrapper = new LambdaQueryWrapper<>();
-        if (StringUtils.hasText(query.getKeyword())) {
-            wrapper.and(w -> w.like(BlogArticle::getTitle, query.getKeyword())
-                    .or()
-                    .like(BlogArticle::getSummary, query.getKeyword()));
-        }
-        wrapper.eq(query.getAuthorId() != null, BlogArticle::getAuthorId, query.getAuthorId())
-                .eq(query.getStatus() != null, BlogArticle::getStatus, query.getStatus())
-                .eq(query.getAccessLevel() != null, BlogArticle::getAccessLevel, query.getAccessLevel())
-                .eq(query.getIsTop() != null, BlogArticle::getIsTop, query.getIsTop())
-                .ge(query.getPublishTimeStart() != null, BlogArticle::getPublishTime, query.getPublishTimeStart())
-                .le(query.getPublishTimeEnd() != null, BlogArticle::getPublishTime, query.getPublishTimeEnd())
-                .in(filteredArticleIds != null, BlogArticle::getId, filteredArticleIds)
-                .orderByDesc(BlogArticle::getUpdatedAt)
-                .orderByDesc(BlogArticle::getId);
-
-        Page<BlogArticle> page = blogArticleService.page(new Page<>(query.getCurrent(), query.getSize()), wrapper);
+        Page<BlogArticle> page = blogArticleRepository.pageAdminArticles(query, filteredArticleIds);
         Map<Long, String> authorNameMap = loadAuthorNames(page.getRecords().stream()
                 .map(BlogArticle::getAuthorId)
                 .filter(Objects::nonNull)
@@ -143,7 +127,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         BlogArticle article = articleModelMapper.toArticle(request);
         applyArticleFields(article, request, true);
         initializeCounters(article);
-        blogArticleService.save(article);
+        blogArticleRepository.save(article);
         syncCategoryBindings(article.getId(), request.getCategoryIds());
         syncTagBindings(article.getId(), request.getTagIds());
         syncAccessBindings(article.getId(), article.getAccessLevel(), request.getAccessList());
@@ -159,7 +143,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         validateSaveRequest(request);
         BlogArticle article = getArticleOrThrow(id);
         applyArticleFields(article, request, false);
-        blogArticleService.updateById(article);
+        blogArticleRepository.updateById(article);
         syncCategoryBindings(id, request.getCategoryIds());
         syncTagBindings(id, request.getTagIds());
         syncAccessBindings(id, article.getAccessLevel(), request.getAccessList());
@@ -178,11 +162,11 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         if (Integer.valueOf(1).equals(status) && article.getPublishTime() == null) {
             article.setPublishTime(new Date());
         }
-        blogArticleService.updateById(article);
+        blogArticleRepository.updateById(article);
     }
 
     /**
-     * 为“指定用户可见”的文章重建授权名单。
+     * 为"指定用户可见"的文章重建授权名单。
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -201,38 +185,20 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteArticle(Long id) {
         getArticleOrThrow(id);
-        List<com.cybzacg.blogbackend.domain.SysComment> comments = sysCommentService.lambdaQuery()
-                .eq(com.cybzacg.blogbackend.domain.SysComment::getTargetType, TARGET_TYPE_ARTICLE)
-                .eq(com.cybzacg.blogbackend.domain.SysComment::getTargetId, id)
-                .list();
-        List<com.cybzacg.blogbackend.domain.SysCollection> collections = sysCollectionService.lambdaQuery()
-                .eq(com.cybzacg.blogbackend.domain.SysCollection::getTargetType, TARGET_TYPE_ARTICLE)
-                .eq(com.cybzacg.blogbackend.domain.SysCollection::getTargetId, id)
-                .list();
+        List<com.cybzacg.blogbackend.domain.SysComment> comments = sysCommentRepository.findByTargetTypeAndTargetId(TARGET_TYPE_ARTICLE, id);
+        List<com.cybzacg.blogbackend.domain.SysCollection> collections = sysCollectionRepository.listByTargetTypeAndTargetId(TARGET_TYPE_ARTICLE, id);
 
-        blogArticleAccessService.remove(new LambdaQueryWrapper<BlogArticleAccess>()
-                .eq(BlogArticleAccess::getArticleId, id));
-        blogArticleCategoryService.remove(new LambdaQueryWrapper<BlogArticleCategory>()
-                .eq(BlogArticleCategory::getArticleId, id));
-        sysTagRelationService.remove(new LambdaQueryWrapper<SysTagRelation>()
-                .eq(SysTagRelation::getTargetType, TARGET_TYPE_ARTICLE)
-                .eq(SysTagRelation::getTargetId, id));
+        blogArticleAccessRepository.removeByArticleId(id);
+        blogArticleCategoryRepository.removeByArticleId(id);
+        sysTagRelationRepository.removeByTargetTypeAndTargetId(TARGET_TYPE_ARTICLE, id);
         cleanupArticleAttachments(id);
         cleanupCommentRelations(comments);
-        sysCommentService.remove(new LambdaQueryWrapper<com.cybzacg.blogbackend.domain.SysComment>()
-                .eq(com.cybzacg.blogbackend.domain.SysComment::getTargetType, TARGET_TYPE_ARTICLE)
-                .eq(com.cybzacg.blogbackend.domain.SysComment::getTargetId, id));
-        sysCollectionService.remove(new LambdaQueryWrapper<com.cybzacg.blogbackend.domain.SysCollection>()
-                .eq(com.cybzacg.blogbackend.domain.SysCollection::getTargetType, TARGET_TYPE_ARTICLE)
-                .eq(com.cybzacg.blogbackend.domain.SysCollection::getTargetId, id));
+        sysCommentRepository.removeByTargetTypeAndTargetId(TARGET_TYPE_ARTICLE, id);
+        sysCollectionRepository.removeByTargetTypeAndTargetId(TARGET_TYPE_ARTICLE, id);
         refreshCollectionFolderCounts(collections);
-        sysInteractionService.remove(new LambdaQueryWrapper<com.cybzacg.blogbackend.domain.SysInteraction>()
-                .eq(com.cybzacg.blogbackend.domain.SysInteraction::getTargetType, TARGET_TYPE_ARTICLE)
-                .eq(com.cybzacg.blogbackend.domain.SysInteraction::getTargetId, id));
-        sysUserFootprintService.remove(new LambdaQueryWrapper<com.cybzacg.blogbackend.domain.SysUserFootprint>()
-                .eq(com.cybzacg.blogbackend.domain.SysUserFootprint::getTargetType, TARGET_TYPE_ARTICLE)
-                .eq(com.cybzacg.blogbackend.domain.SysUserFootprint::getTargetId, id));
-        blogArticleService.removeById(id);
+        sysInteractionRepository.removeByTargetTypeAndTargetId(TARGET_TYPE_ARTICLE, id);
+        sysUserFootprintRepository.removeByTargetTypeAndTargetId(TARGET_TYPE_ARTICLE, id);
+        blogArticleRepository.removeById(id);
     }
 
     /**
@@ -319,7 +285,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
 
     private void validateAuthor(Long authorId) {
         ExceptionThrowerCore.throwBusinessIfNull(authorId, ResultErrorCode.ILLEGAL_ARGUMENT, "作者不能为空");
-        SysUser author = sysUserService.getById(authorId);
+        SysUser author = sysUserRepository.getById(authorId);
         ExceptionThrowerCore.throwBusinessIf(author == null || Integer.valueOf(1).equals(author.getDeletedFlag()),
                 ResultErrorCode.USER_NOT_FOUND, "作者不存在");
     }
@@ -328,10 +294,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         if (categoryIds == null || categoryIds.isEmpty()) {
             return;
         }
-        List<SysCategory> categories = sysCategoryService.lambdaQuery()
-                .in(SysCategory::getId, categoryIds)
-                .eq(SysCategory::getType, TARGET_TYPE_ARTICLE)
-                .list();
+        List<SysCategory> categories = sysCategoryRepository.listByTypeAndIds(TARGET_TYPE_ARTICLE, categoryIds);
         ExceptionThrowerCore.throwBusinessIf(categories.size() != categoryIds.size(),
                 ResultErrorCode.ILLEGAL_ARGUMENT, "分类不存在或不属于文章分类");
     }
@@ -340,7 +303,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         if (tagIds == null || tagIds.isEmpty()) {
             return;
         }
-        List<SysTag> tags = sysTagService.listByIds(tagIds);
+        List<SysTag> tags = sysTagRepository.listByIds(tagIds);
         ExceptionThrowerCore.throwBusinessIf(tags.size() != tagIds.size(), ResultErrorCode.ILLEGAL_ARGUMENT, "标签不存在");
     }
 
@@ -363,7 +326,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
             ExceptionThrowerCore.throwBusinessIf(!keys.add(key), ResultErrorCode.ILLEGAL_ARGUMENT, "存在重复的访问授权记录");
             userIds.add(item.getUserId());
         }
-        List<SysUser> users = sysUserService.listByIds(userIds);
+        List<SysUser> users = sysUserRepository.listByIds(userIds);
         long availableUsers = users.stream()
                 .filter(user -> !Integer.valueOf(1).equals(user.getDeletedFlag()))
                 .count();
@@ -383,11 +346,10 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
     }
 
     /**
-     * 以“先删后建”的方式同步文章分类关系，保证顺序和最终状态一致。
+     * 以"先删后建"的方式同步文章分类关系，保证顺序和最终状态一致。
      */
     private void syncCategoryBindings(Long articleId, List<Long> categoryIds) {
-        blogArticleCategoryService.remove(new LambdaQueryWrapper<BlogArticleCategory>()
-                .eq(BlogArticleCategory::getArticleId, articleId));
+        blogArticleCategoryRepository.removeByArticleId(articleId);
         if (categoryIds == null || categoryIds.isEmpty()) {
             return;
         }
@@ -395,16 +357,14 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         for (int i = 0; i < categoryIds.size(); i++) {
             relations.add(articleModelMapper.toArticleCategory(articleId, categoryIds.get(i), i + 1));
         }
-        blogArticleCategoryService.saveBatch(relations);
+        blogArticleCategoryRepository.saveBatch(relations);
     }
 
     /**
      * 重建文章标签关系，保持标签绑定结果与请求参数完全一致。
      */
     private void syncTagBindings(Long articleId, List<Long> tagIds) {
-        sysTagRelationService.remove(new LambdaQueryWrapper<SysTagRelation>()
-                .eq(SysTagRelation::getTargetType, TARGET_TYPE_ARTICLE)
-                .eq(SysTagRelation::getTargetId, articleId));
+        sysTagRelationRepository.removeByTargetTypeAndTargetId(TARGET_TYPE_ARTICLE, articleId);
         if (tagIds == null || tagIds.isEmpty()) {
             return;
         }
@@ -412,7 +372,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         for (Long tagId : tagIds) {
             relations.add(articleModelMapper.toTagRelation(tagId, articleId, TARGET_TYPE_ARTICLE));
         }
-        sysTagRelationService.saveBatch(relations);
+        sysTagRelationRepository.saveBatch(relations);
     }
 
     /**
@@ -420,8 +380,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
      */
     private void syncAccessBindings(Long articleId, Integer accessLevel, List<ArticleAccessItem> accessList) {
         if (!Integer.valueOf(4).equals(accessLevel)) {
-            blogArticleAccessService.remove(new LambdaQueryWrapper<BlogArticleAccess>()
-                    .eq(BlogArticleAccess::getArticleId, articleId));
+            blogArticleAccessRepository.removeByArticleId(articleId);
             return;
         }
         rebuildAccessBindings(articleId, accessList);
@@ -431,8 +390,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
      * 先清空后重建文章的指定用户授权记录，保持授权结果与请求完全一致。
      */
     private void rebuildAccessBindings(Long articleId, List<ArticleAccessItem> accessList) {
-        blogArticleAccessService.remove(new LambdaQueryWrapper<BlogArticleAccess>()
-                .eq(BlogArticleAccess::getArticleId, articleId));
+        blogArticleAccessRepository.removeByArticleId(articleId);
         if (accessList == null || accessList.isEmpty()) {
             return;
         }
@@ -440,18 +398,14 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         List<BlogArticleAccess> records = accessList.stream()
                 .map(item -> articleModelMapper.toArticleAccess(articleId, item, now))
                 .toList();
-        blogArticleAccessService.saveBatch(records);
+        blogArticleAccessRepository.saveBatch(records);
     }
 
     /**
      * 读取文章分类 ID 列表，并保持与绑定顺序一致，供后台详情回显复用。
      */
     private List<Long> listCategoryIds(Long articleId) {
-        return blogArticleCategoryService.lambdaQuery()
-                .eq(BlogArticleCategory::getArticleId, articleId)
-                .orderByAsc(BlogArticleCategory::getSortOrder)
-                .orderByAsc(BlogArticleCategory::getId)
-                .list()
+        return blogArticleCategoryRepository.listByArticleIdOrdered(articleId)
                 .stream()
                 .map(BlogArticleCategory::getCategoryId)
                 .toList();
@@ -461,14 +415,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
      * 读取文章标签 ID 列表，并保持与绑定顺序一致，供后台详情回显复用。
      */
     private List<Long> listTagIds(Long articleId) {
-        return sysTagRelationService.lambdaQuery()
-                .eq(SysTagRelation::getTargetType, TARGET_TYPE_ARTICLE)
-                .eq(SysTagRelation::getTargetId, articleId)
-                .orderByAsc(SysTagRelation::getId)
-                .list()
-                .stream()
-                .map(SysTagRelation::getTagId)
-                .toList();
+        return sysTagRelationRepository.listTagIdsByTargetTypeAndTargetId(TARGET_TYPE_ARTICLE, articleId);
     }
 
     /**
@@ -477,21 +424,15 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
     private Set<Long> resolveArticleIdsByRelations(ArticleAdminPageQuery query) {
         Set<Long> ids = null;
         if (query.getCategoryId() != null) {
-            Set<Long> categoryIds = blogArticleCategoryService.lambdaQuery()
-                    .eq(BlogArticleCategory::getCategoryId, query.getCategoryId())
-                    .list()
+            Set<Long> categoryIds = blogArticleCategoryRepository.listArticleIdsByCategoryId(query.getCategoryId())
                     .stream()
                     .map(BlogArticleCategory::getArticleId)
                     .collect(Collectors.toCollection(LinkedHashSet::new));
             ids = categoryIds;
         }
         if (query.getTagId() != null) {
-            Set<Long> tagIds = sysTagRelationService.lambdaQuery()
-                    .eq(SysTagRelation::getTargetType, TARGET_TYPE_ARTICLE)
-                    .eq(SysTagRelation::getTagId, query.getTagId())
-                    .list()
+            Set<Long> tagIds = sysTagRelationRepository.listTargetIdsByTargetTypeAndTagId(TARGET_TYPE_ARTICLE, query.getTagId())
                     .stream()
-                    .map(SysTagRelation::getTargetId)
                     .collect(Collectors.toCollection(LinkedHashSet::new));
             ids = intersect(ids, tagIds);
         }
@@ -519,9 +460,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         if (commentIds.isEmpty()) {
             return;
         }
-        sysInteractionService.remove(new LambdaQueryWrapper<com.cybzacg.blogbackend.domain.SysInteraction>()
-                .eq(com.cybzacg.blogbackend.domain.SysInteraction::getTargetType, "comment")
-                .in(com.cybzacg.blogbackend.domain.SysInteraction::getTargetId, commentIds));
+        sysInteractionRepository.removeByTargetTypeAndTargetIds("comment", commentIds);
     }
 
     /**
@@ -536,15 +475,13 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         for (Long folderId : folderIds) {
-            com.cybzacg.blogbackend.domain.SysCollectionFolder folder = sysCollectionFolderService.getById(folderId);
+            com.cybzacg.blogbackend.domain.SysCollectionFolder folder = sysCollectionFolderRepository.getById(folderId);
             if (folder == null) {
                 continue;
             }
-            long count = sysCollectionService.lambdaQuery()
-                    .eq(com.cybzacg.blogbackend.domain.SysCollection::getFolderId, folderId)
-                    .count();
+            long count = sysCollectionRepository.countByFolderId(folderId);
             folder.setCollectionCount((int) count);
-            sysCollectionFolderService.updateById(folder);
+            sysCollectionFolderRepository.updateById(folder);
         }
     }
 
@@ -552,10 +489,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
      * 清理文章附件引用，并在引用归零时同步回收物理文件状态。
      */
     private void cleanupArticleAttachments(Long articleId) {
-        List<FileBusinessInfo> references = fileBusinessInfoService.lambdaQuery()
-                .eq(FileBusinessInfo::getReferenceType, "article_attachment")
-                .eq(FileBusinessInfo::getReferenceId, articleId)
-                .list();
+        List<FileBusinessInfo> references = fileBusinessInfoRepository.listByReferenceTypeAndReferenceId("article_attachment", articleId);
         if (CollectionUtils.isEmpty(references)) {
             return;
         }
@@ -563,7 +497,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
                 .map(FileBusinessInfo::getFileId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
-        fileBusinessInfoService.removeByIds(references.stream().map(FileBusinessInfo::getId).toList());
+        fileBusinessInfoRepository.removeByIds(references.stream().map(FileBusinessInfo::getId).toList());
         for (Long fileId : fileIds) {
             fileLifecycleService.syncFileAfterReferenceRemoval(fileId);
         }
@@ -575,7 +509,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
      * 读取文章，不存在时统一抛出业务异常。
      */
     private BlogArticle getArticleOrThrow(Long id) {
-        BlogArticle article = blogArticleService.getById(id);
+        BlogArticle article = blogArticleRepository.getById(id);
         ExceptionThrowerCore.throwBusinessIfNull(article, ResultErrorCode.ILLEGAL_ARGUMENT, "文章不存在");
         return article;
     }
@@ -588,7 +522,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
             return Map.of();
         }
         Map<Long, String> authorNameMap = new HashMap<>();
-        sysUserService.listByIds(authorIds).forEach(user -> authorNameMap.put(user.getId(), buildAuthorName(user)));
+        sysUserRepository.listByIds(authorIds).forEach(user -> authorNameMap.put(user.getId(), buildAuthorName(user)));
         return authorNameMap;
     }
 
@@ -599,7 +533,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         if (authorId == null) {
             return null;
         }
-        SysUser user = sysUserService.getById(authorId);
+        SysUser user = sysUserRepository.getById(authorId);
         return user == null ? null : buildAuthorName(user);
     }
 
@@ -615,8 +549,3 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
     }
 
 }
-
-
-
-
-

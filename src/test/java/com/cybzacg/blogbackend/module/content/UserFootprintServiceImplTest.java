@@ -7,7 +7,7 @@ import com.cybzacg.blogbackend.domain.SysUserFootprint;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleService;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.user.UserFootprintPageQuery;
 import com.cybzacg.blogbackend.module.content.model.user.UserFootprintVO;
@@ -39,7 +39,7 @@ class UserFootprintServiceImplTest {
     @Mock
     private SysUserFootprintRepository sysUserFootprintRepository;
     @Mock
-    private BlogArticleService blogArticleService;
+    private BlogArticleRepository blogArticleService;
     @Mock
     private ArticleAccessControlService articleAccessControlService;
     @Mock

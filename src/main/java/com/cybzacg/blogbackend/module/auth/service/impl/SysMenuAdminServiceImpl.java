@@ -3,13 +3,13 @@ package com.cybzacg.blogbackend.module.auth.service.impl;
 import com.cybzacg.blogbackend.common.constant.MenuConstants;
 import com.cybzacg.blogbackend.domain.SysMenu;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.module.auth.convert.RbacAdminModelMapper;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysMenuAdminVO;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysMenuSaveRequest;
+import com.cybzacg.blogbackend.module.auth.repository.SysMenuRepository;
+import com.cybzacg.blogbackend.module.auth.repository.SysRoleMenuRepository;
 import com.cybzacg.blogbackend.module.auth.service.SysMenuAdminService;
-import com.cybzacg.blogbackend.module.auth.service.SysMenuService;
-import com.cybzacg.blogbackend.module.auth.service.SysRoleMenuService;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,18 +29,13 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class SysMenuAdminServiceImpl implements SysMenuAdminService {
-    private final SysMenuService sysMenuService;
-    private final SysRoleMenuService sysRoleMenuService;
+    private final SysMenuRepository sysMenuRepository;
+    private final SysRoleMenuRepository sysRoleMenuRepository;
     private final RbacAdminModelMapper rbacAdminModelMapper;
 
     @Override
     public List<SysMenuAdminVO> listMenuTree() {
-        List<SysMenu> menus = sysMenuService.lambdaQuery()
-                .orderByAsc(SysMenu::getParentId)
-                .orderByAsc(SysMenu::getSort)
-                .orderByAsc(SysMenu::getId)
-                .list();
-        return buildMenuTree(menus);
+        return buildMenuTree(sysMenuRepository.findAllOrdered());
     }
 
     @Override
@@ -57,7 +52,7 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
         SysMenu menu = rbacAdminModelMapper.toMenu(request);
         applyMenuFields(menu, request);
         menu.setTreePath(buildTreePath(parent));
-        sysMenuService.save(menu);
+        sysMenuRepository.save(menu);
         return rbacAdminModelMapper.toMenuVO(menu);
     }
 
@@ -70,7 +65,7 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
 
         applyMenuFields(menu, request);
         menu.setTreePath(buildTreePath(parent));
-        sysMenuService.updateById(menu);
+        sysMenuRepository.updateById(menu);
         refreshChildrenTreePath(menu);
         return rbacAdminModelMapper.toMenuVO(menu);
     }
@@ -79,24 +74,16 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteMenu(Long id) {
         getMenuOrThrow(id);
-        boolean hasChildren = sysMenuService.lambdaQuery()
-                .eq(SysMenu::getParentId, id)
-                .exists();
+        boolean hasChildren = sysMenuRepository.existsByParentId(id);
         ExceptionThrowerCore.throwBusinessIf(hasChildren, ResultErrorCode.ILLEGAL_ARGUMENT, "当前菜单存在子菜单，无法删除");
-        sysRoleMenuService.removeByMenuId(id);
-        sysMenuService.removeById(id);
+        sysRoleMenuRepository.deleteByMenuId(id);
+        sysMenuRepository.removeById(id);
     }
 
-    /**
-     * 将请求中的菜单字段统一写回实体，保持新增和更新逻辑一致。
-     */
     private void applyMenuFields(SysMenu menu, SysMenuSaveRequest request) {
         rbacAdminModelMapper.updateMenu(request, menu);
     }
 
-    /**
-     * 校验父菜单是否合法，避免出现自关联或挂载到子孙节点的情况。
-     */
     private SysMenu validateParent(Long parentId, Long currentMenuId) {
         ExceptionThrowerCore.throwBusinessIfNull(parentId, ResultErrorCode.ILLEGAL_ARGUMENT, "父菜单ID不能为空");
         if (MenuConstants.ROOT_PARENT_ID.equals(parentId)) {
@@ -109,9 +96,6 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
         return parent;
     }
 
-    /**
-     * 判断候选父节点是否为当前菜单的后代节点，防止树结构成环。
-     */
     private boolean isDescendant(SysMenu menu, Long currentMenuId) {
         if (!StringUtils.hasText(menu.getTreePath())) {
             return false;
@@ -131,7 +115,7 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
     }
 
     private SysMenu getMenuOrThrow(Long id) {
-        SysMenu menu = sysMenuService.getById(id);
+        SysMenu menu = sysMenuRepository.getById(id);
         ExceptionThrowerCore.throwBusinessIfNull(menu, ResultErrorCode.ILLEGAL_ARGUMENT, "菜单不存在");
         return menu;
     }
@@ -146,26 +130,18 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
         return parent.getTreePath() + "," + parent.getId();
     }
 
-    /**
-     * 递归刷新当前菜单所有子节点的树路径，保证迁移父节点后层级链路正确。
-     */
     private void refreshChildrenTreePath(SysMenu menu) {
-        List<SysMenu> children = sysMenuService.lambdaQuery()
-                .eq(SysMenu::getParentId, menu.getId())
-                .list();
+        List<SysMenu> children = sysMenuRepository.findByParentId(menu.getId());
         if (children == null || children.isEmpty()) {
             return;
         }
         for (SysMenu child : children) {
             child.setTreePath(buildTreePath(menu));
-            sysMenuService.updateById(child);
+            sysMenuRepository.updateById(child);
             refreshChildrenTreePath(child);
         }
     }
 
-    /**
-     * 将菜单列表组装成树结构，供后台菜单管理界面直接展示。
-     */
     private List<SysMenuAdminVO> buildMenuTree(List<SysMenu> menus) {
         if (menus == null || menus.isEmpty()) {
             return List.of();
@@ -188,11 +164,3 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
         return roots;
     }
 }
-
-
-
-
-
-
-
-

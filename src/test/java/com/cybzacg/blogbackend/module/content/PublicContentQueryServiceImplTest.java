@@ -1,22 +1,20 @@
 package com.cybzacg.blogbackend.module.content;
 
-import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
-import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.cybzacg.blogbackend.domain.SysCategory;
 import com.cybzacg.blogbackend.domain.SysComment;
 import com.cybzacg.blogbackend.domain.SysInteraction;
 import com.cybzacg.blogbackend.domain.SysTag;
 import com.cybzacg.blogbackend.domain.SysUser;
-import com.cybzacg.blogbackend.mapper.SysCommentMapper;
-import com.cybzacg.blogbackend.mapper.SysTagMapper;
 import com.cybzacg.blogbackend.module.auth.service.SysUserService;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicCategoryTreeVO;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicCommentQuery;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicCommentVO;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicTagVO;
-import com.cybzacg.blogbackend.module.content.service.SysCategoryService;
-import com.cybzacg.blogbackend.module.content.service.SysInteractionService;
+import com.cybzacg.blogbackend.module.content.repository.SysCategoryRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysCommentRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysInteractionRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysTagRepository;
 import com.cybzacg.blogbackend.module.content.service.impl.PublicContentQueryServiceImpl;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,8 +29,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.anyCollection;
+import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -41,31 +39,27 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class PublicContentQueryServiceImplTest {
     @Mock
-    private SysCategoryService sysCategoryService;
+    private SysCategoryRepository sysCategoryRepository;
     @Mock
-    private SysTagMapper sysTagMapper;
+    private SysTagRepository sysTagRepository;
     @Mock
-    private SysCommentMapper sysCommentMapper;
+    private SysCommentRepository sysCommentRepository;
     @Mock
-    private SysInteractionService sysInteractionService;
+    private SysInteractionRepository sysInteractionRepository;
     @Mock
     private SysUserService sysUserService;
     @Mock
     private ContentModelMapper contentModelMapper;
-    @Mock
-    private LambdaQueryChainWrapper<SysCategory> categoryQuery;
-    @Mock
-    private LambdaQueryChainWrapper<SysInteraction> interactionQuery;
 
     private PublicContentQueryServiceImpl publicContentQueryService;
 
     @BeforeEach
     void setUp() {
         publicContentQueryService = new PublicContentQueryServiceImpl(
-                sysCategoryService,
-                sysTagMapper,
-                sysCommentMapper,
-                sysInteractionService,
+                sysCategoryRepository,
+                sysTagRepository,
+                sysCommentRepository,
+                sysInteractionRepository,
                 sysUserService,
                 contentModelMapper
         );
@@ -79,10 +73,7 @@ class PublicContentQueryServiceImplTest {
         PublicCategoryTreeVO rootVo = categoryVO(1L, 0L, "Backend");
         PublicCategoryTreeVO childVo = categoryVO(2L, 1L, "Java");
 
-        when(sysCategoryService.lambdaQuery()).thenReturn(categoryQuery);
-        when(categoryQuery.eq(anySFunction(), any())).thenReturn(categoryQuery);
-        when(categoryQuery.orderByAsc(anySFunction())).thenReturn(categoryQuery);
-        when(categoryQuery.list()).thenReturn(List.of(root, child));
+        when(sysCategoryRepository.findByTypeAndStatusOrderBySortOrderAndId("article", 1)).thenReturn(List.of(root, child));
         when(contentModelMapper.toPublicCategoryTreeVO(root)).thenReturn(rootVo);
         when(contentModelMapper.toPublicCategoryTreeVO(child)).thenReturn(childVo);
 
@@ -99,7 +90,7 @@ class PublicContentQueryServiceImplTest {
         List<PublicTagVO> result = publicContentQueryService.listTags("comment");
 
         assertTrue(result.isEmpty());
-        verifyNoInteractions(sysTagMapper, contentModelMapper);
+        verifyNoInteractions(sysTagRepository, contentModelMapper);
     }
 
     @Test
@@ -113,7 +104,7 @@ class PublicContentQueryServiceImplTest {
         vo.setId(10L);
         vo.setName("Spring");
 
-        when(sysTagMapper.selectByTargetType("article")).thenReturn(List.of(tag));
+        when(sysTagRepository.findByTargetType("article")).thenReturn(List.of(tag));
         when(contentModelMapper.toPublicTagVO(tag)).thenReturn(vo);
 
         List<PublicTagVO> result = publicContentQueryService.listTags(null);
@@ -139,15 +130,13 @@ class PublicContentQueryServiceImplTest {
         SysInteraction like = new SysInteraction();
         like.setTargetId(20L);
 
-        when(sysCommentMapper.selectRootCommentsByTarget(100L, "article")).thenReturn(List.of(root));
-        when(sysCommentMapper.selectRepliesByRootIds(List.of(20L))).thenReturn(List.of(reply));
+        when(sysCommentRepository.selectRootCommentsByTarget(100L, "article")).thenReturn(List.of(root));
+        when(sysCommentRepository.selectRepliesByRootIds(List.of(20L))).thenReturn(List.of(reply));
         when(sysUserService.listByIds(anyCollection())).thenReturn(List.of(rootUser, replyUser));
         when(contentModelMapper.toPublicCommentVO(root)).thenReturn(rootVo);
         when(contentModelMapper.toPublicCommentVO(reply)).thenReturn(replyVo);
-        when(sysInteractionService.lambdaQuery()).thenReturn(interactionQuery);
-        when(interactionQuery.eq(anySFunction(), any())).thenReturn(interactionQuery);
-        when(interactionQuery.in(anySFunction(), anyCollection())).thenReturn(interactionQuery);
-        when(interactionQuery.list()).thenReturn(List.of(like));
+        when(sysInteractionRepository.findByUserIdAndTargetTypeAndActionTypeInTargetIds(eq(7L), eq("comment"), eq("like"), anyCollection()))
+                .thenReturn(List.of(like));
 
         try (MockedStatic<?> securityUtils = SecurityTestUtils.mockUserId(7L)) {
             List<PublicCommentVO> result = publicContentQueryService.listComments(query);
@@ -168,14 +157,14 @@ class PublicContentQueryServiceImplTest {
         query.setTargetType("article");
         query.setTargetId(100L);
 
-        when(sysCommentMapper.selectRootCommentsByTarget(100L, "article")).thenReturn(List.of());
+        when(sysCommentRepository.selectRootCommentsByTarget(100L, "article")).thenReturn(List.of());
 
         List<PublicCommentVO> result = publicContentQueryService.listComments(query);
 
         assertTrue(result.isEmpty());
-        verify(sysCommentMapper, never()).selectRepliesByRootIds(any());
+        verify(sysCommentRepository, never()).selectRepliesByRootIds(org.mockito.ArgumentMatchers.any());
         verify(sysUserService, never()).listByIds(anyCollection());
-        verify(sysInteractionService, never()).lambdaQuery();
+        verifyNoInteractions(sysInteractionRepository);
     }
 
     private SysCategory category(Long id, Long parentId, String name) {
@@ -224,10 +213,4 @@ class PublicContentQueryServiceImplTest {
         user.setAvatar(avatar);
         return user;
     }
-
-    @SuppressWarnings("unchecked")
-    private static <T> SFunction<T, ?> anySFunction() {
-        return (SFunction<T, ?>) any(SFunction.class);
-    }
 }
-

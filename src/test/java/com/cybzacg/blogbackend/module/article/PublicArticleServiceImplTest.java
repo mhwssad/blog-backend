@@ -1,15 +1,10 @@
 package com.cybzacg.blogbackend.module.article;
 
-import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
-import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.BlogArticleCategory;
 import com.cybzacg.blogbackend.domain.SysCategory;
-import com.cybzacg.blogbackend.domain.SysCollection;
-import com.cybzacg.blogbackend.domain.SysInteraction;
 import com.cybzacg.blogbackend.domain.SysTag;
-import com.cybzacg.blogbackend.domain.SysTagRelation;
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
@@ -18,18 +13,18 @@ import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleCardVO;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleDetailVO;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticlePageQuery;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleCategoryService;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleService;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleCategoryRepository;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.article.service.impl.PublicArticleServiceImpl;
-import com.cybzacg.blogbackend.module.auth.service.SysUserService;
+import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicCategoryTreeVO;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicTagVO;
-import com.cybzacg.blogbackend.module.content.service.SysCategoryService;
-import com.cybzacg.blogbackend.module.content.service.SysCollectionService;
-import com.cybzacg.blogbackend.module.content.service.SysInteractionService;
-import com.cybzacg.blogbackend.module.content.service.SysTagRelationService;
-import com.cybzacg.blogbackend.module.content.service.SysTagService;
+import com.cybzacg.blogbackend.module.content.repository.SysCategoryRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysCollectionRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysInteractionRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysTagRelationRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysTagRepository;
 import com.cybzacg.blogbackend.module.content.service.UserFootprintService;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,19 +35,16 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
@@ -63,21 +55,21 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class PublicArticleServiceImplTest {
     @Mock
-    private BlogArticleService blogArticleService;
+    private BlogArticleRepository blogArticleRepository;
     @Mock
-    private BlogArticleCategoryService blogArticleCategoryService;
+    private BlogArticleCategoryRepository blogArticleCategoryRepository;
     @Mock
-    private SysTagRelationService sysTagRelationService;
+    private SysTagRelationRepository sysTagRelationRepository;
     @Mock
-    private SysCategoryService sysCategoryService;
+    private SysCategoryRepository sysCategoryRepository;
     @Mock
-    private SysTagService sysTagService;
+    private SysTagRepository sysTagRepository;
     @Mock
-    private SysUserService sysUserService;
+    private SysUserRepository sysUserRepository;
     @Mock
-    private SysInteractionService sysInteractionService;
+    private SysInteractionRepository sysInteractionRepository;
     @Mock
-    private SysCollectionService sysCollectionService;
+    private SysCollectionRepository sysCollectionRepository;
     @Mock
     private ArticleAccessControlService articleAccessControlService;
     @Mock
@@ -86,30 +78,20 @@ class PublicArticleServiceImplTest {
     private ContentModelMapper contentModelMapper;
     @Mock
     private UserFootprintService userFootprintService;
-    @Mock
-    private LambdaQueryChainWrapper<BlogArticle> articleQuery;
-    @Mock
-    private LambdaQueryChainWrapper<BlogArticleCategory> categoryQuery;
-    @Mock
-    private LambdaQueryChainWrapper<SysTagRelation> tagQuery;
-    @Mock
-    private LambdaQueryChainWrapper<SysInteraction> interactionQuery;
-    @Mock
-    private LambdaQueryChainWrapper<SysCollection> collectionQuery;
 
     private PublicArticleServiceImpl publicArticleService;
 
     @BeforeEach
     void setUp() {
         publicArticleService = new PublicArticleServiceImpl(
-                blogArticleService,
-                blogArticleCategoryService,
-                sysTagRelationService,
-                sysCategoryService,
-                sysTagService,
-                sysUserService,
-                sysInteractionService,
-                sysCollectionService,
+                blogArticleRepository,
+                blogArticleCategoryRepository,
+                sysTagRelationRepository,
+                sysCategoryRepository,
+                sysTagRepository,
+                sysUserRepository,
+                sysInteractionRepository,
+                sysCollectionRepository,
                 articleAccessControlService,
                 articleModelMapper,
                 contentModelMapper,
@@ -130,7 +112,7 @@ class PublicArticleServiceImplTest {
         BlogArticle ignored = article(3L, "Go", "并发", 1, 103L);
 
         stubPublishedArticles(List.of(titleMatched, summaryMatched, ignored));
-        when(sysUserService.listByIds(anyCollection())).thenReturn(List.of(
+        when(sysUserRepository.listByIds(anyCollection())).thenReturn(List.of(
                 user(101L, "u101", "作者甲"),
                 user(102L, "u102", "作者乙")
         ));
@@ -150,7 +132,7 @@ class PublicArticleServiceImplTest {
         PublicArticlePageQuery query = new PublicArticlePageQuery();
         query.setCategoryId(10L);
 
-        stubCategoryRelations(List.of(
+        stubCategoryArticleIds(List.of(
                 categoryRelation(2L, 10L, 1),
                 categoryRelation(3L, 10L, 2)
         ));
@@ -159,7 +141,7 @@ class PublicArticleServiceImplTest {
                 article(2L, "A2", "s2", 2, 102L),
                 article(3L, "A3", "s3", 3, 103L)
         ));
-        when(sysUserService.listByIds(anyCollection())).thenReturn(List.of(
+        when(sysUserRepository.listByIds(anyCollection())).thenReturn(List.of(
                 user(102L, "u102", "作者乙"),
                 user(103L, "u103", "作者丙")
         ));
@@ -177,17 +159,14 @@ class PublicArticleServiceImplTest {
         PublicArticlePageQuery query = new PublicArticlePageQuery();
         query.setTagId(20L);
 
-        stubTagRelations(List.of(
-                tagRelation(2L, 20L, 1L),
-                tagRelation(4L, 20L, 2L)
-        ));
+        stubTagArticleIds(List.of(2L, 4L));
         stubPublishedArticles(List.of(
                 article(1L, "A1", "s1", 1, 101L),
                 article(2L, "A2", "s2", 2, 102L),
                 article(3L, "A3", "s3", 3, 103L),
                 article(4L, "A4", "s4", 4, 104L)
         ));
-        when(sysUserService.listByIds(anyCollection())).thenReturn(List.of(
+        when(sysUserRepository.listByIds(anyCollection())).thenReturn(List.of(
                 user(102L, "u102", "作者乙"),
                 user(104L, "u104", "作者丁")
         ));
@@ -206,21 +185,18 @@ class PublicArticleServiceImplTest {
         query.setCategoryId(10L);
         query.setTagId(20L);
 
-        stubCategoryRelations(List.of(
+        stubCategoryArticleIds(List.of(
                 categoryRelation(2L, 10L, 1),
                 categoryRelation(3L, 10L, 2)
         ));
-        stubTagRelations(List.of(
-                tagRelation(3L, 20L, 1L),
-                tagRelation(4L, 20L, 2L)
-        ));
+        stubTagArticleIds(List.of(3L, 4L));
         stubPublishedArticles(List.of(
                 article(1L, "A1", "s1", 1, 101L),
                 article(2L, "A2", "s2", 2, 102L),
                 article(3L, "A3", "s3", 3, 103L),
                 article(4L, "A4", "s4", 4, 104L)
         ));
-        when(sysUserService.listByIds(anyCollection())).thenReturn(List.of(user(103L, "u103", "作者丙")));
+        when(sysUserRepository.listByIds(anyCollection())).thenReturn(List.of(user(103L, "u103", "作者丙")));
 
         try (MockedStatic<?> ignoredSecurity = SecurityTestUtils.mockUserId(null)) {
             PageResult<PublicArticleCardVO> result = publicArticleService.pageArticles(query);
@@ -240,7 +216,7 @@ class PublicArticleServiceImplTest {
                 article(2L, "A2", "s2", 3, 102L),
                 article(3L, "A3", "s3", 2, 103L)
         ));
-        when(sysUserService.listByIds(anyCollection())).thenReturn(List.of(
+        when(sysUserRepository.listByIds(anyCollection())).thenReturn(List.of(
                 user(101L, "u101", "作者甲"),
                 user(102L, "u102", "作者乙"),
                 user(103L, "u103", "作者丙")
@@ -265,7 +241,7 @@ class PublicArticleServiceImplTest {
         BlogArticle topNewest = article(3L, "A3", "s3", 3, 103L);
         topNewest.setIsTop(1);
         stubPublishedArticles(List.of(topOld, normalNewest, topNewest));
-        when(sysUserService.listByIds(anyCollection())).thenReturn(List.of(
+        when(sysUserRepository.listByIds(anyCollection())).thenReturn(List.of(
                 user(101L, "u101", "作者甲"),
                 user(102L, "u102", "作者乙"),
                 user(103L, "u103", "作者丙")
@@ -299,7 +275,7 @@ class PublicArticleServiceImplTest {
         third.setCommentCount(3);
 
         stubPublishedArticles(List.of(first, second, third));
-        when(sysUserService.listByIds(anyCollection())).thenReturn(List.of(
+        when(sysUserRepository.listByIds(anyCollection())).thenReturn(List.of(
                 user(101L, "u101", "作者甲"),
                 user(102L, "u102", "作者乙"),
                 user(103L, "u103", "作者丙")
@@ -321,7 +297,7 @@ class PublicArticleServiceImplTest {
 
             assertEquals(0L, result.getTotal());
             assertTrue(result.getRecords().isEmpty());
-            verify(sysUserService, never()).listByIds(anyCollection());
+            verify(sysUserRepository, never()).listByIds(anyCollection());
         }
     }
 
@@ -332,7 +308,7 @@ class PublicArticleServiceImplTest {
         try (MockedStatic<?> ignoredSecurity = SecurityTestUtils.mockUserId(null)) {
             publicArticleService.pageArticles(new PublicArticlePageQuery());
 
-            verify(articleQuery).eq(anySFunction(), eq(1));
+            verify(blogArticleRepository).listAllPublished();
         }
     }
 
@@ -343,7 +319,7 @@ class PublicArticleServiceImplTest {
         query.setSize(10L);
 
         stubPublishedArticles(List.of(article(1L, "A1", "s1", 1, 101L)));
-        when(sysUserService.listByIds(anyCollection())).thenReturn(List.of(user(101L, "u101", "作者甲")));
+        when(sysUserRepository.listByIds(anyCollection())).thenReturn(List.of(user(101L, "u101", "作者甲")));
 
         try (MockedStatic<?> ignoredSecurity = SecurityTestUtils.mockUserId(null)) {
             PageResult<PublicArticleCardVO> result = publicArticleService.pageArticles(query);
@@ -367,7 +343,7 @@ class PublicArticleServiceImplTest {
             Long userId = invocation.getArgument(1);
             return userId == null && article.getId().equals(1L);
         });
-        when(sysUserService.listByIds(anyCollection())).thenReturn(List.of(user(101L, "u101", "作者甲")));
+        when(sysUserRepository.listByIds(anyCollection())).thenReturn(List.of(user(101L, "u101", "作者甲")));
 
         try (MockedStatic<?> ignoredSecurity = SecurityTestUtils.mockUserId(null)) {
             PageResult<PublicArticleCardVO> result = publicArticleService.pageArticles(new PublicArticlePageQuery());
@@ -391,7 +367,7 @@ class PublicArticleServiceImplTest {
             Long userId = invocation.getArgument(1);
             return article.getId().equals(1L) || (article.getId().equals(3L) && Long.valueOf(9L).equals(userId));
         });
-        when(sysUserService.listByIds(anyCollection())).thenReturn(List.of(
+        when(sysUserRepository.listByIds(anyCollection())).thenReturn(List.of(
                 user(101L, "u101", "作者甲"),
                 user(103L, "u103", "作者丙")
         ));
@@ -407,7 +383,7 @@ class PublicArticleServiceImplTest {
 
     @Test
     void getArticleShouldThrowWhenArticleDoesNotExist() {
-        when(blogArticleService.getById(99L)).thenReturn(null);
+        when(blogArticleRepository.getById(99L)).thenReturn(null);
 
         BusinessException exception = assertThrows(BusinessException.class, () -> publicArticleService.getArticle(99L));
 
@@ -420,7 +396,7 @@ class PublicArticleServiceImplTest {
     void getArticleShouldRejectUnpublishedArticle() {
         BlogArticle draft = article(10L, "草稿", "未发布", 1, 101L);
         draft.setStatus(0);
-        when(blogArticleService.getById(10L)).thenReturn(draft);
+        when(blogArticleRepository.getById(10L)).thenReturn(draft);
 
         BusinessException exception = assertThrows(BusinessException.class, () -> publicArticleService.getArticle(10L));
 
@@ -433,7 +409,7 @@ class PublicArticleServiceImplTest {
     void getArticleShouldRequireLoginForLoginOnlyArticle() {
         BlogArticle article = article(11L, "登录可见", "summary", 1, 101L);
         article.setAccessLevel(1);
-        when(blogArticleService.getById(11L)).thenReturn(article);
+        when(blogArticleRepository.getById(11L)).thenReturn(article);
 
         try (MockedStatic<?> ignoredSecurity = SecurityTestUtils.mockUserId(null)) {
             BusinessException exception = assertThrows(BusinessException.class, () -> publicArticleService.getArticle(11L));
@@ -449,34 +425,26 @@ class PublicArticleServiceImplTest {
         BlogArticle article = article(12L, "文章详情", "摘要", 5, 101L);
         article.setContent("content");
         article.setAccessLevel(0);
-        when(blogArticleService.getById(12L)).thenReturn(article);
-        when(sysUserService.getById(101L)).thenReturn(user(101L, "author101", "作者甲"));
+        when(blogArticleRepository.getById(12L)).thenReturn(article);
+        when(sysUserRepository.getById(101L)).thenReturn(user(101L, "author101", "作者甲"));
 
-        stubCategoryRelations(List.of(
+        stubCategoryRelationsForDetail(List.of(
                 categoryRelation(12L, 1001L, 1),
                 categoryRelation(12L, 1002L, 2)
         ));
-        when(sysCategoryService.listByIds(List.of(1001L, 1002L))).thenReturn(List.of(
+        when(sysCategoryRepository.listByIds(List.of(1001L, 1002L))).thenReturn(List.of(
                 category(1001L, "后端"),
                 category(1002L, "Java")
         ));
 
-        stubTagRelations(List.of(
-                tagRelation(12L, 2001L, 1L),
-                tagRelation(12L, 2002L, 2L)
-        ));
-        when(sysTagService.listByIds(List.of(2001L, 2002L))).thenReturn(List.of(
+        when(sysTagRelationRepository.listTagIdsByTargetTypeAndTargetId("article", 12L)).thenReturn(List.of(2001L, 2002L));
+        when(sysTagRepository.listByIds(List.of(2001L, 2002L))).thenReturn(List.of(
                 tag(2001L, "Spring"),
                 tag(2002L, "Boot")
         ));
 
-        when(sysInteractionService.lambdaQuery()).thenReturn(interactionQuery);
-        when(interactionQuery.eq(anySFunction(), any())).thenReturn(interactionQuery);
-        when(interactionQuery.exists()).thenReturn(true);
-
-        when(sysCollectionService.lambdaQuery()).thenReturn(collectionQuery);
-        when(collectionQuery.eq(anySFunction(), any())).thenReturn(collectionQuery);
-        when(collectionQuery.exists()).thenReturn(true);
+        when(sysInteractionRepository.existsByUserIdAndTargetIdAndTargetTypeAndActionType(8L, 12L, "article", "like")).thenReturn(true);
+        when(sysCollectionRepository.existsByUserIdAndTargetTypeAndTargetId(8L, "article", 12L)).thenReturn(true);
 
         try (MockedStatic<?> ignoredSecurity = SecurityTestUtils.mockUserId(8L)) {
             PublicArticleDetailVO detail = publicArticleService.getArticle(12L);
@@ -546,23 +514,19 @@ class PublicArticleServiceImplTest {
     }
 
     private void stubPublishedArticles(List<BlogArticle> articles) {
-        when(blogArticleService.lambdaQuery()).thenReturn(articleQuery);
-        when(articleQuery.eq(anySFunction(), any())).thenReturn(articleQuery);
-        when(articleQuery.list()).thenReturn(articles);
+        when(blogArticleRepository.listAllPublished()).thenReturn(articles);
     }
 
-    private void stubCategoryRelations(List<BlogArticleCategory> relations) {
-        when(blogArticleCategoryService.lambdaQuery()).thenReturn(categoryQuery);
-        when(categoryQuery.eq(anySFunction(), any())).thenReturn(categoryQuery);
-        lenient().when(categoryQuery.orderByAsc(anySFunction())).thenReturn(categoryQuery);
-        when(categoryQuery.list()).thenReturn(relations);
+    private void stubCategoryArticleIds(List<BlogArticleCategory> relations) {
+        when(blogArticleCategoryRepository.listArticleIdsByCategoryId(anyLong())).thenReturn(relations);
     }
 
-    private void stubTagRelations(List<SysTagRelation> relations) {
-        when(sysTagRelationService.lambdaQuery()).thenReturn(tagQuery);
-        when(tagQuery.eq(anySFunction(), any())).thenReturn(tagQuery);
-        lenient().when(tagQuery.orderByAsc(anySFunction())).thenReturn(tagQuery);
-        when(tagQuery.list()).thenReturn(relations);
+    private void stubTagArticleIds(List<Long> articleIds) {
+        when(sysTagRelationRepository.listTargetIdsByTargetTypeAndTagId(eq("article"), anyLong())).thenReturn(articleIds);
+    }
+
+    private void stubCategoryRelationsForDetail(List<BlogArticleCategory> relations) {
+        when(blogArticleCategoryRepository.listByArticleIdOrdered(anyLong())).thenReturn(relations);
     }
 
     private BlogArticle article(Long id, String title, String summary, int publishTick, Long authorId) {
@@ -590,15 +554,6 @@ class PublicArticleServiceImplTest {
         return relation;
     }
 
-    private SysTagRelation tagRelation(Long targetId, Long tagId, Long id) {
-        SysTagRelation relation = new SysTagRelation();
-        relation.setId(id);
-        relation.setTargetId(targetId);
-        relation.setTagId(tagId);
-        relation.setTargetType("article");
-        return relation;
-    }
-
     private SysUser user(Long id, String username, String nickname) {
         SysUser user = new SysUser();
         user.setId(id);
@@ -621,10 +576,5 @@ class PublicArticleServiceImplTest {
         tag.setName(name);
         tag.setColor("#333333");
         return tag;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> SFunction<T, ?> anySFunction() {
-        return (SFunction<T, ?>) any(SFunction.class);
     }
 }

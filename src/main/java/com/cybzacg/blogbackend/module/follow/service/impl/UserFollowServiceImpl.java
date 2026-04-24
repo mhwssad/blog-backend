@@ -1,14 +1,13 @@
 package com.cybzacg.blogbackend.module.follow.service.impl;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.domain.SysUserFollow;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.mapper.SysUserFollowMapper;
 import com.cybzacg.blogbackend.module.auth.service.SysUserService;
 import com.cybzacg.blogbackend.module.follow.convert.FollowModelMapper;
 import com.cybzacg.blogbackend.module.follow.model.data.FollowRelationUserItem;
+import com.cybzacg.blogbackend.module.follow.repository.SysUserFollowRepository;
 import com.cybzacg.blogbackend.module.follow.model.user.UserFanPageQuery;
 import com.cybzacg.blogbackend.module.follow.model.user.UserFollowCountVO;
 import com.cybzacg.blogbackend.module.follow.model.user.UserFollowMutualVO;
@@ -43,7 +42,7 @@ public class UserFollowServiceImpl implements UserFollowService {
     private static final long DEFAULT_PAGE_SIZE = 10L;
     private static final long MAX_PAGE_SIZE = 100L;
 
-    private final SysUserFollowMapper sysUserFollowMapper;
+    private final SysUserFollowRepository sysUserFollowRepository;
     private final SysUserService sysUserService;
     private final FollowModelMapper followModelMapper;
     private final FollowNoticeService followNoticeService;
@@ -81,7 +80,7 @@ public class UserFollowServiceImpl implements UserFollowService {
         SysUserFollow relation = requireActiveFollowRelation(userId, targetUserId);
         relation.setFollowStatus(FOLLOW_STATUS_INACTIVE);
         relation.setUnfollowTime(new Date());
-        sysUserFollowMapper.updateById(relation);
+        sysUserFollowRepository.updateById(relation);
     }
 
     @Override
@@ -90,13 +89,13 @@ public class UserFollowServiceImpl implements UserFollowService {
         long current = normalizeCurrent(query == null ? null : query.getCurrent());
         long size = normalizeSize(query == null ? null : query.getSize());
         Boolean specialOnly = query == null ? null : query.getSpecialOnly();
-        long total = defaultLong(sysUserFollowMapper.countFollowPage(userId, specialOnly));
+        long total = defaultLong(sysUserFollowRepository.countFollowPage(userId, specialOnly));
         if (total == 0L) {
             return emptyPageResult(current, size);
         }
         long offset = (current - 1) * size;
         List<UserFollowUserVO> records = mapUserRecords(
-                sysUserFollowMapper.selectFollowPage(userId, specialOnly, offset, size)
+                sysUserFollowRepository.selectFollowPage(userId, specialOnly, offset, size)
         );
         return PageResult.<UserFollowUserVO>builder()
                 .total(total)
@@ -111,12 +110,12 @@ public class UserFollowServiceImpl implements UserFollowService {
         Long userId = SecurityUtils.requireUserId();
         long current = normalizeCurrent(query == null ? null : query.getCurrent());
         long size = normalizeSize(query == null ? null : query.getSize());
-        long total = defaultLong(sysUserFollowMapper.countFanPage(userId));
+        long total = defaultLong(sysUserFollowRepository.countFanPage(userId));
         if (total == 0L) {
             return emptyPageResult(current, size);
         }
         long offset = (current - 1) * size;
-        List<UserFollowUserVO> records = mapUserRecords(sysUserFollowMapper.selectFanPage(userId, offset, size));
+        List<UserFollowUserVO> records = mapUserRecords(sysUserFollowRepository.selectFanPage(userId, offset, size));
         return PageResult.<UserFollowUserVO>builder()
                 .total(total)
                 .current(current)
@@ -129,8 +128,8 @@ public class UserFollowServiceImpl implements UserFollowService {
     public UserFollowMutualVO getMutualFollowStatus(Long targetUserId) {
         Long userId = SecurityUtils.requireUserId();
         requireActiveTargetUser(userId, targetUserId);
-        boolean following = defaultLong(sysUserFollowMapper.countActiveRelation(userId, targetUserId)) > 0L;
-        boolean followedBy = defaultLong(sysUserFollowMapper.countActiveRelation(targetUserId, userId)) > 0L;
+        boolean following = defaultLong(sysUserFollowRepository.countActiveRelation(userId, targetUserId)) > 0L;
+        boolean followedBy = defaultLong(sysUserFollowRepository.countActiveRelation(targetUserId, userId)) > 0L;
         return UserFollowMutualVO.builder()
                 .targetUserId(targetUserId)
                 .following(following)
@@ -143,8 +142,8 @@ public class UserFollowServiceImpl implements UserFollowService {
     public UserFollowCountVO getMyFollowCount() {
         Long userId = SecurityUtils.requireUserId();
         return UserFollowCountVO.builder()
-                .followingCount(defaultLong(sysUserFollowMapper.countActiveFollowing(userId)))
-                .fanCount(defaultLong(sysUserFollowMapper.countActiveFans(userId)))
+                .followingCount(defaultLong(sysUserFollowRepository.countActiveFollowing(userId)))
+                .fanCount(defaultLong(sysUserFollowRepository.countActiveFans(userId)))
                 .build();
     }
 
@@ -158,7 +157,7 @@ public class UserFollowServiceImpl implements UserFollowService {
         validateSpecialFollowValue(request);
         SysUserFollow relation = requireActiveFollowRelation(userId, targetUserId);
         followModelMapper.updateSpecialFollow(request, relation);
-        sysUserFollowMapper.updateById(relation);
+        sysUserFollowRepository.updateById(relation);
     }
 
     /**
@@ -170,7 +169,7 @@ public class UserFollowServiceImpl implements UserFollowService {
         Long userId = SecurityUtils.requireUserId();
         SysUserFollow relation = requireActiveFollowRelation(userId, targetUserId);
         followModelMapper.updateRemark(request, relation);
-        sysUserFollowMapper.updateById(relation);
+        sysUserFollowRepository.updateById(relation);
     }
 
     /**
@@ -179,7 +178,7 @@ public class UserFollowServiceImpl implements UserFollowService {
     private boolean createFollowRelation(Long userId, Long targetUserId, Date now) {
         SysUserFollow created = followModelMapper.toNewFollow(userId, targetUserId, now);
         try {
-            sysUserFollowMapper.insert(created);
+            sysUserFollowRepository.save(created);
             return true;
         } catch (DuplicateKeyException ex) {
             SysUserFollow existing = getFollowRelation(userId, targetUserId);
@@ -202,7 +201,7 @@ public class UserFollowServiceImpl implements UserFollowService {
         relation.setFollowTime(now);
         relation.setUnfollowTime(null);
         relation.setSource("manual");
-        sysUserFollowMapper.updateById(relation);
+        sysUserFollowRepository.updateById(relation);
     }
 
     private SysUserFollow requireActiveFollowRelation(Long userId, Long targetUserId) {
@@ -217,10 +216,7 @@ public class UserFollowServiceImpl implements UserFollowService {
     }
 
     private SysUserFollow getFollowRelation(Long userId, Long targetUserId) {
-        return sysUserFollowMapper.selectOne(Wrappers.lambdaQuery(SysUserFollow.class)
-                .eq(SysUserFollow::getFollowerId, userId)
-                .eq(SysUserFollow::getFollowingId, targetUserId)
-                .last("limit 1"));
+        return sysUserFollowRepository.findByFollowerAndFollowing(userId, targetUserId);
     }
 
     /**

@@ -6,7 +6,7 @@ import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.SysUserFootprint;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleService;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.user.UserFootprintPageQuery;
 import com.cybzacg.blogbackend.module.content.model.user.UserFootprintVO;
@@ -25,7 +25,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserFootprintServiceImpl implements UserFootprintService {
     private final SysUserFootprintRepository sysUserFootprintRepository;
-    private final BlogArticleService blogArticleService;
+    private final BlogArticleRepository blogArticleService;
     private final ArticleAccessControlService articleAccessControlService;
     private final ContentModelMapper contentModelMapper;
 

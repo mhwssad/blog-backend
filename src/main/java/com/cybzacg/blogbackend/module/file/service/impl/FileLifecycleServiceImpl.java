@@ -1,22 +1,17 @@
 package com.cybzacg.blogbackend.module.file.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.cybzacg.blogbackend.common.storage.MediaAssetPathUtils;
 import com.cybzacg.blogbackend.common.storage.StorageManager;
 import com.cybzacg.blogbackend.common.storage.StorageService;
-import com.cybzacg.blogbackend.domain.FileBusinessInfo;
-import com.cybzacg.blogbackend.domain.FileChunk;
 import com.cybzacg.blogbackend.domain.FileInfo;
 import com.cybzacg.blogbackend.domain.FileUploadTask;
 import com.cybzacg.blogbackend.enums.file.FileResultCode;
-import com.cybzacg.blogbackend.enums.file.FileStatusEnum;
 import com.cybzacg.blogbackend.enums.storage.TaskStatusEnum;
-import com.cybzacg.blogbackend.module.file.service.FileBusinessInfoService;
-import com.cybzacg.blogbackend.module.file.service.FileChunkService;
-import com.cybzacg.blogbackend.module.file.service.FileInfoService;
+import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
+import com.cybzacg.blogbackend.module.file.repository.FileChunkRepository;
+import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
+import com.cybzacg.blogbackend.module.file.repository.FileUploadTaskRepository;
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
-import com.cybzacg.blogbackend.module.file.service.FileUploadTaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -36,10 +31,10 @@ import java.util.List;
 public class FileLifecycleServiceImpl implements FileLifecycleService {
     private static final int EXPIRED_TASK_BATCH_SIZE = 100;
 
-    private final FileInfoService fileInfoService;
-    private final FileUploadTaskService fileUploadTaskService;
-    private final FileChunkService fileChunkService;
-    private final FileBusinessInfoService fileBusinessInfoService;
+    private final FileInfoRepository fileInfoRepository;
+    private final FileUploadTaskRepository fileUploadTaskRepository;
+    private final FileChunkRepository fileChunkRepository;
+    private final FileBusinessInfoRepository fileBusinessInfoRepository;
     private final StorageManager storageManager;
 
     /**
@@ -50,13 +45,7 @@ public class FileLifecycleServiceImpl implements FileLifecycleService {
         if (fileId == null) {
             return;
         }
-        LambdaUpdateWrapper<FileInfo> updateWrapper = new LambdaUpdateWrapper<FileInfo>()
-                .eq(FileInfo::getId, fileId)
-                .setSql("reference_count = (select count(*) from file_business_info where file_id = " + fileId + ")");
-        if (promotePublic) {
-            updateWrapper.set(FileInfo::getIsPublic, 1);
-        }
-        fileInfoService.update(updateWrapper);
+        fileInfoRepository.refreshReferenceMetadata(fileId, promotePublic);
     }
 
     /**
@@ -68,7 +57,7 @@ public class FileLifecycleServiceImpl implements FileLifecycleService {
         if (fileId == null) {
             return;
         }
-        FileInfo fileInfo = fileInfoService.getById(fileId);
+        FileInfo fileInfo = fileInfoRepository.getById(fileId);
         if (fileInfo == null) {
             return;
         }
@@ -77,11 +66,7 @@ public class FileLifecycleServiceImpl implements FileLifecycleService {
             refreshReferenceMetadata(fileId, false);
             return;
         }
-        boolean markedDeleted = fileInfoService.update(new LambdaUpdateWrapper<FileInfo>()
-                .eq(FileInfo::getId, fileId)
-                .apply("not exists (select 1 from file_business_info where file_id = {0})", fileId)
-                .set(FileInfo::getReferenceCount, 0)
-                .set(FileInfo::getStatus, FileStatusEnum.DELETED.getValue()));
+        boolean markedDeleted = fileInfoRepository.markDeletedIfNoReferences(fileId);
         if (!markedDeleted) {
             refreshReferenceMetadata(fileId, false);
             return;
@@ -128,16 +113,15 @@ public class FileLifecycleServiceImpl implements FileLifecycleService {
     }
 
     private List<FileUploadTask> loadExpiredTasks(Date now) {
-        return fileUploadTaskService.lambdaQuery()
-                .le(FileUploadTask::getExpireTime, now)
-                .in(FileUploadTask::getTaskStatus,
+        return fileUploadTaskRepository.findExpiredTasks(
+                now,
+                List.of(
                         TaskStatusEnum.INIT.getValue(),
                         TaskStatusEnum.UPLOADING.getValue(),
-                        TaskStatusEnum.MERGING.getValue())
-                .orderByAsc(FileUploadTask::getExpireTime)
-                .orderByAsc(FileUploadTask::getId)
-                .last("limit " + EXPIRED_TASK_BATCH_SIZE)
-                .list();
+                        TaskStatusEnum.MERGING.getValue()
+                ),
+                EXPIRED_TASK_BATCH_SIZE
+        );
     }
 
     /**
@@ -155,7 +139,7 @@ public class FileLifecycleServiceImpl implements FileLifecycleService {
             task.setErrorCode(String.valueOf(FileResultCode.UPLOAD_TASK_EXPIRED.getCode()));
             task.setErrorMessage(FileResultCode.UPLOAD_TASK_EXPIRED.getMessage());
             task.setCompleteTime(new Date());
-            fileUploadTaskService.updateById(task);
+            fileUploadTaskRepository.updateById(task);
         }
         cleanupChunkArtifacts(task);
     }
@@ -168,7 +152,7 @@ public class FileLifecycleServiceImpl implements FileLifecycleService {
         if (!Integer.valueOf(1).equals(task.getIsChunked()) || task.getId() == null) {
             return;
         }
-        fileChunkService.remove(new LambdaQueryWrapper<FileChunk>().eq(FileChunk::getUploadTaskId, task.getId()));
+        fileChunkRepository.deleteByUploadTaskId(task.getId());
         if (!StringUtils.hasText(task.getUploadId())) {
             return;
         }
@@ -183,10 +167,7 @@ public class FileLifecycleServiceImpl implements FileLifecycleService {
     }
 
     private long countReferences(Long fileId) {
-        Long count = fileBusinessInfoService.lambdaQuery()
-                .eq(FileBusinessInfo::getFileId, fileId)
-                .count();
-        return count == null ? 0L : count;
+        return fileBusinessInfoRepository.countByFileId(fileId);
     }
 
     private void cleanupPhysicalFile(FileInfo fileInfo) {

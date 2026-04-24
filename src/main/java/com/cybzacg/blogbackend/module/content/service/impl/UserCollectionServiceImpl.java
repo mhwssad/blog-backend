@@ -1,23 +1,22 @@
 package com.cybzacg.blogbackend.module.content.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.SysCollection;
 import com.cybzacg.blogbackend.domain.SysCollectionFolder;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleService;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.user.CollectionFolderSaveRequest;
 import com.cybzacg.blogbackend.module.content.model.user.CollectionFolderVO;
 import com.cybzacg.blogbackend.module.content.model.user.CollectionSaveRequest;
 import com.cybzacg.blogbackend.module.content.model.user.CollectionVO;
-import com.cybzacg.blogbackend.module.content.service.SysCollectionFolderService;
-import com.cybzacg.blogbackend.module.content.service.SysCollectionService;
+import com.cybzacg.blogbackend.module.content.repository.SysCollectionFolderRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysCollectionRepository;
 import com.cybzacg.blogbackend.module.content.service.UserCollectionService;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
@@ -36,21 +35,16 @@ import java.util.List;
 public class UserCollectionServiceImpl implements UserCollectionService {
     private static final String ARTICLE_TYPE = "article";
 
-    private final SysCollectionFolderService sysCollectionFolderService;
-    private final SysCollectionService sysCollectionService;
-    private final BlogArticleService blogArticleService;
+    private final SysCollectionFolderRepository sysCollectionFolderRepository;
+    private final SysCollectionRepository sysCollectionRepository;
+    private final BlogArticleRepository blogArticleService;
     private final ArticleAccessControlService articleAccessControlService;
     private final ContentModelMapper contentModelMapper;
 
     @Override
     public PageResult<CollectionFolderVO> pageFolders() {
         Long userId = SecurityUtils.requireUserId();
-        Page<SysCollectionFolder> page = sysCollectionFolderService.page(new Page<>(1, 100),
-                new LambdaQueryWrapper<SysCollectionFolder>()
-                        .eq(SysCollectionFolder::getUserId, userId)
-                        .orderByDesc(SysCollectionFolder::getIsDefault)
-                        .orderByAsc(SysCollectionFolder::getSortOrder)
-                        .orderByDesc(SysCollectionFolder::getId));
+        Page<SysCollectionFolder> page = sysCollectionFolderRepository.pageByUserIdOrderByDefaultAndSort(userId, 1, 100);
         List<CollectionFolderVO> records = page.getRecords().stream().map(contentModelMapper::toCollectionFolderVO).toList();
         return PageResult.of(page, records);
     }
@@ -72,7 +66,7 @@ public class UserCollectionServiceImpl implements UserCollectionService {
         if (Integer.valueOf(1).equals(folder.getIsDefault())) {
             unsetDefaultFolder(userId, folder.getFolderType(), null);
         }
-        sysCollectionFolderService.save(folder);
+        sysCollectionFolderRepository.save(folder);
         return contentModelMapper.toCollectionFolderVO(folder);
     }
 
@@ -92,7 +86,7 @@ public class UserCollectionServiceImpl implements UserCollectionService {
         if (Integer.valueOf(1).equals(folder.getIsDefault())) {
             unsetDefaultFolder(userId, folder.getFolderType(), folder.getId());
         }
-        sysCollectionFolderService.updateById(folder);
+        sysCollectionFolderRepository.updateById(folder);
         return contentModelMapper.toCollectionFolderVO(folder);
     }
 
@@ -105,24 +99,20 @@ public class UserCollectionServiceImpl implements UserCollectionService {
         Long userId = SecurityUtils.requireUserId();
         SysCollectionFolder folder = getFolderOrThrow(id, userId);
         ExceptionThrowerCore.throwBusinessIf(Integer.valueOf(1).equals(folder.getIsDefault()), ResultErrorCode.ILLEGAL_ARGUMENT, "默认收藏夹不可删除");
-        List<SysCollection> collections = sysCollectionService.lambdaQuery().eq(SysCollection::getFolderId, id).list();
+        List<SysCollection> collections = sysCollectionRepository.findByFolderId(id);
         if (!collections.isEmpty()) {
             for (SysCollection collection : collections) {
                 rollbackArticleCollectCount(collection);
             }
-            sysCollectionService.remove(new LambdaQueryWrapper<SysCollection>().eq(SysCollection::getFolderId, id));
+            sysCollectionRepository.removeByFolderId(id);
         }
-        sysCollectionFolderService.removeById(id);
+        sysCollectionFolderRepository.removeById(id);
     }
 
     @Override
     public PageResult<CollectionVO> pageCollections() {
         Long userId = SecurityUtils.requireUserId();
-        Page<SysCollection> page = sysCollectionService.page(new Page<>(1, 100),
-                new LambdaQueryWrapper<SysCollection>()
-                        .eq(SysCollection::getUserId, userId)
-                        .orderByDesc(SysCollection::getCreatedAt)
-                        .orderByDesc(SysCollection::getId));
+        Page<SysCollection> page = sysCollectionRepository.pageByUserId(userId, 1, 100);
         List<CollectionVO> records = page.getRecords().stream().map(contentModelMapper::toUserCollectionVO).toList();
         return PageResult.of(page, records);
     }
@@ -140,19 +130,18 @@ public class UserCollectionServiceImpl implements UserCollectionService {
         articleAccessControlService.validateArticleAccess(article, userId);
         Long folderId = request.getFolderId();
         SysCollectionFolder folder = folderId == null ? getOrCreateDefaultFolder(userId, ARTICLE_TYPE) : getFolderOrThrow(folderId, userId);
-        boolean exists = sysCollectionService.lambdaQuery()
-                .eq(SysCollection::getUserId, userId)
-                .eq(SysCollection::getFolderId, folder.getId())
-                .eq(SysCollection::getTargetId, request.getTargetId())
-                .eq(SysCollection::getTargetType, ARTICLE_TYPE)
-                .exists();
+        boolean exists = sysCollectionRepository.existsByUserIdAndFolderIdAndTargetIdAndTargetType(
+                userId,
+                folder.getId(),
+                request.getTargetId(),
+                ARTICLE_TYPE);
         if (exists) {
             return;
         }
         SysCollection collection = contentModelMapper.toCollection(request, userId, folder.getId(), article);
-        sysCollectionService.save(collection);
+        sysCollectionRepository.save(collection);
         folder.setCollectionCount((folder.getCollectionCount() == null ? 0 : folder.getCollectionCount()) + 1);
-        sysCollectionFolderService.updateById(folder);
+        sysCollectionFolderRepository.updateById(folder);
         article.setCollectCount((article.getCollectCount() == null ? 0 : article.getCollectCount()) + 1);
         blogArticleService.updateById(article);
     }
@@ -164,32 +153,28 @@ public class UserCollectionServiceImpl implements UserCollectionService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteCollection(Long id) {
         Long userId = SecurityUtils.requireUserId();
-        SysCollection collection = sysCollectionService.getById(id);
+        SysCollection collection = sysCollectionRepository.getById(id);
         ExceptionThrowerCore.throwBusinessIf(collection == null || !userId.equals(collection.getUserId()), ResultErrorCode.ILLEGAL_ARGUMENT, "收藏记录不存在");
-        SysCollectionFolder folder = sysCollectionFolderService.getById(collection.getFolderId());
+        SysCollectionFolder folder = sysCollectionFolderRepository.getById(collection.getFolderId());
         if (folder != null) {
             folder.setCollectionCount(Math.max(0, (folder.getCollectionCount() == null ? 0 : folder.getCollectionCount()) - 1));
-            sysCollectionFolderService.updateById(folder);
+            sysCollectionFolderRepository.updateById(folder);
         }
         rollbackArticleCollectCount(collection);
-        sysCollectionService.removeById(id);
+        sysCollectionRepository.removeById(id);
     }
 
     /**
      * 获取默认收藏夹，不存在时自动创建一份系统默认夹。
      */
     private SysCollectionFolder getOrCreateDefaultFolder(Long userId, String folderType) {
-        SysCollectionFolder folder = sysCollectionFolderService.lambdaQuery()
-                .eq(SysCollectionFolder::getUserId, userId)
-                .eq(SysCollectionFolder::getFolderType, folderType)
-                .eq(SysCollectionFolder::getIsDefault, 1)
-                .one();
+        SysCollectionFolder folder = sysCollectionFolderRepository.findDefaultByUserIdAndFolderType(userId, folderType);
         if (folder != null) {
             return folder;
         }
         SysCollectionFolder created = contentModelMapper.toDefaultCollectionFolder(userId, folderType);
         unsetDefaultFolder(userId, folderType, null);
-        sysCollectionFolderService.save(created);
+        sysCollectionFolderRepository.save(created);
         return created;
     }
 
@@ -197,22 +182,18 @@ public class UserCollectionServiceImpl implements UserCollectionService {
      * 将同类型的其他默认收藏夹取消默认标记，确保默认夹唯一。
      */
     private void unsetDefaultFolder(Long userId, String folderType, Long keepId) {
-        List<SysCollectionFolder> folders = sysCollectionFolderService.lambdaQuery()
-                .eq(SysCollectionFolder::getUserId, userId)
-                .eq(SysCollectionFolder::getFolderType, folderType)
-                .eq(SysCollectionFolder::getIsDefault, 1)
-                .list();
+        List<SysCollectionFolder> folders = sysCollectionFolderRepository.findDefaultsByUserIdAndFolderType(userId, folderType);
         for (SysCollectionFolder existing : folders) {
             if (keepId != null && keepId.equals(existing.getId())) {
                 continue;
             }
             existing.setIsDefault(0);
-            sysCollectionFolderService.updateById(existing);
+            sysCollectionFolderRepository.updateById(existing);
         }
     }
 
     private SysCollectionFolder getFolderOrThrow(Long id, Long userId) {
-        SysCollectionFolder folder = sysCollectionFolderService.getById(id);
+        SysCollectionFolder folder = sysCollectionFolderRepository.getById(id);
         ExceptionThrowerCore.throwBusinessIf(folder == null || !userId.equals(folder.getUserId()), ResultErrorCode.ILLEGAL_ARGUMENT, "收藏夹不存在");
         return folder;
     }

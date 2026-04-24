@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.content.service.impl;
 import com.cybzacg.blogbackend.domain.BlogArticleCategory;
 import com.cybzacg.blogbackend.domain.SysCategory;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleCategoryService;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleCategoryRepository;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.admin.CategoryAdminVO;
 import com.cybzacg.blogbackend.module.content.model.admin.CategorySaveRequest;
@@ -34,7 +34,7 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
     private static final String ARTICLE_TYPE = "article";
 
     private final SysCategoryRepository sysCategoryRepository;
-    private final BlogArticleCategoryService blogArticleCategoryService;
+    private final BlogArticleCategoryRepository blogArticleCategoryService;
     private final ContentModelMapper contentModelMapper;
 
     @Override

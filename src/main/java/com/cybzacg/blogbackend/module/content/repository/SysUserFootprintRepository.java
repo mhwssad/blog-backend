@@ -51,4 +51,13 @@ public interface SysUserFootprintRepository extends IService<SysUserFootprint> {
      * @return 受影响行数
      */
     int upsertFootprint(SysUserFootprint footprint);
+
+    /**
+     * 删除指定目标类型和目标 ID 的全部足迹。
+     *
+     * @param targetType 目标类型
+     * @param targetId 目标 ID
+     * @return 是否删除成功
+     */
+    boolean removeByTargetTypeAndTargetId(String targetType, Long targetId);
 }

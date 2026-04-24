@@ -10,6 +10,14 @@
 - **数据访问总数**：约80处
 - **直接 Mapper 注入**：2个服务注入3个 Mapper
 
+## 当前进展（2026-04-01）
+
+- [x] 已新增 `ChatConversationRepository`、`ChatConversationMemberRepository`、`ChatMessageRepository`、`ChatMessageRecipientRepository`、`ChatMessageReadCursorRepository` 及对应实现，先收口 chat 模块 Repository 访问入口。
+- [x] 已将 `ChatAdminServiceImpl` 改为注入 `ChatConversationRepository`、`ChatConversationMemberRepository`、`ChatMessageRepository`、`ChatMessageRecipientRepository`，后台会话分页/详情、消息分页、回执分页、成员列表与成员治理都已改走 Repository。
+- [x] 已移除 `ChatAdminServiceImpl` 对 `ChatConversationMapper`、`ChatMessageMapper` 的直接注入，并移除了该服务内的 chat 成员/回执 `lambdaQuery()` 条件拼装。
+- [x] 已同步更新 `ChatAdminServiceImplTest`，并额外修复 `FileLifecycleServiceImplTest` 的 `anyString()` 静态导入，当前 `mvn -q -DskipTests compile` 与 `mvn -q "-Dtest=ChatAdminServiceImplTest" test` 均已通过。
+- [ ] 剩余最高优先级为 `UserChatServiceImpl`，其 Mapper 直连、`lambdaQuery()` / `lambdaUpdate()` 与读游标、投递状态高水位更新逻辑仍待继续迁移。
+- [ ] 当前按用户要求暂停执行，后续恢复时保持既定顺序：先补 `UserChatServiceImpl` 所需 Repository 方法，再迁移 `UserChatServiceImpl`，随后更新 `UserChatServiceImplTest` 并执行编译与 chat 定向测试。
 ## Repository 列表
 
 | Repository 接口 | 对应实体 | 薄服务来源 | Mapper自定义方法 |
@@ -201,3 +209,4 @@ mvn test -Dtest="com.cybzacg.blogbackend.module.chat.*Test"
 ```
 
 确认 `UserChatServiceImpl` 和 `ChatAdminServiceImpl` 中无直接 Mapper 注入、无 `lambdaQuery()`/`lambdaUpdate()` 调用。
+

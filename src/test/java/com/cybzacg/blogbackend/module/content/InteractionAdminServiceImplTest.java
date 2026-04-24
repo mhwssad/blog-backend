@@ -1,6 +1,5 @@
 package com.cybzacg.blogbackend.module.content;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.BlogArticle;
@@ -8,12 +7,12 @@ import com.cybzacg.blogbackend.domain.SysComment;
 import com.cybzacg.blogbackend.domain.SysInteraction;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleService;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.admin.InteractionPageQuery;
 import com.cybzacg.blogbackend.module.content.model.admin.InteractionVO;
-import com.cybzacg.blogbackend.module.content.service.SysCommentService;
-import com.cybzacg.blogbackend.module.content.service.SysInteractionService;
+import com.cybzacg.blogbackend.module.content.repository.SysCommentRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysInteractionRepository;
 import com.cybzacg.blogbackend.module.content.service.impl.InteractionAdminServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,7 +25,6 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -34,11 +32,11 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class InteractionAdminServiceImplTest {
     @Mock
-    private SysInteractionService sysInteractionService;
+    private SysInteractionRepository sysInteractionRepository;
     @Mock
-    private BlogArticleService blogArticleService;
+    private BlogArticleRepository blogArticleService;
     @Mock
-    private SysCommentService sysCommentService;
+    private SysCommentRepository sysCommentRepository;
     @Mock
     private ContentModelMapper contentModelMapper;
 
@@ -47,9 +45,9 @@ class InteractionAdminServiceImplTest {
     @BeforeEach
     void setUp() {
         interactionAdminService = new InteractionAdminServiceImpl(
-                sysInteractionService,
+                sysInteractionRepository,
                 blogArticleService,
-                sysCommentService,
+                sysCommentRepository,
                 contentModelMapper
         );
     }
@@ -72,7 +70,7 @@ class InteractionAdminServiceImplTest {
         vo.setId(18L);
         vo.setTargetId(100L);
 
-        when(sysInteractionService.page(any(Page.class), any(LambdaQueryWrapper.class))).thenReturn(page);
+        when(sysInteractionRepository.pageByAdminConditions(query)).thenReturn(page);
         when(contentModelMapper.toInteractionVO(interaction)).thenReturn(vo);
 
         PageResult<InteractionVO> result = interactionAdminService.pageInteractions(query);
@@ -91,14 +89,14 @@ class InteractionAdminServiceImplTest {
         article.setId(100L);
         article.setLikeCount(5);
 
-        when(sysInteractionService.getById(21L)).thenReturn(interaction);
+        when(sysInteractionRepository.getById(21L)).thenReturn(interaction);
         when(blogArticleService.getById(100L)).thenReturn(article);
 
         interactionAdminService.deleteInteraction(21L);
 
         assertEquals(Integer.valueOf(4), article.getLikeCount());
         verify(blogArticleService).updateById(article);
-        verify(sysInteractionService).removeById(21L);
+        verify(sysInteractionRepository).removeById(21L);
     }
 
     @Test
@@ -108,27 +106,27 @@ class InteractionAdminServiceImplTest {
         comment.setId(200L);
         comment.setLikeCount(3);
 
-        when(sysInteractionService.getById(22L)).thenReturn(interaction);
-        when(sysCommentService.getById(200L)).thenReturn(comment);
+        when(sysInteractionRepository.getById(22L)).thenReturn(interaction);
+        when(sysCommentRepository.getById(200L)).thenReturn(comment);
 
         interactionAdminService.deleteInteraction(22L);
 
         assertEquals(Integer.valueOf(2), comment.getLikeCount());
-        verify(sysCommentService).updateById(comment);
-        verify(sysInteractionService).removeById(22L);
+        verify(sysCommentRepository).updateById(comment);
+        verify(sysInteractionRepository).removeById(22L);
     }
 
     @Test
     void deleteInteractionShouldThrowWhenRecordMissing() {
-        when(sysInteractionService.getById(22L)).thenReturn(null);
+        when(sysInteractionRepository.getById(22L)).thenReturn(null);
 
         BusinessException exception = assertThrows(BusinessException.class, () -> interactionAdminService.deleteInteraction(22L));
 
         assertEquals(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), exception.getCode());
         assertEquals("互动记录不存在", exception.getMessage());
-        verify(blogArticleService, never()).updateById(any(BlogArticle.class));
-        verify(sysCommentService, never()).updateById(any(SysComment.class));
-        verify(sysInteractionService, never()).removeById(22L);
+        verify(blogArticleService, never()).updateById(org.mockito.ArgumentMatchers.any(BlogArticle.class));
+        verify(sysCommentRepository, never()).updateById(org.mockito.ArgumentMatchers.any(SysComment.class));
+        verify(sysInteractionRepository, never()).removeById(22L);
     }
 
     private SysInteraction interaction(Long id, Long userId, Long targetId, String targetType, String actionType) {
@@ -141,3 +139,4 @@ class InteractionAdminServiceImplTest {
         return interaction;
     }
 }
+

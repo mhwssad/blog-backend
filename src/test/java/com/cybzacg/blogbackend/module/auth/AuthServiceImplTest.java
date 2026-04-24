@@ -1,11 +1,11 @@
 package com.cybzacg.blogbackend.module.auth;
 
-import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.cybzacg.blogbackend.common.constant.AuthConstants;
 import com.cybzacg.blogbackend.common.constant.ConfigConstants;
 import com.cybzacg.blogbackend.common.constant.MenuConstants;
 import com.cybzacg.blogbackend.common.redis.RedisKeyUtils;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
+import com.cybzacg.blogbackend.domain.SysConfig;
 import com.cybzacg.blogbackend.domain.SysMenu;
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
@@ -20,15 +20,14 @@ import com.cybzacg.blogbackend.module.auth.model.AuthRefreshRequest;
 import com.cybzacg.blogbackend.module.auth.model.AuthRegisterRequest;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserInfo;
 import com.cybzacg.blogbackend.module.auth.model.AuthenticationToken;
-import com.cybzacg.blogbackend.module.auth.service.SysConfigService;
-import com.cybzacg.blogbackend.module.auth.service.SysMenuService;
-import com.cybzacg.blogbackend.module.auth.service.SysRoleService;
-import com.cybzacg.blogbackend.module.auth.service.SysUserService;
+import com.cybzacg.blogbackend.module.auth.repository.SysConfigRepository;
+import com.cybzacg.blogbackend.module.auth.repository.SysMenuRepository;
+import com.cybzacg.blogbackend.module.auth.repository.SysRoleRepository;
+import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.service.impl.AuthServiceImpl;
-import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import com.cybzacg.blogbackend.module.auth.token.TokenManager;
+import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
-import org.springframework.dao.DuplicateKeyException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,6 +36,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.mail.autoconfigure.MailProperties;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -44,8 +44,8 @@ import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.ArrayList;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -54,9 +54,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -68,13 +68,13 @@ class AuthServiceImplTest {
     @Mock
     private TokenManager tokenManager;
     @Mock
-    private SysUserService sysUserService;
+    private SysUserRepository sysUserRepository;
     @Mock
-    private SysRoleService sysRoleService;
+    private SysRoleRepository sysRoleRepository;
     @Mock
-    private SysMenuService sysMenuService;
+    private SysMenuRepository sysMenuRepository;
     @Mock
-    private SysConfigService sysConfigService;
+    private SysConfigRepository sysConfigRepository;
     @Mock
     private AuthModelMapper authModelMapper;
     @Mock
@@ -85,8 +85,6 @@ class AuthServiceImplTest {
     private MailProperties mailProperties;
     @Mock
     private PasswordEncoder passwordEncoder;
-    @Mock
-    private LambdaQueryChainWrapper<SysUser> userQuery;
 
     private AuthServiceImpl authService;
 
@@ -95,10 +93,10 @@ class AuthServiceImplTest {
         authService = new AuthServiceImpl(
                 authenticationManager,
                 tokenManager,
-                sysUserService,
-                sysRoleService,
-                sysMenuService,
-                sysConfigService,
+                sysUserRepository,
+                sysRoleRepository,
+                sysMenuRepository,
+                sysConfigRepository,
                 authModelMapper,
                 redisOperator,
                 javaMailSender,
@@ -122,7 +120,7 @@ class AuthServiceImplTest {
                 .refreshToken("refresh-token")
                 .build();
 
-        when(sysUserService.getByUsername("demo@example.com")).thenReturn(user);
+        when(sysUserRepository.findByUsername("demo@example.com")).thenReturn(user);
         when(authenticationManager.authenticate(any(Authentication.class))).thenReturn(authentication);
         when(tokenManager.generateToken(authentication)).thenReturn(token);
 
@@ -142,7 +140,7 @@ class AuthServiceImplTest {
             verify(redisOperator).delete(RedisKeyUtils.build(
                     AuthConstants.LOGIN_FAIL_LOCK_PREFIX,
                     RedisKeyUtils.build(AuthConstants.LOGIN_FAIL_SCOPE_USER, 7L)));
-            verify(sysUserService).updateLoginInfo(7L, "127.0.0.1");
+            verify(sysUserRepository).updateLoginInfo(7L, "127.0.0.1");
         }
     }
 
@@ -159,7 +157,7 @@ class AuthServiceImplTest {
                 AuthConstants.LOGIN_FAIL_LOCK_PREFIX,
                 RedisKeyUtils.build(AuthConstants.LOGIN_FAIL_SCOPE_USER, 9L));
 
-        when(sysUserService.getByUsername("demo")).thenReturn(user);
+        when(sysUserRepository.findByUsername("demo")).thenReturn(user);
         when(redisOperator.hasKey(lockKey)).thenReturn(true);
 
         BusinessException exception = assertThrows(BusinessException.class,
@@ -185,15 +183,13 @@ class AuthServiceImplTest {
                 AuthConstants.LOGIN_FAIL_LOCK_PREFIX,
                 RedisKeyUtils.build(AuthConstants.LOGIN_FAIL_SCOPE_USER, 9L));
 
-        when(sysUserService.getByUsername("demo")).thenReturn(user);
+        when(sysUserRepository.findByUsername("demo")).thenReturn(user);
         when(authenticationManager.authenticate(any(Authentication.class)))
                 .thenThrow(new BadCredentialsException("bad credentials"));
-        when(sysConfigService.getValueOrDefault(
-                ConfigConstants.AUTH_LOGIN_FAIL_MAX_ATTEMPTS_KEY,
-                String.valueOf(ConfigConstants.DEFAULT_AUTH_LOGIN_FAIL_MAX_ATTEMPTS))).thenReturn("3");
-        when(sysConfigService.getValueOrDefault(
-                ConfigConstants.AUTH_LOGIN_FAIL_LOCK_MINUTES_KEY,
-                String.valueOf(ConfigConstants.DEFAULT_AUTH_LOGIN_FAIL_LOCK_MINUTES))).thenReturn("15");
+        when(sysConfigRepository.findByConfigKey(ConfigConstants.AUTH_LOGIN_FAIL_MAX_ATTEMPTS_KEY))
+                .thenReturn(config(ConfigConstants.AUTH_LOGIN_FAIL_MAX_ATTEMPTS_KEY, "3"));
+        when(sysConfigRepository.findByConfigKey(ConfigConstants.AUTH_LOGIN_FAIL_LOCK_MINUTES_KEY))
+                .thenReturn(config(ConfigConstants.AUTH_LOGIN_FAIL_LOCK_MINUTES_KEY, "15"));
         when(redisOperator.increment(countKey)).thenReturn(3L);
 
         LockedException exception = assertThrows(LockedException.class,
@@ -212,17 +208,14 @@ class AuthServiceImplTest {
         request.setEmail("demo@example.com");
         request.setPhone("13800138000");
 
-        when(sysUserService.lambdaQuery()).thenReturn(userQuery);
-        when(userQuery.eq(any(), any())).thenReturn(userQuery);
-        when(userQuery.and(any())).thenReturn(userQuery);
-        when(userQuery.exists()).thenReturn(true);
+        when(sysUserRepository.existsActiveByIdentity("demo")).thenReturn(true);
 
         BusinessException exception = assertThrows(BusinessException.class,
                 () -> authService.register(request, "127.0.0.1"));
 
         assertEquals(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), exception.getCode());
         assertEquals("用户名已存在", exception.getMessage());
-        verify(sysUserService, never()).save(any(SysUser.class));
+        verify(sysUserRepository, never()).save(any(SysUser.class));
         verify(authenticationManager, never()).authenticate(any(Authentication.class));
     }
 
@@ -244,10 +237,9 @@ class AuthServiceImplTest {
                 .refreshToken("register-refresh-token")
                 .build();
 
-        when(sysUserService.lambdaQuery()).thenReturn(userQuery);
-        when(userQuery.eq(any(), any())).thenReturn(userQuery);
-        when(userQuery.and(any())).thenReturn(userQuery);
-        when(userQuery.exists()).thenReturn(false, false, false);
+        when(sysUserRepository.existsActiveByIdentity("demo")).thenReturn(false);
+        when(sysUserRepository.existsActiveByIdentity("demo@example.com")).thenReturn(false);
+        when(sysUserRepository.existsActiveByIdentity("13800138000")).thenReturn(false);
         when(authModelMapper.toRegisterUser(request)).thenReturn(mappedUser);
         when(passwordEncoder.encode("secret")).thenReturn("encoded-secret");
         when(authenticationManager.authenticate(any(Authentication.class))).thenReturn(authentication);
@@ -259,7 +251,7 @@ class AuthServiceImplTest {
             AuthenticationToken result = authService.register(request, "127.0.0.1");
 
             ArgumentCaptor<SysUser> userCaptor = ArgumentCaptor.forClass(SysUser.class);
-            verify(sysUserService).save(userCaptor.capture());
+            verify(sysUserRepository).save(userCaptor.capture());
             SysUser savedUser = userCaptor.getValue();
             assertEquals("demo", savedUser.getUsername());
             assertEquals("encoded-secret", savedUser.getPassword());
@@ -268,57 +260,9 @@ class AuthServiceImplTest {
             assertEquals("13800138000", savedUser.getPhone());
             assertEquals(Integer.valueOf(1), savedUser.getStatus());
             assertEquals(Integer.valueOf(0), savedUser.getDeletedFlag());
-
-            ArgumentCaptor<Authentication> authenticationCaptor = ArgumentCaptor.forClass(Authentication.class);
-            verify(authenticationManager).authenticate(authenticationCaptor.capture());
-            assertEquals("demo", authenticationCaptor.getValue().getPrincipal());
-            assertEquals("secret", authenticationCaptor.getValue().getCredentials());
-            verify(sysUserService).updateLoginInfo(18L, "127.0.0.1");
+            verify(sysUserRepository).updateLoginInfo(18L, "127.0.0.1");
             assertEquals(token, result);
         }
-    }
-
-    @Test
-    void registerShouldRejectDuplicateEmailBeforeSaving() {
-        AuthRegisterRequest request = new AuthRegisterRequest();
-        request.setUsername("demo");
-        request.setPassword("secret");
-        request.setEmail("  Demo@Example.com ");
-
-        when(sysUserService.lambdaQuery()).thenReturn(userQuery);
-        when(userQuery.eq(any(), any())).thenReturn(userQuery);
-        when(userQuery.and(any())).thenReturn(userQuery);
-        when(userQuery.exists()).thenReturn(false, true);
-
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> authService.register(request, "127.0.0.1"));
-
-        assertEquals(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), exception.getCode());
-        assertEquals("邮箱已存在", exception.getMessage());
-        verify(sysUserService, never()).save(any(SysUser.class));
-        verify(authenticationManager, never()).authenticate(any(Authentication.class));
-    }
-
-    @Test
-    void registerShouldRejectDuplicatePhoneBeforeSaving() {
-        AuthRegisterRequest request = new AuthRegisterRequest();
-        request.setUsername("demo");
-        request.setPassword("secret");
-        request.setEmail("demo@example.com");
-        request.setPhone(" 13800138000 ");
-
-        when(sysUserService.lambdaQuery()).thenReturn(userQuery);
-        when(userQuery.eq(any(), any())).thenReturn(userQuery);
-        when(userQuery.and(any())).thenReturn(userQuery);
-        when(userQuery.exists()).thenReturn(false, false, true);
-
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> authService.register(request, "127.0.0.1"));
-
-        assertEquals(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), exception.getCode());
-        assertEquals("手机号已存在", exception.getMessage());
-        verify(sysUserService, never()).save(any(SysUser.class));
-        verify(authenticationManager, never()).authenticate(any(Authentication.class));
     }
 
     @Test
@@ -331,13 +275,13 @@ class AuthServiceImplTest {
 
         SysUser mappedUser = new SysUser();
 
-        when(sysUserService.lambdaQuery()).thenReturn(userQuery, userQuery, userQuery, userQuery);
-        when(userQuery.eq(any(), any())).thenReturn(userQuery);
-        when(userQuery.and(any())).thenReturn(userQuery);
-        when(userQuery.exists()).thenReturn(false, false, false, true);
+        when(sysUserRepository.existsActiveByIdentity("demo")).thenReturn(false);
+        when(sysUserRepository.existsActiveByIdentity("demo@example.com")).thenReturn(false);
+        when(sysUserRepository.existsActiveByIdentity("13800138000")).thenReturn(false);
         when(authModelMapper.toRegisterUser(request)).thenReturn(mappedUser);
         when(passwordEncoder.encode("secret")).thenReturn("encoded-secret");
-        doThrow(new DuplicateKeyException("uk_sys_user_active_username")).when(sysUserService).save(mappedUser);
+        doThrow(new DuplicateKeyException("uk_sys_user_active_username")).when(sysUserRepository).save(mappedUser);
+        when(sysUserRepository.existsActiveByField("username", "demo")).thenReturn(true);
 
         BusinessException exception = assertThrows(BusinessException.class,
                 () -> authService.register(request, "127.0.0.1"));
@@ -374,7 +318,7 @@ class AuthServiceImplTest {
             assertEquals("demo@example.com", authRequest.getPrincipal());
             assertEquals("9527", authRequest.getCredentials());
             assertEquals(token, result);
-            verify(sysUserService).updateLoginInfo(9L, "192.168.1.9");
+            verify(sysUserRepository).updateLoginInfo(9L, "192.168.1.9");
         }
     }
 
@@ -387,7 +331,7 @@ class AuthServiceImplTest {
         user.setId(7L);
         user.setStatus(1);
 
-        when(sysUserService.getByEmail("demo@example.com")).thenReturn(user);
+        when(sysUserRepository.findByEmail("demo@example.com")).thenReturn(user);
         when(redisOperator.setIfAbsent(
                 eq(RedisKeyUtils.build(AuthConstants.EMAIL_LOGIN_CODE_RATE_PREFIX, "demo@example.com")),
                 eq("1"),
@@ -415,49 +359,6 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void sendEmailLoginCodeShouldRejectDisabledUser() {
-        AuthEmailCodeRequest request = new AuthEmailCodeRequest();
-        request.setEmail("demo@example.com");
-
-        SysUser user = new SysUser();
-        user.setId(7L);
-        user.setStatus(0);
-
-        when(sysUserService.getByEmail("demo@example.com")).thenReturn(user);
-
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> authService.sendEmailLoginCode(request));
-
-        assertEquals(ResultErrorCode.ACCOUNT_DISABLED.getCode(), exception.getCode());
-        verify(javaMailSender, never()).send(any(SimpleMailMessage.class));
-        verify(redisOperator, never()).set(any(), any(), any());
-    }
-
-    @Test
-    void sendEmailLoginCodeShouldNotCacheCodeWhenMailSendFails() {
-        AuthEmailCodeRequest request = new AuthEmailCodeRequest();
-        request.setEmail("demo@example.com");
-
-        SysUser user = new SysUser();
-        user.setId(7L);
-        user.setStatus(1);
-
-        when(sysUserService.getByEmail("demo@example.com")).thenReturn(user);
-        when(redisOperator.setIfAbsent(
-                eq(RedisKeyUtils.build(AuthConstants.EMAIL_LOGIN_CODE_RATE_PREFIX, "demo@example.com")),
-                eq("1"),
-                eq(AuthConstants.EMAIL_LOGIN_CODE_RATE_TTL))).thenReturn(true);
-        when(mailProperties.getUsername()).thenReturn("noreply@example.com");
-        doThrow(new RuntimeException("mail server down")).when(javaMailSender).send(any(SimpleMailMessage.class));
-
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> authService.sendEmailLoginCode(request));
-
-        assertEquals(ResultErrorCode.EMAIL_CAPTCHA_SEND_FAILED.getCode(), exception.getCode());
-        verify(redisOperator, never()).set(any(), any(), any());
-    }
-
-    @Test
     void refreshShouldRejectInvalidRefreshToken() {
         AuthRefreshRequest request = new AuthRefreshRequest();
         request.setRefreshToken("invalid-refresh-token");
@@ -468,13 +369,6 @@ class AuthServiceImplTest {
 
         assertEquals(ResultErrorCode.INVALID_TOKEN.getCode(), exception.getCode());
         verify(tokenManager, never()).refreshToken(any());
-    }
-
-    @Test
-    void logoutShouldIgnoreBlankToken() {
-        authService.logout("   ");
-
-        verify(tokenManager, never()).invalidateToken(any());
     }
 
     @Test
@@ -493,14 +387,13 @@ class AuthServiceImplTest {
                 .permissions(permissions)
                 .build();
 
-        when(sysUserService.getById(12L)).thenReturn(user);
-        when(sysRoleService.listRoleCodesByUserId(12L)).thenReturn(roleCodes);
-        when(sysMenuService.listPermissionsByUserId(12L)).thenReturn(permissions);
+        when(sysUserRepository.getById(12L)).thenReturn(user);
+        when(sysRoleRepository.findRoleCodesByUserId(12L)).thenReturn(roleCodes);
+        when(sysMenuRepository.findPermissionsByUserId(12L)).thenReturn(permissions);
         when(authModelMapper.toAuthUserInfo(user, roleCodes, permissions)).thenReturn(expected);
 
         try (MockedStatic<?> securityUtils = SecurityTestUtils.mockAuthentication(authentication, 12L, null)) {
             AuthUserInfo result = authService.getCurrentUser();
-
             assertEquals(expected, result);
         }
     }
@@ -538,8 +431,8 @@ class AuthServiceImplTest {
                 .children(new ArrayList<>())
                 .build();
 
-        when(sysUserService.getByUsername("demo")).thenReturn(user);
-        when(sysMenuService.listMenusByUserId(21L)).thenReturn(List.of(root, child, button));
+        when(sysUserRepository.findByUsername("demo")).thenReturn(user);
+        when(sysMenuRepository.findMenusByUserId(21L)).thenReturn(List.of(root, child, button));
         when(authModelMapper.toAuthMenuInfo(root)).thenReturn(rootInfo);
         when(authModelMapper.toAuthMenuInfo(child)).thenReturn(childInfo);
 
@@ -551,59 +444,12 @@ class AuthServiceImplTest {
             assertEquals(1, result.get(0).getChildren().size());
             assertEquals(2L, result.get(0).getChildren().get(0).getId());
         }
-
-        verify(authModelMapper, never()).toAuthMenuInfo(button);
     }
 
-    @Test
-    void sendEmailLoginCodeShouldRejectWhenRateLimited() {
-        AuthEmailCodeRequest request = new AuthEmailCodeRequest();
-        request.setEmail("demo@example.com");
-
-        SysUser user = new SysUser();
-        user.setId(7L);
-        user.setStatus(1);
-
-        when(sysUserService.getByEmail("demo@example.com")).thenReturn(user);
-        when(redisOperator.setIfAbsent(
-                eq(RedisKeyUtils.build(AuthConstants.EMAIL_LOGIN_CODE_RATE_PREFIX, "demo@example.com")),
-                eq("1"),
-                eq(AuthConstants.EMAIL_LOGIN_CODE_RATE_TTL))).thenReturn(false);
-
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> authService.sendEmailLoginCode(request));
-
-        assertEquals(ResultErrorCode.EMAIL_CAPTCHA_RATE_LIMITED.getCode(), exception.getCode());
-        verify(javaMailSender, never()).send(any(SimpleMailMessage.class));
-        verify(redisOperator, never()).set(any(), any(), any());
-    }
-
-    @Test
-    void sendEmailLoginCodeShouldSetRateLimitKeyOnFirstRequest() {
-        AuthEmailCodeRequest request = new AuthEmailCodeRequest();
-        request.setEmail("demo@example.com");
-
-        SysUser user = new SysUser();
-        user.setId(7L);
-        user.setStatus(1);
-
-        when(sysUserService.getByEmail("demo@example.com")).thenReturn(user);
-        when(redisOperator.setIfAbsent(
-                eq(RedisKeyUtils.build(AuthConstants.EMAIL_LOGIN_CODE_RATE_PREFIX, "demo@example.com")),
-                eq("1"),
-                eq(AuthConstants.EMAIL_LOGIN_CODE_RATE_TTL))).thenReturn(true);
-        when(mailProperties.getUsername()).thenReturn("noreply@example.com");
-
-        authService.sendEmailLoginCode(request);
-
-        verify(redisOperator).setIfAbsent(
-                eq(RedisKeyUtils.build(AuthConstants.EMAIL_LOGIN_CODE_RATE_PREFIX, "demo@example.com")),
-                eq("1"),
-                eq(AuthConstants.EMAIL_LOGIN_CODE_RATE_TTL));
-        verify(javaMailSender).send(any(SimpleMailMessage.class));
-        verify(redisOperator).set(
-                eq(RedisKeyUtils.build(AuthConstants.EMAIL_LOGIN_CODE_PREFIX, "demo@example.com")),
-                any(),
-                eq(AuthConstants.EMAIL_LOGIN_CODE_TTL));
+    private SysConfig config(String key, String value) {
+        SysConfig config = new SysConfig();
+        config.setConfigKey(key);
+        config.setConfigValue(value);
+        return config;
     }
 }

@@ -49,37 +49,39 @@ Authorization: Bearer <accessToken>
 浏览器示例：
 
 ```js
-const socket = new WebSocket(`ws://localhost:8000/ws/chat?accessToken=${accessToken}`);
+const socket = new WebSocket(
+  `ws://localhost:8000/ws/chat?accessToken=${accessToken}`,
+);
 ```
 
 ## 3. 用户侧 HTTP 接口
 
 ### 3.1 接口总览
 
-| 接口 | 方法 | 路径 |
-| --- | --- | --- |
-| 分页查询我的会话 | `GET` | `/api/user/chat/conversations` |
-| 查询会话详情 | `GET` | `/api/user/chat/conversations/{conversationId}` |
-| 打开或创建单聊 | `POST` | `/api/user/chat/single-conversations` |
-| 分页查询会话消息 | `GET` | `/api/user/chat/conversations/{conversationId}/messages` |
-| 发送文本消息 | `POST` | `/api/user/chat/messages/text` |
-| 发送文件消息 | `POST` | `/api/user/chat/messages/file` |
-| 编辑消息 | `PUT` | `/api/user/chat/messages/{messageId}` |
-| 撤回消息 | `POST` | `/api/user/chat/messages/{messageId}/revoke` |
-| 删除我的消息视图 | `DELETE` | `/api/user/chat/messages/{messageId}` |
-| 推进会话已读 | `POST` | `/api/user/chat/conversations/{conversationId}/read` |
-| 创建群聊 | `POST` | `/api/user/chat/groups` |
-| 查询群详情 | `GET` | `/api/user/chat/groups/{conversationId}` |
-| 查询群成员 | `GET` | `/api/user/chat/groups/{conversationId}/members` |
-| 邀请群成员 | `POST` | `/api/user/chat/groups/{conversationId}/members` |
-| 设置群管理员 | `PUT` | `/api/user/chat/groups/{conversationId}/admins/{memberUserId}` |
-| 取消群管理员 | `DELETE` | `/api/user/chat/groups/{conversationId}/admins/{memberUserId}` |
-| 转让群主 | `PUT` | `/api/user/chat/groups/{conversationId}/owner` |
-| 设置成员禁言 | `PUT` | `/api/user/chat/groups/{conversationId}/members/{memberUserId}/mute` |
-| 更新群公告 | `PUT` | `/api/user/chat/groups/{conversationId}/notice` |
-| 移除群成员 | `DELETE` | `/api/user/chat/groups/{conversationId}/members/{memberUserId}` |
-| 退出群聊 | `POST` | `/api/user/chat/groups/{conversationId}/leave` |
-| 解散群聊 | `DELETE` | `/api/user/chat/groups/{conversationId}` |
+| 接口             | 方法     | 路径                                                                 |
+| ---------------- | -------- | -------------------------------------------------------------------- |
+| 分页查询我的会话 | `GET`    | `/api/user/chat/conversations`                                       |
+| 查询会话详情     | `GET`    | `/api/user/chat/conversations/{conversationId}`                      |
+| 打开或创建单聊   | `POST`   | `/api/user/chat/single-conversations`                                |
+| 分页查询会话消息 | `GET`    | `/api/user/chat/conversations/{conversationId}/messages`             |
+| 发送文本消息     | `POST`   | `/api/user/chat/messages/text`                                       |
+| 发送文件消息     | `POST`   | `/api/user/chat/messages/file`                                       |
+| 编辑消息         | `PUT`    | `/api/user/chat/messages/{messageId}`                                |
+| 撤回消息         | `POST`   | `/api/user/chat/messages/{messageId}/revoke`                         |
+| 删除我的消息视图 | `DELETE` | `/api/user/chat/messages/{messageId}`                                |
+| 推进会话已读     | `POST`   | `/api/user/chat/conversations/{conversationId}/read`                 |
+| 创建群聊         | `POST`   | `/api/user/chat/groups`                                              |
+| 查询群详情       | `GET`    | `/api/user/chat/groups/{conversationId}`                             |
+| 查询群成员       | `GET`    | `/api/user/chat/groups/{conversationId}/members`                     |
+| 邀请群成员       | `POST`   | `/api/user/chat/groups/{conversationId}/members`                     |
+| 设置群管理员     | `PUT`    | `/api/user/chat/groups/{conversationId}/admins/{memberUserId}`       |
+| 取消群管理员     | `DELETE` | `/api/user/chat/groups/{conversationId}/admins/{memberUserId}`       |
+| 转让群主         | `PUT`    | `/api/user/chat/groups/{conversationId}/owner`                       |
+| 设置成员禁言     | `PUT`    | `/api/user/chat/groups/{conversationId}/members/{memberUserId}/mute` |
+| 更新群公告       | `PUT`    | `/api/user/chat/groups/{conversationId}/notice`                      |
+| 移除群成员       | `DELETE` | `/api/user/chat/groups/{conversationId}/members/{memberUserId}`      |
+| 退出群聊         | `POST`   | `/api/user/chat/groups/{conversationId}/leave`                       |
+| 解散群聊         | `DELETE` | `/api/user/chat/groups/{conversationId}`                             |
 
 ### 3.2 会话查询
 
@@ -87,22 +89,22 @@ const socket = new WebSocket(`ws://localhost:8000/ws/chat?accessToken=${accessTo
 
 请求参数：
 
-| 参数 | 位置 | 必填 | 说明 |
-| --- | --- | --- | --- |
-| `current` | query | 否 | 页码，默认 `1` |
-| `size` | query | 否 | 每页条数，默认 `20` |
-| `keyword` | query | 否 | 按会话名、最后一条消息内容筛选 |
+| 参数      | 位置  | 必填 | 说明                           |
+| --------- | ----- | ---- | ------------------------------ |
+| `current` | query | 否   | 页码，默认 `1`                 |
+| `size`    | query | 否   | 每页条数，默认 `20`            |
+| `keyword` | query | 否   | 按会话名、最后一条消息内容筛选 |
 
 会话对象重点字段：
 
-| 字段 | 说明 |
-| --- | --- |
-| `conversationType` | `single/group/global` |
-| `notice` | 群公告；当前复用 `chat_conversation.remark` |
-| `selfRole` | 当前用户角色：`owner/admin/member` |
-| `memberCount` | 当前活跃成员数 |
-| `unreadCount` | 当前用户未读数 |
-| `lastMessage` | 最后一条消息摘要 |
+| 字段               | 说明                                        |
+| ------------------ | ------------------------------------------- |
+| `conversationType` | `single/group/global`                       |
+| `notice`           | 群公告；当前复用 `chat_conversation.remark` |
+| `selfRole`         | 当前用户角色：`owner/admin/member`          |
+| `memberCount`      | 当前活跃成员数                              |
+| `unreadCount`      | 当前用户未读数                              |
+| `lastMessage`      | 最后一条消息摘要                            |
 
 说明：
 
@@ -115,64 +117,64 @@ const socket = new WebSocket(`ws://localhost:8000/ws/chat?accessToken=${accessTo
 
 请求参数：
 
-| 参数 | 位置 | 必填 | 说明 |
-| --- | --- | --- | --- |
-| `current` | query | 否 | 页码，默认 `1` |
-| `size` | query | 否 | 每页条数，默认 `20` |
-| `beforeMessageId` | query | 否 | 只查询该消息 ID 之前的历史消息 |
+| 参数              | 位置  | 必填 | 说明                           |
+| ----------------- | ----- | ---- | ------------------------------ |
+| `current`         | query | 否   | 页码，默认 `1`                 |
+| `size`            | query | 否   | 每页条数，默认 `20`            |
+| `beforeMessageId` | query | 否   | 只查询该消息 ID 之前的历史消息 |
 
 消息对象重点字段：
 
-| 字段 | 说明 |
-| --- | --- |
-| `messageType` | `text/file/image/voice` |
-| `content` | 文本内容或附件摘要；撤回后固定为“消息已撤回” |
-| `file` | 附件消息载荷；文本消息为空 |
-| `replyMessageId` | 被回复消息 ID；未回复时为空 |
-| `reply` | 被回复消息快照；如旧消息未落快照且原消息已不可见，会返回占位快照 |
-| `deliveryStatus` | 当前用户视角下的投递状态：`0/1/2` |
-| `readByCurrentUser` | 当前用户是否已读 |
-| `revoked` | 是否已撤回 |
-| `edited` | 是否编辑过；当前仅文本消息可能为 `true` |
-| `updatedAt` | 更新时间 |
+| 字段                | 说明                                                             |
+| ------------------- | ---------------------------------------------------------------- |
+| `messageType`       | `text/file/image/voice`                                          |
+| `content`           | 文本内容或附件摘要；撤回后固定为“消息已撤回”                     |
+| `file`              | 附件消息载荷；文本消息为空                                       |
+| `replyMessageId`    | 被回复消息 ID；未回复时为空                                      |
+| `reply`             | 被回复消息快照；如旧消息未落快照且原消息已不可见，会返回占位快照 |
+| `deliveryStatus`    | 当前用户视角下的投递状态：`0/1/2`                                |
+| `readByCurrentUser` | 当前用户是否已读                                                 |
+| `revoked`           | 是否已撤回                                                       |
+| `edited`            | 是否编辑过；当前仅文本消息可能为 `true`                          |
+| `updatedAt`         | 更新时间                                                         |
 
 附件载荷 `file` 字段：
 
-| 字段 | 说明 |
-| --- | --- |
-| `businessId` | 聊天文件业务引用 ID |
-| `fileId` | 文件 ID |
-| `fileName` | 文件名 |
-| `originalName` | 原始文件名 |
-| `fileUrl` | 文件地址 |
-| `fileSize` | 文件大小 |
-| `fileType` | 文件类型 |
-| `mimeType` | MIME 类型 |
-| `previewUrl` | 预览地址，图片/语音当前复用原文件地址 |
-| `thumbnailUrl` | 缩略图地址；图片刚发送时可能先回落原图，媒体任务完成后会更新为 sidecar 缩略图 |
-| `width` | 图片宽度，异步媒体任务完成前可能为空 |
-| `height` | 图片高度，异步媒体任务完成前可能为空 |
-| `durationSeconds` | 语音时长，异步媒体任务完成前可能为空 |
-| `waveform` | 语音波形采样点，异步媒体任务完成前可能为空 |
-| `transcodeStatus` | 转码状态：`source/pending/ready/failed` |
+| 字段              | 说明                                                                          |
+| ----------------- | ----------------------------------------------------------------------------- |
+| `businessId`      | 聊天文件业务引用 ID                                                           |
+| `fileId`          | 文件 ID                                                                       |
+| `fileName`        | 文件名                                                                        |
+| `originalName`    | 原始文件名                                                                    |
+| `fileUrl`         | 文件地址                                                                      |
+| `fileSize`        | 文件大小                                                                      |
+| `fileType`        | 文件类型                                                                      |
+| `mimeType`        | MIME 类型                                                                     |
+| `previewUrl`      | 预览地址，图片/语音当前复用原文件地址                                         |
+| `thumbnailUrl`    | 缩略图地址；图片刚发送时可能先回落原图，媒体任务完成后会更新为 sidecar 缩略图 |
+| `width`           | 图片宽度，异步媒体任务完成前可能为空                                          |
+| `height`          | 图片高度，异步媒体任务完成前可能为空                                          |
+| `durationSeconds` | 语音时长，异步媒体任务完成前可能为空                                          |
+| `waveform`        | 语音波形采样点，异步媒体任务完成前可能为空                                    |
+| `transcodeStatus` | 转码状态：`source/pending/ready/failed`                                       |
 
 回复快照 `reply` 字段：
 
-| 字段 | 说明 |
-| --- | --- |
-| `id` | 被回复消息 ID |
-| `senderId` | 被回复消息发送人 ID |
-| `senderUsername` | 被回复消息发送人用户名 |
-| `senderNickname` | 被回复消息发送人昵称 |
-| `senderAvatar` | 被回复消息发送人头像 |
-| `messageType` | 被回复消息类型 |
+| 字段               | 说明                                                               |
+| ------------------ | ------------------------------------------------------------------ |
+| `id`               | 被回复消息 ID                                                      |
+| `senderId`         | 被回复消息发送人 ID                                                |
+| `senderUsername`   | 被回复消息发送人用户名                                             |
+| `senderNickname`   | 被回复消息发送人昵称                                               |
+| `senderAvatar`     | 被回复消息发送人头像                                               |
+| `messageType`      | 被回复消息类型                                                     |
 | `replyToMessageId` | 被回复消息自己又回复了哪条消息，仅作为状态链接，不继续内联多层快照 |
-| `content` | 被回复消息摘要 |
-| `file` | 被回复消息附件快照 |
-| `revoked` | 被回复消息是否已撤回 |
-| `deleted` | 仅用于提示原消息当前不可见的兜底状态 |
-| `state` | 当前状态：`normal/revoked/unavailable` |
-| `createdAt` | 被回复消息发送时间 |
+| `content`          | 被回复消息摘要                                                     |
+| `file`             | 被回复消息附件快照                                                 |
+| `revoked`          | 被回复消息是否已撤回                                               |
+| `deleted`          | 仅用于提示原消息当前不可见的兜底状态                               |
+| `state`            | 当前状态：`normal/revoked/unavailable`                             |
+| `createdAt`        | 被回复消息发送时间                                                 |
 
 说明：
 
@@ -401,19 +403,19 @@ DELETE /api/user/chat/groups/{conversationId}/members/{memberUserId}
 
 ### 4.1 接口总览
 
-| 接口 | 方法 | 路径 | 权限 |
-| --- | --- | --- | --- |
-| 分页查询会话 | `GET` | `/api/sys/chats/conversations` | `content:chat:query` |
-| 查询会话详情 | `GET` | `/api/sys/chats/conversations/{conversationId}` | `content:chat:query` |
-| 查询会话成员 | `GET` | `/api/sys/chats/conversations/{conversationId}/members` | `content:chat:query` |
-| 分页查询会话消息 | `GET` | `/api/sys/chats/conversations/{conversationId}/messages` | `content:chat:query` |
-| 查询消息详情 | `GET` | `/api/sys/chats/conversations/{conversationId}/messages/{messageId}` | `content:chat:query` |
-| 分页查询消息回执 | `GET` | `/api/sys/chats/conversations/{conversationId}/messages/{messageId}/receipts` | `content:chat:query` |
-| 更新成员角色 | `PUT` | `/api/sys/chats/conversations/{conversationId}/members/{memberUserId}/role` | `content:chat:update` |
-| 更新成员状态 | `PUT` | `/api/sys/chats/conversations/{conversationId}/members/{memberUserId}/status` | `content:chat:update` |
-| 更新成员禁言 | `PUT` | `/api/sys/chats/conversations/{conversationId}/members/{memberUserId}/mute` | `content:chat:update` |
-| 后台撤回消息 | `POST` | `/api/sys/chats/conversations/{conversationId}/messages/{messageId}/revoke` | `content:chat:update` |
-| 更新会话状态 | `PUT` | `/api/sys/chats/conversations/{conversationId}/status` | `content:chat:update` |
+| 接口             | 方法   | 路径                                                                          | 权限                  |
+| ---------------- | ------ | ----------------------------------------------------------------------------- | --------------------- |
+| 分页查询会话     | `GET`  | `/api/sys/chats/conversations`                                                | `content:chat:query`  |
+| 查询会话详情     | `GET`  | `/api/sys/chats/conversations/{conversationId}`                               | `content:chat:query`  |
+| 查询会话成员     | `GET`  | `/api/sys/chats/conversations/{conversationId}/members`                       | `content:chat:query`  |
+| 分页查询会话消息 | `GET`  | `/api/sys/chats/conversations/{conversationId}/messages`                      | `content:chat:query`  |
+| 查询消息详情     | `GET`  | `/api/sys/chats/conversations/{conversationId}/messages/{messageId}`          | `content:chat:query`  |
+| 分页查询消息回执 | `GET`  | `/api/sys/chats/conversations/{conversationId}/messages/{messageId}/receipts` | `content:chat:query`  |
+| 更新成员角色     | `PUT`  | `/api/sys/chats/conversations/{conversationId}/members/{memberUserId}/role`   | `content:chat:update` |
+| 更新成员状态     | `PUT`  | `/api/sys/chats/conversations/{conversationId}/members/{memberUserId}/status` | `content:chat:update` |
+| 更新成员禁言     | `PUT`  | `/api/sys/chats/conversations/{conversationId}/members/{memberUserId}/mute`   | `content:chat:update` |
+| 后台撤回消息     | `POST` | `/api/sys/chats/conversations/{conversationId}/messages/{messageId}/revoke`   | `content:chat:update` |
+| 更新会话状态     | `PUT`  | `/api/sys/chats/conversations/{conversationId}/status`                        | `content:chat:update` |
 
 ### 4.2 会话与消息分页
 
@@ -429,20 +431,20 @@ DELETE /api/user/chat/groups/{conversationId}/members/{memberUserId}
 
 后台消息对象重点字段：
 
-| 字段 | 说明 |
-| --- | --- |
-| `messageType` | `text/file/image/voice` |
-| `file` | 附件消息载荷 |
-| `replyMessageId` | 被回复消息 ID |
-| `reply` | 被回复消息快照 |
-| `revokeStatus` | 撤回状态 |
-| `revokedBy` | 撤回操作人 ID |
-| `revokedAt` | 撤回时间 |
-| `totalRecipientCount` | 接收成员总数 |
-| `deliveredRecipientCount` | 已送达成员数 |
-| `readRecipientCount` | 已读成员数 |
-| `edited` | 是否编辑过 |
-| `updatedAt` | 更新时间 |
+| 字段                      | 说明                    |
+| ------------------------- | ----------------------- |
+| `messageType`             | `text/file/image/voice` |
+| `file`                    | 附件消息载荷            |
+| `replyMessageId`          | 被回复消息 ID           |
+| `reply`                   | 被回复消息快照          |
+| `revokeStatus`            | 撤回状态                |
+| `revokedBy`               | 撤回操作人 ID           |
+| `revokedAt`               | 撤回时间                |
+| `totalRecipientCount`     | 接收成员总数            |
+| `deliveredRecipientCount` | 已送达成员数            |
+| `readRecipientCount`      | 已读成员数              |
+| `edited`                  | 是否编辑过              |
+| `updatedAt`               | 更新时间                |
 
 ### 4.3 消息详情
 
@@ -456,13 +458,13 @@ DELETE /api/user/chat/groups/{conversationId}/members/{memberUserId}
 
 请求参数：
 
-| 参数 | 位置 | 必填 | 说明 |
-| --- | --- | --- | --- |
-| `current` | query | 否 | 页码，默认 `1` |
-| `size` | query | 否 | 每页条数，默认 `20` |
-| `recipientUserId` | query | 否 | 接收人用户 ID |
-| `deliveryStatus` | query | 否 | `0-待投递，1-已送达，2-已读` |
-| `visibleStatus` | query | 否 | `0-已隐藏，1-可见` |
+| 参数              | 位置  | 必填 | 说明                         |
+| ----------------- | ----- | ---- | ---------------------------- |
+| `current`         | query | 否   | 页码，默认 `1`               |
+| `size`            | query | 否   | 每页条数，默认 `20`          |
+| `recipientUserId` | query | 否   | 接收人用户 ID                |
+| `deliveryStatus`  | query | 否   | `0-待投递，1-已送达，2-已读` |
+| `visibleStatus`   | query | 否   | `0-已隐藏，1-可见`           |
 
 响应记录重点字段：
 
@@ -625,5 +627,3 @@ PUT /api/sys/chats/conversations/{conversationId}/members/{memberUserId}/mute
   - 会话消息分页
   - 单条消息详情
   - 消息回执明细
-
-

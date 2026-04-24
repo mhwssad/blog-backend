@@ -5,17 +5,17 @@ import com.cybzacg.blogbackend.domain.SysComment;
 import com.cybzacg.blogbackend.domain.SysInteraction;
 import com.cybzacg.blogbackend.domain.SysTag;
 import com.cybzacg.blogbackend.domain.SysUser;
-import com.cybzacg.blogbackend.mapper.SysCommentMapper;
-import com.cybzacg.blogbackend.mapper.SysTagMapper;
 import com.cybzacg.blogbackend.module.auth.service.SysUserService;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicCategoryTreeVO;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicCommentQuery;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicCommentVO;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicTagVO;
+import com.cybzacg.blogbackend.module.content.repository.SysCategoryRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysCommentRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysInteractionRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysTagRepository;
 import com.cybzacg.blogbackend.module.content.service.PublicContentQueryService;
-import com.cybzacg.blogbackend.module.content.service.SysCategoryService;
-import com.cybzacg.blogbackend.module.content.service.SysInteractionService;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
@@ -40,22 +40,19 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PublicContentQueryServiceImpl implements PublicContentQueryService {
     private static final String ARTICLE_TYPE = "article";
+    private static final String COMMENT_TYPE = "comment";
+    private static final String LIKE_ACTION = "like";
 
-    private final SysCategoryService sysCategoryService;
-    private final SysTagMapper sysTagMapper;
-    private final SysCommentMapper sysCommentMapper;
-    private final SysInteractionService sysInteractionService;
+    private final SysCategoryRepository sysCategoryRepository;
+    private final SysTagRepository sysTagRepository;
+    private final SysCommentRepository sysCommentRepository;
+    private final SysInteractionRepository sysInteractionRepository;
     private final SysUserService sysUserService;
     private final ContentModelMapper contentModelMapper;
 
     @Override
     public List<PublicCategoryTreeVO> listCategoryTree() {
-        List<SysCategory> categories = sysCategoryService.lambdaQuery()
-                .eq(SysCategory::getType, ARTICLE_TYPE)
-                .eq(SysCategory::getStatus, 1)
-                .orderByAsc(SysCategory::getSortOrder)
-                .orderByAsc(SysCategory::getId)
-                .list();
+        List<SysCategory> categories = sysCategoryRepository.findByTypeAndStatusOrderBySortOrderAndId(ARTICLE_TYPE, 1);
         Map<Long, PublicCategoryTreeVO> categoryMap = new LinkedHashMap<>();
         for (SysCategory category : categories) {
             categoryMap.put(category.getId(), contentModelMapper.toPublicCategoryTreeVO(category));
@@ -78,7 +75,7 @@ public class PublicContentQueryServiceImpl implements PublicContentQueryService 
         if (!ARTICLE_TYPE.equals(actualTargetType)) {
             return List.of();
         }
-        return sysTagMapper.selectByTargetType(actualTargetType).stream()
+        return sysTagRepository.findByTargetType(actualTargetType).stream()
                 .map(contentModelMapper::toPublicTagVO)
                 .toList();
     }
@@ -88,13 +85,13 @@ public class PublicContentQueryServiceImpl implements PublicContentQueryService 
      */
     @Override
     public List<PublicCommentVO> listComments(PublicCommentQuery query) {
-        List<SysComment> roots = sysCommentMapper.selectRootCommentsByTarget(query.getTargetId(), query.getTargetType());
+        List<SysComment> roots = sysCommentRepository.selectRootCommentsByTarget(query.getTargetId(), query.getTargetType());
         if (roots.isEmpty()) {
             return List.of();
         }
 
         List<Long> rootIds = roots.stream().map(SysComment::getId).toList();
-        List<SysComment> replies = sysCommentMapper.selectRepliesByRootIds(rootIds);
+        List<SysComment> replies = sysCommentRepository.selectRepliesByRootIds(rootIds);
         List<SysComment> comments = new ArrayList<>(roots.size() + replies.size());
         comments.addAll(roots);
         comments.addAll(replies);
@@ -155,15 +152,13 @@ public class PublicContentQueryServiceImpl implements PublicContentQueryService 
         if (currentUserId == null || commentIds == null || commentIds.isEmpty()) {
             return Set.of();
         }
-        return sysInteractionService.lambdaQuery()
-                .eq(SysInteraction::getUserId, currentUserId)
-                .eq(SysInteraction::getTargetType, "comment")
-                .eq(SysInteraction::getActionType, "like")
-                .in(SysInteraction::getTargetId, commentIds)
-                .list()
+        return sysInteractionRepository.findByUserIdAndTargetTypeAndActionTypeInTargetIds(
+                        currentUserId,
+                        COMMENT_TYPE,
+                        LIKE_ACTION,
+                        commentIds)
                 .stream()
                 .map(SysInteraction::getTargetId)
                 .collect(Collectors.toSet());
     }
 }
-

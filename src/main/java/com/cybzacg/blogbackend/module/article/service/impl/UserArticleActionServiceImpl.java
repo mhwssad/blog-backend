@@ -4,11 +4,11 @@ import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.SysInteraction;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleService;
 import com.cybzacg.blogbackend.module.article.service.UserArticleActionService;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
-import com.cybzacg.blogbackend.module.content.service.SysInteractionService;
+import com.cybzacg.blogbackend.module.content.repository.SysInteractionRepository;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,8 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class UserArticleActionServiceImpl implements UserArticleActionService {
-    private final BlogArticleService blogArticleService;
-    private final SysInteractionService sysInteractionService;
+    private final BlogArticleRepository blogArticleRepository;
+    private final SysInteractionRepository sysInteractionRepository;
     private final ArticleAccessControlService articleAccessControlService;
     private final ContentModelMapper contentModelMapper;
 
@@ -32,19 +32,14 @@ public class UserArticleActionServiceImpl implements UserArticleActionService {
     public void likeArticle(Long articleId) {
         Long userId = SecurityUtils.requireUserId();
         BlogArticle article = getAccessibleArticle(articleId, userId);
-        boolean exists = sysInteractionService.lambdaQuery()
-                .eq(SysInteraction::getUserId, userId)
-                .eq(SysInteraction::getTargetId, articleId)
-                .eq(SysInteraction::getTargetType, "article")
-                .eq(SysInteraction::getActionType, "like")
-                .exists();
+        boolean exists = sysInteractionRepository.existsByUserIdAndTargetIdAndTargetTypeAndActionType(userId, articleId, "article", "like");
         if (exists) {
             return;
         }
         SysInteraction interaction = contentModelMapper.toInteraction(userId, articleId, "article", "like");
-        sysInteractionService.save(interaction);
+        sysInteractionRepository.save(interaction);
         article.setLikeCount((article.getLikeCount() == null ? 0 : article.getLikeCount()) + 1);
-        blogArticleService.updateById(article);
+        blogArticleRepository.updateById(article);
     }
 
     @Override
@@ -52,25 +47,20 @@ public class UserArticleActionServiceImpl implements UserArticleActionService {
     public void unlikeArticle(Long articleId) {
         Long userId = SecurityUtils.requireUserId();
         BlogArticle article = getAccessibleArticle(articleId, userId);
-        SysInteraction interaction = sysInteractionService.lambdaQuery()
-                .eq(SysInteraction::getUserId, userId)
-                .eq(SysInteraction::getTargetId, articleId)
-                .eq(SysInteraction::getTargetType, "article")
-                .eq(SysInteraction::getActionType, "like")
-                .one();
+        SysInteraction interaction = sysInteractionRepository.findOneByUserIdAndTargetIdAndTargetTypeAndActionType(userId, articleId, "article", "like");
         if (interaction == null) {
             return;
         }
-        sysInteractionService.removeById(interaction.getId());
+        sysInteractionRepository.removeById(interaction.getId());
         article.setLikeCount(Math.max(0, (article.getLikeCount() == null ? 0 : article.getLikeCount()) - 1));
-        blogArticleService.updateById(article);
+        blogArticleRepository.updateById(article);
     }
 
     /**
      * 获取当前用户可访问的已发布文章，不满足条件时抛出统一异常。
      */
     private BlogArticle getAccessibleArticle(Long articleId, Long userId) {
-        BlogArticle article = blogArticleService.getById(articleId);
+        BlogArticle article = blogArticleRepository.getById(articleId);
         ExceptionThrowerCore.throwBusinessIf(article == null || !Integer.valueOf(1).equals(article.getStatus()), ResultErrorCode.ILLEGAL_ARGUMENT, "文章不存在");
         articleAccessControlService.validateArticleAccess(article, userId);
         return article;

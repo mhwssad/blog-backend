@@ -1,6 +1,5 @@
 package com.cybzacg.blogbackend.module.chat.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.ChatConversation;
@@ -10,9 +9,7 @@ import com.cybzacg.blogbackend.domain.ChatMessageRecipient;
 import com.cybzacg.blogbackend.domain.FileBusinessInfo;
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.mapper.ChatConversationMapper;
-import com.cybzacg.blogbackend.mapper.ChatMessageMapper;
-import com.cybzacg.blogbackend.module.auth.service.SysUserService;
+import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.chat.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.convert.ChatModelMapper;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminConversationPageQuery;
@@ -35,13 +32,13 @@ import com.cybzacg.blogbackend.module.chat.model.user.ChatMemberVO;
 import com.cybzacg.blogbackend.module.chat.model.user.ChatMessageVO;
 import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsConversationUpdatedPayload;
 import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsMembersUpdatedPayload;
+import com.cybzacg.blogbackend.module.chat.repository.ChatConversationMemberRepository;
+import com.cybzacg.blogbackend.module.chat.repository.ChatConversationRepository;
+import com.cybzacg.blogbackend.module.chat.repository.ChatMessageRecipientRepository;
+import com.cybzacg.blogbackend.module.chat.repository.ChatMessageRepository;
 import com.cybzacg.blogbackend.module.chat.service.ChatAdminService;
-import com.cybzacg.blogbackend.module.chat.service.ChatConversationMemberService;
-import com.cybzacg.blogbackend.module.chat.service.ChatConversationService;
-import com.cybzacg.blogbackend.module.chat.service.ChatMessageRecipientService;
-import com.cybzacg.blogbackend.module.chat.service.ChatMessageService;
 import com.cybzacg.blogbackend.module.chat.service.ChatPushService;
-import com.cybzacg.blogbackend.module.file.service.FileBusinessInfoService;
+import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.JsonUtils;
@@ -69,23 +66,21 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class ChatAdminServiceImpl implements ChatAdminService {
-    private final ChatConversationMapper chatConversationMapper;
-    private final ChatMessageMapper chatMessageMapper;
-    private final ChatConversationService chatConversationService;
-    private final ChatConversationMemberService chatConversationMemberService;
-    private final ChatMessageService chatMessageService;
-    private final ChatMessageRecipientService chatMessageRecipientService;
-    private final SysUserService sysUserService;
+    private final ChatConversationRepository chatConversationRepository;
+    private final ChatMessageRepository chatMessageRepository;
+    private final ChatConversationMemberRepository chatConversationMemberRepository;
+    private final ChatMessageRecipientRepository chatMessageRecipientRepository;
+    private final SysUserRepository sysUserRepository;
     private final ChatModelMapper chatModelMapper;
     private final ChatPushService chatPushService;
-    private final FileBusinessInfoService fileBusinessInfoService;
+    private final FileBusinessInfoRepository fileBusinessInfoRepository;
     private final FileLifecycleService fileLifecycleService;
 
     @Override
     public PageResult<ChatAdminConversationVO> pageConversations(ChatAdminConversationPageQuery query) {
         long current = normalizeCurrent(query.getCurrent());
         long size = normalizeSize(query.getSize(), 10L, 100L);
-        long total = Objects.requireNonNullElse(chatConversationMapper.countAdminConversationPage(query), 0L);
+        long total = Objects.requireNonNullElse(chatConversationRepository.countAdminConversationPage(query), 0L);
         if (total == 0L) {
             return PageResult.<ChatAdminConversationVO>builder()
                     .total(0L)
@@ -95,7 +90,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
                     .build();
         }
         long offset = (current - 1) * size;
-        List<ChatAdminConversationListItem> items = chatConversationMapper.selectAdminConversationPage(query, offset, size);
+        List<ChatAdminConversationListItem> items = chatConversationRepository.selectAdminConversationPage(query, offset, size);
         return PageResult.<ChatAdminConversationVO>builder()
                 .total(total)
                 .current(current)
@@ -107,7 +102,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
     @Override
     public ChatAdminConversationVO getConversation(Long conversationId) {
         requireConversation(conversationId);
-        ChatAdminConversationListItem item = chatConversationMapper.selectAdminConversationDetail(conversationId);
+        ChatAdminConversationListItem item = chatConversationRepository.selectAdminConversationDetail(conversationId);
         ExceptionThrowerCore.throwBusinessIfNull(item, ResultErrorCode.ILLEGAL_ARGUMENT, "会话不存在");
         return buildConversationVO(item, listMembersByConversationIds(List.of(conversationId)).getOrDefault(conversationId, List.of()));
     }
@@ -123,7 +118,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         requireConversation(conversationId);
         long current = normalizeCurrent(query.getCurrent());
         long size = normalizeSize(query.getSize(), 20L, 100L);
-        long total = Objects.requireNonNullElse(chatMessageMapper.countAdminMessagePage(conversationId, query), 0L);
+        long total = Objects.requireNonNullElse(chatMessageRepository.countAdminMessagePage(conversationId, query), 0L);
         if (total == 0L) {
             return PageResult.<ChatAdminMessageVO>builder()
                     .total(0L)
@@ -133,7 +128,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
                     .build();
         }
         long offset = (current - 1) * size;
-        List<ChatAdminMessageItem> items = chatMessageMapper.selectAdminMessagePage(conversationId, query, offset, size);
+        List<ChatAdminMessageItem> items = chatMessageRepository.selectAdminMessagePage(conversationId, query, offset, size);
         Map<Long, SysUser> userMap = loadUsers(items.stream().map(ChatAdminMessageItem::getSenderId).collect(LinkedHashSet::new, Set::add, Set::addAll));
         Map<Long, ChatReplyMessageVO> replySnapshots = loadAdminReplySnapshots(conversationId, collectReplyMessageIds(items));
         List<ChatAdminMessageVO> records = items.stream().map(item -> buildMessageVO(item, userMap, replySnapshots)).toList();
@@ -185,14 +180,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         ChatAdminMessageReceiptPageQuery safeQuery = query == null ? new ChatAdminMessageReceiptPageQuery() : query;
         long current = normalizeCurrent(safeQuery.getCurrent());
         long size = normalizeSize(safeQuery.getSize(), 20L, 100L);
-        LambdaQueryWrapper<ChatMessageRecipient> wrapper = new LambdaQueryWrapper<ChatMessageRecipient>()
-                .eq(ChatMessageRecipient::getConversationId, conversationId)
-                .eq(ChatMessageRecipient::getMessageId, messageId)
-                .eq(safeQuery.getRecipientUserId() != null, ChatMessageRecipient::getRecipientUserId, safeQuery.getRecipientUserId())
-                .eq(safeQuery.getDeliveryStatus() != null, ChatMessageRecipient::getDeliveryStatus, safeQuery.getDeliveryStatus())
-                .eq(safeQuery.getVisibleStatus() != null, ChatMessageRecipient::getVisibleStatus, safeQuery.getVisibleStatus())
-                .orderByDesc(ChatMessageRecipient::getId);
-        Page<ChatMessageRecipient> page = chatMessageRecipientService.page(new Page<>(current, size), wrapper);
+        Page<ChatMessageRecipient> page = chatMessageRecipientRepository.pageAdminReceipts(conversationId, messageId, safeQuery);
         Map<Long, SysUser> userMap = loadUsers(page.getRecords().stream()
                 .map(ChatMessageRecipient::getRecipientUserId)
                 .collect(LinkedHashSet::new, Set::add, Set::addAll));
@@ -217,20 +205,20 @@ public class ChatAdminServiceImpl implements ChatAdminService {
             ChatConversationMember currentOwner = findOwnerMember(conversationId);
             if (currentOwner != null && !Objects.equals(currentOwner.getUserId(), memberUserId)) {
                 currentOwner.setMemberRole(ChatConstants.MEMBER_ROLE_ADMIN);
-                chatConversationMemberService.updateById(currentOwner);
+                chatConversationMemberRepository.updateById(currentOwner);
             }
             conversation.setOwnerId(memberUserId);
-            chatConversationService.updateById(conversation);
+            chatConversationRepository.updateById(conversation);
         } else if (Objects.equals(member.getMemberRole(), ChatConstants.MEMBER_ROLE_OWNER) && conversation.getOwnerId() != null
                 && !Objects.equals(conversation.getOwnerId(), memberUserId)) {
             conversation.setOwnerId(null);
-            chatConversationService.updateById(conversation);
+            chatConversationRepository.updateById(conversation);
         } else if (!Objects.equals(role, ChatConstants.MEMBER_ROLE_OWNER) && Objects.equals(conversation.getOwnerId(), memberUserId)) {
             conversation.setOwnerId(null);
-            chatConversationService.updateById(conversation);
+            chatConversationRepository.updateById(conversation);
         }
         member.setMemberRole(role);
-        chatConversationMemberService.updateById(member);
+        chatConversationMemberRepository.updateById(member);
         List<ChatConversationMember> activeMembers = listActiveMembers(conversationId);
         List<ChatMemberVO> records = buildMemberRecords(activeMembers);
         List<Long> activeUserIds = activeUserIds(activeMembers);
@@ -257,7 +245,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         if (Objects.equals(status, ChatConstants.MEMBER_STATUS_NORMAL) && member.getJoinedAt() == null) {
             member.setJoinedAt(new Date());
         }
-        chatConversationMemberService.updateById(member);
+        chatConversationMemberRepository.updateById(member);
         List<ChatConversationMember> activeMembers = listActiveMembers(conversationId);
         List<ChatMemberVO> records = buildMemberRecords(activeMembers);
         chatPushService.pushMembersUpdated(buildMembersUpdatedPayload("admin_member_status_updated", conversationId, memberUserId, records), notifyUserIds);
@@ -271,7 +259,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         ChatConversationMember member = requireMember(conversationId, memberUserId);
         Date muteUntil = request == null ? null : request.getMuteUntil();
         member.setMuteUntil(muteUntil != null && muteUntil.after(new Date()) ? muteUntil : null);
-        chatConversationMemberService.updateById(member);
+        chatConversationMemberRepository.updateById(member);
         List<ChatConversationMember> activeMembers = listActiveMembers(conversationId);
         List<ChatMemberVO> records = buildMemberRecords(activeMembers);
         chatPushService.pushMembersUpdated(buildMembersUpdatedPayload("admin_member_mute_updated", conversationId, memberUserId, records), activeUserIds(activeMembers));
@@ -292,7 +280,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         message.setRevokedAt(now);
         message.setContent(ChatConstants.MESSAGE_REVOKED_PLACEHOLDER);
         message.setPayloadJson(null);
-        chatMessageService.updateById(message);
+        chatMessageRepository.updateById(message);
         releaseFileReferencesForMessage(message);
         chatPushService.pushMessageRevoked(buildMessagePushVO(message), activeUserIds(listActiveMembers(conversationId)));
     }
@@ -306,7 +294,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
             return;
         }
         conversation.setStatus(status);
-        chatConversationService.updateById(conversation);
+        chatConversationRepository.updateById(conversation);
         chatPushService.pushConversationUpdated(buildConversationUpdatedPayload("admin_conversation_status_updated", conversation, listActiveMembers(conversationId)),
                 activeUserIds(listActiveMembers(conversationId)));
     }
@@ -452,9 +440,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         if (conversationIds == null || conversationIds.isEmpty()) {
             return Map.of();
         }
-        List<ChatConversationMember> members = chatConversationMemberService.lambdaQuery()
-                .in(ChatConversationMember::getConversationId, conversationIds)
-                .list();
+        List<ChatConversationMember> members = chatConversationMemberRepository.listByConversationIds(conversationIds);
         Map<Long, List<ChatConversationMember>> result = new HashMap<>();
         for (ChatConversationMember member : members) {
             result.computeIfAbsent(member.getConversationId(), key -> new ArrayList<>()).add(member);
@@ -463,16 +449,11 @@ public class ChatAdminServiceImpl implements ChatAdminService {
     }
 
     private List<ChatConversationMember> listConversationMembers(Long conversationId) {
-        return chatConversationMemberService.lambdaQuery()
-                .eq(ChatConversationMember::getConversationId, conversationId)
-                .list();
+        return chatConversationMemberRepository.listByConversationId(conversationId);
     }
 
     private List<ChatConversationMember> listActiveMembers(Long conversationId) {
-        return chatConversationMemberService.lambdaQuery()
-                .eq(ChatConversationMember::getConversationId, conversationId)
-                .eq(ChatConversationMember::getStatus, ChatConstants.MEMBER_STATUS_NORMAL)
-                .list();
+        return chatConversationMemberRepository.listActiveByConversationId(conversationId);
     }
 
     private Map<Long, SysUser> loadUsers(Collection<Long> userIds) {
@@ -480,13 +461,13 @@ public class ChatAdminServiceImpl implements ChatAdminService {
             return Map.of();
         }
         Map<Long, SysUser> userMap = new HashMap<>();
-        sysUserService.listByIds(userIds).forEach(user -> userMap.put(user.getId(), user));
+        sysUserRepository.listByIds(userIds).forEach(user -> userMap.put(user.getId(), user));
         return userMap;
     }
 
     private ChatConversation requireConversation(Long conversationId) {
         ExceptionThrowerCore.throwBusinessIfNull(conversationId, ResultErrorCode.ILLEGAL_ARGUMENT, "会话ID不能为空");
-        ChatConversation conversation = chatConversationService.getById(conversationId);
+        ChatConversation conversation = chatConversationRepository.getById(conversationId);
         ExceptionThrowerCore.throwBusinessIfNull(conversation, ResultErrorCode.ILLEGAL_ARGUMENT, "会话不存在");
         return conversation;
     }
@@ -502,36 +483,24 @@ public class ChatAdminServiceImpl implements ChatAdminService {
 
     private ChatMessage requireMessage(Long conversationId, Long messageId) {
         ExceptionThrowerCore.throwBusinessIfNull(messageId, ResultErrorCode.ILLEGAL_ARGUMENT, "消息ID不能为空");
-        ChatMessage message = chatMessageService.getById(messageId);
+        ChatMessage message = chatMessageRepository.getById(messageId);
         ExceptionThrowerCore.throwBusinessIf(message == null || !Objects.equals(message.getConversationId(), conversationId), ResultErrorCode.ILLEGAL_ARGUMENT, "消息不存在");
         return message;
     }
 
     private ChatConversationMember requireMember(Long conversationId, Long memberUserId) {
         ExceptionThrowerCore.throwBusinessIfNull(memberUserId, ResultErrorCode.ILLEGAL_ARGUMENT, "成员用户ID不能为空");
-        ChatConversationMember member = chatConversationMemberService.lambdaQuery()
-                .eq(ChatConversationMember::getConversationId, conversationId)
-                .eq(ChatConversationMember::getUserId, memberUserId)
-                .orderByDesc(ChatConversationMember::getId)
-                .last("limit 1")
-                .one();
+        ChatConversationMember member = chatConversationMemberRepository.findByConversationAndUser(conversationId, memberUserId);
         ExceptionThrowerCore.throwBusinessIfNull(member, ResultErrorCode.ILLEGAL_ARGUMENT, "成员不存在");
         return member;
     }
 
     private ChatConversationMember findOwnerMember(Long conversationId) {
-        return chatConversationMemberService.lambdaQuery()
-                .eq(ChatConversationMember::getConversationId, conversationId)
-                .eq(ChatConversationMember::getMemberRole, ChatConstants.MEMBER_ROLE_OWNER)
-                .orderByDesc(ChatConversationMember::getId)
-                .last("limit 1")
-                .one();
+        return chatConversationMemberRepository.findOwnerByConversationId(conversationId);
     }
 
     private List<ChatMessageRecipient> listMessageRecipients(Long messageId) {
-        return chatMessageRecipientService.lambdaQuery()
-                .eq(ChatMessageRecipient::getMessageId, messageId)
-                .list();
+        return chatMessageRecipientRepository.listByMessageId(messageId);
     }
 
     private String normalizeRole(ChatAdminMemberRoleUpdateRequest request) {
@@ -562,10 +531,10 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         if (message == null || !isAttachmentMessageType(message.getMessageType())) {
             return;
         }
-        List<FileBusinessInfo> references = fileBusinessInfoService.lambdaQuery()
-                .eq(FileBusinessInfo::getReferenceType, ChatConstants.FILE_MESSAGE_REFERENCE_TYPE)
-                .eq(FileBusinessInfo::getReferenceId, message.getId())
-                .list();
+        List<FileBusinessInfo> references = fileBusinessInfoRepository.listByReferenceTypeAndReferenceId(
+                ChatConstants.FILE_MESSAGE_REFERENCE_TYPE,
+                message.getId()
+        );
         if (references.isEmpty()) {
             return;
         }
@@ -575,7 +544,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
                 fileIds.put(reference.getFileId(), reference.getFileId());
             }
         }
-        fileBusinessInfoService.removeByIds(references.stream().map(FileBusinessInfo::getId).toList());
+        fileBusinessInfoRepository.removeByIds(references.stream().map(FileBusinessInfo::getId).toList());
         fileIds.values().forEach(fileLifecycleService::syncFileAfterReferenceRemoval);
     }
 
@@ -693,7 +662,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
             return Map.of();
         }
         List<ChatAdminMessageItem> replyItems = Objects.requireNonNullElse(
-                chatMessageMapper.selectAdminMessagesByIds(conversationId, ids),
+                chatMessageRepository.selectAdminMessagesByIds(conversationId, ids),
                 List.of()
         );
         Map<Long, SysUser> userMap = loadUsers(replyItems.stream().map(ChatAdminMessageItem::getSenderId).collect(LinkedHashSet::new, Set::add, Set::addAll));
@@ -826,3 +795,4 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         return 2;
     }
 }
+

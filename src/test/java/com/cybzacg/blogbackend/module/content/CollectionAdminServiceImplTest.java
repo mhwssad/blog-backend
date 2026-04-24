@@ -1,6 +1,5 @@
 package com.cybzacg.blogbackend.module.content;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.BlogArticle;
@@ -8,13 +7,13 @@ import com.cybzacg.blogbackend.domain.SysCollection;
 import com.cybzacg.blogbackend.domain.SysCollectionFolder;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.article.service.BlogArticleService;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.admin.CollectionPageQuery;
 import com.cybzacg.blogbackend.module.content.model.admin.CollectionVO;
 import com.cybzacg.blogbackend.module.content.model.user.CollectionFolderVO;
-import com.cybzacg.blogbackend.module.content.service.SysCollectionFolderService;
-import com.cybzacg.blogbackend.module.content.service.SysCollectionService;
+import com.cybzacg.blogbackend.module.content.repository.SysCollectionFolderRepository;
+import com.cybzacg.blogbackend.module.content.repository.SysCollectionRepository;
 import com.cybzacg.blogbackend.module.content.service.impl.CollectionAdminServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,11 +34,11 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class CollectionAdminServiceImplTest {
     @Mock
-    private SysCollectionFolderService sysCollectionFolderService;
+    private SysCollectionFolderRepository sysCollectionFolderRepository;
     @Mock
-    private SysCollectionService sysCollectionService;
+    private SysCollectionRepository sysCollectionRepository;
     @Mock
-    private BlogArticleService blogArticleService;
+    private BlogArticleRepository blogArticleService;
     @Mock
     private ContentModelMapper contentModelMapper;
 
@@ -48,8 +47,8 @@ class CollectionAdminServiceImplTest {
     @BeforeEach
     void setUp() {
         collectionAdminService = new CollectionAdminServiceImpl(
-                sysCollectionFolderService,
-                sysCollectionService,
+                sysCollectionFolderRepository,
+                sysCollectionRepository,
                 blogArticleService,
                 contentModelMapper
         );
@@ -71,7 +70,7 @@ class CollectionAdminServiceImplTest {
         vo.setId(11L);
         vo.setUserId(7L);
 
-        when(sysCollectionFolderService.page(any(Page.class), any(LambdaQueryWrapper.class))).thenReturn(page);
+        when(sysCollectionFolderRepository.pageByAdminConditions(query)).thenReturn(page);
         when(contentModelMapper.toCollectionFolderVO(folder)).thenReturn(vo);
 
         PageResult<CollectionFolderVO> result = collectionAdminService.pageFolders(query);
@@ -101,7 +100,7 @@ class CollectionAdminServiceImplTest {
         vo.setId(12L);
         vo.setTargetId(100L);
 
-        when(sysCollectionService.page(any(Page.class), any(LambdaQueryWrapper.class))).thenReturn(page);
+        when(sysCollectionRepository.pageByAdminConditions(query)).thenReturn(page);
         when(contentModelMapper.toAdminCollectionVO(collection)).thenReturn(vo);
 
         PageResult<CollectionVO> result = collectionAdminService.pageCollections(query);
@@ -119,30 +118,30 @@ class CollectionAdminServiceImplTest {
         SysCollectionFolder folder = folder(30L, 7L, "article", 3);
         BlogArticle article = article(100L, 4);
 
-        when(sysCollectionService.getById(15L)).thenReturn(collection);
-        when(sysCollectionFolderService.getById(30L)).thenReturn(folder);
+        when(sysCollectionRepository.getById(15L)).thenReturn(collection);
+        when(sysCollectionFolderRepository.getById(30L)).thenReturn(folder);
         when(blogArticleService.getById(100L)).thenReturn(article);
 
         collectionAdminService.deleteCollection(15L);
 
         assertEquals(Integer.valueOf(2), folder.getCollectionCount());
         assertEquals(Integer.valueOf(3), article.getCollectCount());
-        verify(sysCollectionFolderService).updateById(folder);
+        verify(sysCollectionFolderRepository).updateById(folder);
         verify(blogArticleService).updateById(article);
-        verify(sysCollectionService).removeById(15L);
+        verify(sysCollectionRepository).removeById(15L);
     }
 
     @Test
     void deleteCollectionShouldThrowWhenCollectionMissing() {
-        when(sysCollectionService.getById(15L)).thenReturn(null);
+        when(sysCollectionRepository.getById(15L)).thenReturn(null);
 
         BusinessException exception = assertThrows(BusinessException.class, () -> collectionAdminService.deleteCollection(15L));
 
         assertEquals(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), exception.getCode());
         assertEquals("收藏记录不存在", exception.getMessage());
-        verify(sysCollectionFolderService, never()).updateById(any(SysCollectionFolder.class));
+        verify(sysCollectionFolderRepository, never()).updateById(any(SysCollectionFolder.class));
         verify(blogArticleService, never()).updateById(any(BlogArticle.class));
-        verify(sysCollectionService, never()).removeById(15L);
+        verify(sysCollectionRepository, never()).removeById(15L);
     }
 
     private SysCollectionFolder folder(Long id, Long userId, String folderType, Integer collectionCount) {

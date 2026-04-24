@@ -17,20 +17,27 @@
 - [x] 已移除 `UserFootprintServiceImpl` 对 `SysUserFootprintMapper` 的直接注入，并同步更新 `UserFootprintServiceImplTest`。
 - [x] 已新增 `SysTagRepository`、`SysTagRelationRepository`，并将 `TagAdminServiceImpl` 迁到 Repository，标签列表、名称唯一性校验和标签关联清理都已收口到 Repository。
 - [x] 已新增 `SysCategoryRepository`，并将 `CategoryAdminServiceImpl` 迁到 Repository，分类树查询、分类编码唯一性校验、子分类查询和是否存在子分类判断都已收口到 Repository。
-- [ ] 其余 content 业务服务的 Repository 迁移仍待继续。
+- [x] 已新增 `SysInteractionRepository`，并将 `InteractionAdminServiceImpl` 迁到 Repository，管理端互动分页查询已收口到 Repository。
+- [x] 已新增 `SysCollectionRepository`、`SysCollectionFolderRepository`，并将 `CollectionAdminServiceImpl` 迁到 Repository，管理端收藏夹分页和收藏记录分页已收口到 Repository。
+- [x] 已将 `PublicContentQueryServiceImpl` 改为注入 `SysCategoryRepository`、`SysTagRepository`、`SysCommentRepository`、`SysInteractionRepository`，公开分类树、标签列表、评论树和点赞状态回填都已改走 Repository，并移除了 `SysTagMapper` 直接注入。
+- [x] 已将 `UserCollectionServiceImpl` 改为注入 `SysCollectionRepository`、`SysCollectionFolderRepository`，用户收藏夹分页、默认收藏夹查询、收藏重复校验、文件夹下收藏清理都已改走 Repository。
+- [x] 已将 `UserCommentServiceImpl` 改为注入 `SysCommentRepository`、`SysInteractionRepository`，评论点赞状态查询、评论子树读取与评论互动级联清理都已改走 Repository。
+- [x] 已将 `CommentAdminServiceImpl` 改为注入 `SysCommentRepository`，管理端评论分页、评论子树读取与删除都已改走 Repository。
+- [x] 已同步更新 `UserCollectionServiceImplTest`、`UserCommentServiceImplTest`、`CommentAdminServiceImplTest`，测试 mock 已切换到 Repository。
+- [x] content 自有业务服务的 Repository 迁移已完成；当前剩余直接 `lambdaQuery()` 仅为 `CategoryAdminServiceImpl` 中跨模块 `BlogArticleCategoryService` 的文章分类绑定校验，留待 article 模块轮次统一迁移。
 
 ## Repository 列表
 
-| Repository 接口 | 对应实体 | 薄服务来源 | 自定义方法 |
-|---|---|---|---|
-| `SysCategoryRepository` | SysCategory | SysCategoryService | 无 |
-| `SysTagRepository` | SysTag | SysTagService | 无 + 包装Mapper XML |
-| `SysTagRelationRepository` | SysTagRelation | SysTagRelationService | 无 |
-| `SysCommentRepository` | SysComment | SysCommentService | 包装Mapper XML |
-| `SysInteractionRepository` | SysInteraction | SysInteractionService | 包装Mapper XML |
-| `SysCollectionRepository` | SysCollection | SysCollectionService | 无 |
-| `SysCollectionFolderRepository` | SysCollectionFolder | SysCollectionFolderService | 无 |
-| `SysUserFootprintRepository` | SysUserFootprint | SysUserFootprintService | 包装Mapper XML |
+| Repository 接口                 | 对应实体            | 薄服务来源                 | 自定义方法          |
+| ------------------------------- | ------------------- | -------------------------- | ------------------- |
+| `SysCategoryRepository`         | SysCategory         | SysCategoryService         | 无                  |
+| `SysTagRepository`              | SysTag              | SysTagService              | 无 + 包装Mapper XML |
+| `SysTagRelationRepository`      | SysTagRelation      | SysTagRelationService      | 无                  |
+| `SysCommentRepository`          | SysComment          | SysCommentService          | 包装Mapper XML      |
+| `SysInteractionRepository`      | SysInteraction      | SysInteractionService      | 包装Mapper XML      |
+| `SysCollectionRepository`       | SysCollection       | SysCollectionService       | 无                  |
+| `SysCollectionFolderRepository` | SysCollectionFolder | SysCollectionFolderService | 无                  |
+| `SysUserFootprintRepository`    | SysUserFootprint    | SysUserFootprintService    | 包装Mapper XML      |
 
 ## 各 Repository 方法设计
 
@@ -46,13 +53,13 @@ public interface SysCategoryRepository extends IService<SysCategory> {
 }
 ```
 
-| 方法 | 来源 | 行号 |
-|---|---|---|
-| `findByTypeOrderBySortOrderAndId` | CategoryAdminServiceImpl:42, `sysCategoryService.lambdaQuery()...list()` | 按类型查分类列表 |
+| 方法                                       | 来源                                                                                       | 行号               |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------ | ------------------ |
+| `findByTypeOrderBySortOrderAndId`          | CategoryAdminServiceImpl:42, `sysCategoryService.lambdaQuery()...list()`                   | 按类型查分类列表   |
 | `findByTypeAndStatusOrderBySortOrderAndId` | PublicContentQueryServiceImpl:55, `sysCategoryService.lambdaQuery().eq(status,1)...list()` | 公开接口查可用分类 |
-| `findByParentId` | CategoryAdminServiceImpl:161, `sysCategoryService.lambdaQuery().eq(parentId)...list()` | 查子分类 |
-| `existsByParentId` | CategoryAdminServiceImpl:90, `sysCategoryService.lambdaQuery()...exists()` | 检查是否有子分类 |
-| `existsByTypeAndCodeExcludingId` | CategoryAdminServiceImpl:102, `sysCategoryService.lambdaQuery().eq(code).ne(id).exists()` | 唯一性校验 |
+| `findByParentId`                           | CategoryAdminServiceImpl:161, `sysCategoryService.lambdaQuery().eq(parentId)...list()`     | 查子分类           |
+| `existsByParentId`                         | CategoryAdminServiceImpl:90, `sysCategoryService.lambdaQuery()...exists()`                 | 检查是否有子分类   |
+| `existsByTypeAndCodeExcludingId`           | CategoryAdminServiceImpl:102, `sysCategoryService.lambdaQuery().eq(code).ne(id).exists()`  | 唯一性校验         |
 
 > `save`、`updateById`、`getById`、`removeById` 继承自 IService，无需额外定义。
 
@@ -66,11 +73,11 @@ public interface SysTagRepository extends IService<SysTag> {
 }
 ```
 
-| 方法 | 来源 | 说明 |
-|---|---|---|
-| `findAllOrderByIdDesc` | TagAdminServiceImpl:34, `lambdaQuery().orderByDesc(id).list()` | 管理端标签列表 |
+| 方法                      | 来源                                                             | 说明             |
+| ------------------------- | ---------------------------------------------------------------- | ---------------- |
+| `findAllOrderByIdDesc`    | TagAdminServiceImpl:34, `lambdaQuery().orderByDesc(id).list()`   | 管理端标签列表   |
 | `existsByNameExcludingId` | TagAdminServiceImpl:79, `lambdaQuery().eq(name).ne(id).exists()` | 标签名唯一性校验 |
-| `findByTargetType` | PublicContentQueryServiceImpl:83, **直接注入 SysTagMapper** | 包装XML多表查询 |
+| `findByTargetType`        | PublicContentQueryServiceImpl:83, **直接注入 SysTagMapper**      | 包装XML多表查询  |
 
 ### SysTagRelationRepository
 
@@ -81,10 +88,10 @@ public interface SysTagRelationRepository extends IService<SysTagRelation> {
 }
 ```
 
-| 方法 | 来源 | 说明 |
-|---|---|---|
-| `existsByTagId` | TagAdminServiceImpl:70, `lambdaQuery().eq(tagId).exists()` | 删除标签前检查关联 |
-| `removeByTagId` | TagAdminServiceImpl:70, `remove(new LambdaQueryWrapper)` | 删除标签时清理标签关联 |
+| 方法            | 来源                                                       | 说明                   |
+| --------------- | ---------------------------------------------------------- | ---------------------- |
+| `existsByTagId` | TagAdminServiceImpl:70, `lambdaQuery().eq(tagId).exists()` | 删除标签前检查关联     |
+| `removeByTagId` | TagAdminServiceImpl:70, `remove(new LambdaQueryWrapper)`   | 删除标签时清理标签关联 |
 
 ### SysCommentRepository
 
@@ -98,13 +105,13 @@ public interface SysCommentRepository extends IService<SysComment> {
 }
 ```
 
-| 方法 | 来源 | 说明 |
-|---|---|---|
-| `pageByAdminConditions` | CommentAdminServiceImpl:46, `new LambdaQueryWrapper<>() + page()` | 管理端多条件分页 |
-| `findByTargetTypeAndTargetId` | CommentAdminServiceImpl:114, UserCommentServiceImpl:159, `lambdaQuery().eq(targetType).eq(targetId).list()` | 按目标查评论列表 |
-| `findByTargetTypeAndTargetIdAndStatusOrderByCreatedAtAndId` | PublicContentQueryServiceImpl:90, `lambdaQuery().eq(status,1)...list()` | 公开接口查可用评论 |
-| `selectRootCommentsByTarget` | SysCommentMapper XML | 多表关联查根评论 |
-| `selectRepliesByRootIds` | SysCommentMapper XML | 批量查回复 |
+| 方法                                                        | 来源                                                                                                        | 说明               |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------ |
+| `pageByAdminConditions`                                     | CommentAdminServiceImpl:46, `new LambdaQueryWrapper<>() + page()`                                           | 管理端多条件分页   |
+| `findByTargetTypeAndTargetId`                               | CommentAdminServiceImpl:114, UserCommentServiceImpl:159, `lambdaQuery().eq(targetType).eq(targetId).list()` | 按目标查评论列表   |
+| `findByTargetTypeAndTargetIdAndStatusOrderByCreatedAtAndId` | PublicContentQueryServiceImpl:90, `lambdaQuery().eq(status,1)...list()`                                     | 公开接口查可用评论 |
+| `selectRootCommentsByTarget`                                | SysCommentMapper XML                                                                                        | 多表关联查根评论   |
+| `selectRepliesByRootIds`                                    | SysCommentMapper XML                                                                                        | 批量查回复         |
 
 ### SysInteractionRepository
 
@@ -119,14 +126,14 @@ public interface SysInteractionRepository extends IService<SysInteraction> {
 }
 ```
 
-| 方法 | 来源 | 说明 |
-|---|---|---|
-| `pageByAdminConditions` | InteractionAdminServiceImpl:34, `LambdaQueryWrapper + page()` | 管理端分页 |
-| `existsByUserIdAndTargetIdAndTargetTypeAndActionType` | UserCommentServiceImpl:50, `lambdaQuery()...exists()` | 检查是否已点赞 |
-| `findOneByUserIdAndTargetIdAndTargetTypeAndActionType` | UserCommentServiceImpl:73, `lambdaQuery()...one()` | 查找已有点赞记录 |
-| `removeByTargetTypeAndTargetIds` | UserCommentServiceImpl:137, `remove(new LambdaQueryWrapper)` | 级联删除关联互动 |
-| `findByUserIdAndTargetTypeAndActionTypeInTargetIds` | PublicContentQueryServiceImpl:150, `lambdaQuery().in(targetIds).list()` | 批量查用户互动状态 |
-| `existsUserAction` | SysInteractionMapper XML | XML查询 |
+| 方法                                                   | 来源                                                                    | 说明               |
+| ------------------------------------------------------ | ----------------------------------------------------------------------- | ------------------ |
+| `pageByAdminConditions`                                | InteractionAdminServiceImpl:34, `LambdaQueryWrapper + page()`           | 管理端分页         |
+| `existsByUserIdAndTargetIdAndTargetTypeAndActionType`  | UserCommentServiceImpl:50, `lambdaQuery()...exists()`                   | 检查是否已点赞     |
+| `findOneByUserIdAndTargetIdAndTargetTypeAndActionType` | UserCommentServiceImpl:73, `lambdaQuery()...one()`                      | 查找已有点赞记录   |
+| `removeByTargetTypeAndTargetIds`                       | UserCommentServiceImpl:137, `remove(new LambdaQueryWrapper)`            | 级联删除关联互动   |
+| `findByUserIdAndTargetTypeAndActionTypeInTargetIds`    | PublicContentQueryServiceImpl:150, `lambdaQuery().in(targetIds).list()` | 批量查用户互动状态 |
+| `existsUserAction`                                     | SysInteractionMapper XML                                                | XML查询            |
 
 ### SysCollectionRepository
 
@@ -140,13 +147,13 @@ public interface SysCollectionRepository extends IService<SysCollection> {
 }
 ```
 
-| 方法 | 来源 | 说明 |
-|---|---|---|
-| `pageByAdminConditions` | CollectionAdminServiceImpl:49, `LambdaQueryWrapper + page()` | 管理端分页 |
-| `pageByUserId` | UserCollectionServiceImpl:121, `LambdaQueryWrapper + page()` | 用户收藏分页 |
-| `findByFolderId` | UserCollectionServiceImpl:108, `lambdaQuery().eq(folderId).list()` | 查文件夹下收藏 |
-| `removeByFolderId` | UserCollectionServiceImpl:113, `remove(wrapper)` | 删除文件夹下所有收藏 |
-| `existsByUserIdAndFolderIdAndTargetIdAndTargetType` | UserCollectionServiceImpl:143, `lambdaQuery()...exists()` | 收藏重复检查 |
+| 方法                                                | 来源                                                               | 说明                 |
+| --------------------------------------------------- | ------------------------------------------------------------------ | -------------------- |
+| `pageByAdminConditions`                             | CollectionAdminServiceImpl:49, `LambdaQueryWrapper + page()`       | 管理端分页           |
+| `pageByUserId`                                      | UserCollectionServiceImpl:121, `LambdaQueryWrapper + page()`       | 用户收藏分页         |
+| `findByFolderId`                                    | UserCollectionServiceImpl:108, `lambdaQuery().eq(folderId).list()` | 查文件夹下收藏       |
+| `removeByFolderId`                                  | UserCollectionServiceImpl:113, `remove(wrapper)`                   | 删除文件夹下所有收藏 |
+| `existsByUserIdAndFolderIdAndTargetIdAndTargetType` | UserCollectionServiceImpl:143, `lambdaQuery()...exists()`          | 收藏重复检查         |
 
 ### SysCollectionFolderRepository
 
@@ -159,11 +166,11 @@ public interface SysCollectionFolderRepository extends IService<SysCollectionFol
 }
 ```
 
-| 方法 | 来源 | 说明 |
-|---|---|---|
-| `pageByAdminConditions` | CollectionAdminServiceImpl:35, `LambdaQueryWrapper + page()` | 管理端分页 |
-| `pageByUserIdOrderByDefaultAndSort` | UserCollectionServiceImpl:48, `LambdaQueryWrapper + page()` | 用户收藏夹分页 |
-| `findDefaultByUserIdAndFolderType` | UserCollectionServiceImpl:182, `lambdaQuery().eq(isDefault,1).one()` | 查默认收藏夹 |
+| 方法                                | 来源                                                                  | 说明             |
+| ----------------------------------- | --------------------------------------------------------------------- | ---------------- |
+| `pageByAdminConditions`             | CollectionAdminServiceImpl:35, `LambdaQueryWrapper + page()`          | 管理端分页       |
+| `pageByUserIdOrderByDefaultAndSort` | UserCollectionServiceImpl:48, `LambdaQueryWrapper + page()`           | 用户收藏夹分页   |
+| `findDefaultByUserIdAndFolderType`  | UserCollectionServiceImpl:182, `lambdaQuery().eq(isDefault,1).one()`  | 查默认收藏夹     |
 | `findDefaultsByUserIdAndFolderType` | UserCollectionServiceImpl:200, `lambdaQuery().eq(isDefault,1).list()` | 查所有默认收藏夹 |
 
 ### `SysUserFootprintRepository`
@@ -178,13 +185,13 @@ public interface SysUserFootprintRepository extends IService<SysUserFootprint> {
 }
 ```
 
-| 方法 | 来源 | 说明 |
-|---|---|---|
-| `pageByAdminConditions` | FootprintAdminServiceImpl:28, `LambdaQueryWrapper + page()` | 管理端分页 |
-| `pageByUserIdAndTargetType` | UserFootprintServiceImpl:37, `LambdaQueryWrapper + page()` | 用户足迹分页 |
-| `removeByUserId` | UserFootprintServiceImpl:60, `remove(wrapper)` | 清空用户足迹 |
-| `removeByAdminConditions` | FootprintAdminServiceImpl:49, `remove(wrapper)` | 管理端批量删除 |
-| `upsertFootprint` | UserFootprintServiceImpl:82, **直接注入 SysUserFootprintMapper** | 包装XML upsert |
+| 方法                        | 来源                                                             | 说明           |
+| --------------------------- | ---------------------------------------------------------------- | -------------- |
+| `pageByAdminConditions`     | FootprintAdminServiceImpl:28, `LambdaQueryWrapper + page()`      | 管理端分页     |
+| `pageByUserIdAndTargetType` | UserFootprintServiceImpl:37, `LambdaQueryWrapper + page()`       | 用户足迹分页   |
+| `removeByUserId`            | UserFootprintServiceImpl:60, `remove(wrapper)`                   | 清空用户足迹   |
+| `removeByAdminConditions`   | FootprintAdminServiceImpl:49, `remove(wrapper)`                  | 管理端批量删除 |
+| `upsertFootprint`           | UserFootprintServiceImpl:82, **直接注入 SysUserFootprintMapper** | 包装XML upsert |
 
 ## 跨模块依赖
 
@@ -192,25 +199,25 @@ public interface SysUserFootprintRepository extends IService<SysUserFootprint> {
 
 本模块的薄服务被以下外部模块的业务服务注入：
 
-| 薄服务 | 外部注入方 | 迁移后替换为 |
-|---|---|---|
-| SysCategoryService | ArticleAdminServiceImpl, PublicArticleServiceImpl | SysCategoryRepository |
-| SysTagService | ArticleAdminServiceImpl, PublicArticleServiceImpl | SysTagRepository |
-| SysTagRelationService | ArticleAdminServiceImpl, PublicArticleServiceImpl | SysTagRelationRepository |
-| SysCommentService | ArticleAdminServiceImpl, PublicArticleServiceImpl, UserCommentServiceImpl(chat?) | SysCommentRepository |
-| SysInteractionService | ArticleAdminServiceImpl, PublicArticleServiceImpl | SysInteractionRepository |
-| SysCollectionService | ArticleAdminServiceImpl, PublicArticleServiceImpl | SysCollectionRepository |
-| SysCollectionFolderService | ArticleAdminServiceImpl, PublicArticleServiceImpl | SysCollectionFolderRepository |
-| SysUserFootprintService | ArticleAdminServiceImpl, PublicArticleServiceImpl | `SysUserFootprintRepository` |
+| 薄服务                     | 外部注入方                                                                       | 迁移后替换为                  |
+| -------------------------- | -------------------------------------------------------------------------------- | ----------------------------- |
+| SysCategoryService         | ArticleAdminServiceImpl, PublicArticleServiceImpl                                | SysCategoryRepository         |
+| SysTagService              | ArticleAdminServiceImpl, PublicArticleServiceImpl                                | SysTagRepository              |
+| SysTagRelationService      | ArticleAdminServiceImpl, PublicArticleServiceImpl                                | SysTagRelationRepository      |
+| SysCommentService          | ArticleAdminServiceImpl, PublicArticleServiceImpl, UserCommentServiceImpl(chat?) | SysCommentRepository          |
+| SysInteractionService      | ArticleAdminServiceImpl, PublicArticleServiceImpl                                | SysInteractionRepository      |
+| SysCollectionService       | ArticleAdminServiceImpl, PublicArticleServiceImpl                                | SysCollectionRepository       |
+| SysCollectionFolderService | ArticleAdminServiceImpl, PublicArticleServiceImpl                                | SysCollectionFolderRepository |
+| SysUserFootprintService    | ArticleAdminServiceImpl, PublicArticleServiceImpl                                | `SysUserFootprintRepository`  |
 
 > **注意**：article 模块第5轮迁移时需同步处理这些依赖替换。本模块迁移期间，旧薄服务保持不变，article 模块仍注入旧服务接口。
 
 ## 直接 Mapper 注入迁移
 
-| 文件 | 直接注入的 Mapper | 迁移到 |
-|---|---|---|
-| PublicContentQueryServiceImpl:83 | SysTagMapper | SysTagRepository.findByTargetType() |
-| UserFootprintServiceImpl:82 | SysUserFootprintMapper | SysUserFootprintRepository.upsertFootprint() |
+| 文件                             | 直接注入的 Mapper      | 迁移到                                        |
+| -------------------------------- | ---------------------- | --------------------------------------------- |
+| PublicContentQueryServiceImpl:83 | SysTagMapper           | SysTagRepository.findByTargetType()（已完成） |
+| UserFootprintServiceImpl:82      | SysUserFootprintMapper | SysUserFootprintRepository.upsertFootprint()  |
 
 ## 执行步骤
 
@@ -221,6 +228,7 @@ public interface SysUserFootprintRepository extends IService<SysUserFootprint> {
 ### Step 2: 修改10个业务服务
 
 逐个替换注入和调用：
+
 1. `CategoryAdminServiceImpl` — 注入 `SysCategoryRepository`
 2. `TagAdminServiceImpl` — 注入 `SysTagRepository`, `SysTagRelationRepository`
 3. `CommentAdminServiceImpl` — 注入 `SysCommentRepository`
@@ -251,14 +259,10 @@ mvn test -Dtest="com.cybzacg.blogbackend.module.content.*Test"
 
 确认所有业务服务中无 `lambdaQuery()`、`lambdaUpdate()`、`new LambdaQueryWrapper<>()`、直接 Mapper 注入。
 
+本轮已额外验证：
 
+```bash
+mvn -q -Dtest="UserCollectionServiceImplTest,UserCommentServiceImplTest,CommentAdminServiceImplTest" test
+```
 
-
-
-
-
-
-
-
-
-
+> 说明：`mvn -q clean -DskipTests compile` 当前会被无关的 `target/generated-sources/annotations/com/cybzacg/blogbackend/module/chat/convert/ChatModelMapperImpl.java` 语法错误阻塞，需在 chat 模块另行修复。
