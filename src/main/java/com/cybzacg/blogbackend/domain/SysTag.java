@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /** 标签。 */
 @TableName(value = "sys_tag")
@@ -22,5 +22,5 @@ public class SysTag {
     private String color;
 
     /** 创建时间 */
-    private Date createdAt;
+    private LocalDateTime createdAt;
 }

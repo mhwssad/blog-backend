@@ -11,7 +11,7 @@ import com.cybzacg.blogbackend.module.chat.repository.ChatMessageRecipientReposi
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -37,7 +37,7 @@ public class ChatMessageRecipientRepositoryImpl extends ServiceImpl<ChatMessageR
      * delivered_at 和 read_at 统一使用 readAt 以保证时序一致。
      */
     @Override
-    public boolean markReadUpTo(Long conversationId, Long recipientUserId, Long messageId, Date readAt) {
+    public boolean markReadUpTo(Long conversationId, Long recipientUserId, Long messageId, LocalDateTime readAt) {
         return lambdaUpdate()
                 .eq(ChatMessageRecipient::getConversationId, conversationId)
                 .eq(ChatMessageRecipient::getRecipientUserId, recipientUserId)
@@ -53,7 +53,7 @@ public class ChatMessageRecipientRepositoryImpl extends ServiceImpl<ChatMessageR
      * 仅将当前状态为 PENDING 的记录更新为 DELIVERED，避免覆盖已读状态。
      */
     @Override
-    public boolean markDelivered(Long conversationId, Long recipientUserId, Long messageId, Date deliveredAt) {
+    public boolean markDelivered(Long conversationId, Long recipientUserId, Long messageId, LocalDateTime deliveredAt) {
         return lambdaUpdate()
                 .eq(ChatMessageRecipient::getConversationId, conversationId)
                 .eq(ChatMessageRecipient::getRecipientUserId, recipientUserId)
@@ -68,7 +68,7 @@ public class ChatMessageRecipientRepositoryImpl extends ServiceImpl<ChatMessageR
      * 批量标记已投递，仅更新状态低于 DELIVERED 的记录，防止降级已读状态。
      */
     @Override
-    public boolean batchMarkDelivered(Long conversationId, Long recipientUserId, Collection<Long> messageIds, Date deliveredAt) {
+    public boolean batchMarkDelivered(Long conversationId, Long recipientUserId, Collection<Long> messageIds, LocalDateTime deliveredAt) {
         if (messageIds == null || messageIds.isEmpty()) {
             return true;
         }

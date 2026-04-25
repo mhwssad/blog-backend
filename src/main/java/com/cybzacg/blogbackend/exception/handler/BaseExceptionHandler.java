@@ -176,8 +176,7 @@ public abstract class BaseExceptionHandler {
      * @return 错误详情 Map
      */
     protected Map<String, Object> buildErrorDetail(Exception e) {
-        Map<String, Object> errorDetail = new LinkedHashMap<>();
-        errorDetail.putAll(buildThrowableSummary(e));
+        Map<String, Object> errorDetail = new LinkedHashMap<>(buildThrowableSummary(e));
 
         StackTraceElement[] stackTrace = e.getStackTrace();
         if (stackTrace != null && stackTrace.length > 0) {

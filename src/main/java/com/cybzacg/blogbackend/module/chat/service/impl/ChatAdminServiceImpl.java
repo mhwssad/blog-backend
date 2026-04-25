@@ -46,7 +46,7 @@ import com.cybzacg.blogbackend.utils.StrUtils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -277,7 +277,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
             member.setMuteUntil(null);
         }
         if (Objects.equals(status, ChatConstants.MEMBER_STATUS_NORMAL) && member.getJoinedAt() == null) {
-            member.setJoinedAt(new Date());
+            member.setJoinedAt(LocalDateTime.now());
         }
         chatConversationMemberRepository.updateById(member);
         List<ChatConversationMember> activeMembers = listActiveMembers(conversationId);
@@ -299,8 +299,8 @@ public class ChatAdminServiceImpl implements ChatAdminService {
     public List<ChatMemberVO> updateMemberMute(Long conversationId, Long memberUserId, ChatAdminMemberMuteUpdateRequest request) {
         requireManageableGroupConversation(conversationId);
         ChatConversationMember member = requireMember(conversationId, memberUserId);
-        Date muteUntil = request == null ? null : request.getMuteUntil();
-        member.setMuteUntil(muteUntil != null && muteUntil.after(new Date()) ? muteUntil : null);
+        LocalDateTime muteUntil = request == null ? null : request.getMuteUntil();
+        member.setMuteUntil(muteUntil != null && muteUntil.isAfter(LocalDateTime.now()) ? muteUntil : null);
         chatConversationMemberRepository.updateById(member);
         List<ChatConversationMember> activeMembers = listActiveMembers(conversationId);
         List<ChatMemberVO> records = buildMemberRecords(activeMembers);
@@ -319,7 +319,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         if (Objects.equals(message.getRevokeStatus(), ChatConstants.REVOKE_STATUS_REVOKED)) {
             return;
         }
-        Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
         message.setRevokeStatus(ChatConstants.REVOKE_STATUS_REVOKED);
         message.setRevokedBy(0L);
         message.setRevokedAt(now);
@@ -456,7 +456,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         members.stream()
                 .sorted(Comparator.comparingInt(this::memberRoleOrder)
                         .thenComparing(ChatConversationMember::getStatus)
-                        .thenComparing(ChatConversationMember::getJoinedAt, Comparator.nullsLast(java.util.Date::compareTo))
+                        .thenComparing(ChatConversationMember::getJoinedAt, Comparator.nullsLast(LocalDateTime::compareTo))
                         .thenComparing(ChatConversationMember::getUserId))
                 .forEach(member -> {
                     ChatMemberVO vo = chatModelMapper.toMemberVO(member);
@@ -638,11 +638,11 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         return recipient.getDeliveryStatus() != null && recipient.getDeliveryStatus() >= ChatConstants.DELIVERY_STATUS_READ;
     }
 
-    private boolean isEdited(String messageType, Date createdAt, Date updatedAt) {
+    private boolean isEdited(String messageType, LocalDateTime createdAt, LocalDateTime updatedAt) {
         return Objects.equals(messageType, ChatConstants.MESSAGE_TYPE_TEXT)
                 && createdAt != null
                 && updatedAt != null
-                && updatedAt.after(createdAt);
+                && updatedAt.isAfter(createdAt);
     }
 
     private boolean isAttachmentMessageType(String messageType) {

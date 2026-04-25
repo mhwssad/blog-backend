@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.follow.model.data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
@@ -18,5 +18,5 @@ public class FollowRelationUserItem {
     private Integer isSpecialFollow;
     private String remark;
     private Integer mutualFollow;
-    private Date followTime;
+    private LocalDateTime followTime;
 }

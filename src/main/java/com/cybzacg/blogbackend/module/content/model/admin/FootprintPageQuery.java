@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Schema(description = "后台足迹分页查询条件")
@@ -22,9 +22,9 @@ public class FootprintPageQuery {
 
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Schema(description = "访问开始时间")
-    private Date visitedAtStart;
+    private LocalDateTime visitedAtStart;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Schema(description = "访问结束时间")
-    private Date visitedAtEnd;
+    private LocalDateTime visitedAtEnd;
 }

@@ -16,7 +16,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Date;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -48,8 +50,8 @@ class FootprintAdminServiceImplTest {
         query.setUserId(7L);
         query.setTargetId(100L);
         query.setTargetType("article");
-        query.setVisitedAtStart(new Date(1000L));
-        query.setVisitedAtEnd(new Date(2000L));
+        query.setVisitedAtStart(LocalDateTime.ofInstant(Instant.ofEpochMilli(1000L), ZoneOffset.UTC));
+        query.setVisitedAtEnd(LocalDateTime.ofInstant(Instant.ofEpochMilli(2000L), ZoneOffset.UTC));
 
         SysUserFootprint footprint = footprint(31L, 7L, 100L, "article");
         Page<SysUserFootprint> page = new Page<>(2, 6, 1);
@@ -86,8 +88,8 @@ class FootprintAdminServiceImplTest {
         FootprintPageQuery query = new FootprintPageQuery();
         query.setUserId(7L);
         query.setTargetType("article");
-        query.setVisitedAtStart(new Date(1000L));
-        query.setVisitedAtEnd(new Date(2000L));
+        query.setVisitedAtStart(LocalDateTime.ofInstant(Instant.ofEpochMilli(1000L), ZoneOffset.UTC));
+        query.setVisitedAtEnd(LocalDateTime.ofInstant(Instant.ofEpochMilli(2000L), ZoneOffset.UTC));
 
         footprintAdminService.cleanFootprints(query);
 

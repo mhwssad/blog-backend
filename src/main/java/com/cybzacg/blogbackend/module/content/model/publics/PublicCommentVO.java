@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.util.ArrayList;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -37,7 +37,7 @@ public class PublicCommentVO {
     @Schema(description = "评论状态")
     private Integer status;
     @Schema(description = "创建时间")
-    private Date createdAt;
+    private LocalDateTime createdAt;
     @Schema(description = "当前用户是否已点赞")
     private Boolean liked;
     @Schema(description = "子评论列表")

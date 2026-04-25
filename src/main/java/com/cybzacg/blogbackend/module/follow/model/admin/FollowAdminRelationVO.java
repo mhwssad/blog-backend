@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.follow.model.admin;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
@@ -56,14 +56,14 @@ public class FollowAdminRelationVO {
     private String remark;
 
     @Schema(description = "最近关注时间")
-    private Date followTime;
+    private LocalDateTime followTime;
 
     @Schema(description = "最近取关时间")
-    private Date unfollowTime;
+    private LocalDateTime unfollowTime;
 
     @Schema(description = "创建时间")
-    private Date createdAt;
+    private LocalDateTime createdAt;
 
     @Schema(description = "更新时间")
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 }

@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * 文件物理信息表。
@@ -53,7 +53,7 @@ public class FileInfo {
     /** 状态：0-正常，1-已删除 */
     private Integer status;
     /** 创建时间 */
-    private Date createdAt;
+    private LocalDateTime createdAt;
     /** 更新时间 */
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 }

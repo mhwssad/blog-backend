@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.article.model.publics;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Schema(description = "前台文章卡片")
@@ -33,5 +33,5 @@ public class PublicArticleCardVO {
     @Schema(description = "收藏数")
     private Integer collectCount;
     @Schema(description = "发布时间")
-    private Date publishTime;
+    private LocalDateTime publishTime;
 }

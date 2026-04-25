@@ -4,9 +4,9 @@ import com.cybzacg.blogbackend.common.constant.AuthConstants;
 import com.cybzacg.blogbackend.common.redis.RedisKeyUtils;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserDetails;
 import com.cybzacg.blogbackend.module.auth.service.AuthUserDetailsService;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -31,12 +31,8 @@ public class EmailCodeAuthenticationProvider implements AuthenticationProvider {
         String code = authentication.getCredentials() == null ? null : StrUtils.trim(authentication.getCredentials().toString());
 
         String cachedCode = redisOperator.get(emailLoginCodeKey(email), String.class);
-        if (!StringUtils.hasText(cachedCode)) {
-            throw new BusinessException(ResultErrorCode.EMAIL_CAPTCHA_EXPIRED);
-        }
-        if (!cachedCode.equals(code)) {
-            throw new BusinessException(ResultErrorCode.EMAIL_CAPTCHA_INVALID);
-        }
+        ExceptionThrowerCore.throwBusinessIfBlank(cachedCode, ResultErrorCode.EMAIL_CAPTCHA_EXPIRED);
+        ExceptionThrowerCore.throwBusinessIf(!cachedCode.equals(code), ResultErrorCode.EMAIL_CAPTCHA_INVALID);
 
         AuthUserDetails userDetails = authUserDetailsService.loadAuthUserByUsername(email);
         if (!userDetails.isEnabled()) {

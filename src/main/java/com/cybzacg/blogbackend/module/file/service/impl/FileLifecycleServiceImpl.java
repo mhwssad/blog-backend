@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -80,7 +80,7 @@ public class FileLifecycleServiceImpl implements FileLifecycleService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean expireTaskIfNeeded(FileUploadTask task) {
-        if (task == null || task.getExpireTime() == null || !task.getExpireTime().before(new Date())) {
+        if (task == null || task.getExpireTime() == null || !task.getExpireTime().isBefore(LocalDateTime.now())) {
             return false;
         }
         if (TaskStatusEnum.COMPLETED.getValue().equals(task.getTaskStatus())) {
@@ -98,7 +98,7 @@ public class FileLifecycleServiceImpl implements FileLifecycleService {
     public int cleanupExpiredUploadTasks() {
         int cleaned = 0;
         while (true) {
-            List<FileUploadTask> batch = loadExpiredTasks(new Date());
+            List<FileUploadTask> batch = loadExpiredTasks(LocalDateTime.now());
             if (batch.isEmpty()) {
                 return cleaned;
             }
@@ -112,7 +112,7 @@ public class FileLifecycleServiceImpl implements FileLifecycleService {
         }
     }
 
-    private List<FileUploadTask> loadExpiredTasks(Date now) {
+    private List<FileUploadTask> loadExpiredTasks(LocalDateTime now) {
         return fileUploadTaskRepository.findExpiredTasks(
                 now,
                 List.of(
@@ -138,7 +138,7 @@ public class FileLifecycleServiceImpl implements FileLifecycleService {
             task.setTaskStatus(TaskStatusEnum.CANCELLED.getValue());
             task.setErrorCode(String.valueOf(FileResultCode.UPLOAD_TASK_EXPIRED.getCode()));
             task.setErrorMessage(FileResultCode.UPLOAD_TASK_EXPIRED.getMessage());
-            task.setCompleteTime(new Date());
+            task.setCompleteTime(LocalDateTime.now());
             fileUploadTaskRepository.updateById(task);
         }
         cleanupChunkArtifacts(task);

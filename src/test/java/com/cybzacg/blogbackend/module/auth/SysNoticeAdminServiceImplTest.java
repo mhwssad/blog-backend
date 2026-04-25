@@ -8,6 +8,7 @@ import com.cybzacg.blogbackend.module.auth.repository.SysNoticeRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserNoticeRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.service.impl.SysNoticeAdminServiceImpl;
+import com.cybzacg.blogbackend.module.auth.service.impl.SysNoticeFactory;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,8 @@ class SysNoticeAdminServiceImplTest {
     private SysUserRepository sysUserRepository;
     @Mock
     private SysNoticeModelMapper sysNoticeModelMapper;
+    @Mock
+    private SysNoticeFactory sysNoticeFactory;
 
     private SysNoticeAdminServiceImpl sysNoticeAdminService;
 
@@ -47,7 +50,8 @@ class SysNoticeAdminServiceImplTest {
                 sysNoticeRepository,
                 sysUserNoticeRepository,
                 sysUserRepository,
-                sysNoticeModelMapper
+                sysNoticeModelMapper,
+                sysNoticeFactory
         );
     }
 

@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.domain;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /** 文章分类关联表。 */
@@ -17,5 +17,5 @@ public class BlogArticleCategory {
     /** 排序值 */
     private Integer sortOrder;
     /** 创建时间 */
-    private Date createdAt;
+    private LocalDateTime createdAt;
 }

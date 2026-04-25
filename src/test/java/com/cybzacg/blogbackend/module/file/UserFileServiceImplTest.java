@@ -18,6 +18,7 @@ import com.cybzacg.blogbackend.module.file.model.user.FileUploadResultVO;
 import com.cybzacg.blogbackend.module.file.model.user.UserFilePageQuery;
 import com.cybzacg.blogbackend.module.file.model.user.UserFileTaskPageQuery;
 import com.cybzacg.blogbackend.module.file.model.user.UserFileVO;
+import com.cybzacg.blogbackend.module.file.convert.FileModelMapper;
 import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
 import com.cybzacg.blogbackend.module.file.repository.FileChunkRepository;
 import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
@@ -64,6 +65,8 @@ class UserFileServiceImplTest {
     @Mock
     private FileUploadProperties fileUploadProperties;
     @Mock
+    private FileModelMapper fileModelMapper;
+    @Mock
     private StorageService storageService;
 
     private UserFileServiceImpl userFileService;
@@ -77,7 +80,8 @@ class UserFileServiceImplTest {
                 fileBusinessInfoRepository,
                 fileLifecycleService,
                 storageManager,
-                fileUploadProperties
+                fileUploadProperties,
+                fileModelMapper
         );
         when(fileUploadProperties.getAllowedExtensions()).thenReturn(List.of("png"));
         when(fileUploadProperties.getMaxFileSize()).thenReturn(10_240L);

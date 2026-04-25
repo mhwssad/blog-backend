@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.follow.model.data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
@@ -12,5 +12,5 @@ public class PublicFollowUserItem {
     private String username;
     private String nickname;
     private String avatar;
-    private Date followTime;
+    private LocalDateTime followTime;
 }

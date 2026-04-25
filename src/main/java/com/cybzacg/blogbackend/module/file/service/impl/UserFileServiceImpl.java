@@ -15,9 +15,9 @@ import com.cybzacg.blogbackend.enums.file.FileResultCode;
 import com.cybzacg.blogbackend.enums.file.FileStatusEnum;
 import com.cybzacg.blogbackend.enums.storage.TaskStatusEnum;
 import com.cybzacg.blogbackend.enums.storage.UploadModeEnum;
-import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.file.model.user.ChunkUploadVO;
 import com.cybzacg.blogbackend.module.file.model.user.FileUploadInitRequest;
+import com.cybzacg.blogbackend.module.file.convert.FileModelMapper;
 import com.cybzacg.blogbackend.module.file.model.user.FileUploadInitVO;
 import com.cybzacg.blogbackend.module.file.model.user.FileUploadResultVO;
 import com.cybzacg.blogbackend.module.file.model.user.UserFilePageQuery;
@@ -45,7 +45,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -69,6 +69,7 @@ public class UserFileServiceImpl implements UserFileService {
     private final FileLifecycleService fileLifecycleService;
     private final StorageManager storageManager;
     private final FileUploadProperties fileUploadProperties;
+    private final FileModelMapper fileModelMapper;
     /**
      * 初始化上传任务，并根据文件指纹预判是否可以直接走秒传。
      * 无论是否秒传命中，都会先固化一条上传任务，保证客户端后续轮询、审计与异常补偿都能基于同一条任务链路展开。
@@ -107,7 +108,7 @@ public class UserFileServiceImpl implements UserFileService {
         task.setUploadedChunks(0);
         task.setTaskStatus(TaskStatusEnum.INIT.getValue());
         task.setRetryCount(0);
-        task.setStartTime(new Date());
+        task.setStartTime(LocalDateTime.now());
         task.setExpireTime(expireAfterDays(fileUploadProperties.getTaskExpireDays()));
         fileUploadTaskRepository.save(task);
         FileUploadInitVO vo = new FileUploadInitVO();
@@ -151,11 +152,8 @@ public class UserFileServiceImpl implements UserFileService {
         // 秒传检测只依赖文件指纹与大小，不要求客户端重新上传文件体。
         FileInfo existing = tryFindExistingFile(normalizeMd5(task.getFileMd5()), task.getFileSize());
         if (existing == null) {
-            FileUploadResultVO vo = new FileUploadResultVO();
-            vo.setUploadId(task.getUploadId());
-            vo.setTaskId(task.getId());
+            FileUploadResultVO vo = fileModelMapper.toFileUploadResultVO(task);
             vo.setQuickUpload(false);
-            vo.setTaskStatus(task.getTaskStatus());
             return vo;
         }
         return finalizeTaskWithReference(task, existing, sourceIp, true);
@@ -181,12 +179,12 @@ public class UserFileServiceImpl implements UserFileService {
         }
         String objectName = buildFinalObjectName(task.getCategory(), task.getOriginalName());
         StorageService storageService = requireStorageService(task.getStorageKey());
-        String url;
+        String url = null;
         try (InputStream inputStream = file.getInputStream()) {
             url = storageService.upload(inputStream, objectName, task.getMimeType());
         } catch (Exception e) {
             markTaskFailed(task, FileResultCode.FILE_UPLOAD_FAILED, e.getMessage());
-            throw new BusinessException(FileResultCode.FILE_UPLOAD_FAILED);
+            ExceptionThrowerCore.throwBusinessEx(FileResultCode.FILE_UPLOAD_FAILED);
         }
         try {
             PersistedFileInfo persisted = createOrReuseFileInfo(task, objectName, url, md5);
@@ -220,7 +218,7 @@ public class UserFileServiceImpl implements UserFileService {
             storageService.uploadToTemp(inputStream, chunkObjectName, file.getContentType());
         } catch (Exception e) {
             markTaskFailed(task, FileResultCode.CHUNK_UPLOAD_FAILED, e.getMessage());
-            throw new BusinessException(FileResultCode.CHUNK_UPLOAD_FAILED);
+            ExceptionThrowerCore.throwBusinessEx(FileResultCode.CHUNK_UPLOAD_FAILED);
         }
         try {
             // 分片记录既用于断点续传，也用于最终合并前的完整性校验。
@@ -265,7 +263,7 @@ public class UserFileServiceImpl implements UserFileService {
             storageService.mergeFiles(sourceObjectNames, targetObjectName);
         } catch (Exception e) {
             markTaskFailed(task, FileResultCode.CHUNK_MERGE_FAILED, e.getMessage());
-            throw new BusinessException(FileResultCode.CHUNK_MERGE_FAILED);
+            ExceptionThrowerCore.throwBusinessEx(FileResultCode.CHUNK_MERGE_FAILED);
         }
         try {
             String url = storageService.getUrl(targetObjectName);
@@ -426,7 +424,7 @@ public class UserFileServiceImpl implements UserFileService {
                 FileResultCode.UPLOAD_TASK_NOT_FOUND
         );
         if (fileLifecycleService.expireTaskIfNeeded(task)) {
-            throw new BusinessException(FileResultCode.UPLOAD_TASK_EXPIRED);
+            ExceptionThrowerCore.throwBusinessEx(FileResultCode.UPLOAD_TASK_EXPIRED);
         }
         return task;
     }
@@ -495,11 +493,11 @@ public class UserFileServiceImpl implements UserFileService {
         task.setIsQuickUpload(quick ? 1 : defaultInt(task.getIsQuickUpload(), 0));
         if (quick) {
             task.setReferencedFileId(fileInfo.getId());
-            task.setQuickUploadTime(new Date());
+            task.setQuickUploadTime(LocalDateTime.now());
         }
         task.setFileId(fileInfo.getId());
         task.setTaskStatus(TaskStatusEnum.COMPLETED.getValue());
-        task.setCompleteTime(new Date());
+        task.setCompleteTime(LocalDateTime.now());
         fileUploadTaskRepository.updateById(task);
         cleanupChunkArtifacts(task);
         return toResultVO(task, fileInfo, ref == null ? null : ref.getId());
@@ -660,14 +658,14 @@ public class UserFileServiceImpl implements UserFileService {
             chunk.setChunkMd5(md5);
             chunk.setUploadStatus(CHUNK_STATUS_COMPLETED);
             chunk.setRetryCount(0);
-            chunk.setUploadTime(new Date());
+            chunk.setUploadTime(LocalDateTime.now());
             fileChunkRepository.save(chunk);
             return;
         }
         chunk.setChunkSize(size);
         chunk.setChunkMd5(md5);
         chunk.setUploadStatus(CHUNK_STATUS_COMPLETED);
-        chunk.setUploadTime(new Date());
+        chunk.setUploadTime(LocalDateTime.now());
         fileChunkRepository.updateById(chunk);
     }
     private int countUploadedChunks(Long taskId) {
@@ -736,57 +734,21 @@ public class UserFileServiceImpl implements UserFileService {
         if (ref == null || fileInfo == null) {
             return null;
         }
-        UserFileVO vo = new UserFileVO();
-        vo.setBusinessId(ref.getId());
-        vo.setFileId(fileInfo.getId());
-        vo.setFileName(fileInfo.getFileName());
-        vo.setOriginalName(fileInfo.getOriginalName());
-        vo.setFileUrl(fileInfo.getFileUrl());
-        vo.setFileSize(fileInfo.getFileSize());
-        vo.setFileType(fileInfo.getFileType());
-        vo.setMimeType(fileInfo.getMimeType());
-        vo.setCategory(ref.getCategory());
-        vo.setReferenceType(ref.getReferenceType());
-        vo.setReferenceId(ref.getReferenceId());
-        vo.setIsPublic(ref.getIsPublic());
-        vo.setStatus(fileInfo.getStatus());
-        vo.setCreatedAt(ref.getCreatedAt());
-        return vo;
+        return fileModelMapper.toUserFileVOFromBoth(ref, fileInfo);
     }
     /**
      * 将上传任务转换为用户侧任务视图，便于展示当前上传进度和异常信息。
      */
     private UserFileTaskVO toUserTaskVO(FileUploadTask task) {
-        UserFileTaskVO vo = new UserFileTaskVO();
-        vo.setId(task.getId());
-        vo.setUploadId(task.getUploadId());
-        vo.setFileId(task.getFileId());
-        vo.setOriginalName(task.getOriginalName());
-        vo.setFileSize(task.getFileSize());
-        vo.setIsQuickUpload(task.getIsQuickUpload());
-        vo.setIsChunked(task.getIsChunked());
-        vo.setChunkSize(task.getChunkSize());
-        vo.setTotalChunks(task.getTotalChunks());
-        vo.setUploadedChunks(task.getUploadedChunks());
-        vo.setTaskStatus(task.getTaskStatus());
-        vo.setErrorCode(task.getErrorCode());
-        vo.setErrorMessage(task.getErrorMessage());
-        vo.setStartTime(task.getStartTime());
-        vo.setCompleteTime(task.getCompleteTime());
-        vo.setCreatedAt(task.getCreatedAt());
-        return vo;
+        return fileModelMapper.toUserFileTaskVO(task);
     }
     /**
      * 构造统一的上传结果对象，兼容秒传、普通上传和分片上传完成三种返回场景。
      */
     private FileUploadResultVO toResultVO(FileUploadTask task, FileInfo fileInfo, Long businessId) {
-        FileUploadResultVO vo = new FileUploadResultVO();
-        vo.setUploadId(task.getUploadId());
-        vo.setTaskId(task.getId());
+        FileUploadResultVO vo = fileModelMapper.toFileUploadResultVO(task);
         vo.setFileId(fileInfo == null ? null : fileInfo.getId());
         vo.setBusinessId(businessId);
-        vo.setQuickUpload(Integer.valueOf(1).equals(task.getIsQuickUpload()));
-        vo.setTaskStatus(task.getTaskStatus());
         vo.setFileUrl(fileInfo == null ? null : fileInfo.getFileUrl());
         vo.setReferenceCount(fileInfo == null ? null : fileInfo.getReferenceCount());
         return vo;
@@ -880,10 +842,9 @@ public class UserFileServiceImpl implements UserFileService {
         }
         return "other";
     }
-    private Date expireAfterDays(Integer days) {
+    private LocalDateTime expireAfterDays(Integer days) {
         int d = days == null ? 2 : Math.max(1, days);
-        long millis = (long) d * 24L * 60L * 60L * 1000L;
-        return new Date(System.currentTimeMillis() + millis);
+        return LocalDateTime.now().plusDays(d);
     }
     private String truncate(String value, int maxLen) {
         if (!StringUtils.hasText(value)) {

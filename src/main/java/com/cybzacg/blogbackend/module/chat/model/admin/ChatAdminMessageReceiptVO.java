@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.chat.model.admin;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
@@ -38,14 +38,14 @@ public class ChatAdminMessageReceiptVO {
     private Integer deliveryStatus;
 
     @Schema(description = "送达时间")
-    private Date deliveredAt;
+    private LocalDateTime deliveredAt;
 
     @Schema(description = "已读时间")
-    private Date readAt;
+    private LocalDateTime readAt;
 
     @Schema(description = "可见状态")
     private Integer visibleStatus;
 
     @Schema(description = "创建时间")
-    private Date createdAt;
+    private LocalDateTime createdAt;
 }

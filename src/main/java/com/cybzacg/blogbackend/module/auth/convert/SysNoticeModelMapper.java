@@ -8,7 +8,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import java.util.Arrays;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -28,7 +28,7 @@ public interface SysNoticeModelMapper {
         return vo;
     }
 
-    default UserNoticeVO toUserNoticeVO(SysNotice notice, boolean isRead, Date readTime) {
+    default UserNoticeVO toUserNoticeVO(SysNotice notice, boolean isRead, LocalDateTime readTime) {
         UserNoticeVO vo = toUserNoticeVO(notice);
         vo.setIsRead(isRead ? NoticeConstants.READ_READ : NoticeConstants.READ_UNREAD);
         vo.setReadTime(readTime);

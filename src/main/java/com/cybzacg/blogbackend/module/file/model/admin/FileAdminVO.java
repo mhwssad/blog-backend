@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.file.model.admin;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Schema(description = "后台文件列表项")
@@ -39,5 +39,5 @@ public class FileAdminVO {
     @Schema(description = "引用数")
     private Integer referenceCount;
     @Schema(description = "创建时间")
-    private Date createdAt;
+    private LocalDateTime createdAt;
 }

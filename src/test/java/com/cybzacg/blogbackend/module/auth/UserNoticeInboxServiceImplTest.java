@@ -9,6 +9,7 @@ import com.cybzacg.blogbackend.module.auth.convert.SysNoticeModelMapper;
 import com.cybzacg.blogbackend.module.auth.repository.SysNoticeRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserNoticeRepository;
 import com.cybzacg.blogbackend.module.auth.service.impl.UserNoticeInboxServiceImpl;
+import com.cybzacg.blogbackend.module.auth.service.impl.SysNoticeFactory;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,6 +40,8 @@ class UserNoticeInboxServiceImplTest {
     private SysUserNoticeRepository sysUserNoticeRepository;
     @Mock
     private SysNoticeModelMapper sysNoticeModelMapper;
+    @Mock
+    private SysNoticeFactory sysNoticeFactory;
 
     private UserNoticeInboxServiceImpl userNoticeInboxService;
 
@@ -47,7 +50,8 @@ class UserNoticeInboxServiceImplTest {
         userNoticeInboxService = new UserNoticeInboxServiceImpl(
                 sysNoticeRepository,
                 sysUserNoticeRepository,
-                sysNoticeModelMapper
+                sysNoticeModelMapper,
+                sysNoticeFactory
         );
     }
 

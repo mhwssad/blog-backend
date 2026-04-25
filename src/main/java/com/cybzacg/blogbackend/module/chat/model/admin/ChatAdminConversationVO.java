@@ -2,7 +2,7 @@ package com.cybzacg.blogbackend.module.chat.model.admin;
 
 import com.cybzacg.blogbackend.module.chat.model.user.ChatConversationLastMessageVO;
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
@@ -48,8 +48,8 @@ public class ChatAdminConversationVO {
     private ChatConversationLastMessageVO lastMessage;
 
     @Schema(description = "创建时间")
-    private Date createdAt;
+    private LocalDateTime createdAt;
 
     @Schema(description = "更新时间")
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 }

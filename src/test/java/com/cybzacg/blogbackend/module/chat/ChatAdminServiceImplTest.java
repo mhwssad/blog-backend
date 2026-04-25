@@ -42,7 +42,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Date;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -530,21 +532,21 @@ class ChatAdminServiceImplTest {
         ownerMember.setUserId(1L);
         ownerMember.setMemberRole(ChatConstants.MEMBER_ROLE_OWNER);
         ownerMember.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
-        ownerMember.setJoinedAt(new java.util.Date(1_000L));
+        ownerMember.setJoinedAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(1_000L), ZoneOffset.UTC));
 
         ChatConversationMember adminMember = new ChatConversationMember();
         adminMember.setConversationId(conversationId);
         adminMember.setUserId(2L);
         adminMember.setMemberRole(ChatConstants.MEMBER_ROLE_ADMIN);
         adminMember.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
-        adminMember.setJoinedAt(new java.util.Date(2_000L));
+        adminMember.setJoinedAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(2_000L), ZoneOffset.UTC));
 
         ChatConversationMember normalMember = new ChatConversationMember();
         normalMember.setConversationId(conversationId);
         normalMember.setUserId(3L);
         normalMember.setMemberRole(ChatConstants.MEMBER_ROLE_MEMBER);
         normalMember.setStatus(ChatConstants.MEMBER_STATUS_REMOVED);
-        normalMember.setJoinedAt(new java.util.Date(3_000L));
+        normalMember.setJoinedAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(3_000L), ZoneOffset.UTC));
 
         SysUser owner = new SysUser();
         owner.setId(1L);
@@ -590,21 +592,21 @@ class ChatAdminServiceImplTest {
         ownerMember.setUserId(1L);
         ownerMember.setMemberRole(ChatConstants.MEMBER_ROLE_OWNER);
         ownerMember.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
-        ownerMember.setJoinedAt(new Date(5_000L));
+        ownerMember.setJoinedAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(5_000L), ZoneOffset.UTC));
 
         ChatConversationMember adminEarly = new ChatConversationMember();
         adminEarly.setConversationId(conversationId);
         adminEarly.setUserId(2L);
         adminEarly.setMemberRole(ChatConstants.MEMBER_ROLE_ADMIN);
         adminEarly.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
-        adminEarly.setJoinedAt(new Date(1_000L));
+        adminEarly.setJoinedAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(1_000L), ZoneOffset.UTC));
 
         ChatConversationMember adminLate = new ChatConversationMember();
         adminLate.setConversationId(conversationId);
         adminLate.setUserId(3L);
         adminLate.setMemberRole(ChatConstants.MEMBER_ROLE_ADMIN);
         adminLate.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
-        adminLate.setJoinedAt(new Date(2_000L));
+        adminLate.setJoinedAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(2_000L), ZoneOffset.UTC));
 
         ChatConversationMember adminWithoutJoinTime = new ChatConversationMember();
         adminWithoutJoinTime.setConversationId(conversationId);
@@ -617,28 +619,28 @@ class ChatAdminServiceImplTest {
         memberLeft.setUserId(5L);
         memberLeft.setMemberRole(ChatConstants.MEMBER_ROLE_MEMBER);
         memberLeft.setStatus(ChatConstants.MEMBER_STATUS_LEFT);
-        memberLeft.setJoinedAt(new Date(3_000L));
+        memberLeft.setJoinedAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(3_000L), ZoneOffset.UTC));
 
         ChatConversationMember memberNormalHigherUserId = new ChatConversationMember();
         memberNormalHigherUserId.setConversationId(conversationId);
         memberNormalHigherUserId.setUserId(7L);
         memberNormalHigherUserId.setMemberRole(ChatConstants.MEMBER_ROLE_MEMBER);
         memberNormalHigherUserId.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
-        memberNormalHigherUserId.setJoinedAt(new Date(4_000L));
+        memberNormalHigherUserId.setJoinedAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(4_000L), ZoneOffset.UTC));
 
         ChatConversationMember memberNormalLowerUserId = new ChatConversationMember();
         memberNormalLowerUserId.setConversationId(conversationId);
         memberNormalLowerUserId.setUserId(6L);
         memberNormalLowerUserId.setMemberRole(ChatConstants.MEMBER_ROLE_MEMBER);
         memberNormalLowerUserId.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
-        memberNormalLowerUserId.setJoinedAt(new Date(4_000L));
+        memberNormalLowerUserId.setJoinedAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(4_000L), ZoneOffset.UTC));
 
         ChatConversationMember memberDisabled = new ChatConversationMember();
         memberDisabled.setConversationId(conversationId);
         memberDisabled.setUserId(8L);
         memberDisabled.setMemberRole(ChatConstants.MEMBER_ROLE_MEMBER);
         memberDisabled.setStatus(ChatConstants.MEMBER_STATUS_DISABLED);
-        memberDisabled.setJoinedAt(new Date(500L));
+        memberDisabled.setJoinedAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(500L), ZoneOffset.UTC));
 
         when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
         when(chatConversationMemberRepository.listByConversationId(conversationId)).thenReturn(List.of(
@@ -1021,8 +1023,8 @@ class ChatAdminServiceImplTest {
     void getMessageDetailShouldAssembleFilePayloadAndReceiptCounts() {
         Long conversationId = 8001L;
         Long messageId = 9101L;
-        Date createdAt = new Date(1_000L);
-        Date updatedAt = new Date(2_000L);
+        LocalDateTime createdAt = LocalDateTime.ofInstant(Instant.ofEpochMilli(1_000L), ZoneOffset.UTC);
+        LocalDateTime updatedAt = LocalDateTime.ofInstant(Instant.ofEpochMilli(2_000L), ZoneOffset.UTC);
 
         ChatConversation conversation = new ChatConversation();
         conversation.setId(conversationId);
@@ -1315,7 +1317,7 @@ class ChatAdminServiceImplTest {
     void updateMemberMuteShouldUpdateMuteUntilAndPushMembersUpdated() {
         Long conversationId = 8007L;
         Long memberUserId = 2L;
-        Date muteUntil = new Date(System.currentTimeMillis() + 60_000L);
+        LocalDateTime muteUntil = LocalDateTime.now().plusSeconds(60);
 
         ChatConversation conversation = new ChatConversation();
         conversation.setId(conversationId);
@@ -1376,7 +1378,7 @@ class ChatAdminServiceImplTest {
         when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
 
         var request = new ChatAdminMemberMuteUpdateRequest();
-        request.setMuteUntil(new Date(System.currentTimeMillis() + 60_000L));
+        request.setMuteUntil(LocalDateTime.now().plusSeconds(60));
 
         BusinessException exception = assertThrows(BusinessException.class,
                 () -> chatAdminService.updateMemberMute(conversationId, 2L, request));

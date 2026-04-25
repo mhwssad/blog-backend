@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -37,6 +37,7 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
     private final SysUserNoticeRepository sysUserNoticeRepository;
     private final SysUserRepository sysUserRepository;
     private final SysNoticeModelMapper sysNoticeModelMapper;
+    private final SysNoticeFactory sysNoticeFactory;
 
     /** 分页查询系统通知列表。 */
     @Override
@@ -86,7 +87,7 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         SysNotice notice = getAvailableNotice(id);
         ExceptionThrowerCore.throwBusinessIfNot(Objects.equals(NoticeConstants.PUBLISH_STATUS_DRAFT, notice.getPublishStatus()), ResultErrorCode.ILLEGAL_ARGUMENT, "仅未发布通知允许发布");
 
-        Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
         notice.setPublishStatus(NoticeConstants.PUBLISH_STATUS_PUBLISHED);
         notice.setPublishTime(now);
         notice.setRevokeTime(null);
@@ -102,7 +103,7 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         SysNotice notice = getAvailableNotice(id);
         ExceptionThrowerCore.throwBusinessIfNot(Objects.equals(NoticeConstants.PUBLISH_STATUS_PUBLISHED, notice.getPublishStatus()), ResultErrorCode.ILLEGAL_ARGUMENT, "仅已发布通知允许撤回");
         notice.setPublishStatus(NoticeConstants.PUBLISH_STATUS_REVOKED);
-        notice.setRevokeTime(new Date());
+        notice.setRevokeTime(LocalDateTime.now());
         sysNoticeRepository.updateById(notice);
     }
 
@@ -115,7 +116,7 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         sysNoticeRepository.updateById(notice);
     }
 
-    private void deliverNotice(SysNotice notice, Date now) {
+    private void deliverNotice(SysNotice notice, LocalDateTime now) {
         sysUserNoticeRepository.deleteByNoticeId(notice.getId());
         if (!Objects.equals(NoticeConstants.TARGET_SPECIFIED, notice.getTargetType())) {
             return;
@@ -123,17 +124,7 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         List<Long> targetUserIds = sysNoticeModelMapper.toIdList(notice.getTargetUserIds());
         ExceptionThrowerCore.throwBusinessIf(targetUserIds.isEmpty(), ResultErrorCode.ILLEGAL_ARGUMENT, "指定用户通知缺少目标用户");
         List<SysUserNotice> records = targetUserIds.stream()
-                .map(userId -> {
-                    SysUserNotice userNotice = new SysUserNotice();
-                    userNotice.setNoticeId(notice.getId());
-                    userNotice.setUserId(userId);
-                    userNotice.setIsRead(NoticeConstants.READ_UNREAD);
-                    userNotice.setReadTime(null);
-                    userNotice.setCreateTime(now);
-                    userNotice.setUpdateTime(now);
-                    userNotice.setIsDeleted(0);
-                    return userNotice;
-                })
+                .map(userId -> sysNoticeFactory.createDeliveryRecord(notice.getId(), userId, now))
                 .toList();
         sysUserNoticeRepository.saveBatch(records);
     }

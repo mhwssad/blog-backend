@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.content.model.user;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Schema(description = "用户收藏信息")
@@ -23,5 +23,5 @@ public class CollectionVO {
     @Schema(description = "目标地址")
     private String targetUrl;
     @Schema(description = "创建时间")
-    private Date createdAt;
+    private LocalDateTime createdAt;
 }

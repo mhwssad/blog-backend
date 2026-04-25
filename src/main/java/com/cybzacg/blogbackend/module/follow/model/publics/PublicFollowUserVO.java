@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.follow.model.publics;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
@@ -23,5 +23,5 @@ public class PublicFollowUserVO {
     private String avatar;
 
     @Schema(description = "最近关注时间")
-    private Date followTime;
+    private LocalDateTime followTime;
 }

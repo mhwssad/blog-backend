@@ -9,7 +9,7 @@ import com.cybzacg.blogbackend.module.chat.repository.ChatConversationMemberRepo
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -93,7 +93,7 @@ public class ChatConversationMemberRepositoryImpl extends ServiceImpl<ChatConver
      * CAS 式推进已投递游标，仅在当前值为空或小于目标值时更新，避免并发回退。
      */
     @Override
-    public boolean advanceDeliveredState(Long id, Long messageId, Date deliveredAt) {
+    public boolean advanceDeliveredState(Long id, Long messageId, LocalDateTime deliveredAt) {
         return lambdaUpdate()
                 .eq(ChatConversationMember::getId, id)
                 .and(wrapper -> wrapper.isNull(ChatConversationMember::getLastDeliveredMessageId)

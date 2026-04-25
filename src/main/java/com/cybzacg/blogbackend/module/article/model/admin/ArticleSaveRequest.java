@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -47,7 +47,7 @@ public class ArticleSaveRequest {
 
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Schema(description = "发布时间")
-    private Date publishTime;
+    private LocalDateTime publishTime;
 
     @Schema(description = "访问级别")
     private Integer accessLevel;

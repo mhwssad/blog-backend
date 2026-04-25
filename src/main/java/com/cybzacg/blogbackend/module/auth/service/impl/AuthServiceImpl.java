@@ -9,7 +9,6 @@ import com.cybzacg.blogbackend.domain.SysConfig;
 import com.cybzacg.blogbackend.domain.SysMenu;
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.authentication.EmailCodeAuthenticationToken;
 import com.cybzacg.blogbackend.module.auth.convert.AuthModelMapper;
 import com.cybzacg.blogbackend.module.auth.model.AuthEmailCodeRequest;
@@ -136,7 +135,7 @@ public class AuthServiceImpl implements AuthService {
         try {
             sysUserRepository.save(user);
         } catch (DuplicateKeyException ex) {
-            throw buildRegisterDuplicateException(username, email, phone, ex);
+            throwRegisterDuplicateException(username, email, phone, ex);
         }
 
         Authentication authentication = authenticationManager.authenticate(
@@ -361,20 +360,20 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-    private BusinessException buildRegisterDuplicateException(String username,
-                                                             String email,
-                                                             String phone,
-                                                             DuplicateKeyException cause) {
+    private void throwRegisterDuplicateException(String username,
+                                                String email,
+                                                String phone,
+                                                DuplicateKeyException cause) {
         if (existsActiveUser(USER_FIELD_USERNAME, username)) {
-            return new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "用户名已存在", cause);
+            ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.ILLEGAL_ARGUMENT, "用户名已存在", cause);
         }
         if (existsActiveUser(USER_FIELD_EMAIL, email)) {
-            return new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "邮箱已存在", cause);
+            ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.ILLEGAL_ARGUMENT, "邮箱已存在", cause);
         }
         if (existsActiveUser(USER_FIELD_PHONE, phone)) {
-            return new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "手机号已存在", cause);
+            ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.ILLEGAL_ARGUMENT, "手机号已存在", cause);
         }
-        return new BusinessException(ResultErrorCode.DATA_ALREADY_EXISTS.getCode(), "注册信息已存在", cause);
+        ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.DATA_ALREADY_EXISTS, "注册信息已存在", cause);
     }
 
     private boolean existsActiveUser(String fieldName, String identity) {

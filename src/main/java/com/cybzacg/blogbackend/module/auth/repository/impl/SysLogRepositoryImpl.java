@@ -11,7 +11,7 @@ import com.cybzacg.blogbackend.module.auth.repository.SysLogRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * 系统日志 Repository 实现，基于 MyBatis-Plus。
@@ -75,8 +75,8 @@ public class SysLogRepositoryImpl extends ServiceImpl<SysLogMapper, SysLog>
                                                              String requestUri,
                                                              String ip,
                                                              Long createBy,
-                                                             Date createTimeStart,
-                                                             Date createTimeEnd) {
+                                                             LocalDateTime createTimeStart,
+                                                             LocalDateTime createTimeEnd) {
         return new LambdaQueryWrapper<SysLog>()
                 .like(StringUtils.hasText(module), SysLog::getModule, module)
                 .like(StringUtils.hasText(requestMethod), SysLog::getRequestMethod, requestMethod)

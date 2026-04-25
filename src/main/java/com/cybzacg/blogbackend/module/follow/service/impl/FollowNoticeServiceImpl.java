@@ -9,7 +9,7 @@ import com.cybzacg.blogbackend.module.auth.repository.SysUserNoticeRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.follow.service.FollowNoticeService;
 import com.cybzacg.blogbackend.utils.StrUtils;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,12 +58,20 @@ public class FollowNoticeServiceImpl implements FollowNoticeService {
         if (follower == null || !Objects.equals(follower.getDeletedFlag(), 0)) {
             return;
         }
-        Date now = new Date();
-        String displayName = StrUtils.trimToNull(follower.getNickname());
-        if (!StrUtils.hasText(displayName)) {
-            displayName = StrUtils.trimToDefault(follower.getUsername(), "有新用户");
-        }
+        LocalDateTime now = LocalDateTime.now();
+        String displayName = StrUtils.hasText(follower.getNickname()) ? follower.getNickname().trim()
+                : StrUtils.trimToDefault(follower.getUsername(), "有新用户");
 
+        SysNotice notice = buildFollowNotice(targetUserId, followerUserId, displayName, now);
+        try {
+            sysNoticeRepository.save(notice);
+            sysUserNoticeRepository.save(buildFollowUserNotice(notice.getId(), targetUserId, now));
+        } catch (RuntimeException ex) {
+            log.warn("create follow notice failed: followerUserId={}, targetUserId={}", followerUserId, targetUserId, ex);
+        }
+    }
+
+    private SysNotice buildFollowNotice(Long targetUserId, Long followerUserId, String displayName, LocalDateTime now) {
         SysNotice notice = new SysNotice();
         notice.setTitle(FOLLOW_NOTICE_TITLE);
         notice.setContent(displayName + " 关注了你");
@@ -79,18 +87,17 @@ public class FollowNoticeServiceImpl implements FollowNoticeService {
         notice.setUpdateBy(followerUserId);
         notice.setUpdateTime(now);
         notice.setIsDeleted(0);
-        try {
-            sysNoticeRepository.save(notice);
-            SysUserNotice relation = new SysUserNotice();
-            relation.setNoticeId(notice.getId());
-            relation.setUserId(targetUserId);
-            relation.setIsRead(NoticeConstants.READ_UNREAD);
-            relation.setCreateTime(now);
-            relation.setUpdateTime(now);
-            relation.setIsDeleted(0);
-            sysUserNoticeRepository.save(relation);
-        } catch (RuntimeException ex) {
-            log.warn("create follow notice failed: followerUserId={}, targetUserId={}", followerUserId, targetUserId, ex);
-        }
+        return notice;
+    }
+
+    private SysUserNotice buildFollowUserNotice(Long noticeId, Long targetUserId, LocalDateTime now) {
+        SysUserNotice relation = new SysUserNotice();
+        relation.setNoticeId(noticeId);
+        relation.setUserId(targetUserId);
+        relation.setIsRead(NoticeConstants.READ_UNREAD);
+        relation.setCreateTime(now);
+        relation.setUpdateTime(now);
+        relation.setIsDeleted(0);
+        return relation;
     }
 }

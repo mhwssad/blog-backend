@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.auth.model.admin;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Schema(description = "系统日志信息")
@@ -41,5 +41,5 @@ public class SysLogAdminVO {
     @Schema(description = "创建人ID")
     private Long createBy;
     @Schema(description = "创建时间")
-    private Date createTime;
+    private LocalDateTime createTime;
 }

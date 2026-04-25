@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Schema(description = "后台文章分页查询条件")
@@ -30,9 +30,9 @@ public class ArticleAdminPageQuery {
 
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Schema(description = "发布时间开始")
-    private Date publishTimeStart;
+    private LocalDateTime publishTimeStart;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Schema(description = "发布时间结束")
-    private Date publishTimeEnd;
+    private LocalDateTime publishTimeEnd;
 }

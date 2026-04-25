@@ -15,6 +15,7 @@ import com.cybzacg.blogbackend.module.auth.repository.SysRoleMenuRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysRoleRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRoleRepository;
 import com.cybzacg.blogbackend.module.auth.service.impl.SysRoleAdminServiceImpl;
+import com.cybzacg.blogbackend.module.auth.service.impl.RbacAssociationFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,6 +46,8 @@ class SysRoleAdminServiceImplTest {
     private SysMenuRepository sysMenuRepository;
     @Mock
     private RbacAdminModelMapper rbacAdminModelMapper;
+    @Mock
+    private RbacAssociationFactory rbacAssociationFactory;
 
     private SysRoleAdminServiceImpl sysRoleAdminService;
 
@@ -55,7 +58,8 @@ class SysRoleAdminServiceImplTest {
                 sysRoleMenuRepository,
                 sysUserRoleRepository,
                 sysMenuRepository,
-                rbacAdminModelMapper
+                rbacAdminModelMapper,
+                rbacAssociationFactory
         );
     }
 

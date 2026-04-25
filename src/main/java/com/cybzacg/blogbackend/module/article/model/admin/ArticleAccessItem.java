@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Schema(description = "文章访问授权项")
@@ -16,7 +16,7 @@ public class ArticleAccessItem {
 
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Schema(description = "过期时间")
-    private Date expireTime;
+    private LocalDateTime expireTime;
 
     @Schema(description = "授权原因")
     private String grantReason;

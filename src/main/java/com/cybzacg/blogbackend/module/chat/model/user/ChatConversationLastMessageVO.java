@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.chat.model.user;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
@@ -26,5 +26,5 @@ public class ChatConversationLastMessageVO {
     private String content;
 
     @Schema(description = "发送时间")
-    private Date createdAt;
+    private LocalDateTime createdAt;
 }

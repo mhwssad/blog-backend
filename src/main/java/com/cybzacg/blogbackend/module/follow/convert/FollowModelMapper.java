@@ -10,17 +10,18 @@ import com.cybzacg.blogbackend.module.follow.model.user.UserFollowRemarkUpdateRe
 import com.cybzacg.blogbackend.module.follow.model.user.UserFollowSpecialUpdateRequest;
 import com.cybzacg.blogbackend.module.follow.model.user.UserFollowUserVO;
 import com.cybzacg.blogbackend.utils.StrUtils;
-import java.util.Date;
+import java.time.LocalDateTime;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.ReportingPolicy;
 
 /**
  * 关注关系模型转换器。
  *
  * <p>负责收口关注实体构建、更新请求映射和分页列表视图转换。
  */
-@Mapper(componentModel = "spring", imports = StrUtils.class)
+@Mapper(componentModel = "spring", imports = StrUtils.class, unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface FollowModelMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "followerId", source = "userId")
@@ -33,7 +34,7 @@ public interface FollowModelMapper {
     @Mapping(target = "remark", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    SysUserFollow toNewFollow(Long userId, Long targetUserId, Date followTime);
+    SysUserFollow toNewFollow(Long userId, Long targetUserId, LocalDateTime followTime);
 
     @Mapping(target = "isSpecialFollow", source = "specialFollow")
     void updateSpecialFollow(UserFollowSpecialUpdateRequest request, @MappingTarget SysUserFollow relation);

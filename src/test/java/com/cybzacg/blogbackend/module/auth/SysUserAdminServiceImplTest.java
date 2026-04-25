@@ -14,6 +14,7 @@ import com.cybzacg.blogbackend.module.auth.repository.SysRoleRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRoleRepository;
 import com.cybzacg.blogbackend.module.auth.service.impl.SysUserAdminServiceImpl;
+import com.cybzacg.blogbackend.module.auth.service.impl.RbacAssociationFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,6 +49,8 @@ class SysUserAdminServiceImplTest {
     private PasswordEncoder passwordEncoder;
     @Mock
     private RbacAdminModelMapper rbacAdminModelMapper;
+    @Mock
+    private RbacAssociationFactory rbacAssociationFactory;
 
     private SysUserAdminServiceImpl sysUserAdminService;
 
@@ -58,7 +61,8 @@ class SysUserAdminServiceImplTest {
                 sysRoleRepository,
                 sysUserRoleRepository,
                 passwordEncoder,
-                rbacAdminModelMapper
+                rbacAdminModelMapper,
+                rbacAssociationFactory
         );
     }
 

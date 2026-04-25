@@ -11,6 +11,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -93,7 +94,7 @@ class ArticleAccessControlServiceTest {
         expired.setArticleId(1L);
         expired.setUserId(9L);
         expired.setAccessType(1);
-        expired.setExpireTime(java.util.Date.from(Instant.now().minusSeconds(60)));
+        expired.setExpireTime(Instant.now().minusSeconds(60).atZone(java.time.ZoneId.systemDefault()).toLocalDateTime());
 
         BlogArticleAccess blacklist = new BlogArticleAccess();
         blacklist.setArticleId(1L);

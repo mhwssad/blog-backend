@@ -30,7 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.lang.reflect.Method;
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -122,7 +122,7 @@ public class SysLogAspect {
         sysLog.setMethod(targetClass.getName() + "#" + method.getName());
         sysLog.setExecutionTime(executionTime);
         sysLog.setCreateBy(SecurityUtils.getUserId());
-        sysLog.setCreateTime(new Date());
+        sysLog.setCreateTime(LocalDateTime.now());
 
         String ip = IPUtils.getIpAddr(request);
         sysLog.setIp(ip);

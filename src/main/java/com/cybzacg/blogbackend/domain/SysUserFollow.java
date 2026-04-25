@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
@@ -26,13 +26,13 @@ public class SysUserFollow {
     /** 关注来源（search-搜索，recommend-推荐） */
     private String source;
     /** 关注时间 */
-    private Date followTime;
+    private LocalDateTime followTime;
     /** 取关时间 */
-    private Date unfollowTime;
+    private LocalDateTime unfollowTime;
     /** 关注备注 */
     private String remark;
     /** 创建时间 */
-    private Date createdAt;
+    private LocalDateTime createdAt;
     /** 更新时间 */
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 }

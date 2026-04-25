@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.domain;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /** 文章表。 */
@@ -29,7 +29,7 @@ public class BlogArticle {
     /** 状态：0-草稿，1-已发布，2-已下架 */
     private Integer status;
     /** 发布时间 */
-    private Date publishTime;
+    private LocalDateTime publishTime;
     /** 访问级别：0-公开，1-登录可见，2-密码访问，3-指定用户 */
     private Integer accessLevel;
     /** 浏览数 */
@@ -43,9 +43,9 @@ public class BlogArticle {
     /** 分享数 */
     private Integer shareCount;
     /** 创建时间 */
-    private Date createdAt;
+    private LocalDateTime createdAt;
     /** 更新时间 */
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
     /** 备注 */
     private String remark;
 }

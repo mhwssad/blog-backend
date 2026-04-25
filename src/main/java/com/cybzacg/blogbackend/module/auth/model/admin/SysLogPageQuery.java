@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Schema(description = "日志分页查询条件")
@@ -32,9 +32,9 @@ public class SysLogPageQuery {
 
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Schema(description = "创建开始时间", example = "2026-03-18 00:00:00")
-    private Date createTimeStart;
+    private LocalDateTime createTimeStart;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Schema(description = "创建结束时间", example = "2026-03-18 23:59:59")
-    private Date createTimeEnd;
+    private LocalDateTime createTimeEnd;
 }

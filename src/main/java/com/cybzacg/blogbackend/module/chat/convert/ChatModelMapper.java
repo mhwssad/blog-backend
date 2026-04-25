@@ -6,6 +6,9 @@ import com.cybzacg.blogbackend.domain.ChatMessage;
 import com.cybzacg.blogbackend.domain.ChatMessageReadCursor;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminConversationVO;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageVO;
+import com.cybzacg.blogbackend.module.chat.model.common.ChatFilePayloadVO;
+import com.cybzacg.blogbackend.module.chat.model.common.ChatMessagePayloadVO;
+import com.cybzacg.blogbackend.module.chat.model.common.ChatReplyMessageVO;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatAdminConversationListItem;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatAdminMessageItem;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatConversationListItem;
@@ -18,14 +21,15 @@ import com.cybzacg.blogbackend.module.chat.model.user.ChatMessageVO;
 import com.cybzacg.blogbackend.module.chat.model.user.ChatReadStateVO;
 import com.cybzacg.blogbackend.module.chat.model.user.ChatSendTextRequest;
 import com.cybzacg.blogbackend.utils.StrUtils;
-import java.util.Date;
+import java.time.LocalDateTime;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 
 /**
  * 聊天模块对象转换。
  */
-@Mapper(componentModel = "spring", imports = StrUtils.class)
+@Mapper(componentModel = "spring", imports = StrUtils.class, unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ChatModelMapper {
     @Mapping(target = "id", source = "id")
     @Mapping(target = "allSite", expression = "java(item.getIsAllSite() != null && item.getIsAllSite() == 1)")
@@ -43,9 +47,13 @@ public interface ChatModelMapper {
     ChatAdminConversationVO toAdminConversationVO(ChatAdminConversationListItem item);
 
     @Mapping(target = "senderNickname", ignore = true)
+    @Mapping(target = "messageType", ignore = true)
+    @Mapping(target = "content", ignore = true)
     ChatConversationLastMessageVO toConversationLastMessageVO(ChatConversationListItem item);
 
     @Mapping(target = "senderNickname", ignore = true)
+    @Mapping(target = "messageType", ignore = true)
+    @Mapping(target = "content", ignore = true)
     ChatConversationLastMessageVO toConversationLastMessageVO(ChatAdminConversationListItem item);
 
     @Mapping(target = "id", ignore = true)
@@ -83,6 +91,9 @@ public interface ChatModelMapper {
     ChatMessage toTextMessage(ChatSendTextRequest request);
 
     @Mapping(target = "role", source = "memberRole")
+    @Mapping(target = "username", ignore = true)
+    @Mapping(target = "nickname", ignore = true)
+    @Mapping(target = "avatar", ignore = true)
     ChatMemberVO toMemberVO(ChatConversationMember member);
 
     @Mapping(target = "senderUsername", ignore = true)
@@ -111,18 +122,31 @@ public interface ChatModelMapper {
                                                         String memberRole,
                                                         String joinSource,
                                                         Long lastMessageId,
-                                                        Date lastMessageTime) {
+                                                        LocalDateTime lastMessageTime) {
         ChatConversationMember member = new ChatConversationMember();
         member.setConversationId(conversationId);
         member.setUserId(userId);
         member.setMemberRole(memberRole);
         member.setJoinSource(joinSource);
         member.setStatus(1);
-        member.setJoinedAt(new Date());
+        member.setJoinedAt(LocalDateTime.now());
         member.setLastReadMessageId(lastMessageId);
         member.setLastReadAt(lastMessageTime);
         member.setLastDeliveredMessageId(lastMessageId);
         member.setLastDeliveredAt(lastMessageTime);
         return member;
+    }
+
+    default ChatMessagePayloadVO toMessagePayloadVO(ChatFilePayloadVO filePayload) {
+        ChatMessagePayloadVO payload = new ChatMessagePayloadVO();
+        payload.setFile(filePayload);
+        return payload;
+    }
+
+    default ChatMessagePayloadVO toMessagePayloadVO(ChatFilePayloadVO filePayload, ChatReplyMessageVO replySnapshot) {
+        ChatMessagePayloadVO payload = new ChatMessagePayloadVO();
+        payload.setFile(filePayload);
+        payload.setReply(replySnapshot);
+        return payload;
     }
 }

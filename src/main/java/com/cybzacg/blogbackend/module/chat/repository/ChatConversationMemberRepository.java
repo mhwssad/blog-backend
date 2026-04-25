@@ -3,6 +3,7 @@ package com.cybzacg.blogbackend.module.chat.repository;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.cybzacg.blogbackend.domain.ChatConversationMember;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -42,5 +43,5 @@ public interface ChatConversationMemberRepository extends IService<ChatConversat
      * @param deliveredAt 投递时间
      * @return 是否更新成功
      */
-    boolean advanceDeliveredState(Long id, Long messageId, java.util.Date deliveredAt);
+    boolean advanceDeliveredState(Long id, Long messageId, LocalDateTime deliveredAt);
 }

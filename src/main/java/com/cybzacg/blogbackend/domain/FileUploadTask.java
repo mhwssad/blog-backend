@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * 文件上传任务表。
@@ -61,19 +61,19 @@ public class FileUploadTask {
     /** 重试次数 */
     private Integer retryCount;
     /** 开始上传时间 */
-    private Date startTime;
+    private LocalDateTime startTime;
     /** 完成时间 */
-    private Date completeTime;
+    private LocalDateTime completeTime;
     /** 秒传完成时间 */
-    private Date quickUploadTime;
+    private LocalDateTime quickUploadTime;
     /** 任务过期时间 */
-    private Date expireTime;
+    private LocalDateTime expireTime;
     /** 错误码 */
     private String errorCode;
     /** 错误信息 */
     private String errorMessage;
     /** 创建时间 */
-    private Date createdAt;
+    private LocalDateTime createdAt;
     /** 更新时间 */
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 }

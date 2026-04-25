@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.chat.model.data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
@@ -18,15 +18,15 @@ public class ChatConversationListItem {
     private Integer status;
     private String selfRole;
     private Long lastReadMessageId;
-    private Date lastReadAt;
+    private LocalDateTime lastReadAt;
     private Long lastDeliveredMessageId;
-    private Date lastDeliveredAt;
+    private LocalDateTime lastDeliveredAt;
     private Integer unreadCount;
     private Long lastMessageId;
     private String lastMessageType;
     private String lastMessageContent;
     private Long lastMessageSenderId;
-    private Date lastMessageTime;
-    private Date createdAt;
-    private Date updatedAt;
+    private LocalDateTime lastMessageTime;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

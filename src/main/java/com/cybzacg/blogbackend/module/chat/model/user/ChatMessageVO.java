@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.chat.model.user;
 import com.cybzacg.blogbackend.module.chat.model.common.ChatFilePayloadVO;
 import com.cybzacg.blogbackend.module.chat.model.common.ChatReplyMessageVO;
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
@@ -58,7 +58,7 @@ public class ChatMessageVO {
     private Boolean readByCurrentUser;
 
     @Schema(description = "当前用户读到该消息的时间")
-    private Date readAt;
+    private LocalDateTime readAt;
 
     @Schema(description = "是否已撤回")
     private Boolean revoked;
@@ -67,8 +67,8 @@ public class ChatMessageVO {
     private Boolean edited;
 
     @Schema(description = "更新时间")
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 
     @Schema(description = "发送时间")
-    private Date createdAt;
+    private LocalDateTime createdAt;
 }

@@ -1,7 +1,6 @@
 package com.cybzacg.blogbackend.utils;
 
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserDetails;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserPrincipal;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -29,9 +28,7 @@ public final class SecurityUtils {
 
     public static Authentication requireAuthentication() {
         Authentication authentication = getAuthentication();
-        if (!isAuthenticated(authentication)) {
-            throw new BusinessException(ResultErrorCode.LOGIN_REQUIRED);
-        }
+        ExceptionThrowerCore.throwBusinessIf(!isAuthenticated(authentication), ResultErrorCode.LOGIN_REQUIRED);
         return authentication;
     }
 
@@ -56,10 +53,7 @@ public final class SecurityUtils {
 
     public static Long requireUserId() {
         Long userId = getUserId();
-        if (userId == null) {
-            throw new BusinessException(ResultErrorCode.LOGIN_REQUIRED);
-        }
-        return userId;
+        return ExceptionThrowerCore.requireNonNull(userId, ResultErrorCode.LOGIN_REQUIRED);
     }
 
     public static Long getUserId(Authentication authentication) {

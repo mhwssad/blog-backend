@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.chat.model.user;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
@@ -56,20 +56,20 @@ public class ChatConversationVO {
     private Long lastReadMessageId;
 
     @Schema(description = "最后已读时间")
-    private Date lastReadAt;
+    private LocalDateTime lastReadAt;
 
     @Schema(description = "最后已送达消息ID")
     private Long lastDeliveredMessageId;
 
     @Schema(description = "最后已送达时间")
-    private Date lastDeliveredAt;
+    private LocalDateTime lastDeliveredAt;
 
     @Schema(description = "最后一条消息")
     private ChatConversationLastMessageVO lastMessage;
 
     @Schema(description = "创建时间")
-    private Date createdAt;
+    private LocalDateTime createdAt;
 
     @Schema(description = "更新时间")
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 }

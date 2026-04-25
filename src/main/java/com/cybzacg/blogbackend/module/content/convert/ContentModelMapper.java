@@ -31,13 +31,14 @@ import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.ReportingPolicy;
 
 import java.util.ArrayList;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /** 内容模块对象转换器，涵盖分类、标签、评论、收藏、互动及足迹的映射。 */
-@Mapper(componentModel = "spring", imports = StrUtils.class)
+@Mapper(componentModel = "spring", imports = StrUtils.class, unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ContentModelMapper {
     CategoryAdminVO toCategoryAdminVO(SysCategory category);
 
@@ -170,7 +171,7 @@ public interface ContentModelMapper {
     @Mapping(target = "ipAddress", source = "ipAddress")
     @Mapping(target = "userAgent", source = "userAgent")
     @Mapping(target = "visitedAt", source = "visitedAt")
-    SysUserFootprint toArticleFootprint(Long userId, BlogArticle article, String ipAddress, String userAgent, Date visitedAt);
+    SysUserFootprint toArticleFootprint(Long userId, BlogArticle article, String ipAddress, String userAgent, LocalDateTime visitedAt);
 
     default List<String> toStringList(String json) {
         List<String> images = JsonUtils.fromJsonToList(json, String.class);

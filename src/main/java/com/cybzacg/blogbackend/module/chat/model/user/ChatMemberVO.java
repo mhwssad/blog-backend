@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.chat.model.user;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
@@ -29,8 +29,8 @@ public class ChatMemberVO {
     private Integer status;
 
     @Schema(description = "加入时间")
-    private Date joinedAt;
+    private LocalDateTime joinedAt;
 
     @Schema(description = "禁言截止时间")
-    private Date muteUntil;
+    private LocalDateTime muteUntil;
 }

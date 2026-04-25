@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /** 用户互动记录。 */
 @TableName(value = "sys_interaction")
@@ -28,5 +28,5 @@ public class SysInteraction {
     private String actionType;
 
     /** 创建时间 */
-    private Date createdAt;
+    private LocalDateTime createdAt;
 }

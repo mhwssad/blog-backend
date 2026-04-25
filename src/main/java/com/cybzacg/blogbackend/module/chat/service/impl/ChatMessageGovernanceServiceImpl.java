@@ -8,6 +8,7 @@ import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.service.SysConfigService;
 import com.cybzacg.blogbackend.module.chat.service.ChatMessageGovernanceService;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Instant;
@@ -81,7 +82,7 @@ public class ChatMessageGovernanceServiceImpl implements ChatMessageGovernanceSe
             }
             if (requestCount > limit) {
                 meterRegistry.counter("chat.message.governance.reject.total", "reason", "rate_limit").increment();
-                throw new BusinessException(ResultErrorCode.REQUEST_RATE_LIMITED.getCode(), "聊天发送过于频繁，请稍后再试");
+                ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.REQUEST_RATE_LIMITED, "聊天发送过于频繁，请稍后再试");
             }
         } catch (BusinessException ex) {
             throw ex;
@@ -102,7 +103,7 @@ public class ChatMessageGovernanceServiceImpl implements ChatMessageGovernanceSe
         for (String sensitiveWord : resolveSensitiveWords()) {
             if (lowerContent.contains(sensitiveWord.toLowerCase(Locale.ROOT))) {
                 meterRegistry.counter("chat.message.governance.reject.total", "reason", "sensitive_word").increment();
-                throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "消息内容包含敏感词，请调整后再发送");
+                ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.ILLEGAL_ARGUMENT, "消息内容包含敏感词，请调整后再发送");
             }
         }
     }

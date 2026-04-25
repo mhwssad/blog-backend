@@ -10,7 +10,7 @@ import com.cybzacg.blogbackend.module.file.model.user.UserFileTaskPageQuery;
 import com.cybzacg.blogbackend.module.file.repository.FileUploadTaskRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -54,7 +54,7 @@ public class FileUploadTaskRepositoryImpl extends ServiceImpl<FileUploadTaskMapp
 
     /** {@inheritDoc} */
     @Override
-    public List<FileUploadTask> findExpiredTasks(Date expireTime, List<Integer> statuses, int limit) {
+    public List<FileUploadTask> findExpiredTasks(LocalDateTime expireTime, List<Integer> statuses, int limit) {
         return list(new LambdaQueryWrapper<FileUploadTask>()
                 .le(FileUploadTask::getExpireTime, expireTime)
                 .in(FileUploadTask::getTaskStatus, statuses)

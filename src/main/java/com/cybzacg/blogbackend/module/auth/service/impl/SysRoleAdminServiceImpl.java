@@ -3,7 +3,6 @@ package com.cybzacg.blogbackend.module.auth.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.SysRole;
-import com.cybzacg.blogbackend.domain.SysRoleMenu;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.auth.convert.RbacAdminModelMapper;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysRoleAdminVO;
@@ -36,6 +35,7 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
     private final SysUserRoleRepository sysUserRoleRepository;
     private final SysMenuRepository sysMenuRepository;
     private final RbacAdminModelMapper rbacAdminModelMapper;
+    private final RbacAssociationFactory rbacAssociationFactory;
 
     /** 分页查询角色列表，附带每个角色已分配的菜单 ID。 */
     @Override
@@ -119,12 +119,7 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
             return;
         }
         sysRoleMenuRepository.saveBatch(distinctMenuIds.stream()
-                .map(menuId -> {
-                    SysRoleMenu roleMenu = new SysRoleMenu();
-                    roleMenu.setRoleId(roleId);
-                    roleMenu.setMenuId(menuId);
-                    return roleMenu;
-                })
+                .map(menuId -> rbacAssociationFactory.createRoleMenu(roleId, menuId))
                 .toList());
     }
 

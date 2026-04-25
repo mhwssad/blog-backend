@@ -39,6 +39,7 @@ import com.cybzacg.blogbackend.module.chat.model.user.ChatTransferGroupOwnerRequ
 import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsConversationUpdatedPayload;
 import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsMembersUpdatedPayload;
 import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsMessageDeletedPayload;
+import com.cybzacg.blogbackend.module.chat.convert.ChatModelMapper;
 import com.cybzacg.blogbackend.module.chat.repository.ChatConversationMemberRepository;
 import com.cybzacg.blogbackend.module.chat.repository.ChatConversationRepository;
 import com.cybzacg.blogbackend.module.chat.repository.ChatMessageReadCursorRepository;
@@ -61,7 +62,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -207,7 +208,7 @@ public class UserChatServiceImpl implements UserChatService {
                 return existingMessage;
             }
 
-            Date now = message.getCreatedAt() != null ? message.getCreatedAt() : new Date();
+            LocalDateTime now = message.getCreatedAt() != null ? message.getCreatedAt() : LocalDateTime.now();
             conversation.setLastMessageId(message.getId());
             conversation.setLastMessageTime(now);
             chatConversationRepository.updateById(conversation);
@@ -270,7 +271,7 @@ public class UserChatServiceImpl implements UserChatService {
             message.setPayloadJson(buildMessagePayloadJson(filePayload, buildReplySnapshot(replyMessage)));
             chatMessageRepository.updateById(message);
 
-            Date now = message.getCreatedAt() != null ? message.getCreatedAt() : new Date();
+            LocalDateTime now = message.getCreatedAt() != null ? message.getCreatedAt() : LocalDateTime.now();
             conversation.setLastMessageId(message.getId());
             conversation.setLastMessageTime(now);
             chatConversationRepository.updateById(conversation);
@@ -372,7 +373,7 @@ public class UserChatServiceImpl implements UserChatService {
             return state;
         }
 
-        Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
         chatMessageRecipientRepository.markReadUpTo(conversationId, userId, message.getId(), now);
 
         long unread = countUnread(conversationId, userId);
@@ -528,8 +529,8 @@ public class UserChatServiceImpl implements UserChatService {
         ExceptionThrowerCore.throwBusinessIf(Objects.equals(userId, memberUserId), ResultErrorCode.ILLEGAL_ARGUMENT, "不能对自己执行禁言操作");
         ChatConversationMember targetMember = requireActiveGroupMember(conversationId, memberUserId);
         validateManagerCanOperateMember(context.selfMember(), targetMember);
-        Date muteUntil = request == null ? null : request.getMuteUntil();
-        targetMember.setMuteUntil(muteUntil != null && muteUntil.after(new Date()) ? muteUntil : null);
+        LocalDateTime muteUntil = request == null ? null : request.getMuteUntil();
+        targetMember.setMuteUntil(muteUntil != null && muteUntil.isAfter(LocalDateTime.now()) ? muteUntil : null);
         chatConversationMemberRepository.updateById(targetMember);
         List<ChatConversationMember> members = listActiveMembers(conversationId);
         List<ChatMemberVO> records = buildMemberRecords(members);
@@ -694,8 +695,8 @@ public class UserChatServiceImpl implements UserChatService {
      * 统一拦截成员自身被禁言时的发言请求，避免继续写入消息和推进状态。
      */
     private void validateMemberCanSend(ChatConversationMember selfMember) {
-        Date muteUntil = selfMember == null ? null : selfMember.getMuteUntil();
-        ExceptionThrowerCore.throwBusinessIf(muteUntil != null && muteUntil.after(new Date()),
+        LocalDateTime muteUntil = selfMember == null ? null : selfMember.getMuteUntil();
+        ExceptionThrowerCore.throwBusinessIf(muteUntil != null && muteUntil.isAfter(LocalDateTime.now()),
                 ResultErrorCode.FORBIDDEN,
                 "当前用户已被禁言，暂时不能发送消息");
     }
@@ -761,7 +762,7 @@ public class UserChatServiceImpl implements UserChatService {
                                               boolean resetCursorToLatest) {
         ChatConversationMember member = findMember(conversation.getId(), memberUserId);
         Long referenceMessageId = resetCursorToLatest ? conversation.getLastMessageId() : null;
-        Date referenceMessageTime = resetCursorToLatest ? conversation.getLastMessageTime() : null;
+        LocalDateTime referenceMessageTime = resetCursorToLatest ? conversation.getLastMessageTime() : null;
         boolean wasInactive = member == null || !Objects.equals(member.getStatus(), ChatConstants.MEMBER_STATUS_NORMAL);
         if (member == null) {
             member = chatModelMapper.toConversationMember(conversation.getId(), memberUserId, memberRole, joinSource, referenceMessageId, referenceMessageTime);
@@ -772,7 +773,7 @@ public class UserChatServiceImpl implements UserChatService {
             member.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
             member.setMuteUntil(null);
             if (wasInactive || member.getJoinedAt() == null) {
-                member.setJoinedAt(new Date());
+                member.setJoinedAt(LocalDateTime.now());
             }
             if (resetCursorToLatest) {
                 member.setLastReadMessageId(referenceMessageId);
@@ -793,7 +794,7 @@ public class UserChatServiceImpl implements UserChatService {
         }
     }
 
-    private void persistRecipients(ChatMessage message, List<Long> userIds, Long senderId, Date now) {
+    private void persistRecipients(ChatMessage message, List<Long> userIds, Long senderId, LocalDateTime now) {
         List<ChatMessageRecipient> recipients = new ArrayList<>();
         for (Long recipientUserId : userIds) {
             ChatMessageRecipient recipient = new ChatMessageRecipient();
@@ -814,7 +815,7 @@ public class UserChatServiceImpl implements UserChatService {
         chatMessageRecipientRepository.saveBatch(recipients);
     }
 
-    private void updateSenderCursorAfterSend(ChatConversation conversation, Long senderId, Long messageId, Date now) {
+    private void updateSenderCursorAfterSend(ChatConversation conversation, Long senderId, Long messageId, LocalDateTime now) {
         ChatMessageReadCursor cursor = getOrCreateCursor(conversation.getId(), senderId, messageId, now);
         cursor.setReadMessageId(messageId);
         cursor.setReadAt(now);
@@ -847,7 +848,7 @@ public class UserChatServiceImpl implements UserChatService {
                                                   List<Long> userIds,
                                                   Long senderId,
                                                   Long messageId,
-                                                  Date now) {
+                                                  LocalDateTime now) {
         for (Long recipientUserId : userIds) {
             if (Objects.equals(recipientUserId, senderId) || chatWebSocketSessionRegistry.getSessions(recipientUserId).isEmpty()) {
                 continue;
@@ -868,7 +869,7 @@ public class UserChatServiceImpl implements UserChatService {
         if (messageIds.isEmpty()) {
             return;
         }
-        Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
         chatMessageRecipientRepository.batchMarkDelivered(conversationId, userId, messageIds, now);
         Long maxMessageId = Collections.max(messageIds);
         advanceCursorDeliveredState(conversationId, userId, maxMessageId, now);
@@ -1000,7 +1001,7 @@ public class UserChatServiceImpl implements UserChatService {
      * 撤回时同步清空文件载荷，并释放聊天消息对文件模块的业务引用。
      */
     private void revokeMessage(ChatMessage message, Long operatorUserId) {
-        Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
         message.setRevokeStatus(ChatConstants.REVOKE_STATUS_REVOKED);
         message.setRevokedBy(operatorUserId);
         message.setRevokedAt(now);
@@ -1144,7 +1145,7 @@ public class UserChatServiceImpl implements UserChatService {
         List<ChatMemberVO> records = new ArrayList<>();
         members.stream()
                 .sorted(Comparator.comparingInt(this::memberRoleOrder)
-                        .thenComparing(ChatConversationMember::getJoinedAt, Comparator.nullsLast(Date::compareTo))
+                        .thenComparing(ChatConversationMember::getJoinedAt, Comparator.nullsLast(LocalDateTime::compareTo))
                         .thenComparing(ChatConversationMember::getUserId))
                 .forEach(member -> {
                     ChatMemberVO vo = chatModelMapper.toMemberVO(member);
@@ -1243,7 +1244,7 @@ public class UserChatServiceImpl implements UserChatService {
         ExceptionThrowerCore.throwBusinessIfNull(userId, ResultErrorCode.USER_NOT_FOUND, "用户不存在");
         Long currentUserId = SecurityUtils.getUserId();
         if (!allowSelf && Objects.equals(currentUserId, userId)) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "不能操作自己");
+            ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.ILLEGAL_ARGUMENT, "不能操作自己");
         }
         SysUser user = sysUserRepository.getById(userId);
         ExceptionThrowerCore.throwBusinessIf(user == null || !Objects.equals(user.getDeletedFlag(), 0), ResultErrorCode.USER_NOT_FOUND, "用户不存在");
@@ -1278,7 +1279,7 @@ public class UserChatServiceImpl implements UserChatService {
         return chatConversationMemberRepository.findByConversationAndUser(conversationId, userId);
     }
 
-    private ChatMessageReadCursor getOrCreateCursor(Long conversationId, Long userId, Long referenceMessageId, Date referenceTime) {
+    private ChatMessageReadCursor getOrCreateCursor(Long conversationId, Long userId, Long referenceMessageId, LocalDateTime referenceTime) {
         ChatMessageReadCursor cursor = findCursor(conversationId, userId);
         if (cursor != null) {
             if (cursor.getUnreadCount() == null) {
@@ -1324,7 +1325,7 @@ public class UserChatServiceImpl implements UserChatService {
     /**
      * delivered 高水位只能前进不能回退，避免并发推送时旧事务覆盖新事务的游标。
      */
-    private void advanceCursorDeliveredState(Long conversationId, Long userId, Long messageId, Date deliveredAt) {
+    private void advanceCursorDeliveredState(Long conversationId, Long userId, Long messageId, LocalDateTime deliveredAt) {
         if (messageId == null) {
             return;
         }
@@ -1339,7 +1340,7 @@ public class UserChatServiceImpl implements UserChatService {
         }
     }
 
-    private void advanceMemberDeliveredState(ChatConversationMember member, Long messageId, Date deliveredAt) {
+    private void advanceMemberDeliveredState(ChatConversationMember member, Long messageId, LocalDateTime deliveredAt) {
         if (member == null || member.getId() == null || messageId == null) {
             return;
         }
@@ -1353,7 +1354,7 @@ public class UserChatServiceImpl implements UserChatService {
         }
     }
 
-    private void updateMemberReadState(ChatConversationMember member, Long messageId, Date readAt) {
+    private void updateMemberReadState(ChatConversationMember member, Long messageId, LocalDateTime readAt) {
         member.setLastReadMessageId(messageId);
         member.setLastReadAt(readAt);
         if (member.getLastDeliveredMessageId() == null || member.getLastDeliveredMessageId() < messageId) {
@@ -1463,17 +1464,15 @@ public class UserChatServiceImpl implements UserChatService {
         if (filePayload == null && replySnapshot == null) {
             return null;
         }
-        ChatMessagePayloadVO payload = new ChatMessagePayloadVO();
-        payload.setFile(filePayload);
-        payload.setReply(replySnapshot);
+        ChatMessagePayloadVO payload = chatModelMapper.toMessagePayloadVO(filePayload, replySnapshot);
         return JsonUtils.toJson(payload);
     }
 
-    private boolean isEdited(String messageType, Date createdAt, Date updatedAt) {
+    private boolean isEdited(String messageType, LocalDateTime createdAt, LocalDateTime updatedAt) {
         return Objects.equals(messageType, ChatConstants.MESSAGE_TYPE_TEXT)
                 && createdAt != null
                 && updatedAt != null
-                && updatedAt.after(createdAt);
+                && updatedAt.isAfter(createdAt);
     }
 
     private boolean isAttachmentMessageType(String messageType) {

@@ -4,10 +4,11 @@ import com.cybzacg.blogbackend.common.constant.AuthConstants;
 import com.cybzacg.blogbackend.common.redis.RedisKeyUtils;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
 import com.cybzacg.blogbackend.config.property.SecurityProperties;
-import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.auth.model.AuthenticationToken;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserDetails;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserPrincipal;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.ReflectionUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.AllArgsConstructor;
@@ -105,9 +106,8 @@ public class RedisTokenManager implements TokenManager {
     public AuthenticationToken refreshToken(String token) {
         String normalizedRefreshToken = normalizeToken(token);
         RefreshTokenState refreshTokenState = findRefreshTokenState(normalizedRefreshToken);
-        if (refreshTokenState == null) {
-            throw new BusinessException("Refresh Token无效或已过期");
-        }
+        ExceptionThrowerCore.throwBusinessIfNull(refreshTokenState, ResultErrorCode.INVALID_TOKEN,
+                "Refresh Token无效或已过期");
 
         invalidateAccessToken(refreshTokenState.getAccessToken());
         Authentication authentication = buildAuthentication(refreshTokenState);
@@ -161,9 +161,8 @@ public class RedisTokenManager implements TokenManager {
 
     private AccessTokenState getAccessTokenState(String token) {
         AccessTokenState tokenState = findAccessTokenState(token);
-        if (tokenState == null) {
-            throw new BusinessException("Token无效或已过期");
-        }
+        ExceptionThrowerCore.throwBusinessIfNull(tokenState, ResultErrorCode.INVALID_TOKEN,
+                "Token无效或已过期");
         return tokenState;
     }
 
@@ -314,9 +313,7 @@ public class RedisTokenManager implements TokenManager {
     }
 
     private String normalizeToken(String token) {
-        if (!StringUtils.hasText(token)) {
-            throw new BusinessException("Token不能为空");
-        }
+        ExceptionThrowerCore.throwBusinessIfBlank(token, ResultErrorCode.INVALID_TOKEN, "Token不能为空");
 
         String value = StrUtils.trim(token);
         if (value.regionMatches(true, 0, AuthConstants.BEARER + " ", 0, AuthConstants.BEARER.length() + 1)) {

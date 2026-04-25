@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.chat.model.admin;
 import com.cybzacg.blogbackend.module.chat.model.common.ChatFilePayloadVO;
 import com.cybzacg.blogbackend.module.chat.model.common.ChatReplyMessageVO;
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
@@ -58,7 +58,7 @@ public class ChatAdminMessageVO {
     private Long revokedBy;
 
     @Schema(description = "撤回时间")
-    private Date revokedAt;
+    private LocalDateTime revokedAt;
 
     @Schema(description = "接收成员总数")
     private Long totalRecipientCount;
@@ -73,8 +73,8 @@ public class ChatAdminMessageVO {
     private Boolean edited;
 
     @Schema(description = "更新时间")
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 
     @Schema(description = "发送时间")
-    private Date createdAt;
+    private LocalDateTime createdAt;
 }

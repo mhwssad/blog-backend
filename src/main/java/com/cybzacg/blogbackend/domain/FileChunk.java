@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * 文件分片表。
@@ -29,9 +29,9 @@ public class FileChunk {
     /** 重试次数 */
     private Integer retryCount;
     /** 上传完成时间 */
-    private Date uploadTime;
+    private LocalDateTime uploadTime;
     /** 创建时间 */
-    private Date createdAt;
+    private LocalDateTime createdAt;
     /** 更新时间 */
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 }

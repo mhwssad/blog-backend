@@ -10,6 +10,7 @@ import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsMessageType;
 import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsRequest;
 import com.cybzacg.blogbackend.module.chat.service.ChatWebSocketSessionRegistry;
 import com.cybzacg.blogbackend.module.chat.service.UserChatService;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.JsonUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -137,6 +138,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         if (value instanceof Number number) {
             return number.longValue();
         }
-        throw new BusinessException(ResultErrorCode.LOGIN_REQUIRED.getCode(), ResultErrorCode.LOGIN_REQUIRED.getMessage());
+        ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.LOGIN_REQUIRED);
+        return 0L;
     }
 }

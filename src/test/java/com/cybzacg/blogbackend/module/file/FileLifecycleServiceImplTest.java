@@ -18,7 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -70,7 +70,7 @@ class FileLifecycleServiceImplTest {
     @Test
     void cleanupExpiredUploadTasksShouldCancelTaskAndCleanupArtifacts() {
         FileUploadTask task = buildExpiredChunkTask();
-        when(fileUploadTaskRepository.findExpiredTasks(any(Date.class), any(), any(Integer.class))).thenReturn(List.of(task), List.of());
+        when(fileUploadTaskRepository.findExpiredTasks(any(LocalDateTime.class), any(), any(Integer.class))).thenReturn(List.of(task), List.of());
         when(fileUploadTaskRepository.updateById(task)).thenReturn(true);
         when(fileChunkRepository.deleteByUploadTaskId(task.getId())).thenReturn(true);
         when(storageManager.getStorageService("local-test")).thenReturn(storageService);
@@ -91,7 +91,7 @@ class FileLifecycleServiceImplTest {
     @Test
     void cleanupExpiredUploadTasksShouldIgnoreStorageCleanupFailure() {
         FileUploadTask task = buildExpiredChunkTask();
-        when(fileUploadTaskRepository.findExpiredTasks(any(Date.class), any(), any(Integer.class))).thenReturn(List.of(task), List.of());
+        when(fileUploadTaskRepository.findExpiredTasks(any(LocalDateTime.class), any(), any(Integer.class))).thenReturn(List.of(task), List.of());
         when(fileUploadTaskRepository.updateById(task)).thenReturn(true);
         when(fileChunkRepository.deleteByUploadTaskId(task.getId())).thenReturn(true);
         when(storageManager.getStorageService("local-test")).thenReturn(storageService);
@@ -112,7 +112,7 @@ class FileLifecycleServiceImplTest {
                 .mapToObj(id -> buildExpiredChunkTask(id))
                 .toList();
         List<FileUploadTask> secondBatch = List.of(buildExpiredChunkTask(101));
-        when(fileUploadTaskRepository.findExpiredTasks(any(Date.class), any(), any(Integer.class))).thenReturn(firstBatch, secondBatch);
+        when(fileUploadTaskRepository.findExpiredTasks(any(LocalDateTime.class), any(), any(Integer.class))).thenReturn(firstBatch, secondBatch);
         when(fileUploadTaskRepository.updateById(any(FileUploadTask.class))).thenReturn(true);
         when(fileChunkRepository.deleteByUploadTaskId(any(Long.class))).thenReturn(true);
         when(storageManager.getStorageService("local-test")).thenReturn(storageService);
@@ -121,7 +121,7 @@ class FileLifecycleServiceImplTest {
         int cleaned = fileLifecycleService.cleanupExpiredUploadTasks();
 
         assertEquals(101, cleaned);
-        verify(fileUploadTaskRepository, org.mockito.Mockito.times(2)).findExpiredTasks(any(Date.class), any(), any(Integer.class));
+        verify(fileUploadTaskRepository, org.mockito.Mockito.times(2)).findExpiredTasks(any(LocalDateTime.class), any(), any(Integer.class));
         verify(fileUploadTaskRepository, org.mockito.Mockito.times(101)).updateById(any(FileUploadTask.class));
         verify(storageService, org.mockito.Mockito.times(101)).deleteTempFiles(any());
     }
@@ -130,7 +130,7 @@ class FileLifecycleServiceImplTest {
     void expireTaskIfNeededShouldReturnFalseForCompletedTask() {
         FileUploadTask task = new FileUploadTask();
         task.setTaskStatus(TaskStatusEnum.COMPLETED.getValue());
-        task.setExpireTime(new Date(System.currentTimeMillis() - 1000L));
+        task.setExpireTime(LocalDateTime.now().minusSeconds(1));
 
         boolean expired = fileLifecycleService.expireTaskIfNeeded(task);
 
@@ -219,7 +219,7 @@ class FileLifecycleServiceImplTest {
         task.setStorageKey("local-test");
         task.setIsChunked(1);
         task.setTaskStatus(TaskStatusEnum.UPLOADING.getValue());
-        task.setExpireTime(new Date(System.currentTimeMillis() - 1000L));
+        task.setExpireTime(LocalDateTime.now().minusSeconds(1));
         return task;
     }
 

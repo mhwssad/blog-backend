@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
@@ -26,13 +26,13 @@ public class ChatAttachmentProcessTask {
     /** 最大重试次数 */
     private Integer maxRetryCount;
     /** 下次重试时间 */
-    private Date nextRetryAt;
+    private LocalDateTime nextRetryAt;
     /** 处理租约过期时间 */
-    private Date leaseExpireAt;
+    private LocalDateTime leaseExpireAt;
     /** 开始处理时间 */
-    private Date startedAt;
+    private LocalDateTime startedAt;
     /** 完成时间 */
-    private Date completedAt;
+    private LocalDateTime completedAt;
     /** 最近一次错误信息 */
     private String lastError;
     /** 消息快照（JSON，用于重试） */
@@ -40,7 +40,7 @@ public class ChatAttachmentProcessTask {
     /** 待推送用户ID列表（JSON，用于重试） */
     private String pushUserIdsJson;
     /** 创建时间 */
-    private Date createdAt;
+    private LocalDateTime createdAt;
     /** 更新时间 */
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 }

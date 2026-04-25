@@ -13,6 +13,8 @@ import com.cybzacg.blogbackend.module.content.model.user.UserFootprintVO;
 import com.cybzacg.blogbackend.module.content.repository.SysUserFootprintRepository;
 import com.cybzacg.blogbackend.module.content.service.UserFootprintService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
+
+import java.time.LocalDateTime;
 import com.cybzacg.blogbackend.utils.RequestContextUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -86,7 +88,7 @@ public class UserFootprintServiceImpl implements UserFootprintService {
                 article,
                 RequestContextUtils.getClientIp(),
                 RequestContextUtils.getUserAgent(),
-                new java.util.Date());
+                LocalDateTime.now());
         sysUserFootprintRepository.upsertFootprint(footprint);
     }
 }

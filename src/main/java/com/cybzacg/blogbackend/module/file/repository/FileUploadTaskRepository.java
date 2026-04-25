@@ -6,7 +6,7 @@ import com.cybzacg.blogbackend.domain.FileUploadTask;
 import com.cybzacg.blogbackend.module.file.model.admin.FileTaskPageQuery;
 import com.cybzacg.blogbackend.module.file.model.user.UserFileTaskPageQuery;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -49,7 +49,7 @@ public interface FileUploadTaskRepository extends IService<FileUploadTask> {
      * @param limit 限制数量
      * @return 过期任务列表
      */
-    List<FileUploadTask> findExpiredTasks(Date expireTime, List<Integer> statuses, int limit);
+    List<FileUploadTask> findExpiredTasks(LocalDateTime expireTime, List<Integer> statuses, int limit);
 
     /**
      * 查询文件最近关联的上传任务。

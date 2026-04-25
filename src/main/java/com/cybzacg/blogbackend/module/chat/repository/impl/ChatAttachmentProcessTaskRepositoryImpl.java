@@ -9,7 +9,7 @@ import com.cybzacg.blogbackend.module.chat.repository.ChatAttachmentProcessTaskR
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Repository;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -32,7 +32,7 @@ public class ChatAttachmentProcessTaskRepositoryImpl
                                                             String messageSnapshotJson,
                                                             String pushUserIdsJson,
                                                             Integer maxRetryCount,
-                                                            Date nextRetryAt) {
+                                                            LocalDateTime nextRetryAt) {
         ChatAttachmentProcessTask existing = lambdaQuery()
                 .eq(ChatAttachmentProcessTask::getMessageId, messageId)
                 .last("limit 1")
@@ -66,7 +66,7 @@ public class ChatAttachmentProcessTaskRepositoryImpl
      * 查询到期可执行的任务，按 nextRetryAt 和 ID 升序排列以保证调度公平性。
      */
     @Override
-    public List<ChatAttachmentProcessTask> listDispatchableTasks(Date executeBefore, int limit) {
+    public List<ChatAttachmentProcessTask> listDispatchableTasks(LocalDateTime executeBefore, int limit) {
         return lambdaQuery()
                 .eq(ChatAttachmentProcessTask::getTaskStatus, ChatConstants.ATTACHMENT_TASK_STATUS_PENDING)
                 .le(ChatAttachmentProcessTask::getNextRetryAt, executeBefore)
@@ -80,7 +80,7 @@ public class ChatAttachmentProcessTaskRepositoryImpl
      * 抢占式认领任务，通过 status + nextRetryAt 条件保证同一任务不会被多个节点重复执行。
      */
     @Override
-    public boolean claimTask(Long taskId, Date executeBefore, Date leaseExpireAt) {
+    public boolean claimTask(Long taskId, LocalDateTime executeBefore, LocalDateTime leaseExpireAt) {
         return lambdaUpdate()
                 .eq(ChatAttachmentProcessTask::getId, taskId)
                 .eq(ChatAttachmentProcessTask::getTaskStatus, ChatConstants.ATTACHMENT_TASK_STATUS_PENDING)
@@ -97,7 +97,7 @@ public class ChatAttachmentProcessTaskRepositoryImpl
      * 将租约过期的 PROCESSING 任务恢复为 PENDING，使其可被重新调度。
      */
     @Override
-    public int resetExpiredTasks(Date now, String lastError) {
+    public int resetExpiredTasks(LocalDateTime now, String lastError) {
         return baseMapper.update(
                 null,
                 Wrappers.<ChatAttachmentProcessTask>lambdaUpdate()
@@ -115,7 +115,7 @@ public class ChatAttachmentProcessTaskRepositoryImpl
      * 标记任务处理成功，清除租约和重试相关字段。
      */
     @Override
-    public boolean markSuccess(Long taskId, Date completedAt) {
+    public boolean markSuccess(Long taskId, LocalDateTime completedAt) {
         return lambdaUpdate()
                 .eq(ChatAttachmentProcessTask::getId, taskId)
                 .eq(ChatAttachmentProcessTask::getTaskStatus, ChatConstants.ATTACHMENT_TASK_STATUS_PROCESSING)
@@ -131,7 +131,7 @@ public class ChatAttachmentProcessTaskRepositoryImpl
      * 标记任务稍后重试，将状态回退为 PENDING 并重置执行上下文字段。
      */
     @Override
-    public boolean markRetry(Long taskId, int retryCount, Date nextRetryAt, String lastError) {
+    public boolean markRetry(Long taskId, int retryCount, LocalDateTime nextRetryAt, String lastError) {
         return lambdaUpdate()
                 .eq(ChatAttachmentProcessTask::getId, taskId)
                 .eq(ChatAttachmentProcessTask::getTaskStatus, ChatConstants.ATTACHMENT_TASK_STATUS_PROCESSING)
@@ -149,7 +149,7 @@ public class ChatAttachmentProcessTaskRepositoryImpl
      * 标记任务最终失败，不再重试，清除调度相关字段。
      */
     @Override
-    public boolean markFailed(Long taskId, int retryCount, Date completedAt, String lastError) {
+    public boolean markFailed(Long taskId, int retryCount, LocalDateTime completedAt, String lastError) {
         return lambdaUpdate()
                 .eq(ChatAttachmentProcessTask::getId, taskId)
                 .eq(ChatAttachmentProcessTask::getTaskStatus, ChatConstants.ATTACHMENT_TASK_STATUS_PROCESSING)
@@ -168,7 +168,7 @@ public class ChatAttachmentProcessTaskRepositoryImpl
                                                        String messageSnapshotJson,
                                                        String pushUserIdsJson,
                                                        Integer maxRetryCount,
-                                                       Date nextRetryAt) {
+                                                       LocalDateTime nextRetryAt) {
         task.setMessageId(messageId);
         task.setMessageType(messageType);
         task.setTaskStatus(ChatConstants.ATTACHMENT_TASK_STATUS_PENDING);

@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.content.model.user;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Schema(description = "用户收藏夹信息")
@@ -27,7 +27,7 @@ public class CollectionFolderVO {
     @Schema(description = "收藏数量")
     private Integer collectionCount;
     @Schema(description = "创建时间")
-    private Date createdAt;
+    private LocalDateTime createdAt;
     @Schema(description = "更新时间")
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 }

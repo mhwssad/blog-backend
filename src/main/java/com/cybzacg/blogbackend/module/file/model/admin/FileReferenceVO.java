@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.file.model.admin;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Schema(description = "文件业务引用详情")
@@ -23,5 +23,5 @@ public class FileReferenceVO {
     @Schema(description = "备注")
     private String remark;
     @Schema(description = "创建时间")
-    private Date createdAt;
+    private LocalDateTime createdAt;
 }

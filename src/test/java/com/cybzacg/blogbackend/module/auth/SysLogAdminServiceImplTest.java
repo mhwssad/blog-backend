@@ -17,7 +17,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Date;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -126,8 +128,8 @@ class SysLogAdminServiceImplTest {
         request.setRequestUri("/auth/login");
         request.setIp("127.0.0.1");
         request.setCreateBy(1L);
-        request.setCreateTimeStart(new Date(1_000L));
-        request.setCreateTimeEnd(new Date(2_000L));
+        request.setCreateTimeStart(LocalDateTime.ofInstant(Instant.ofEpochMilli(1_000L), ZoneOffset.UTC));
+        request.setCreateTimeEnd(LocalDateTime.ofInstant(Instant.ofEpochMilli(2_000L), ZoneOffset.UTC));
         return request;
     }
 

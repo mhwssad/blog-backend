@@ -8,6 +8,7 @@ import com.cybzacg.blogbackend.domain.ChatAttachmentProcessTask;
 import com.cybzacg.blogbackend.domain.ChatMessage;
 import com.cybzacg.blogbackend.domain.FileInfo;
 import com.cybzacg.blogbackend.module.chat.constant.ChatConstants;
+import com.cybzacg.blogbackend.module.chat.convert.ChatModelMapper;
 import com.cybzacg.blogbackend.module.chat.model.common.ChatFilePayloadVO;
 import com.cybzacg.blogbackend.module.chat.model.common.ChatMessagePayloadVO;
 import com.cybzacg.blogbackend.module.chat.model.user.ChatMessageVO;
@@ -29,7 +30,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -68,6 +69,7 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
     private final ChatAttachmentMetadataResolver chatAttachmentMetadataResolver;
     private final ChatPushService chatPushService;
     private final ChatMetricsService chatMetricsService;
+    private final ChatModelMapper chatModelMapper;
 
     public ChatAttachmentAsyncProcessingServiceImpl(
             @Qualifier("asyncTaskExecutor") java.util.concurrent.Executor asyncTaskExecutor,
@@ -78,7 +80,7 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
             StorageManager storageManager,
             ChatAttachmentMetadataResolver chatAttachmentMetadataResolver,
             ChatPushService chatPushService,
-            ChatMetricsService chatMetricsService) {
+            ChatMetricsService chatMetricsService, ChatModelMapper chatModelMapper) {
         this.asyncTaskExecutor = asyncTaskExecutor;
         this.chatAttachmentProcessTaskRepository = chatAttachmentProcessTaskRepository;
         this.chatAttachmentProcessingProperties = chatAttachmentProcessingProperties;
@@ -88,6 +90,7 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
         this.chatAttachmentMetadataResolver = chatAttachmentMetadataResolver;
         this.chatPushService = chatPushService;
         this.chatMetricsService = chatMetricsService;
+        this.chatModelMapper = chatModelMapper;
     }
 
     /**
@@ -110,7 +113,7 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
                 serializeMessageSnapshot(messageSnapshot),
                 serializePushUserIds(pushUserIds),
                 chatAttachmentProcessingProperties.getMaxRetryCount(),
-                new Date()
+                LocalDateTime.now()
         );
         Runnable scheduleAction = () -> submitTask(task.getId());
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
@@ -131,7 +134,7 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
     @Override
     public void dispatchDueTasks() {
         List<ChatAttachmentProcessTask> tasks = chatAttachmentProcessTaskRepository.listDispatchableTasks(
-                new Date(),
+                LocalDateTime.now(),
                 chatAttachmentProcessingProperties.getBatchSize()
         );
         for (ChatAttachmentProcessTask task : tasks) {
@@ -146,7 +149,7 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
      */
     @Override
     public int recoverExpiredTasks() {
-        return chatAttachmentProcessTaskRepository.resetExpiredTasks(new Date(), LEASE_EXPIRED_REASON);
+        return chatAttachmentProcessTaskRepository.resetExpiredTasks(LocalDateTime.now(), LEASE_EXPIRED_REASON);
     }
 
     /**
@@ -167,8 +170,8 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
         if (task == null) {
             return;
         }
-        Date now = new Date();
-        Date leaseExpireAt = new Date(now.getTime() + chatAttachmentProcessingProperties.getLeaseSeconds() * 1000L);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime leaseExpireAt = now.plusSeconds(chatAttachmentProcessingProperties.getLeaseSeconds());
         if (!chatAttachmentProcessTaskRepository.claimTask(taskId, now, leaseExpireAt)) {
             return;
         }
@@ -400,9 +403,7 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
             if (legacyFilePayload == null || legacyFilePayload.getFileId() == null) {
                 return payload;
             }
-            ChatMessagePayloadVO normalizedPayload = new ChatMessagePayloadVO();
-            normalizedPayload.setFile(legacyFilePayload);
-            return normalizedPayload;
+            return chatModelMapper.toMessagePayloadVO(legacyFilePayload);
         } catch (RuntimeException ex) {
             return null;
         }
@@ -418,7 +419,7 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
     /**
      * 从任务快照中恢复待推送的消息对象，避免异步线程再次拼装整条消息视图。
      */
-    private void pushUpdatedMessage(ChatAttachmentProcessTask task, ChatFilePayloadVO updatedFilePayload, Date updatedAt) {
+    private void pushUpdatedMessage(ChatAttachmentProcessTask task, ChatFilePayloadVO updatedFilePayload, LocalDateTime updatedAt) {
         ChatMessageVO updatedMessage = parseMessageSnapshot(task.getMessageSnapshotJson());
         if (updatedMessage == null) {
             return;
@@ -432,7 +433,7 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
      * 任务成功或确认无需继续处理时，统一收口为成功态，避免调度器重复扫描。
      */
     private void markTaskSuccess(Long taskId) {
-        if (!chatAttachmentProcessTaskRepository.markSuccess(taskId, new Date())) {
+        if (!chatAttachmentProcessTaskRepository.markSuccess(taskId, LocalDateTime.now())) {
             log.warn("mark chat attachment task success skipped: taskId={}", taskId);
         }
     }
@@ -447,7 +448,7 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
                 chatAttachmentProcessingProperties.getMaxRetryCount()
         );
         String errorMessage = abbreviateError(ex);
-        Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
         boolean updated;
         if (currentRetryCount >= maxRetryCount) {
             updated = chatAttachmentProcessTaskRepository.markFailed(task.getId(), currentRetryCount, now, errorMessage);
@@ -467,10 +468,10 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
     /**
      * 构造下次重试时间，使用基础间隔 * 2^(retry-1) 的指数退避，避免错误风暴。
      */
-    private Date buildNextRetryAt(Date now, int retryCount) {
+    private LocalDateTime buildNextRetryAt(LocalDateTime now, int retryCount) {
         long multiplier = 1L << Math.min(Math.max(retryCount - 1, 0), 4);
-        long delayMillis = chatAttachmentProcessingProperties.getRetryDelaySeconds() * 1000L * multiplier;
-        return new Date(now.getTime() + delayMillis);
+        long delaySeconds = chatAttachmentProcessingProperties.getRetryDelaySeconds() * multiplier;
+        return now.plusSeconds(delaySeconds);
     }
 
     private String serializeMessageSnapshot(ChatMessageVO messageSnapshot) {

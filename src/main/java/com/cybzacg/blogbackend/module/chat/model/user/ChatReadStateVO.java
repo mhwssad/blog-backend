@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.chat.model.user;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
@@ -20,13 +20,13 @@ public class ChatReadStateVO {
     private Long readMessageId;
 
     @Schema(description = "最后已读时间")
-    private Date readAt;
+    private LocalDateTime readAt;
 
     @Schema(description = "最后已送达消息ID")
     private Long deliveredMessageId;
 
     @Schema(description = "最后已送达时间")
-    private Date deliveredAt;
+    private LocalDateTime deliveredAt;
 
     @Schema(description = "未读数")
     private Integer unreadCount;

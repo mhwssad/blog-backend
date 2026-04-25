@@ -3,7 +3,6 @@ package com.cybzacg.blogbackend.module.auth.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.SysUser;
-import com.cybzacg.blogbackend.domain.SysUserRole;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.auth.convert.RbacAdminModelMapper;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysUserAdminVO;
@@ -37,6 +36,7 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
     private final SysUserRoleRepository sysUserRoleRepository;
     private final PasswordEncoder passwordEncoder;
     private final RbacAdminModelMapper rbacAdminModelMapper;
+    private final RbacAssociationFactory rbacAssociationFactory;
 
     /** 分页查询用户列表，附带每个用户的角色 ID。 */
     @Override
@@ -131,12 +131,7 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
             return;
         }
         sysUserRoleRepository.saveBatch(distinctRoleIds.stream()
-                .map(roleId -> {
-                    SysUserRole userRole = new SysUserRole();
-                    userRole.setUserId(userId);
-                    userRole.setRoleId(roleId);
-                    return userRole;
-                })
+                .map(roleId -> rbacAssociationFactory.createUserRole(userId, roleId))
                 .toList());
     }
 

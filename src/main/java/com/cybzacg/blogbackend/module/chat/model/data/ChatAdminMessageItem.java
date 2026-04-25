@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.chat.model.data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
@@ -19,10 +19,10 @@ public class ChatAdminMessageItem {
     private Integer sendStatus;
     private Integer revokeStatus;
     private Long revokedBy;
-    private Date revokedAt;
+    private LocalDateTime revokedAt;
     private Long totalRecipientCount;
     private Long deliveredRecipientCount;
     private Long readRecipientCount;
-    private Date createdAt;
-    private Date updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

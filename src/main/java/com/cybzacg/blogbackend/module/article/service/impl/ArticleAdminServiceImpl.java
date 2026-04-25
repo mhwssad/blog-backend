@@ -44,7 +44,6 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -160,7 +159,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         BlogArticle article = getArticleOrThrow(id);
         article.setStatus(status);
         if (Integer.valueOf(1).equals(status) && article.getPublishTime() == null) {
-            article.setPublishTime(new Date());
+            article.setPublishTime(LocalDateTime.now());
         }
         blogArticleRepository.updateById(article);
     }
@@ -219,7 +218,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
      * 将请求对象中的可编辑字段统一回填到文章实体，确保创建和更新流程复用同一套规则。
      */
     private void applyArticleFields(BlogArticle article, ArticleSaveRequest request, boolean creating) {
-        Date existingPublishTime = article.getPublishTime();
+        LocalDateTime existingPublishTime = article.getPublishTime();
         articleModelMapper.updateArticle(request, article);
         article.setIsTop(defaultIfNull(article.getIsTop(), 0));
         article.setIsOriginal(defaultIfNull(article.getIsOriginal(), 1));
@@ -227,16 +226,16 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         article.setPublishTime(resolvePublishTime(article.getStatus(), request.getPublishTime(), existingPublishTime));
         article.setAccessLevel(defaultIfNull(article.getAccessLevel(), 0));
         if (creating && article.getPublishTime() == null && Integer.valueOf(1).equals(article.getStatus())) {
-            article.setPublishTime(new Date());
+            article.setPublishTime(LocalDateTime.now());
         }
     }
 
     /**
      * 根据目标状态和请求发布时间推导最终发布时间，保证已发布文章始终有稳定的发布时间。
      */
-    private Date resolvePublishTime(Integer status, Date requestPublishTime, Date existingPublishTime) {
+    private LocalDateTime resolvePublishTime(Integer status, LocalDateTime requestPublishTime, LocalDateTime existingPublishTime) {
         if (Integer.valueOf(1).equals(defaultIfNull(status, 0))) {
-            return requestPublishTime != null ? requestPublishTime : (existingPublishTime != null ? existingPublishTime : new Date());
+            return requestPublishTime != null ? requestPublishTime : (existingPublishTime != null ? existingPublishTime : LocalDateTime.now());
         }
         return requestPublishTime;
     }
@@ -394,7 +393,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         if (accessList == null || accessList.isEmpty()) {
             return;
         }
-        Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
         List<BlogArticleAccess> records = accessList.stream()
                 .map(item -> articleModelMapper.toArticleAccess(articleId, item, now))
                 .toList();

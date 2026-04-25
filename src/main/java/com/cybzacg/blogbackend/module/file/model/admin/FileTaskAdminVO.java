@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.file.model.admin;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Schema(description = "后台上传任务列表项")
@@ -35,7 +35,7 @@ public class FileTaskAdminVO {
     @Schema(description = "错误信息")
     private String errorMessage;
     @Schema(description = "创建时间")
-    private Date createdAt;
+    private LocalDateTime createdAt;
     @Schema(description = "完成时间")
-    private Date completeTime;
+    private LocalDateTime completeTime;
 }

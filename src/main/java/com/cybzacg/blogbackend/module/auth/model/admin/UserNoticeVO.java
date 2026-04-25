@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.auth.model.admin;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Schema(description = "用户通知信息")
@@ -19,9 +19,9 @@ public class UserNoticeVO {
     @Schema(description = "通知等级")
     private String level;
     @Schema(description = "发布时间")
-    private Date publishTime;
+    private LocalDateTime publishTime;
     @Schema(description = "是否已读")
     private Integer isRead;
     @Schema(description = "阅读时间")
-    private Date readTime;
+    private LocalDateTime readTime;
 }

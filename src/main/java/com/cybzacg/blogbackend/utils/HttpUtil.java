@@ -348,7 +348,8 @@ public class HttpUtil {
             validateSuccessfulResponse(response, "HTTP请求", request.url().toString());
             return readResponseBodyAsString(response, "HTTP请求", request.url().toString());
         } catch (IOException e) {
-            throw buildIoBusinessException("HTTP请求异常", request.url().toString(), e);
+            throwIoBusinessException("HTTP请求异常", request.url().toString(), e);
+            throw new IllegalStateException("unreachable");
         }
     }
 
@@ -415,7 +416,8 @@ public class HttpUtil {
             log.info("文件下载成功: {} (大小: {} bytes)", savePath, targetFile.length());
             return targetFile;
         } catch (IOException e) {
-            throw buildIoBusinessException("文件下载异常", request.url().toString(), e);
+            throwIoBusinessException("文件下载异常", request.url().toString(), e);
+            throw new IllegalStateException("unreachable");
         }
     }
 
@@ -444,7 +446,8 @@ public class HttpUtil {
             log.info("文件下载成功: {} (大小: {} bytes)", request.url(), bytes.length);
             return bytes;
         } catch (IOException e) {
-            throw buildIoBusinessException("文件下载异常", request.url().toString(), e);
+            throwIoBusinessException("文件下载异常", request.url().toString(), e);
+            throw new IllegalStateException("unreachable");
         }
     }
 
@@ -550,7 +553,7 @@ public class HttpUtil {
     private static HttpUrl buildHttpUrl(String url, Map<String, String> params) {
         HttpUrl httpUrl = HttpUrl.parse(url);
         if (httpUrl == null) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "请求地址非法: " + url);
+            ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.ILLEGAL_ARGUMENT, "请求地址非法: " + url);
         }
         if (params == null || params.isEmpty()) {
             return httpUrl;
@@ -601,7 +604,7 @@ public class HttpUtil {
         if (offset > 0 && response.code() != 206) {
             String message = String.format("文件断点下载失败: %s -> %s %s", url, response.code(), response.message());
             log.error(message);
-            throw new BusinessException(ResultErrorCode.FAIL.getCode(), message);
+            ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.FAIL, message);
         }
         validateSuccessfulResponse(response, "文件下载", url);
     }
@@ -636,7 +639,7 @@ public class HttpUtil {
         if (parentDir != null && !parentDir.exists() && !parentDir.mkdirs() && !parentDir.exists()) {
             String message = "创建下载目录失败: " + parentDir.getAbsolutePath();
             log.error(message);
-            throw new BusinessException(ResultErrorCode.IO_ERROR.getCode(), message);
+            ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.IO_ERROR, message);
         }
         return targetFile;
     }
@@ -662,11 +665,11 @@ public class HttpUtil {
     }
 
     /**
-     * 构建 IO 场景下的统一业务异常，便于接入现有异常处理体系。
+     * 抛出 IO 场景下的统一业务异常，便于接入现有异常处理体系。
      */
-    private static BusinessException buildIoBusinessException(String action, String url, IOException e) {
+    private static void throwIoBusinessException(String action, String url, IOException e) {
         String message = action + ": " + url;
         log.error(message, e);
-        return new BusinessException(ResultErrorCode.IO_ERROR.getCode(), message, e);
+        ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.IO_ERROR, message, e);
     }
 }

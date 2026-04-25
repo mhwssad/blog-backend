@@ -5,7 +5,7 @@ import com.cybzacg.blogbackend.module.content.model.publics.PublicTagVO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -44,7 +44,7 @@ public class PublicArticleDetailVO {
     @Schema(description = "分享数")
     private Integer shareCount;
     @Schema(description = "发布时间")
-    private Date publishTime;
+    private LocalDateTime publishTime;
     @Schema(description = "分类列表")
     private List<PublicCategoryTreeVO> categories;
     @Schema(description = "标签列表")

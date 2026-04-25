@@ -1,7 +1,6 @@
 package com.cybzacg.blogbackend.utils;
 
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 
@@ -89,7 +88,8 @@ public class OkHttpSslUtil {
             return buildSslClient(sslContext.getSocketFactory(), trustManager, (hostname, session) -> true,
                     connectTimeoutSeconds, readTimeoutSeconds, writeTimeoutSeconds);
         } catch (NoSuchAlgorithmException | KeyManagementException e) {
-            throw buildSslBusinessException("创建不安全 SSL 客户端失败", e);
+            throwSslBusinessException("创建不安全 SSL 客户端失败", e);
+            throw new IllegalStateException("unreachable");
         }
     }
 
@@ -119,7 +119,8 @@ public class OkHttpSslUtil {
                     HttpsURLConnection.getDefaultHostnameVerifier(),
                     connectTimeoutSeconds, readTimeoutSeconds, writeTimeoutSeconds);
         } catch (NoSuchAlgorithmException e) {
-            throw buildSslBusinessException("创建默认 SSL 客户端失败", e);
+            throwSslBusinessException("创建默认 SSL 客户端失败", e);
+            throw new IllegalStateException("unreachable");
         }
     }
 
@@ -139,7 +140,7 @@ public class OkHttpSslUtil {
                                                      long readTimeoutSeconds,
                                                      long writeTimeoutSeconds) {
         if (sslContext == null) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "SSLContext不能为空");
+            ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.ILLEGAL_ARGUMENT, "SSLContext不能为空");
         }
         X509TrustManager trustManager = resolveTrustManager(sslContext);
         return buildSslClient(sslContext.getSocketFactory(), trustManager, resolveHostnameVerifier(hostnameVerifier),
@@ -165,7 +166,7 @@ public class OkHttpSslUtil {
      */
     public static X509TrustManager createTrustManager(X509Certificate[] certificates) {
         if (certificates == null || certificates.length == 0) {
-            throw new BusinessException(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), "证书列表不能为空");
+            ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.ILLEGAL_ARGUMENT, "证书列表不能为空");
         }
         X509Certificate[] acceptedIssuers = certificates.clone();
         return new X509TrustManager() {
@@ -199,7 +200,8 @@ public class OkHttpSslUtil {
             SSL_CONTEXT_TRUST_MANAGER_CACHE.put(sslContext, trustManager);
             return sslContext;
         } catch (NoSuchAlgorithmException | KeyManagementException e) {
-            throw buildSslBusinessException("创建 SSLContext 失败", e);
+            throwSslBusinessException("创建 SSLContext 失败", e);
+            throw new IllegalStateException("unreachable");
         }
     }
 
@@ -256,9 +258,10 @@ public class OkHttpSslUtil {
                 }
             }
         } catch (Exception e) {
-            throw buildSslBusinessException("获取默认 TrustManager 失败", e);
+            throwSslBusinessException("获取默认 TrustManager 失败", e);
         }
-        throw new BusinessException(ResultErrorCode.SYSTEM_ERROR.getCode(), "获取默认 TrustManager 失败");
+        throwSslBusinessException("获取默认 TrustManager 失败", null);
+        throw new IllegalStateException("unreachable");
     }
 
     /**
@@ -324,8 +327,8 @@ public class OkHttpSslUtil {
     /**
      * 构建 SSL 相关统一业务异常，接入当前异常处理体系。
      */
-    private static BusinessException buildSslBusinessException(String message, Exception e) {
+    private static void throwSslBusinessException(String message, Exception e) {
         log.error(message, e);
-        return new BusinessException(ResultErrorCode.SYSTEM_ERROR.getCode(), message, e);
+        ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.SYSTEM_ERROR, message, e);
     }
 }

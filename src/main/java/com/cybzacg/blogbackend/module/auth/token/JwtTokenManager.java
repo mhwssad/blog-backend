@@ -2,10 +2,12 @@ package com.cybzacg.blogbackend.module.auth.token;
 
 import com.cybzacg.blogbackend.common.constant.AuthConstants;
 import com.cybzacg.blogbackend.config.property.SecurityProperties;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.model.AuthenticationToken;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserDetails;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserPrincipal;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -116,9 +118,7 @@ public class JwtTokenManager implements TokenManager {
      * 统一解析并校验 JWT 声明，失败时转换为业务异常。
      */
     private Claims parseClaims(String token) {
-        if (!StringUtils.hasText(token)) {
-            throw new BusinessException("Token不能为空");
-        }
+        ExceptionThrowerCore.throwBusinessIfBlank(token, ResultErrorCode.INVALID_TOKEN, "Token不能为空");
 
         try {
             return Jwts.parser()
@@ -126,8 +126,9 @@ public class JwtTokenManager implements TokenManager {
                     .build()
                     .parseSignedClaims(normalizeToken(token))
                     .getPayload();
-        } catch (BusinessException | JwtException | IllegalArgumentException ex) {
-            throw new BusinessException("Token无效或已过期", ex);
+        } catch (JwtException | IllegalArgumentException ex) {
+            ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.INVALID_TOKEN, "Token无效或已过期", ex);
+            throw new IllegalStateException("unreachable");
         }
     }
 
@@ -193,9 +194,8 @@ public class JwtTokenManager implements TokenManager {
 
     private void validateTokenType(Claims claims, String expectedTokenType) {
         String actualTokenType = claims.get(AuthConstants.TOKEN_TYPE, String.class);
-        if (!expectedTokenType.equals(actualTokenType)) {
-            throw new BusinessException("Token类型不匹配");
-        }
+        ExceptionThrowerCore.throwBusinessIf(!expectedTokenType.equals(actualTokenType),
+                ResultErrorCode.INVALID_TOKEN, "Token类型不匹配");
     }
 
     private String normalizeToken(String token) {

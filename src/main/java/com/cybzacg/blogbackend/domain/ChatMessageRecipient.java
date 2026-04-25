@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
@@ -26,13 +26,13 @@ public class ChatMessageRecipient {
     /** 投递状态：0-待投递，1-已投递，2-已读 */
     private Integer deliveryStatus;
     /** 投递时间 */
-    private Date deliveredAt;
+    private LocalDateTime deliveredAt;
     /** 已读时间 */
-    private Date readAt;
+    private LocalDateTime readAt;
     /** 可见状态：0-正常，1-已隐藏 */
     private Integer visibleStatus;
     /** 创建时间 */
-    private Date createdAt;
+    private LocalDateTime createdAt;
     /** 更新时间 */
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 }

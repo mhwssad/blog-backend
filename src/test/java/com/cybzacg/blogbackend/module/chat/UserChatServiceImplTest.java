@@ -58,7 +58,7 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.socket.WebSocketSession;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -396,7 +396,7 @@ class UserChatServiceImplTest {
         ownerMember.setUserId(currentUserId);
         ownerMember.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
         ownerMember.setMemberRole(ChatConstants.MEMBER_ROLE_OWNER);
-        ownerMember.setJoinedAt(new Date());
+        ownerMember.setJoinedAt(LocalDateTime.now());
 
         when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
         when(chatConversationMemberRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(ownerMember);
@@ -458,7 +458,7 @@ class UserChatServiceImplTest {
         Long targetUserId = 2L;
         Long conversationId = 3001L;
         Long messageId = 9001L;
-        Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
 
         ChatConversation conversation = new ChatConversation();
         conversation.setId(conversationId);
@@ -555,7 +555,7 @@ class UserChatServiceImplTest {
         Long conversationId = 3002L;
         Long messageId = 9002L;
         Long replyMessageId = 8801L;
-        Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
 
         ChatConversation conversation = new ChatConversation();
         conversation.setId(conversationId);
@@ -582,7 +582,7 @@ class UserChatServiceImplTest {
         replyItem.setMessageType(ChatConstants.MESSAGE_TYPE_TEXT);
         replyItem.setContent("origin text");
         replyItem.setReplyMessageId(7701L);
-        replyItem.setCreatedAt(new Date(now.getTime() - 3_000L));
+        replyItem.setCreatedAt(now.minusSeconds(3));
 
         ChatMessageHistoryItem historyItem = new ChatMessageHistoryItem();
         historyItem.setId(messageId);
@@ -671,7 +671,7 @@ class UserChatServiceImplTest {
         Long senderUserId = 1L;
         Long conversationId = 4001L;
         Long readMessageId = 9002L;
-        Date previousTime = new Date(System.currentTimeMillis() - 10_000L);
+        LocalDateTime previousTime = LocalDateTime.now().minusSeconds(10);
 
         ChatConversation conversation = new ChatConversation();
         conversation.setId(conversationId);
@@ -1024,7 +1024,7 @@ class UserChatServiceImplTest {
         Long adminUserId = 2L;
         Long memberUserId = 3L;
         Long conversationId = 5003L;
-        Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
 
         ChatConversation conversation = new ChatConversation();
         conversation.setId(conversationId);
@@ -1036,21 +1036,21 @@ class UserChatServiceImplTest {
         ownerMember.setUserId(currentUserId);
         ownerMember.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
         ownerMember.setMemberRole(ChatConstants.MEMBER_ROLE_OWNER);
-        ownerMember.setJoinedAt(new Date(now.getTime() - 3_000L));
+        ownerMember.setJoinedAt(now.minusSeconds(3));
 
         ChatConversationMember adminMember = new ChatConversationMember();
         adminMember.setConversationId(conversationId);
         adminMember.setUserId(adminUserId);
         adminMember.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
         adminMember.setMemberRole(ChatConstants.MEMBER_ROLE_ADMIN);
-        adminMember.setJoinedAt(new Date(now.getTime() - 2_000L));
+        adminMember.setJoinedAt(now.minusSeconds(2));
 
         ChatConversationMember normalMember = new ChatConversationMember();
         normalMember.setConversationId(conversationId);
         normalMember.setUserId(memberUserId);
         normalMember.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
         normalMember.setMemberRole(ChatConstants.MEMBER_ROLE_MEMBER);
-        normalMember.setJoinedAt(new Date(now.getTime() - 1_000L));
+        normalMember.setJoinedAt(now.minusSeconds(1));
 
         SysUser ownerUser = new SysUser();
         ownerUser.setId(currentUserId);
@@ -1300,7 +1300,7 @@ class UserChatServiceImplTest {
     void sendTextMessageShouldRejectWhenCurrentMemberIsMuted() {
         Long currentUserId = 1L;
         Long conversationId = 6205L;
-        Date muteUntil = new Date(System.currentTimeMillis() + 60_000L);
+        LocalDateTime muteUntil = LocalDateTime.now().plusSeconds(60);
 
         ChatConversation conversation = new ChatConversation();
         conversation.setId(conversationId);
@@ -1408,7 +1408,7 @@ class UserChatServiceImplTest {
         Long memberUserId = 2L;
         Long conversationId = 7001L;
         Long lastMessageId = 888L;
-        Date lastMessageTime = new Date();
+        LocalDateTime lastMessageTime = LocalDateTime.now();
 
         ChatConversation conversation = new ChatConversation();
         conversation.setId(conversationId);
@@ -1422,14 +1422,14 @@ class UserChatServiceImplTest {
         ownerMember.setUserId(currentUserId);
         ownerMember.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
         ownerMember.setMemberRole(ChatConstants.MEMBER_ROLE_OWNER);
-        ownerMember.setJoinedAt(new Date(lastMessageTime.getTime() - 2_000L));
+        ownerMember.setJoinedAt(lastMessageTime.minusSeconds(2));
 
         ChatConversationMember inactiveMember = new ChatConversationMember();
         inactiveMember.setConversationId(conversationId);
         inactiveMember.setUserId(memberUserId);
         inactiveMember.setStatus(ChatConstants.MEMBER_STATUS_REMOVED);
         inactiveMember.setMemberRole(ChatConstants.MEMBER_ROLE_MEMBER);
-        inactiveMember.setJoinedAt(new Date(lastMessageTime.getTime() - 1_000L));
+        inactiveMember.setJoinedAt(lastMessageTime.minusSeconds(1));
 
         ChatMessageReadCursor memberCursor = new ChatMessageReadCursor();
         memberCursor.setId(31L);
@@ -1498,7 +1498,7 @@ class UserChatServiceImplTest {
         Long memberUserId = 3L;
         Long conversationId = 7002L;
         Long lastMessageId = 889L;
-        Date lastMessageTime = new Date();
+        LocalDateTime lastMessageTime = LocalDateTime.now();
 
         ChatConversation conversation = new ChatConversation();
         conversation.setId(conversationId);
@@ -1755,7 +1755,7 @@ class UserChatServiceImplTest {
         Long currentUserId = 1L;
         Long memberUserId = 2L;
         Long conversationId = 7006L;
-        Date muteUntil = new Date(System.currentTimeMillis() + 60_000L);
+        LocalDateTime muteUntil = LocalDateTime.now().plusSeconds(60);
 
         ChatConversation conversation = new ChatConversation();
         conversation.setId(conversationId);
@@ -1812,7 +1812,7 @@ class UserChatServiceImplTest {
         Long targetUserId = 2L;
         Long conversationId = 8001L;
         Long messageId = 9003L;
-        Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
 
         SysUser targetUser = new SysUser();
         targetUser.setId(targetUserId);
@@ -2299,7 +2299,7 @@ class UserChatServiceImplTest {
         Long senderUserId = 1L;
         Long conversationId = 9304L;
         Long messageId = 9906L;
-        Date lastMessageTime = new Date();
+        LocalDateTime lastMessageTime = LocalDateTime.now();
 
         ChatConversation conversation = new ChatConversation();
         conversation.setId(conversationId);
@@ -2462,7 +2462,7 @@ class UserChatServiceImplTest {
         Long currentUserId = 1L;
         Long conversationId = 9303L;
         Long lastMessageId = 8001L;
-        Date lastMessageTime = new Date();
+        LocalDateTime lastMessageTime = LocalDateTime.now();
 
         ChatConversation conversation = new ChatConversation();
         conversation.setId(conversationId);
@@ -2988,7 +2988,7 @@ class UserChatServiceImplTest {
         Long targetUserId = 2L;
         Long conversationId = 9901L;
         Long messageId = 8801L;
-        Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
 
         ChatMessageRecipient recipient = new ChatMessageRecipient();
         recipient.setMessageId(messageId);
@@ -3010,7 +3010,7 @@ class UserChatServiceImplTest {
         item.setContent("edited");
         item.setDeliveryStatus(ChatConstants.DELIVERY_STATUS_READ);
         item.setCreatedAt(now);
-        item.setUpdatedAt(new Date(now.getTime() + 1000L));
+        item.setUpdatedAt(now.plusSeconds(1));
 
         ChatMessageVO messageVO = new ChatMessageVO();
         messageVO.setId(messageId);
@@ -3058,7 +3058,7 @@ class UserChatServiceImplTest {
         Long messageId = 8802L;
         Long replyMessageId = 8701L;
         Long businessId = 801L;
-        Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
 
         ChatConversation conversation = new ChatConversation();
         conversation.setId(conversationId);
@@ -3206,7 +3206,7 @@ class UserChatServiceImplTest {
         Long conversationId = 9904L;
         Long messageId = 8803L;
         Long businessId = 802L;
-        Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
 
         ChatConversation conversation = new ChatConversation();
         conversation.setId(conversationId);

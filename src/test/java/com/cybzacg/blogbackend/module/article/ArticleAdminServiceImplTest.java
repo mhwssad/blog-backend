@@ -44,7 +44,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Date;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -503,10 +505,10 @@ class ArticleAdminServiceImplTest {
             item.setGrantReason(access.getGrantReason());
             return item;
         });
-        lenient().when(articleModelMapper.toArticleAccess(anyLong(), any(ArticleAccessItem.class), any(Date.class))).thenAnswer(invocation -> {
+        lenient().when(articleModelMapper.toArticleAccess(anyLong(), any(ArticleAccessItem.class), any(LocalDateTime.class))).thenAnswer(invocation -> {
             Long articleId = invocation.getArgument(0);
             ArticleAccessItem item = invocation.getArgument(1);
-            Date grantTime = invocation.getArgument(2);
+            LocalDateTime grantTime = invocation.getArgument(2);
             BlogArticleAccess access = new BlogArticleAccess();
             access.setArticleId(articleId);
             access.setUserId(item.getUserId());
@@ -593,8 +595,8 @@ class ArticleAdminServiceImplTest {
         article.setAccessLevel(accessLevel);
         article.setIsTop(0);
         article.setIsOriginal(1);
-        article.setPublishTime(new Date(1_000L * id));
-        article.setUpdatedAt(new Date(2_000L * id));
+        article.setPublishTime(LocalDateTime.ofInstant(Instant.ofEpochMilli(1_000L * id), ZoneOffset.UTC));
+        article.setUpdatedAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(2_000L * id), ZoneOffset.UTC));
         article.setLikeCount(0);
         article.setCommentCount(0);
         article.setCollectCount(0);

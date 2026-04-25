@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /** 文章分类。 */
 @TableName(value = "sys_category")
@@ -46,8 +46,8 @@ public class SysCategory {
     private Integer status;
 
     /** 创建时间 */
-    private Date createdAt;
+    private LocalDateTime createdAt;
 
     /** 更新时间 */
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 }

@@ -5,7 +5,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @Schema(description = "用户新增/修改请求")
@@ -34,7 +35,7 @@ public class SysUserSaveRequest {
     private Integer gender;
 
     @Schema(description = "生日")
-    private Date birthday;
+    private LocalDate birthday;
 
     @Schema(description = "状态")
     private Integer status;

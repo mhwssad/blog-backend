@@ -10,7 +10,7 @@ import com.cybzacg.blogbackend.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -59,13 +59,13 @@ public class ArticleAccessControlServiceImpl implements ArticleAccessControlServ
         }
 
         List<BlogArticleAccess> accessList = listArticleAccesses(article.getId());
-        Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
         boolean hitWhitelist = false;
         for (BlogArticleAccess access : accessList) {
             if (!userId.equals(access.getUserId())) {
                 continue;
             }
-            if (access.getExpireTime() != null && access.getExpireTime().before(now)) {
+            if (access.getExpireTime() != null && access.getExpireTime().isBefore(now)) {
                 continue;
             }
             if (Integer.valueOf(2).equals(access.getAccessType())) {
@@ -103,14 +103,14 @@ public class ArticleAccessControlServiceImpl implements ArticleAccessControlServ
         if (articleId == null || userId == null) {
             return false;
         }
-        Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
         return listArticleAccesses(articleId).stream()
                 .filter(access -> userId.equals(access.getUserId()))
-                .filter(access -> access.getExpireTime() == null || !access.getExpireTime().before(now))
+                .filter(access -> access.getExpireTime() == null || !access.getExpireTime().isBefore(now))
                 .noneMatch(access -> Integer.valueOf(2).equals(access.getAccessType()))
                 && listArticleAccesses(articleId).stream()
                 .filter(access -> userId.equals(access.getUserId()))
-                .filter(access -> access.getExpireTime() == null || !access.getExpireTime().before(now))
+                .filter(access -> access.getExpireTime() == null || !access.getExpireTime().isBefore(now))
                 .anyMatch(access -> Integer.valueOf(1).equals(access.getAccessType()));
     }
 

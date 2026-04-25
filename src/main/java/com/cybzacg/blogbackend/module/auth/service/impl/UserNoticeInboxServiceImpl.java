@@ -18,7 +18,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +37,7 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
     private final SysNoticeRepository sysNoticeRepository;
     private final SysUserNoticeRepository sysUserNoticeRepository;
     private final SysNoticeModelMapper sysNoticeModelMapper;
+    private final SysNoticeFactory sysNoticeFactory;
 
     /** 分页查询当前用户的收件箱通知，区分已读和未读状态。 */
     @Override
@@ -113,7 +114,7 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
     @Transactional(rollbackFor = Exception.class)
     public void markAllRead() {
         Long userId = SecurityUtils.requireUserId();
-        Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
         List<SysUserNotice> relations = listUserNoticeRelations(userId);
         relations.stream()
                 .filter(item -> !Objects.equals(NoticeConstants.READ_READ, item.getIsRead()))
@@ -162,17 +163,10 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
     }
 
     private SysUserNotice markReadInternal(Long userId, SysNotice notice) {
-        Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
         SysUserNotice relation = findActiveRelation(userId, notice.getId());
         if (relation == null) {
-            relation = new SysUserNotice();
-            relation.setNoticeId(notice.getId());
-            relation.setUserId(userId);
-            relation.setIsRead(NoticeConstants.READ_READ);
-            relation.setReadTime(now);
-            relation.setCreateTime(now);
-            relation.setUpdateTime(now);
-            relation.setIsDeleted(0);
+            relation = sysNoticeFactory.createReadRecord(notice.getId(), userId, now);
             try {
                 sysUserNoticeRepository.save(relation);
                 return relation;

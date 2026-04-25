@@ -22,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -131,7 +132,7 @@ class UserFootprintServiceImplTest {
         SysUserFootprint footprint = footprint(null, 7L, 100L, "article");
 
         when(blogArticleService.getById(100L)).thenReturn(article);
-        when(contentModelMapper.toArticleFootprint(eq(7L), eq(article), eq("127.0.0.1"), eq("JUnit"), any(java.util.Date.class)))
+        when(contentModelMapper.toArticleFootprint(eq(7L), eq(article), eq("127.0.0.1"), eq("JUnit"), any(LocalDateTime.class)))
                 .thenReturn(footprint);
 
         try (MockedStatic<?> securityUtils = SecurityTestUtils.mockUserId(7L);
@@ -143,7 +144,7 @@ class UserFootprintServiceImplTest {
         }
 
         verify(articleAccessControlService).validateArticleAccess(article, 7L);
-        verify(contentModelMapper).toArticleFootprint(eq(7L), eq(article), eq("127.0.0.1"), eq("JUnit"), any(java.util.Date.class));
+        verify(contentModelMapper).toArticleFootprint(eq(7L), eq(article), eq("127.0.0.1"), eq("JUnit"), any(LocalDateTime.class));
         verify(sysUserFootprintRepository).upsertFootprint(footprint);
     }
 

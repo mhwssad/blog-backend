@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.file.model.user;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Schema(description = "用户文件列表项")
@@ -35,5 +35,5 @@ public class UserFileVO {
     @Schema(description = "文件状态")
     private Integer status;
     @Schema(description = "创建时间")
-    private Date createdAt;
+    private LocalDateTime createdAt;
 }

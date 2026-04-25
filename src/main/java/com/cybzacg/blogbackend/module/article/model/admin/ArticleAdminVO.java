@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.article.model.admin;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Schema(description = "后台文章信息")
@@ -39,11 +39,11 @@ public class ArticleAdminVO {
     @Schema(description = "分享数")
     private Integer shareCount;
     @Schema(description = "发布时间")
-    private Date publishTime;
+    private LocalDateTime publishTime;
     @Schema(description = "创建时间")
-    private Date createdAt;
+    private LocalDateTime createdAt;
     @Schema(description = "更新时间")
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
     @Schema(description = "备注")
     private String remark;
 }

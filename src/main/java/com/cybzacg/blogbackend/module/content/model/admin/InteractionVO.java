@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.content.model.admin;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Schema(description = "后台互动信息")
@@ -19,5 +19,5 @@ public class InteractionVO {
     @Schema(description = "互动类型")
     private String actionType;
     @Schema(description = "创建时间")
-    private Date createdAt;
+    private LocalDateTime createdAt;
 }

@@ -11,15 +11,20 @@ import com.cybzacg.blogbackend.module.article.model.admin.ArticleSaveRequest;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleCardVO;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleDetailVO;
 import com.cybzacg.blogbackend.utils.StrUtils;
-import org.mapstruct.InheritConfiguration;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
+import org.mapstruct.*;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
-/** 文章模块对象转换器，处理文章、分类关联、标签关联及访问权限的映射。 */
-@Mapper(componentModel = "spring", imports = StrUtils.class)
+/**
+ * 文章模块对象转换器，处理文章、分类关联、标签关联及访问权限的映射。
+ */
+@Mapper(
+    componentModel = "spring",
+    imports = StrUtils.class,
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
+    nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS,
+    unmappedTargetPolicy = ReportingPolicy.IGNORE
+)
 public interface ArticleModelMapper {
     ArticleAdminVO toAdminVO(BlogArticle article);
 
@@ -79,5 +84,5 @@ public interface ArticleModelMapper {
     @Mapping(target = "grantReason", expression = "java(StrUtils.normalize(item.getGrantReason()))")
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    BlogArticleAccess toArticleAccess(Long articleId, ArticleAccessItem item, Date grantTime);
+    BlogArticleAccess toArticleAccess(Long articleId, ArticleAccessItem item, LocalDateTime grantTime);
 }

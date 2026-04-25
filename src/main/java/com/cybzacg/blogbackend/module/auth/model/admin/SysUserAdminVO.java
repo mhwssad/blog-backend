@@ -3,7 +3,8 @@ package com.cybzacg.blogbackend.module.auth.model.admin;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -24,11 +25,11 @@ public class SysUserAdminVO {
     @Schema(description = "性别")
     private Integer gender;
     @Schema(description = "生日")
-    private Date birthday;
+    private LocalDate birthday;
     @Schema(description = "状态")
     private Integer status;
     @Schema(description = "最后登录时间")
-    private Date lastLoginTime;
+    private LocalDateTime lastLoginTime;
     @Schema(description = "最后登录IP")
     private String lastLoginIp;
     @Schema(description = "备注")

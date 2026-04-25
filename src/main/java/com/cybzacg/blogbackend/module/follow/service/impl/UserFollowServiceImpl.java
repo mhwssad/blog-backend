@@ -19,7 +19,7 @@ import com.cybzacg.blogbackend.module.follow.service.FollowNoticeService;
 import com.cybzacg.blogbackend.module.follow.service.UserFollowService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
@@ -56,7 +56,7 @@ public class UserFollowServiceImpl implements UserFollowService {
         Long userId = SecurityUtils.requireUserId();
         requireActiveTargetUser(userId, targetUserId);
         SysUserFollow relation = getFollowRelation(userId, targetUserId);
-        Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
         if (relation != null) {
             if (isActiveRelation(relation)) {
                 return;
@@ -79,7 +79,7 @@ public class UserFollowServiceImpl implements UserFollowService {
         Long userId = SecurityUtils.requireUserId();
         SysUserFollow relation = requireActiveFollowRelation(userId, targetUserId);
         relation.setFollowStatus(FOLLOW_STATUS_INACTIVE);
-        relation.setUnfollowTime(new Date());
+        relation.setUnfollowTime(LocalDateTime.now());
         sysUserFollowRepository.updateById(relation);
     }
 
@@ -190,7 +190,7 @@ public class UserFollowServiceImpl implements UserFollowService {
     /**
      * 创建新关注关系，并在并发插入撞上唯一键时回退到“读取后恢复”的收口路径。
      */
-    private boolean createFollowRelation(Long userId, Long targetUserId, Date now) {
+    private boolean createFollowRelation(Long userId, Long targetUserId, LocalDateTime now) {
         SysUserFollow created = followModelMapper.toNewFollow(userId, targetUserId, now);
         try {
             sysUserFollowRepository.save(created);
@@ -211,7 +211,7 @@ public class UserFollowServiceImpl implements UserFollowService {
     /**
      * 复用旧记录恢复关注，保持“软取消后重新关注”不新增关系行的设计。
      */
-    private void reactivateFollowRelation(SysUserFollow relation, Date now) {
+    private void reactivateFollowRelation(SysUserFollow relation, LocalDateTime now) {
         relation.setFollowStatus(FOLLOW_STATUS_ACTIVE);
         relation.setFollowTime(now);
         relation.setUnfollowTime(null);

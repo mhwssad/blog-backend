@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.chat.model.common;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
@@ -47,5 +47,5 @@ public class ChatReplyMessageVO {
     private String state;
 
     @Schema(description = "被回复消息发送时间")
-    private Date createdAt;
+    private LocalDateTime createdAt;
 }

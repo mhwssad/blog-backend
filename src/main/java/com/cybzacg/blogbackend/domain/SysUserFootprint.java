@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /** 用户浏览足迹。 */
 @TableName(value = "sys_user_footprint")
@@ -37,5 +37,5 @@ public class SysUserFootprint {
     private String userAgent;
 
     /** 访问时间 */
-    private Date visitedAt;
+    private LocalDateTime visitedAt;
 }

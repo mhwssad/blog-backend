@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.content.model.admin;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Schema(description = "后台足迹信息")
@@ -25,5 +25,5 @@ public class FootprintVO {
     @Schema(description = "用户代理")
     private String userAgent;
     @Schema(description = "访问时间")
-    private Date visitedAt;
+    private LocalDateTime visitedAt;
 }

@@ -35,7 +35,9 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
-import java.util.Date;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -542,7 +544,7 @@ class PublicArticleServiceImplTest {
         article.setLikeCount(0);
         article.setCommentCount(0);
         article.setCollectCount(0);
-        article.setPublishTime(new Date(1_000L * publishTick));
+        article.setPublishTime(LocalDateTime.ofInstant(Instant.ofEpochMilli(1_000L * publishTick), ZoneOffset.UTC));
         return article;
     }
 

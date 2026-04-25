@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
@@ -26,21 +26,21 @@ public class ChatConversationMember {
     /** 成员状态：0-正常，1-已退出，2-已移除 */
     private Integer status;
     /** 禁言截止时间 */
-    private Date muteUntil;
+    private LocalDateTime muteUntil;
     /** 加入时间 */
-    private Date joinedAt;
+    private LocalDateTime joinedAt;
     /** 最后已读消息ID */
     private Long lastReadMessageId;
     /** 最后已读时间 */
-    private Date lastReadAt;
+    private LocalDateTime lastReadAt;
     /** 最后已投递消息ID */
     private Long lastDeliveredMessageId;
     /** 最后已投递时间 */
-    private Date lastDeliveredAt;
+    private LocalDateTime lastDeliveredAt;
     /** 成员备注名 */
     private String remark;
     /** 创建时间 */
-    private Date createdAt;
+    private LocalDateTime createdAt;
     /** 更新时间 */
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 }

@@ -6,7 +6,7 @@ import com.cybzacg.blogbackend.domain.ChatMessageRecipient;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageReceiptPageQuery;
 
 import java.util.Collection;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -19,13 +19,13 @@ public interface ChatMessageRecipientRepository extends IService<ChatMessageReci
     boolean hideMessage(Long conversationId, Long recipientUserId, Long messageId);
 
     /** 将指定接收者在某会话中不超过目标消息 ID 的全部可见消息标记为已读。 */
-    boolean markReadUpTo(Long conversationId, Long recipientUserId, Long messageId, Date readAt);
+    boolean markReadUpTo(Long conversationId, Long recipientUserId, Long messageId, LocalDateTime readAt);
 
     /** 将单条消息对某个接收者的状态从待投递更新为已投递。 */
-    boolean markDelivered(Long conversationId, Long recipientUserId, Long messageId, Date deliveredAt);
+    boolean markDelivered(Long conversationId, Long recipientUserId, Long messageId, LocalDateTime deliveredAt);
 
     /** 将多条消息批量标记为已投递，仅更新当前状态低于已投递的记录。 */
-    boolean batchMarkDelivered(Long conversationId, Long recipientUserId, Collection<Long> messageIds, Date deliveredAt);
+    boolean batchMarkDelivered(Long conversationId, Long recipientUserId, Collection<Long> messageIds, LocalDateTime deliveredAt);
 
     /** 统计指定接收者在某会话中的未读消息数。 */
     long countUnread(Long conversationId, Long recipientUserId);

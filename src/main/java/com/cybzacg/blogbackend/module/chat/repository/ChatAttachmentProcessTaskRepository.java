@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.chat.repository;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.cybzacg.blogbackend.domain.ChatAttachmentProcessTask;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -27,7 +27,7 @@ public interface ChatAttachmentProcessTaskRepository extends IService<ChatAttach
                                                      String messageSnapshotJson,
                                                      String pushUserIdsJson,
                                                      Integer maxRetryCount,
-                                                     Date nextRetryAt);
+                                                     LocalDateTime nextRetryAt);
 
     /**
      * 查询当前到期且可执行的任务列表。
@@ -36,7 +36,7 @@ public interface ChatAttachmentProcessTaskRepository extends IService<ChatAttach
      * @param limit 批次大小
      * @return 任务列表
      */
-    List<ChatAttachmentProcessTask> listDispatchableTasks(Date executeBefore, int limit);
+    List<ChatAttachmentProcessTask> listDispatchableTasks(LocalDateTime executeBefore, int limit);
 
     /**
      * 尝试抢占待执行任务，避免多节点重复处理。
@@ -46,7 +46,7 @@ public interface ChatAttachmentProcessTaskRepository extends IService<ChatAttach
      * @param leaseExpireAt 本次执行租约过期时间
      * @return 是否抢占成功
      */
-    boolean claimTask(Long taskId, Date executeBefore, Date leaseExpireAt);
+    boolean claimTask(Long taskId, LocalDateTime executeBefore, LocalDateTime leaseExpireAt);
 
     /**
      * 将处理超时的任务恢复为待执行状态。
@@ -55,7 +55,7 @@ public interface ChatAttachmentProcessTaskRepository extends IService<ChatAttach
      * @param lastError 恢复原因
      * @return 恢复的任务数
      */
-    int resetExpiredTasks(Date now, String lastError);
+    int resetExpiredTasks(LocalDateTime now, String lastError);
 
     /**
      * 标记任务处理成功。
@@ -64,7 +64,7 @@ public interface ChatAttachmentProcessTaskRepository extends IService<ChatAttach
      * @param completedAt 完成时间
      * @return 是否更新成功
      */
-    boolean markSuccess(Long taskId, Date completedAt);
+    boolean markSuccess(Long taskId, LocalDateTime completedAt);
 
     /**
      * 标记任务稍后重试。
@@ -75,7 +75,7 @@ public interface ChatAttachmentProcessTaskRepository extends IService<ChatAttach
      * @param lastError 最近一次错误信息
      * @return 是否更新成功
      */
-    boolean markRetry(Long taskId, int retryCount, Date nextRetryAt, String lastError);
+    boolean markRetry(Long taskId, int retryCount, LocalDateTime nextRetryAt, String lastError);
 
     /**
      * 标记任务最终失败。
@@ -86,5 +86,5 @@ public interface ChatAttachmentProcessTaskRepository extends IService<ChatAttach
      * @param lastError 最近一次错误信息
      * @return 是否更新成功
      */
-    boolean markFailed(Long taskId, int retryCount, Date completedAt, String lastError);
+    boolean markFailed(Long taskId, int retryCount, LocalDateTime completedAt, String lastError);
 }

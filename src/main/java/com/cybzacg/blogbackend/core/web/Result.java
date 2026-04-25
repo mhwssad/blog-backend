@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * 统一响应结构体
@@ -24,9 +25,10 @@ public class Result <T> implements Serializable {
     private String message;
 
     /**
-     * 时间戳（毫秒）
+     * 响应时间戳
      */
-    private Long timestamp = System.currentTimeMillis();
+    @Builder.Default
+    private LocalDateTime timestamp = LocalDateTime.now();
 
     /**
      * 判断是否成功
