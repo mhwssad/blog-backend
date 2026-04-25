@@ -1,22 +1,8 @@
 package com.cybzacg.blogbackend.module.chat.service;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatConversationPageQuery;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatConversationVO;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatCreateGroupRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatEditMessageRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatGroupNoticeUpdateRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatGroupMemberOperateRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatMarkReadRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatMemberVO;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatMessagePageQuery;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatMessageVO;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatMuteMemberRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatOpenSingleConversationRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatReadStateVO;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatSendFileRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatSendTextRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatTransferGroupOwnerRequest;
+import com.cybzacg.blogbackend.module.chat.model.user.*;
+
 import java.util.List;
 
 /**

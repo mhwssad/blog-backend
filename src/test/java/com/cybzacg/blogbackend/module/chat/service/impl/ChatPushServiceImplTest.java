@@ -13,7 +13,6 @@ import com.cybzacg.blogbackend.module.chat.service.ChatWebSocketSessionRegistry;
 import com.cybzacg.blogbackend.module.chat.websocket.ChatWebSocketMessageCodec;
 import com.cybzacg.blogbackend.utils.JsonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,13 +22,10 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ChatPushServiceImplTest {
@@ -195,7 +191,8 @@ class ChatPushServiceImplTest {
         switch (type) {
             case MESSAGE_UPDATED -> chatPushService.pushMessageUpdated((ChatMessageVO) payload, List.of(1L, 2L, 1L));
             case MESSAGE_REVOKED -> chatPushService.pushMessageRevoked((ChatMessageVO) payload, List.of(1L, 2L, 1L));
-            case MESSAGE_DELETED -> chatPushService.pushMessageDeleted((ChatWsMessageDeletedPayload) payload, List.of(1L, 2L, 1L));
+            case MESSAGE_DELETED ->
+                    chatPushService.pushMessageDeleted((ChatWsMessageDeletedPayload) payload, List.of(1L, 2L, 1L));
             case READ_UPDATED -> chatPushService.pushReadUpdated((ChatReadStateVO) payload, List.of(1L, 2L, 1L));
             case CONVERSATION_UPDATED ->
                     chatPushService.pushConversationUpdated((ChatWsConversationUpdatedPayload) payload, List.of(1L, 2L, 1L));

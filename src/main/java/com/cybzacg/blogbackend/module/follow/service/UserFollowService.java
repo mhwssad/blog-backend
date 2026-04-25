@@ -1,13 +1,7 @@
 package com.cybzacg.blogbackend.module.follow.service;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.module.follow.model.user.UserFanPageQuery;
-import com.cybzacg.blogbackend.module.follow.model.user.UserFollowCountVO;
-import com.cybzacg.blogbackend.module.follow.model.user.UserFollowMutualVO;
-import com.cybzacg.blogbackend.module.follow.model.user.UserFollowPageQuery;
-import com.cybzacg.blogbackend.module.follow.model.user.UserFollowRemarkUpdateRequest;
-import com.cybzacg.blogbackend.module.follow.model.user.UserFollowSpecialUpdateRequest;
-import com.cybzacg.blogbackend.module.follow.model.user.UserFollowUserVO;
+import com.cybzacg.blogbackend.module.follow.model.user.*;
 
 /**
  * 用户关注关系服务接口。

@@ -39,33 +39,34 @@ module/chat/
     └── ChatWebSocketMessageCodec.java (协议编解码)
 ```
 
-数据库: 6张表 (`chat_conversation` / `chat_conversation_member` / `chat_message` / `chat_message_recipient` / `chat_message_read_cursor` / `chat_attachment_process_task`)
+数据库: 6张表 (`chat_conversation` / `chat_conversation_member` / `chat_message` / `chat_message_recipient` /
+`chat_message_read_cursor` / `chat_attachment_process_task`)
 
 ## 2. 功能完成度评估
 
 ### 2.1 接口方法完成情况
 
-| 服务                           | 方法数  | 已实现 | 状态                    |
-| ------------------------------ | ------- | ------ | ----------------------- |
-| UserChatService                | 24      | 24     | ✅ 全部完成             |
-| ChatAdminService               | 11      | 11     | ✅ 全部完成             |
-| ChatPushService                | 7       | 7      | ✅ 全部完成             |
-| ChatWebSocketSessionRegistry   | 5       | 5      | ✅ 全部完成             |
-| ChatAttachmentMetadataResolver | 1       | 1      | ✅ 全部完成             |
-| ChatAttachmentAsyncProcessing  | 1       | 1      | ✅ 全部完成             |
-| ChatMessageGovernanceService   | 2       | 2      | ✅ 全部完成             |
-| ChatMetricsService             | 2       | 2      | ✅ 全部完成             |
-| 基础仓储(5个)                  | 0自定义 | 全部   | ✅ MyBatis-Plus标准CRUD |
+| 服务                             | 方法数  | 已实现 | 状态                   |
+|--------------------------------|------|-----|----------------------|
+| UserChatService                | 24   | 24  | ✅ 全部完成               |
+| ChatAdminService               | 11   | 11  | ✅ 全部完成               |
+| ChatPushService                | 7    | 7   | ✅ 全部完成               |
+| ChatWebSocketSessionRegistry   | 5    | 5   | ✅ 全部完成               |
+| ChatAttachmentMetadataResolver | 1    | 1   | ✅ 全部完成               |
+| ChatAttachmentAsyncProcessing  | 1    | 1   | ✅ 全部完成               |
+| ChatMessageGovernanceService   | 2    | 2   | ✅ 全部完成               |
+| ChatMetricsService             | 2    | 2   | ✅ 全部完成               |
+| 基础仓储(5个)                       | 0自定义 | 全部  | ✅ MyBatis-Plus标准CRUD |
 
 **结论: chat 模块所有接口方法均已完整实现，不存在缺失的方法。**
 
 ### 2.2 WebSocket协议完成情况
 
-| 方向          | 类型                                                                                                                                        | 状态    |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| 方向      | 类型                                                                                                                                          | 状态   |
+|---------|---------------------------------------------------------------------------------------------------------------------------------------------|------|
 | 客户端→服务端 | `send_message` / `mark_read` / `ping`                                                                                                       | ✅ 完成 |
 | 服务端→客户端 | `message_created` / `message_updated` / `message_revoked` / `message_deleted` / `read_updated` / `conversation_updated` / `members_updated` | ✅ 完成 |
-| 多节点广播    | Redis pub/sub + 本地会话表                                                                                                                  | ✅ 完成 |
+| 多节点广播   | Redis pub/sub + 本地会话表                                                                                                                       | ✅ 完成 |
 
 ## 3. 本轮已完成
 
@@ -97,18 +98,18 @@ module/chat/
 
 ## 4. 现有测试文件 (10个)
 
-| 测试文件                                       | 测试方法数 | 覆盖范围                                                               |
-| ---------------------------------------------- | ---------- | ---------------------------------------------------------------------- |
-| `ChatWebSocketHandlerTest`                     | 25         | 连接生命周期/ping/协议分发/拒绝服务端类型/send_message/mark_read全分支 |
-| `ChatControllerSecurityTest`                   | 19         | 用户端登录要求/后台权限拦截(11个场景)                                  |
-| `UserChatServiceImplTest`                      | 53         | 会话详情/文本发送/文件发送/已读/群创建/群治理/编辑/撤回/删除/分页边界  |
-| `ChatAdminServiceImplTest`                     | 33         | 会话分页/消息分页/详情/回执/成员治理/撤回/状态切换                     |
-| `ChatPushServiceImplTest`                      | 10         | 本地推送+Redis广播/全量推送方法/集群事件处理/未知类型忽略              |
-| `ChatPushRedisSubscriberTest`                  | 2          | 有效payload转发/无效JSON忽略                                           |
-| `ChatAttachmentMetadataResolverImplTest`       | 2          | 图片尺寸/WAV时长+波形                                                  |
-| `ChatAttachmentAsyncProcessingServiceImplTest` | 5          | 持久化任务落库/图片缩略图/语音转码/legacy兼容/失败重试                |
-| `ChatMessageGovernanceServiceImplTest`         | 3          | 敏感词拦截/频控拦截/正常通过路径                                       |
-| `ChatWebSocketSessionRegistryImplTest`         | 3          | 会话注册/注销/数字型用户ID解析/在线数统计                              |
+| 测试文件                                           | 测试方法数 | 覆盖范围                                               |
+|------------------------------------------------|-------|----------------------------------------------------|
+| `ChatWebSocketHandlerTest`                     | 25    | 连接生命周期/ping/协议分发/拒绝服务端类型/send_message/mark_read全分支 |
+| `ChatControllerSecurityTest`                   | 19    | 用户端登录要求/后台权限拦截(11个场景)                              |
+| `UserChatServiceImplTest`                      | 53    | 会话详情/文本发送/文件发送/已读/群创建/群治理/编辑/撤回/删除/分页边界            |
+| `ChatAdminServiceImplTest`                     | 33    | 会话分页/消息分页/详情/回执/成员治理/撤回/状态切换                       |
+| `ChatPushServiceImplTest`                      | 10    | 本地推送+Redis广播/全量推送方法/集群事件处理/未知类型忽略                  |
+| `ChatPushRedisSubscriberTest`                  | 2     | 有效payload转发/无效JSON忽略                               |
+| `ChatAttachmentMetadataResolverImplTest`       | 2     | 图片尺寸/WAV时长+波形                                      |
+| `ChatAttachmentAsyncProcessingServiceImplTest` | 5     | 持久化任务落库/图片缩略图/语音转码/legacy兼容/失败重试                   |
+| `ChatMessageGovernanceServiceImplTest`         | 3     | 敏感词拦截/频控拦截/正常通过路径                                  |
+| `ChatWebSocketSessionRegistryImplTest`         | 3     | 会话注册/注销/数字型用户ID解析/在线数统计                            |
 
 ## 5. 下一批高优先级
 
@@ -138,7 +139,8 @@ module/chat/
 
 ### 5.4 推送服务补充
 
-- [x] `ChatPushServiceImpl` - `pushMessageUpdated` / `pushMessageRevoked` / `pushMessageDeleted` / `pushReadUpdated` / `pushConversationUpdated` / `pushMembersUpdated` 各推送方法验证
+- [x] `ChatPushServiceImpl` - `pushMessageUpdated` / `pushMessageRevoked` / `pushMessageDeleted` / `pushReadUpdated` /
+  `pushConversationUpdated` / `pushMembersUpdated` 各推送方法验证
 - [x] `ChatMessageGovernanceServiceImpl` - 正常通过路径（无敏感词+未超频）
 - [x] `ChatWebSocketSessionRegistryImpl` - 会话注册/注销/查找/在线数统计
 
@@ -154,10 +156,14 @@ module/chat/
 ## 7. 中长期基础设施
 
 - [x] 将异步媒体处理从单机线程池升级为持久化任务（节点重启不丢任务）
-- [x] 评估更完整的 Redis Testcontainers 广播链路集成测试（结论：值得做，但应作为后续集成测试专项，优先验证 Redis pub/sub 广播、跨节点会话注册表协同，以及消息更新/已读事件跨节点送达）
-- [x] 评估从敏感词拦截升级到命中审计/人工复核/外部审核服务（结论：v1 先保持同步拦截；下一阶段优先补“命中留痕 + 审计记录 + 管理端查询”，再视合规要求接人工复核或外部审核）
-- [x] 当会话量和在线连接数显著增长后，评估未读数缓存/推送异步化（结论：当前先保持 DB 真值 + Redis 广播；当热点会话、未读聚合查询或广播风暴明显出现后，再按“未读缓存 + 推送削峰队列”拆分）
-- [x] 评估 delivered 从"在线即delivered"改为ACK驱动的改造影响（结论：会同步影响 recipient/cursor/member 高水位、WebSocket 协议、多端重连补 ACK 和消息状态回放；当前维持在线即 delivered，若业务要求更强送达语义再单独立项）
+- [x] 评估更完整的 Redis Testcontainers 广播链路集成测试（结论：值得做，但应作为后续集成测试专项，优先验证 Redis pub/sub
+  广播、跨节点会话注册表协同，以及消息更新/已读事件跨节点送达）
+- [x] 评估从敏感词拦截升级到命中审计/人工复核/外部审核服务（结论：v1 先保持同步拦截；下一阶段优先补“命中留痕 + 审计记录 +
+  管理端查询”，再视合规要求接人工复核或外部审核）
+- [x] 当会话量和在线连接数显著增长后，评估未读数缓存/推送异步化（结论：当前先保持 DB 真值 + Redis
+  广播；当热点会话、未读聚合查询或广播风暴明显出现后，再按“未读缓存 + 推送削峰队列”拆分）
+- [x] 评估 delivered 从"在线即delivered"改为ACK驱动的改造影响（结论：会同步影响 recipient/cursor/member 高水位、WebSocket
+  协议、多端重连补 ACK 和消息状态回放；当前维持在线即 delivered，若业务要求更强送达语义再单独立项）
 
 ## 8. 完成标志
 

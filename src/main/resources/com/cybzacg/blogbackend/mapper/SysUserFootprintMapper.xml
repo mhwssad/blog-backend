@@ -17,20 +17,20 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,user_id,target_id,target_type,title,url,ip_address,user_agent,visited_at
+        id
+        ,user_id,target_id,target_type,title,url,ip_address,user_agent,visited_at
     </sql>
 
     <insert id="upsertFootprint" parameterType="com.cybzacg.blogbackend.domain.SysUserFootprint">
-        insert into sys_user_footprint (
-            user_id, target_id, target_type, title, url, ip_address, user_agent, visited_at
-        ) values (
-            #{userId}, #{targetId}, #{targetType}, #{title}, #{url}, #{ipAddress}, #{userAgent}, #{visitedAt}
-        )
-        on duplicate key update
-            title = values(title),
-            url = values(url),
-            ip_address = values(ip_address),
-            user_agent = values(user_agent),
-            visited_at = values(visited_at)
+        insert into sys_user_footprint (user_id, target_id, target_type, title, url, ip_address, user_agent, visited_at)
+        values (#{userId}, #{targetId}, #{targetType}, #{title}, #{url}, #{ipAddress}, #{userAgent},
+                #{visitedAt}) on duplicate key
+        update
+            title =
+        values (title), url =
+        values (url), ip_address =
+        values (ip_address), user_agent =
+        values (user_agent), visited_at =
+        values (visited_at)
     </insert>
 </mapper>

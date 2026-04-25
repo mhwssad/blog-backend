@@ -1,30 +1,22 @@
 package com.cybzacg.blogbackend.module.article;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.BlogArticle;
-import com.cybzacg.blogbackend.domain.BlogArticleCategory;
-import com.cybzacg.blogbackend.domain.SysCategory;
-import com.cybzacg.blogbackend.domain.SysTag;
-import com.cybzacg.blogbackend.domain.SysUser;
+import com.cybzacg.blogbackend.domain.*;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.article.convert.ArticleModelMapper;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleCardVO;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleDetailVO;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticlePageQuery;
-import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleCategoryRepository;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
+import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
 import com.cybzacg.blogbackend.module.article.service.impl.PublicArticleServiceImpl;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicCategoryTreeVO;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicTagVO;
-import com.cybzacg.blogbackend.module.content.repository.SysCategoryRepository;
-import com.cybzacg.blogbackend.module.content.repository.SysCollectionRepository;
-import com.cybzacg.blogbackend.module.content.repository.SysInteractionRepository;
-import com.cybzacg.blogbackend.module.content.repository.SysTagRelationRepository;
-import com.cybzacg.blogbackend.module.content.repository.SysTagRepository;
+import com.cybzacg.blogbackend.module.content.repository.*;
 import com.cybzacg.blogbackend.module.content.service.UserFootprintService;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,25 +26,15 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertIterableEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyCollection;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PublicArticleServiceImplTest {

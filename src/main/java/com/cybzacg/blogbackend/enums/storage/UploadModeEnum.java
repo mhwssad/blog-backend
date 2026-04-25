@@ -33,15 +33,6 @@ public enum UploadModeEnum {
         this.label = label;
     }
 
-    @JsonValue
-    public Integer getValue() {
-        return this.value;
-    }
-
-    public String getLabel() {
-        return label;
-    }
-
     /**
      * 根据code获取枚举
      *
@@ -58,6 +49,15 @@ public enum UploadModeEnum {
             }
         }
         return null;
+    }
+
+    @JsonValue
+    public Integer getValue() {
+        return this.value;
+    }
+
+    public String getLabel() {
+        return label;
     }
 }
 

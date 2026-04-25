@@ -17,13 +17,17 @@ import org.springframework.util.StringUtils;
 public class SysConfigRepositoryImpl extends ServiceImpl<SysConfigMapper, SysConfig>
         implements SysConfigRepository {
 
-    /** 根据配置键查找配置项。 */
+    /**
+     * 根据配置键查找配置项。
+     */
     @Override
     public SysConfig findByConfigKey(String configKey) {
         return baseMapper.selectByConfigKey(configKey);
     }
 
-    /** 判断配置键是否已被其他未删除配置占用。 */
+    /**
+     * 判断配置键是否已被其他未删除配置占用。
+     */
     @Override
     public boolean existsActiveByConfigKey(String configKey, Long excludeId) {
         if (!StringUtils.hasText(configKey)) {
@@ -35,7 +39,9 @@ public class SysConfigRepositoryImpl extends ServiceImpl<SysConfigMapper, SysCon
                 .ne(excludeId != null, SysConfig::getId, excludeId));
     }
 
-    /** 根据管理端查询条件进行分页，按创建时间降序排列。 */
+    /**
+     * 根据管理端查询条件进行分页，按创建时间降序排列。
+     */
     @Override
     public Page<SysConfig> pageByAdminConditions(SysConfigPageQuery query) {
         return page(new Page<>(query.getCurrent(), query.getSize()), new LambdaQueryWrapper<SysConfig>()

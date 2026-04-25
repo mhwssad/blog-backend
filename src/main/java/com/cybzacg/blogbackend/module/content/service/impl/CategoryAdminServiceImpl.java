@@ -36,20 +36,26 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
     private final BlogArticleCategoryRepository blogArticleCategoryService;
     private final ContentModelMapper contentModelMapper;
 
-    /** 查询文章分类树结构，返回按排序字段组装的层级列表。 */
+    /**
+     * 查询文章分类树结构，返回按排序字段组装的层级列表。
+     */
     @Override
     public List<CategoryTreeVO> listCategoryTree() {
         List<SysCategory> categories = sysCategoryRepository.findByTypeOrderBySortOrderAndId(ARTICLE_TYPE);
         return buildCategoryTree(categories);
     }
 
-    /** 按ID获取分类详情。 */
+    /**
+     * 按ID获取分类详情。
+     */
     @Override
     public CategoryAdminVO getCategory(Long id) {
         return contentModelMapper.toCategoryAdminVO(getCategoryOrThrow(id));
     }
 
-    /** 创建分类，校验编码唯一性与父分类合法性后持久化。 */
+    /**
+     * 创建分类，校验编码唯一性与父分类合法性后持久化。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public CategoryAdminVO createCategory(CategorySaveRequest request) {
@@ -61,7 +67,9 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
         return contentModelMapper.toCategoryAdminVO(category);
     }
 
-    /** 更新分类信息，并递归刷新子分类的层级与祖先链。 */
+    /**
+     * 更新分类信息，并递归刷新子分类的层级与祖先链。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public CategoryAdminVO updateCategory(Long id, CategorySaveRequest request) {
@@ -74,7 +82,9 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
         return contentModelMapper.toCategoryAdminVO(category);
     }
 
-    /** 切换分类启用/禁用状态。 */
+    /**
+     * 切换分类启用/禁用状态。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, Integer status) {
@@ -83,7 +93,9 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
         sysCategoryRepository.updateById(category);
     }
 
-    /** 删除分类，删除前校验是否仍存在子分类或已绑定文章。 */
+    /**
+     * 删除分类，删除前校验是否仍存在子分类或已绑定文章。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteCategory(Long id) {

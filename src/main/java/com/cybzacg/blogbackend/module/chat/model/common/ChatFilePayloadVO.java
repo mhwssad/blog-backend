@@ -1,8 +1,9 @@
 package com.cybzacg.blogbackend.module.chat.model.common;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.List;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * 文件消息载荷。

@@ -6,8 +6,8 @@ import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.SysCollection;
 import com.cybzacg.blogbackend.domain.SysCollectionFolder;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
+import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.user.CollectionFolderSaveRequest;
 import com.cybzacg.blogbackend.module.content.model.user.CollectionFolderVO;
@@ -41,7 +41,9 @@ public class UserCollectionServiceImpl implements UserCollectionService {
     private final ArticleAccessControlService articleAccessControlService;
     private final ContentModelMapper contentModelMapper;
 
-    /** 分页查询当前用户的收藏夹列表，按默认夹与排序字段排列。 */
+    /**
+     * 分页查询当前用户的收藏夹列表，按默认夹与排序字段排列。
+     */
     @Override
     public PageResult<CollectionFolderVO> pageFolders() {
         Long userId = SecurityUtils.requireUserId();
@@ -110,7 +112,9 @@ public class UserCollectionServiceImpl implements UserCollectionService {
         sysCollectionFolderRepository.removeById(id);
     }
 
-    /** 分页查询当前用户的收藏记录列表。 */
+    /**
+     * 分页查询当前用户的收藏记录列表。
+     */
     @Override
     public PageResult<CollectionVO> pageCollections() {
         Long userId = SecurityUtils.requireUserId();

@@ -2,54 +2,29 @@ package com.cybzacg.blogbackend.module.article.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.BlogArticle;
-import com.cybzacg.blogbackend.domain.BlogArticleAccess;
-import com.cybzacg.blogbackend.domain.BlogArticleCategory;
-import com.cybzacg.blogbackend.domain.FileBusinessInfo;
-import com.cybzacg.blogbackend.domain.SysCategory;
-import com.cybzacg.blogbackend.domain.SysTag;
-import com.cybzacg.blogbackend.domain.SysTagRelation;
-import com.cybzacg.blogbackend.domain.SysUser;
+import com.cybzacg.blogbackend.domain.*;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.convert.ArticleModelMapper;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleAccessItem;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleAdminPageQuery;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleAdminVO;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleDetailVO;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleSaveRequest;
+import com.cybzacg.blogbackend.module.article.model.admin.*;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleAccessRepository;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleCategoryRepository;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
-import com.cybzacg.blogbackend.module.article.service.ArticleAdminService;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
+import com.cybzacg.blogbackend.module.article.service.ArticleAdminService;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.content.repository.SysCategoryRepository;
-import com.cybzacg.blogbackend.module.content.repository.SysCollectionFolderRepository;
-import com.cybzacg.blogbackend.module.content.repository.SysCollectionRepository;
-import com.cybzacg.blogbackend.module.content.repository.SysCommentRepository;
-import com.cybzacg.blogbackend.module.content.repository.SysInteractionRepository;
-import com.cybzacg.blogbackend.module.content.repository.SysTagRelationRepository;
-import com.cybzacg.blogbackend.module.content.repository.SysTagRepository;
-import com.cybzacg.blogbackend.module.content.repository.SysUserFootprintRepository;
+import com.cybzacg.blogbackend.module.content.repository.*;
 import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.IdCollectionUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.util.CollectionUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -445,6 +420,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         current.retainAll(incoming);
         return current;
     }
+
     /**
      * 删除文章评论对应的互动记录，避免评论被删后仍残留点赞等关联数据。
      */
@@ -501,7 +477,6 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
             fileLifecycleService.syncFileAfterReferenceRemoval(fileId);
         }
     }
-
 
 
     /**

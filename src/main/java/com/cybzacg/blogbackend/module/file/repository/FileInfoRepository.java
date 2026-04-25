@@ -14,7 +14,7 @@ public interface FileInfoRepository extends IService<FileInfo> {
     /**
      * 按 MD5 和状态查询文件。
      *
-     * @param md5 文件 MD5
+     * @param md5    文件 MD5
      * @param status 文件状态
      * @return 文件信息
      */
@@ -31,7 +31,7 @@ public interface FileInfoRepository extends IService<FileInfo> {
     /**
      * 按状态和关键字查询文件 ID 集合。
      *
-     * @param status 文件状态
+     * @param status  文件状态
      * @param keyword 关键字
      * @return 文件 ID 集合
      */
@@ -48,7 +48,7 @@ public interface FileInfoRepository extends IService<FileInfo> {
     /**
      * 重算文件引用元数据。
      *
-     * @param fileId 文件 ID
+     * @param fileId        文件 ID
      * @param promotePublic 是否提升公开状态
      * @return 是否更新成功
      */

@@ -19,11 +19,11 @@ import java.time.LocalDateTime;
  * 文章模块对象转换器，处理文章、分类关联、标签关联及访问权限的映射。
  */
 @Mapper(
-    componentModel = "spring",
-    imports = StrUtils.class,
-    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
-    nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS,
-    unmappedTargetPolicy = ReportingPolicy.IGNORE
+        componentModel = "spring",
+        imports = StrUtils.class,
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
+        nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS,
+        unmappedTargetPolicy = ReportingPolicy.IGNORE
 )
 public interface ArticleModelMapper {
     ArticleAdminVO toAdminVO(BlogArticle article);

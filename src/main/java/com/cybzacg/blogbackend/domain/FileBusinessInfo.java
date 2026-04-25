@@ -13,27 +13,49 @@ import java.time.LocalDateTime;
 @Data
 @TableName("file_business_info")
 public class FileBusinessInfo {
-    /** 主键ID */
+    /**
+     * 主键ID
+     */
     @TableId(type = IdType.AUTO)
     private Long id;
-    /** 文件ID */
+    /**
+     * 文件ID
+     */
     private Long fileId;
-    /** 使用者ID */
+    /**
+     * 使用者ID
+     */
     private Long userId;
-    /** 业务引用类型（avatar-头像，chat_attachment-聊天附件，article_cover-文章封面） */
+    /**
+     * 业务引用类型（avatar-头像，chat_attachment-聊天附件，article_cover-文章封面）
+     */
     private String referenceType;
-    /** 业务引用ID */
+    /**
+     * 业务引用ID
+     */
     private Long referenceId;
-    /** 来源IP地址 */
+    /**
+     * 来源IP地址
+     */
     private String sourceIp;
-    /** 是否公开：0-私密，1-公开 */
+    /**
+     * 是否公开：0-私密，1-公开
+     */
     private Integer isPublic;
-    /** 文件分类 */
+    /**
+     * 文件分类
+     */
     private String category;
-    /** 备注 */
+    /**
+     * 备注
+     */
     private String remark;
-    /** 创建时间 */
+    /**
+     * 创建时间
+     */
     private LocalDateTime createdAt;
-    /** 更新时间 */
+    /**
+     * 更新时间
+     */
     private LocalDateTime updatedAt;
 }

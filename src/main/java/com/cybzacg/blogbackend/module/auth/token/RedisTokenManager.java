@@ -5,9 +5,9 @@ import com.cybzacg.blogbackend.common.redis.RedisKeyUtils;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
 import com.cybzacg.blogbackend.config.property.SecurityProperties;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.auth.model.AuthenticationToken;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserDetails;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserPrincipal;
+import com.cybzacg.blogbackend.module.auth.model.AuthenticationToken;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.ReflectionUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
@@ -25,11 +25,7 @@ import org.springframework.util.StringUtils;
 
 import java.security.SecureRandom;
 import java.time.Duration;
-import java.util.Base64;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Redis Token 管理器
@@ -357,20 +353,20 @@ public class RedisTokenManager implements TokenManager {
         return redisTokenConfig != null ? redisTokenConfig : new SecurityProperties.RedisTokenConfig();
     }
 
-    @Data
-    @AllArgsConstructor
-    private static class TokenContext {
-        private Long userId;
-        private String username;
-        private List<String> authorities;
-    }
-
     private interface TokenState {
         Long getUserId();
 
         String getUsername();
 
         List<String> getAuthorities();
+    }
+
+    @Data
+    @AllArgsConstructor
+    private static class TokenContext {
+        private Long userId;
+        private String username;
+        private List<String> authorities;
     }
 
     @Data

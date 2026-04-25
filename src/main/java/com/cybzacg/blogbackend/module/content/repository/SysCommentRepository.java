@@ -23,7 +23,7 @@ public interface SysCommentRepository extends IService<SysComment> {
      * 查询指定目标下的全部评论。
      *
      * @param targetType 目标类型
-     * @param targetId 目标 ID
+     * @param targetId   目标 ID
      * @return 评论列表
      */
     List<SysComment> findByTargetTypeAndTargetId(String targetType, Long targetId);
@@ -31,7 +31,7 @@ public interface SysCommentRepository extends IService<SysComment> {
     /**
      * 查询指定目标下的根评论。
      *
-     * @param targetId 目标 ID
+     * @param targetId   目标 ID
      * @param targetType 目标类型
      * @return 根评论列表
      */
@@ -49,7 +49,7 @@ public interface SysCommentRepository extends IService<SysComment> {
      * 删除指定目标类型和目标 ID 的全部评论。
      *
      * @param targetType 目标类型
-     * @param targetId 目标 ID
+     * @param targetId   目标 ID
      * @return 是否删除成功
      */
     boolean removeByTargetTypeAndTargetId(String targetType, Long targetId);

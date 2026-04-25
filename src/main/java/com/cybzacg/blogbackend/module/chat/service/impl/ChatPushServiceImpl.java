@@ -12,17 +12,14 @@ import com.cybzacg.blogbackend.module.chat.service.ChatPushService;
 import com.cybzacg.blogbackend.module.chat.service.ChatWebSocketSessionRegistry;
 import com.cybzacg.blogbackend.module.chat.websocket.ChatWebSocketMessageCodec;
 import com.cybzacg.blogbackend.utils.JsonUtils;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
+
+import java.util.*;
 
 /**
  * 聊天推送服务实现。
@@ -175,8 +172,7 @@ public class ChatPushServiceImpl implements ChatPushService {
                     JsonUtils.getObjectMapper().convertValue(event.getPayload(), ChatMessageVO.class);
             case "message_deleted" ->
                     JsonUtils.getObjectMapper().convertValue(event.getPayload(), ChatWsMessageDeletedPayload.class);
-            case "read_updated" ->
-                    JsonUtils.getObjectMapper().convertValue(event.getPayload(), ChatReadStateVO.class);
+            case "read_updated" -> JsonUtils.getObjectMapper().convertValue(event.getPayload(), ChatReadStateVO.class);
             case "conversation_updated" ->
                     JsonUtils.getObjectMapper().convertValue(event.getPayload(), ChatWsConversationUpdatedPayload.class);
             case "members_updated" ->

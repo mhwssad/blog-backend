@@ -1,8 +1,9 @@
 package com.cybzacg.blogbackend.module.follow.model.admin;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.time.LocalDateTime;
 import lombok.Data;
+
+import java.time.LocalDateTime;
 
 /**
  * 关注关系后台视图。

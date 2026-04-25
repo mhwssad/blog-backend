@@ -10,11 +10,11 @@
 
 ## Repository 列表
 
-| Repository 接口 | 对应实体 | 薄服务来源 | Mapper自定义方法 |
-|---|---|---|---|
-| `BlogArticleRepository` | BlogArticle | BlogArticleService | `selectAdminPage`, `selectPublishedPage`, `selectArticleDetailById` |
-| `BlogArticleCategoryRepository` | BlogArticleCategory | BlogArticleCategoryService | 无 |
-| `BlogArticleAccessRepository` | BlogArticleAccess | BlogArticleAccessService | 无 |
+| Repository 接口                   | 对应实体                | 薄服务来源                      | Mapper自定义方法                                                         |
+|---------------------------------|---------------------|----------------------------|---------------------------------------------------------------------|
+| `BlogArticleRepository`         | BlogArticle         | BlogArticleService         | `selectAdminPage`, `selectPublishedPage`, `selectArticleDetailById` |
+| `BlogArticleCategoryRepository` | BlogArticleCategory | BlogArticleCategoryService | 无                                                                   |
+| `BlogArticleAccessRepository`   | BlogArticleAccess   | BlogArticleAccessService   | 无                                                                   |
 
 ## 各 Repository 方法设计
 
@@ -33,13 +33,13 @@ public interface BlogArticleRepository extends IService<BlogArticle> {
 }
 ```
 
-| 方法 | 来源 | 说明 |
-|---|---|---|
-| `selectAdminPage` | BlogArticleMapper XML | 管理端文章分页（多表JOIN） |
-| `selectPublishedPage` | BlogArticleMapper XML | 公开文章分页 |
-| `selectArticleDetailById` | BlogArticleMapper XML | 文章详情 |
-| `pageAdminArticles` | ArticleAdminServiceImpl:98, `LambdaQueryWrapper + page()` | 多条件管理端分页 |
-| `listAllPublished` | PublicArticleServiceImpl:77, `lambdaQuery().eq(status,1).list()` | 所有已发布文章ID |
+| 方法                        | 来源                                                               | 说明              |
+|---------------------------|------------------------------------------------------------------|-----------------|
+| `selectAdminPage`         | BlogArticleMapper XML                                            | 管理端文章分页（多表JOIN） |
+| `selectPublishedPage`     | BlogArticleMapper XML                                            | 公开文章分页          |
+| `selectArticleDetailById` | BlogArticleMapper XML                                            | 文章详情            |
+| `pageAdminArticles`       | ArticleAdminServiceImpl:98, `LambdaQueryWrapper + page()`        | 多条件管理端分页        |
+| `listAllPublished`        | PublicArticleServiceImpl:77, `lambdaQuery().eq(status,1).list()` | 所有已发布文章ID       |
 
 ### BlogArticleCategoryRepository
 
@@ -52,12 +52,12 @@ public interface BlogArticleCategoryRepository extends IService<BlogArticleCateg
 }
 ```
 
-| 方法 | 来源 | 说明 |
-|---|---|---|
-| `listByArticleIdOrdered` | PublicArticleServiceImpl:186, `lambdaQuery().eq(articleId).orderByAsc(sortOrder).list()` | 文章关联分类（排序） |
-| `listArticleIdsByCategoryId` | PublicArticleServiceImpl:140, `lambdaQuery().eq(categoryId).list()` | 分类下的文章 |
-| `listArticleCategoriesByIds` | ArticleAdminServiceImpl:331, `lambdaQuery().in(ids).eq(type).list()` | 批量查分类 |
-| `deleteByArticleId` | ArticleAdminServiceImpl:213, `remove(LambdaQueryWrapper)` | 删除文章分类关联 |
+| 方法                           | 来源                                                                                       | 说明         |
+|------------------------------|------------------------------------------------------------------------------------------|------------|
+| `listByArticleIdOrdered`     | PublicArticleServiceImpl:186, `lambdaQuery().eq(articleId).orderByAsc(sortOrder).list()` | 文章关联分类（排序） |
+| `listArticleIdsByCategoryId` | PublicArticleServiceImpl:140, `lambdaQuery().eq(categoryId).list()`                      | 分类下的文章     |
+| `listArticleCategoriesByIds` | ArticleAdminServiceImpl:331, `lambdaQuery().in(ids).eq(type).list()`                     | 批量查分类      |
+| `deleteByArticleId`          | ArticleAdminServiceImpl:213, `remove(LambdaQueryWrapper)`                                | 删除文章分类关联   |
 
 ### BlogArticleAccessRepository
 
@@ -67,8 +67,8 @@ public interface BlogArticleAccessRepository extends IService<BlogArticleAccess>
 }
 ```
 
-| 方法 | 来源 | 说明 |
-|---|---|---|
+| 方法                  | 来源                                                        | 说明       |
+|---------------------|-----------------------------------------------------------|----------|
 | `deleteByArticleId` | ArticleAdminServiceImpl:213, `remove(LambdaQueryWrapper)` | 删除文章访问权限 |
 
 ## 跨模块 Repository 注入
@@ -77,26 +77,26 @@ Article 模块的业务服务是最大的跨模块消费者，需要注入以下
 
 ### 来自 content 模块
 
-| 外部 Repository | 用途 | 调用方 |
-|---|---|---|
-| `SysCategoryRepository` | 查文章分类 | ArticleAdminServiceImpl, PublicArticleServiceImpl |
-| `SysTagRepository` | 查标签 | ArticleAdminServiceImpl, PublicArticleServiceImpl |
-| `SysTagRelationRepository` | 文章标签关联 | ArticleAdminServiceImpl, PublicArticleServiceImpl |
-| `SysCommentRepository` | 文章评论级联 | ArticleAdminServiceImpl |
-| `SysInteractionRepository` | 文章互动 | ArticleAdminServiceImpl, UserArticleActionServiceImpl, PublicArticleServiceImpl |
-| `SysCollectionRepository` | 文章收藏 | ArticleAdminServiceImpl, PublicArticleServiceImpl |
-| `SysUserFootprintRepository` | 文章足迹 | ArticleAdminServiceImpl |
+| 外部 Repository                | 用途     | 调用方                                                                             |
+|------------------------------|--------|---------------------------------------------------------------------------------|
+| `SysCategoryRepository`      | 查文章分类  | ArticleAdminServiceImpl, PublicArticleServiceImpl                               |
+| `SysTagRepository`           | 查标签    | ArticleAdminServiceImpl, PublicArticleServiceImpl                               |
+| `SysTagRelationRepository`   | 文章标签关联 | ArticleAdminServiceImpl, PublicArticleServiceImpl                               |
+| `SysCommentRepository`       | 文章评论级联 | ArticleAdminServiceImpl                                                         |
+| `SysInteractionRepository`   | 文章互动   | ArticleAdminServiceImpl, UserArticleActionServiceImpl, PublicArticleServiceImpl |
+| `SysCollectionRepository`    | 文章收藏   | ArticleAdminServiceImpl, PublicArticleServiceImpl                               |
+| `SysUserFootprintRepository` | 文章足迹   | ArticleAdminServiceImpl                                                         |
 
 ### 来自 auth 模块
 
-| 外部 Repository | 用途 | 调用方 |
-|---|---|---|
+| 外部 Repository       | 用途    | 调用方                                               |
+|---------------------|-------|---------------------------------------------------|
 | `SysUserRepository` | 查作者信息 | ArticleAdminServiceImpl, PublicArticleServiceImpl |
 
 ### 来自 file 模块
 
-| 外部 Repository | 用途 | 调用方 |
-|---|---|---|
+| 外部 Repository                | 用途   | 调用方                     |
+|------------------------------|------|-------------------------|
 | `FileBusinessInfoRepository` | 文章附件 | ArticleAdminServiceImpl |
 
 ## 执行步骤
@@ -106,22 +106,22 @@ Article 模块的业务服务是最大的跨模块消费者，需要注入以下
 ### Step 2: 修改4个业务服务
 
 1. **`ArticleAdminServiceImpl`**（最复杂，16个依赖）：
-   - 注入 `BlogArticleRepository`, `BlogArticleCategoryRepository`, `BlogArticleAccessRepository`
-   - 注入 `SysCategoryRepository`, `SysTagRepository`, `SysTagRelationRepository`
-   - 注入 `SysCommentRepository`, `SysInteractionRepository`, `SysCollectionRepository`, `SysUserFootprintRepository`
-   - 注入 `SysUserRepository`, `FileBusinessInfoRepository`
-   - 提取13处 LambdaQueryWrapper、9处 lambdaQuery 到对应 Repository 方法
+    - 注入 `BlogArticleRepository`, `BlogArticleCategoryRepository`, `BlogArticleAccessRepository`
+    - 注入 `SysCategoryRepository`, `SysTagRepository`, `SysTagRelationRepository`
+    - 注入 `SysCommentRepository`, `SysInteractionRepository`, `SysCollectionRepository`, `SysUserFootprintRepository`
+    - 注入 `SysUserRepository`, `FileBusinessInfoRepository`
+    - 提取13处 LambdaQueryWrapper、9处 lambdaQuery 到对应 Repository 方法
 
 2. **`PublicArticleServiceImpl`**：
-   - 注入 `BlogArticleRepository`, `BlogArticleCategoryRepository`
-   - 注入 `SysCategoryRepository`, `SysTagRepository`, `SysTagRelationRepository`
-   - 注入 `SysInteractionRepository`, `SysCollectionRepository`, `SysUserRepository`
+    - 注入 `BlogArticleRepository`, `BlogArticleCategoryRepository`
+    - 注入 `SysCategoryRepository`, `SysTagRepository`, `SysTagRelationRepository`
+    - 注入 `SysInteractionRepository`, `SysCollectionRepository`, `SysUserRepository`
 
 3. **`UserArticleActionServiceImpl`**：
-   - 注入 `BlogArticleRepository`, `SysInteractionRepository`
+    - 注入 `BlogArticleRepository`, `SysInteractionRepository`
 
 4. **`ArticleAccessControlServiceImpl`**：
-   - 注入 `BlogArticleAccessRepository`
+    - 注入 `BlogArticleAccessRepository`
 
 ### Step 3: 更新测试
 
@@ -133,8 +133,10 @@ Article 模块的业务服务是最大的跨模块消费者，需要注入以下
 
 - [x] 已创建 `BlogArticleRepository`、`BlogArticleCategoryRepository`、`BlogArticleAccessRepository` 及对应实现。
 - [x] 已删除旧薄服务 `BlogArticleService`、`BlogArticleCategoryService`、`BlogArticleAccessService` 及对应实现。
-- [x] `ArticleAdminServiceImpl` 已完成迁移，注入 article 模块 3 个 Repository + content 模块 5 个 Repository + auth 模块 `SysUserRepository` + file 模块 `FileBusinessInfoRepository`，无遗留 `lambdaQuery`/直接 Mapper 注入。
-- [x] `PublicArticleServiceImpl` 已完成迁移，注入 article 模块 2 个 Repository + content 模块 4 个 Repository + auth 模块 `SysUserRepository`，无遗留。
+- [x] `ArticleAdminServiceImpl` 已完成迁移，注入 article 模块 3 个 Repository + content 模块 5 个 Repository + auth 模块
+  `SysUserRepository` + file 模块 `FileBusinessInfoRepository`，无遗留 `lambdaQuery`/直接 Mapper 注入。
+- [x] `PublicArticleServiceImpl` 已完成迁移，注入 article 模块 2 个 Repository + content 模块 4 个 Repository + auth 模块
+  `SysUserRepository`，无遗留。
 - [x] `UserArticleActionServiceImpl` 已完成迁移，注入 `BlogArticleRepository` + `SysInteractionRepository`，无遗留。
 - [x] `ArticleAccessControlServiceImpl` 已完成迁移，注入 `BlogArticleAccessRepository`，无遗留。
 - [x] 所有 4 个业务服务中无 `lambdaQuery()`/`lambdaUpdate()`/`LambdaQueryWrapper`/直接 Mapper 注入。

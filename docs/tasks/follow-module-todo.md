@@ -1,6 +1,7 @@
 # Follow 模块待办清单
 
-本文档用于收口 follow（粉丝关注）模块接下来要持续推进的任务，避免“知道有缺口，但每次都重新梳理一遍”。本清单按 2026-03-31 当前代码状态整理，并已同步到本轮 follow 后台/公开/通知联动落地后的状态。
+本文档用于收口 follow（粉丝关注）模块接下来要持续推进的任务，避免“知道有缺口，但每次都重新梳理一遍”。本清单按 2026-03-31
+当前代码状态整理，并已同步到本轮 follow 后台/公开/通知联动落地后的状态。
 
 ## 1. 模块当前状态
 
@@ -32,18 +33,18 @@
 
 表 `sys_user_follow`，已定义在 `06_follow.sql` + `07_schema_repair.sql`：
 
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| `id` | Long | 主键 |
-| `follower_id` | Long | 关注者用户ID |
-| `following_id` | Long | 被关注者用户ID |
-| `follow_status` | Integer | 0=已取关, 1=已关注 |
-| `is_special_follow` | Integer | 0=普通关注, 1=特别关注 |
-| `source` | String | 来源: manual/recommend/system |
-| `follow_time` | Date | 最近关注时间 |
-| `unfollow_time` | Date | 最近取关时间 |
-| `remark` | String | 备注 |
-| `created_at` / `updated_at` | Date | 时间戳 |
+| 字段                          | 类型      | 说明                          |
+|-----------------------------|---------|-----------------------------|
+| `id`                        | Long    | 主键                          |
+| `follower_id`               | Long    | 关注者用户ID                     |
+| `following_id`              | Long    | 被关注者用户ID                    |
+| `follow_status`             | Integer | 0=已取关, 1=已关注                |
+| `is_special_follow`         | Integer | 0=普通关注, 1=特别关注              |
+| `source`                    | String  | 来源: manual/recommend/system |
+| `follow_time`               | Date    | 最近关注时间                      |
+| `unfollow_time`             | Date    | 最近取关时间                      |
+| `remark`                    | String  | 备注                          |
+| `created_at` / `updated_at` | Date    | 时间戳                         |
 
 约束:
 
@@ -60,21 +61,21 @@
 ## 3. 实现规则结论
 
 - [x] 关注/取关行为是单向还是需要对方确认？
-  - 当前实现为**单向关注**，无需对方确认。
+    - 当前实现为**单向关注**，无需对方确认。
 - [x] 取关后重新关注的行为（复用原记录切换状态 vs 新建记录）
-  - 当前实现为**复用原记录切换状态**。
+    - 当前实现为**复用原记录切换状态**。
 - [x] 特别关注的语义与特殊能力（如专属动态/优先展示）
-  - 当前先收口为**关注列表置顶筛选能力**，暂不扩展专属动态。
+    - 当前先收口为**关注列表置顶筛选能力**，暂不扩展专属动态。
 - [x] 是否允许自关注（数据库已禁止，业务层是否需要额外校验）
-  - 当前业务层也已显式拦截自关注。
+    - 当前业务层也已显式拦截自关注。
 - [x] 粉丝数/关注数的统计口径（实时 COUNT vs 独立计数字段 vs 异步统计）
-  - 当前采用**实时 COUNT**。
+    - 当前采用**实时 COUNT**。
 - [x] 关注关系与通知的联动（新粉丝是否通知被关注者）
-  - 当前已落地**新粉丝通知**，并采用**事务提交后异步补写**，不让通知失败回滚关注主链路。
+    - 当前已落地**新粉丝通知**，并采用**事务提交后异步补写**，不让通知失败回滚关注主链路。
 - [x] 是否需要后台管理能力（查看/清理异常关注关系）
-  - 当前已落地**后台分页查询 + 异常关系清理**，用于治理历史脏数据和用户状态异常关系。
+    - 当前已落地**后台分页查询 + 异常关系清理**，用于治理历史脏数据和用户状态异常关系。
 - [x] 关注关系与用户主页的联动（关注后是否影响主页展示内容）
-  - 当前结论为**先保持解耦**；follow 模块只维护关系与通知，不直接驱动主页内容编排。
+    - 当前结论为**先保持解耦**；follow 模块只维护关系与通知，不直接驱动主页内容编排。
 
 ## 4. 功能落地状态
 
@@ -112,32 +113,32 @@
 
 - [x] 关注数/粉丝数统计方案（实时 COUNT / 用户表冗余字段 / Redis缓存）
 - [x] 统计一致性保证（关注/取关时同步更新）
-  - 当前因采用实时 COUNT，关注/取关只需维护关系状态一致性。
+    - 当前因采用实时 COUNT，关注/取关只需维护关系状态一致性。
 - [ ] Redis 缓存层
-  - 当前结论：**暂不引入**。现阶段接口复杂度和热点规模不足以支撑额外缓存一致性成本。
+    - 当前结论：**暂不引入**。现阶段接口复杂度和热点规模不足以支撑额外缓存一致性成本。
 
 ### 4.6 通知联动
 
 - [x] 新粉丝通知（被关注者收到提醒）
 - [x] 通知失败不影响关注主链路
 - [ ] 关注请求通知（如采用双向确认模式）
-  - 当前结论：**不适用**，因为 follow 规则仍为单向关注。
+    - 当前结论：**不适用**，因为 follow 规则仍为单向关注。
 
 ## 5. 现有文件清单（核心文件已扩展）
 
-| 文件 | 路径 | 内容 |
-| --- | --- | --- |
-| `UserFollowController.java` | `module/follow/controller/` | 用户侧关注接口 |
-| `PublicFollowController.java` | `module/follow/controller/` | 公开访客接口 |
-| `FollowAdminController.java` | `module/follow/controller/` | 后台管理接口 |
-| `UserFollowServiceImpl.java` | `module/follow/service/impl/` | 用户侧主链路 + 通知挂钩 |
-| `PublicFollowServiceImpl.java` | `module/follow/service/impl/` | 公开访客分页查询 |
-| `FollowAdminServiceImpl.java` | `module/follow/service/impl/` | 后台分页与异常清理 |
-| `FollowNoticeServiceImpl.java` | `module/follow/service/impl/` | 新粉丝通知补写 |
-| `FollowModelMapper.java` | `module/follow/convert/` | 用户/公开/后台视图转换 |
-| `SysUserFollowMapper.java` | `mapper/` | 关系查询、公开查询、后台查询与清理 |
-| `SysUserFollowMapper.xml` | `resources/.../mapper/` | follow 相关联表 SQL |
-| `follow-api.md` | `docs/api文档/` | 用户/公开/后台接口文档 |
+| 文件                             | 路径                            | 内容                |
+|--------------------------------|-------------------------------|-------------------|
+| `UserFollowController.java`    | `module/follow/controller/`   | 用户侧关注接口           |
+| `PublicFollowController.java`  | `module/follow/controller/`   | 公开访客接口            |
+| `FollowAdminController.java`   | `module/follow/controller/`   | 后台管理接口            |
+| `UserFollowServiceImpl.java`   | `module/follow/service/impl/` | 用户侧主链路 + 通知挂钩     |
+| `PublicFollowServiceImpl.java` | `module/follow/service/impl/` | 公开访客分页查询          |
+| `FollowAdminServiceImpl.java`  | `module/follow/service/impl/` | 后台分页与异常清理         |
+| `FollowNoticeServiceImpl.java` | `module/follow/service/impl/` | 新粉丝通知补写           |
+| `FollowModelMapper.java`       | `module/follow/convert/`      | 用户/公开/后台视图转换      |
+| `SysUserFollowMapper.java`     | `mapper/`                     | 关系查询、公开查询、后台查询与清理 |
+| `SysUserFollowMapper.xml`      | `resources/.../mapper/`       | follow 相关联表 SQL   |
+| `follow-api.md`                | `docs/api文档/`                 | 用户/公开/后台接口文档      |
 
 ## 6. 下一阶段建议
 

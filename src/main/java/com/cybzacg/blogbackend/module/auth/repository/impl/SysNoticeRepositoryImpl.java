@@ -23,7 +23,9 @@ import java.util.Objects;
 public class SysNoticeRepositoryImpl extends ServiceImpl<SysNoticeMapper, SysNotice>
         implements SysNoticeRepository {
 
-    /** 根据管理端查询条件进行分页，按创建时间降序排列。 */
+    /**
+     * 根据管理端查询条件进行分页，按创建时间降序排列。
+     */
     @Override
     public Page<SysNotice> pageByAdminConditions(SysNoticePageQuery query) {
         return page(new Page<>(query.getCurrent(), query.getSize()), new LambdaQueryWrapper<SysNotice>()
@@ -88,9 +90,9 @@ public class SysNoticeRepositoryImpl extends ServiceImpl<SysNoticeMapper, SysNot
             } else {
                 // 有已读且有定向未读：合并全局未读和定向未读
                 wrapper.and(w -> w.eq(SysNotice::getTargetType, NoticeConstants.TARGET_ALL)
-                                .notIn(SysNotice::getId, readNoticeIds)
-                                .or()
-                                .in(SysNotice::getId, unreadTargetNoticeIds));
+                        .notIn(SysNotice::getId, readNoticeIds)
+                        .or()
+                        .in(SysNotice::getId, unreadTargetNoticeIds));
             }
         }
 
@@ -99,7 +101,9 @@ public class SysNoticeRepositoryImpl extends ServiceImpl<SysNoticeMapper, SysNot
                 .orderByDesc(SysNotice::getId));
     }
 
-    /** 统计全局已发布通知中排除用户已读之后的未读数量。 */
+    /**
+     * 统计全局已发布通知中排除用户已读之后的未读数量。
+     */
     @Override
     public long countGlobalUnread(Collection<Long> readNoticeIds) {
         return count(new LambdaQueryWrapper<SysNotice>()
@@ -109,7 +113,9 @@ public class SysNoticeRepositoryImpl extends ServiceImpl<SysNoticeMapper, SysNot
                 .notIn(readNoticeIds != null && !readNoticeIds.isEmpty(), SysNotice::getId, readNoticeIds));
     }
 
-    /** 统计定向通知中用户未读的数量。 */
+    /**
+     * 统计定向通知中用户未读的数量。
+     */
     @Override
     public long countTargetedUnread(Collection<Long> unreadTargetNoticeIds) {
         if (unreadTargetNoticeIds == null || unreadTargetNoticeIds.isEmpty()) {
@@ -121,7 +127,9 @@ public class SysNoticeRepositoryImpl extends ServiceImpl<SysNoticeMapper, SysNot
                 .in(SysNotice::getId, unreadTargetNoticeIds));
     }
 
-    /** 查询用户未读的全局通知，排除已存在的通知 ID。 */
+    /**
+     * 查询用户未读的全局通知，排除已存在的通知 ID。
+     */
     @Override
     public List<SysNotice> findGlobalUnread(Collection<Long> existingNoticeIds) {
         return list(new LambdaQueryWrapper<SysNotice>()

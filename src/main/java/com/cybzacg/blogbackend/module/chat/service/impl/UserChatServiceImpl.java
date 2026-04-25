@@ -1,14 +1,7 @@
 package com.cybzacg.blogbackend.module.chat.service.impl;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.ChatConversation;
-import com.cybzacg.blogbackend.domain.ChatConversationMember;
-import com.cybzacg.blogbackend.domain.ChatMessage;
-import com.cybzacg.blogbackend.domain.ChatMessageReadCursor;
-import com.cybzacg.blogbackend.domain.ChatMessageRecipient;
-import com.cybzacg.blogbackend.domain.FileBusinessInfo;
-import com.cybzacg.blogbackend.domain.FileInfo;
-import com.cybzacg.blogbackend.domain.SysUser;
+import com.cybzacg.blogbackend.domain.*;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.enums.file.FileStatusEnum;
 import com.cybzacg.blogbackend.exception.BusinessException;
@@ -17,40 +10,15 @@ import com.cybzacg.blogbackend.module.chat.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.convert.ChatModelMapper;
 import com.cybzacg.blogbackend.module.chat.model.common.ChatFilePayloadVO;
 import com.cybzacg.blogbackend.module.chat.model.common.ChatMessagePayloadVO;
+import com.cybzacg.blogbackend.module.chat.model.common.ChatReplyMessageVO;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatConversationListItem;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatMessageHistoryItem;
-import com.cybzacg.blogbackend.module.chat.model.common.ChatReplyMessageVO;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatConversationPageQuery;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatConversationVO;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatCreateGroupRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatEditMessageRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatGroupNoticeUpdateRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatGroupMemberOperateRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatMarkReadRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatMemberVO;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatMessagePageQuery;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatMessageVO;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatMuteMemberRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatOpenSingleConversationRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatReadStateVO;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatSendFileRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatSendTextRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatTransferGroupOwnerRequest;
+import com.cybzacg.blogbackend.module.chat.model.user.*;
 import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsConversationUpdatedPayload;
 import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsMembersUpdatedPayload;
 import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsMessageDeletedPayload;
-import com.cybzacg.blogbackend.module.chat.convert.ChatModelMapper;
-import com.cybzacg.blogbackend.module.chat.repository.ChatConversationMemberRepository;
-import com.cybzacg.blogbackend.module.chat.repository.ChatConversationRepository;
-import com.cybzacg.blogbackend.module.chat.repository.ChatMessageReadCursorRepository;
-import com.cybzacg.blogbackend.module.chat.repository.ChatMessageRecipientRepository;
-import com.cybzacg.blogbackend.module.chat.repository.ChatMessageRepository;
-import com.cybzacg.blogbackend.module.chat.service.ChatAttachmentAsyncProcessingService;
-import com.cybzacg.blogbackend.module.chat.service.ChatMessageGovernanceService;
-import com.cybzacg.blogbackend.module.chat.service.ChatMetricsService;
-import com.cybzacg.blogbackend.module.chat.service.ChatPushService;
-import com.cybzacg.blogbackend.module.chat.service.ChatWebSocketSessionRegistry;
-import com.cybzacg.blogbackend.module.chat.service.UserChatService;
+import com.cybzacg.blogbackend.module.chat.repository.*;
+import com.cybzacg.blogbackend.module.chat.service.*;
 import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
 import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
@@ -58,22 +26,13 @@ import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.JsonUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.*;
 
 /**
  * 用户侧聊天服务实现。
@@ -357,6 +316,7 @@ public class UserChatServiceImpl implements UserChatService {
         Long userId = SecurityUtils.requireUserId();
         return markRead(userId, conversationId, request.getReadMessageId());
     }
+
     /**
      * 推进当前用户在会话内的已读高水位，并同步回写 recipient/cursor/member 三处读状态。
      */
@@ -1567,6 +1527,7 @@ public class UserChatServiceImpl implements UserChatService {
         }
         return liveReply != null ? liveReply : buildUnavailableReplySnapshot(item.getReplyMessageId());
     }
+
     /**
      * 批量加载当前用户仍可见的 reply 原消息；缺失记录会统一补成 unavailable 占位，保证历史消息渲染稳定。
      */

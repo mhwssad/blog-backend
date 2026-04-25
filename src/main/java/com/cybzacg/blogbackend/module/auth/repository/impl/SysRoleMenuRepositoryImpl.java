@@ -16,7 +16,9 @@ import java.util.List;
 public class SysRoleMenuRepositoryImpl extends ServiceImpl<SysRoleMenuMapper, SysRoleMenu>
         implements SysRoleMenuRepository {
 
-    /** 根据角色 ID 查询关联的菜单 ID 列表并去重。 */
+    /**
+     * 根据角色 ID 查询关联的菜单 ID 列表并去重。
+     */
     @Override
     public List<Long> findMenuIdsByRoleId(Long roleId) {
         return list(new LambdaQueryWrapper<SysRoleMenu>()
@@ -27,14 +29,18 @@ public class SysRoleMenuRepositoryImpl extends ServiceImpl<SysRoleMenuMapper, Sy
                 .toList();
     }
 
-    /** 根据角色 ID 删除所有关联的菜单关系。 */
+    /**
+     * 根据角色 ID 删除所有关联的菜单关系。
+     */
     @Override
     public void deleteByRoleId(Long roleId) {
         remove(new LambdaQueryWrapper<SysRoleMenu>()
                 .eq(SysRoleMenu::getRoleId, roleId));
     }
 
-    /** 根据菜单 ID 删除所有关联的角色关系。 */
+    /**
+     * 根据菜单 ID 删除所有关联的角色关系。
+     */
     @Override
     public void deleteByMenuId(Long menuId) {
         remove(new LambdaQueryWrapper<SysRoleMenu>()

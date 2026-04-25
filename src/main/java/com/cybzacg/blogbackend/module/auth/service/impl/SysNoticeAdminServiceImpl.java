@@ -39,7 +39,9 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
     private final SysNoticeModelMapper sysNoticeModelMapper;
     private final SysNoticeFactory sysNoticeFactory;
 
-    /** 分页查询系统通知列表。 */
+    /**
+     * 分页查询系统通知列表。
+     */
     @Override
     public PageResult<SysNoticeAdminVO> pageNotices(SysNoticePageQuery query) {
         var page = sysNoticeRepository.pageByAdminConditions(query);
@@ -49,14 +51,18 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         return PageResult.of(page, records);
     }
 
-    /** 根据 ID 获取通知详情。 */
+    /**
+     * 根据 ID 获取通知详情。
+     */
     @Override
     public SysNoticeAdminVO getNotice(Long id) {
         SysNotice notice = getAvailableNotice(id);
         return sysNoticeModelMapper.toNoticeAdminVO(notice, sysNoticeModelMapper.toIdList(notice.getTargetUserIds()));
     }
 
-    /** 创建通知草稿。 */
+    /**
+     * 创建通知草稿。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public SysNoticeAdminVO createNotice(SysNoticeSaveRequest request) {
@@ -69,7 +75,9 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         return sysNoticeModelMapper.toNoticeAdminVO(notice, targetUserIds);
     }
 
-    /** 更新通知（仅草稿状态可编辑）。 */
+    /**
+     * 更新通知（仅草稿状态可编辑）。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public SysNoticeAdminVO updateNotice(Long id, SysNoticeSaveRequest request) {
@@ -80,7 +88,9 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         return sysNoticeModelMapper.toNoticeAdminVO(notice, targetUserIds);
     }
 
-    /** 发布通知，针对指定用户类型时自动生成用户通知投递关系。 */
+    /**
+     * 发布通知，针对指定用户类型时自动生成用户通知投递关系。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void publishNotice(Long id) {
@@ -96,7 +106,9 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         deliverNotice(notice, now);
     }
 
-    /** 撤回已发布的通知。 */
+    /**
+     * 撤回已发布的通知。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void revokeNotice(Long id) {
@@ -107,7 +119,9 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         sysNoticeRepository.updateById(notice);
     }
 
-    /** 软删除通知。 */
+    /**
+     * 软删除通知。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteNotice(Long id) {

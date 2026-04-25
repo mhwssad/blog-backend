@@ -81,7 +81,9 @@ public class MinioStorageServiceImpl implements StorageService {
         }
     }
 
-    /** 委托给带 contentType 的重载方法，contentType 传 {@code null}。 */
+    /**
+     * 委托给带 contentType 的重载方法，contentType 传 {@code null}。
+     */
     @Override
     public String upload(InputStream inputStream, String objectName) {
         return upload(inputStream, objectName, null);
@@ -243,7 +245,9 @@ public class MinioStorageServiceImpl implements StorageService {
         }
     }
 
-    /** 返回 {@link StorageType#MINIO}。 */
+    /**
+     * 返回 {@link StorageType#MINIO}。
+     */
     @Override
     public StorageType getStorageType() {
         return StorageType.MINIO;
@@ -281,13 +285,17 @@ public class MinioStorageServiceImpl implements StorageService {
         );
     }
 
-    /** 委托给带 contentType 的重载方法，contentType 传 {@code null}。 */
+    /**
+     * 委托给带 contentType 的重载方法，contentType 传 {@code null}。
+     */
     @Override
     public String uploadToTemp(InputStream inputStream, String objectName) {
         return uploadToTemp(inputStream, objectName, null);
     }
 
-    /** 将文件上传到临时目录，路径前缀由配置项 {@code tempDirPrefix} 决定。 */
+    /**
+     * 将文件上传到临时目录，路径前缀由配置项 {@code tempDirPrefix} 决定。
+     */
     @Override
     public String uploadToTemp(InputStream inputStream, String objectName, String contentType) {
         // 构建临时存储路径：temp/{uploadId}/{objectName}
@@ -318,7 +326,9 @@ public class MinioStorageServiceImpl implements StorageService {
         }
     }
 
-    /** 按 uploadId 删除对应的临时分片对象。 */
+    /**
+     * 按 uploadId 删除对应的临时分片对象。
+     */
     @Override
     public boolean deleteTempFiles(String uploadId) {
         String prefix = fileUploadProperties.getTempDirPrefix() + "/" + uploadId + "/";

@@ -10,7 +10,7 @@ public interface FileLifecycleService {
     /**
      * 按真实引用关系刷新文件引用计数，并按需提升公开性。
      *
-     * @param fileId 文件 ID
+     * @param fileId        文件 ID
      * @param promotePublic 是否同步将文件标记为公开
      */
     void refreshReferenceMetadata(Long fileId, boolean promotePublic);

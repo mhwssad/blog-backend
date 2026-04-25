@@ -3,15 +3,17 @@ package com.cybzacg.blogbackend.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import lombok.Data;
 
 /**
  * 用户信息表
+ *
  * @TableName sys_user
  */
-@TableName(value ="sys_user")
+@TableName(value = "sys_user")
 @Data
 public class SysUser {
     /**
@@ -95,4 +97,4 @@ public class SysUser {
      */
     private String remark;
 
-    }
+}

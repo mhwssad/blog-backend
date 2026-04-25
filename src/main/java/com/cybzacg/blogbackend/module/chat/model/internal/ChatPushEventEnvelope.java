@@ -1,8 +1,9 @@
 package com.cybzacg.blogbackend.module.chat.model.internal;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import java.util.List;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * 聊天分布式推送事件包。

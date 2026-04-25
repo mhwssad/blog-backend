@@ -10,8 +10,8 @@ import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageReceiptPa
 import com.cybzacg.blogbackend.module.chat.repository.ChatMessageRecipientRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -21,7 +21,9 @@ import java.util.List;
 public class ChatMessageRecipientRepositoryImpl extends ServiceImpl<ChatMessageRecipientMapper, ChatMessageRecipient>
         implements ChatMessageRecipientRepository {
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean hideMessage(Long conversationId, Long recipientUserId, Long messageId) {
         return lambdaUpdate()
@@ -82,7 +84,9 @@ public class ChatMessageRecipientRepositoryImpl extends ServiceImpl<ChatMessageR
                 .update();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public long countUnread(Long conversationId, Long recipientUserId) {
         return count(new LambdaQueryWrapper<ChatMessageRecipient>()
@@ -105,7 +109,9 @@ public class ChatMessageRecipientRepositoryImpl extends ServiceImpl<ChatMessageR
                 .last("limit 1"), false);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<ChatMessageRecipient> listByMessageId(Long messageId) {
         return list(new LambdaQueryWrapper<ChatMessageRecipient>()

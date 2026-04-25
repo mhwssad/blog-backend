@@ -31,7 +31,9 @@ public class SysConfigAdminServiceImpl implements SysConfigAdminService {
     private final SysConfigService sysConfigService;
     private final SysConfigModelMapper sysConfigModelMapper;
 
-    /** 分页查询系统配置列表。 */
+    /**
+     * 分页查询系统配置列表。
+     */
     @Override
     public PageResult<SysConfigAdminVO> pageConfigs(SysConfigPageQuery query) {
         Page<SysConfig> page = sysConfigRepository.pageByAdminConditions(query);
@@ -41,13 +43,17 @@ public class SysConfigAdminServiceImpl implements SysConfigAdminService {
         return PageResult.of(page, records);
     }
 
-    /** 根据 ID 获取配置详情。 */
+    /**
+     * 根据 ID 获取配置详情。
+     */
     @Override
     public SysConfigAdminVO getConfig(Long id) {
         return sysConfigModelMapper.toConfigVO(getAvailableConfig(id));
     }
 
-    /** 新建系统配置，并刷新对应缓存。 */
+    /**
+     * 新建系统配置，并刷新对应缓存。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public SysConfigAdminVO createConfig(SysConfigSaveRequest request) {
@@ -60,7 +66,9 @@ public class SysConfigAdminServiceImpl implements SysConfigAdminService {
         return sysConfigModelMapper.toConfigVO(config);
     }
 
-    /** 更新系统配置，同时失效旧缓存和新缓存。 */
+    /**
+     * 更新系统配置，同时失效旧缓存和新缓存。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public SysConfigAdminVO updateConfig(Long id, SysConfigSaveRequest request) {
@@ -74,7 +82,9 @@ public class SysConfigAdminServiceImpl implements SysConfigAdminService {
         return sysConfigModelMapper.toConfigVO(config);
     }
 
-    /** 软删除系统配置，并清除对应缓存。 */
+    /**
+     * 软删除系统配置，并清除对应缓存。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteConfig(Long id) {
@@ -84,7 +94,9 @@ public class SysConfigAdminServiceImpl implements SysConfigAdminService {
         sysConfigService.evictConfigCache(config.getConfigKey());
     }
 
-    /** 根据配置键查询配置值（委托给 SysConfigService）。 */
+    /**
+     * 根据配置键查询配置值（委托给 SysConfigService）。
+     */
     @Override
     public String getValueByKey(String configKey) {
         return sysConfigService.getValueByKey(configKey);

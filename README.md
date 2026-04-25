@@ -1,6 +1,7 @@
 # blog-backend
 
-`blog-backend` 是一个基于 Spring Boot 4、Spring Security、MyBatis-Plus、MySQL、Redis 的博客后端项目，当前仓库重点已经落地认证鉴权、RBAC 后台管理、通知中心、内容域接口以及文件上传管理能力。
+`blog-backend` 是一个基于 Spring Boot 4、Spring Security、MyBatis-Plus、MySQL、Redis 的博客后端项目，当前仓库重点已经落地认证鉴权、RBAC
+后台管理、通知中心、内容域接口以及文件上传管理能力。
 
 文档入口优先看 [docs/README.md](docs/README.md)。
 项目结构与代码落位约束见 [docs/项目结构规范.md](docs/项目结构规范.md)。
@@ -10,13 +11,13 @@
 - 技术栈：Java 17、Spring Boot 4.0.3、Spring Security、MyBatis-Plus、Druid、Redis、Knife4j/OpenAPI、MapStruct、Lombok。
 - 当前默认环境：`dev`，启动端口 `8000`。
 - 当前已落地的业务主线：
-  - 认证与会话：账号登录、注册、邮箱验证码登录、刷新令牌、退出登录。
-  - RBAC 管理：用户、角色、菜单、系统配置、通知、日志后台接口。
-  - 内容域：文章、分类、标签、评论、收藏、互动、足迹接口。
-  - 文件域：用户上传、秒传/分片上传、文件后台管理。
+    - 认证与会话：账号登录、注册、邮箱验证码登录、刷新令牌、退出登录。
+    - RBAC 管理：用户、角色、菜单、系统配置、通知、日志后台接口。
+    - 内容域：文章、分类、标签、评论、收藏、互动、足迹接口。
+    - 文件域：用户上传、秒传/分片上传、文件后台管理。
 - 当前阶段重点：
-  - 继续整理公共能力、测试支撑、文档入口和历史结构问题。
-  - 聊天 / WebSocket 当前仅保留数据库与单机握手骨架，待主线能力继续稳定后再进入正式业务实现。
+    - 继续整理公共能力、测试支撑、文档入口和历史结构问题。
+    - 聊天 / WebSocket 当前仅保留数据库与单机握手骨架，待主线能力继续稳定后再进入正式业务实现。
 
 ## 架构概览
 
@@ -84,7 +85,8 @@ src/main/java/com/cybzacg/blogbackend
 
 1. 创建数据库 `blog_backend`。
 2. 空库按顺序执行 `1.sys.sql`、`02_article.sql`、`04_file.sql`、`05_chat.sql`、`06_follow.sql`、`03_permission_init.sql`。
-3. 如果是历史库升级，不要直接把 `04_file.sql`、`05_chat.sql`、`06_follow.sql` 当增量脚本执行；应改为执行 `07_schema_repair.sql` 做存量库修复。
+3. 如果是历史库升级，不要直接把 `04_file.sql`、`05_chat.sql`、`06_follow.sql` 当增量脚本执行；应改为执行
+   `07_schema_repair.sql` 做存量库修复。
 4. 根据本机环境修改 `application-dev.yml` 中的数据库、Redis、邮件配置。
 
 ## 怎么样编译
@@ -164,8 +166,8 @@ mvn test
 - 数据库修复说明：`docs/db-schema-repair.md`
 - 内容域任务拆分：`docs/tasks/content-domain/`
 - Swagger / Knife4j：
-  - `http://localhost:8000/doc.html`
-  - `http://localhost:8000/swagger-ui.html`
+    - `http://localhost:8000/doc.html`
+    - `http://localhost:8000/swagger-ui.html`
 
 ## 当前维护建议
 

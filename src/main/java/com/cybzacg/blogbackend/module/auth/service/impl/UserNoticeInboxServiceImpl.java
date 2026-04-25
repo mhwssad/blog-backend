@@ -19,11 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -39,7 +35,9 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
     private final SysNoticeModelMapper sysNoticeModelMapper;
     private final SysNoticeFactory sysNoticeFactory;
 
-    /** 分页查询当前用户的收件箱通知，区分已读和未读状态。 */
+    /**
+     * 分页查询当前用户的收件箱通知，区分已读和未读状态。
+     */
     @Override
     public PageResult<UserNoticeVO> pageMyNotices(UserNoticePageQuery query) {
         Long userId = SecurityUtils.requireUserId();
@@ -69,7 +67,9 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
         return PageResult.of(page, records);
     }
 
-    /** 查看通知详情，自动标记为已读。 */
+    /**
+     * 查看通知详情，自动标记为已读。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public UserNoticeVO getMyNotice(Long noticeId) {
@@ -79,7 +79,9 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
         return sysNoticeModelMapper.toUserNoticeVO(notice, true, relation.getReadTime());
     }
 
-    /** 统计当前用户的未读通知数（含全局通知和指定用户通知）。 */
+    /**
+     * 统计当前用户的未读通知数（含全局通知和指定用户通知）。
+     */
     @Override
     public long countUnreadNotices() {
         Long userId = SecurityUtils.requireUserId();
@@ -100,7 +102,9 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
         return globalUnread + targetedUnread;
     }
 
-    /** 将指定通知标记为已读。 */
+    /**
+     * 将指定通知标记为已读。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void markRead(Long noticeId) {
@@ -109,7 +113,9 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
         markReadInternal(userId, notice);
     }
 
-    /** 将当前用户的所有未读通知批量标记为已读（含全局通知的补录）。 */
+    /**
+     * 将当前用户的所有未读通知批量标记为已读（含全局通知的补录）。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void markAllRead() {

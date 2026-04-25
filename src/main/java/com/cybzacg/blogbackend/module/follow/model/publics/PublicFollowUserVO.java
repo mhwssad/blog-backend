@@ -1,8 +1,9 @@
 package com.cybzacg.blogbackend.module.follow.model.publics;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.time.LocalDateTime;
 import lombok.Data;
+
+import java.time.LocalDateTime;
 
 /**
  * 公开关注用户列表视图。

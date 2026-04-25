@@ -1,29 +1,17 @@
 package com.cybzacg.blogbackend.module.file.controller;
+
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.core.web.Result;
-import com.cybzacg.blogbackend.module.file.model.user.ChunkUploadVO;
-import com.cybzacg.blogbackend.module.file.model.user.FileUploadInitRequest;
-import com.cybzacg.blogbackend.module.file.model.user.FileUploadInitVO;
-import com.cybzacg.blogbackend.module.file.model.user.FileUploadResultVO;
-import com.cybzacg.blogbackend.module.file.model.user.UserFilePageQuery;
-import com.cybzacg.blogbackend.module.file.model.user.UserFileTaskPageQuery;
-import com.cybzacg.blogbackend.module.file.model.user.UserFileTaskVO;
-import com.cybzacg.blogbackend.module.file.model.user.UserFileVO;
+import com.cybzacg.blogbackend.module.file.model.user.*;
 import com.cybzacg.blogbackend.module.file.service.UserFileService;
 import com.cybzacg.blogbackend.utils.RequestContextUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
 /**
  * 用户侧文件控制器。
  *
@@ -34,22 +22,26 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class UserFileController {
     private final UserFileService userFileService;
+
     @PostMapping("/api/user/files/upload-tasks/init")
     @Operation(summary = "初始化上传任务")
     public Result<FileUploadInitVO> initUploadTask(@Valid @RequestBody FileUploadInitRequest request) {
         return Result.success(userFileService.initUploadTask(request, RequestContextUtils.getClientIp()));
     }
+
     @PostMapping("/api/user/files/upload-tasks/{uploadId}/quick-check")
     @Operation(summary = "秒传检测")
     public Result<FileUploadResultVO> quickCheck(@PathVariable String uploadId) {
         return Result.success(userFileService.quickCheck(uploadId, RequestContextUtils.getClientIp()));
     }
+
     @PostMapping("/api/user/files/upload-tasks/{uploadId}/file")
     @Operation(summary = "普通上传")
     public Result<FileUploadResultVO> uploadFile(@PathVariable String uploadId,
                                                  @RequestParam("file") MultipartFile file) {
         return Result.success(userFileService.uploadFile(uploadId, file, RequestContextUtils.getClientIp()));
     }
+
     @PostMapping("/api/user/files/upload-tasks/{uploadId}/chunks/{chunkNumber}")
     @Operation(summary = "上传分片")
     public Result<ChunkUploadVO> uploadChunk(@PathVariable String uploadId,
@@ -58,21 +50,25 @@ public class UserFileController {
                                              @RequestParam(value = "chunkMd5", required = false) String chunkMd5) {
         return Result.success(userFileService.uploadChunk(uploadId, chunkNumber, file, chunkMd5, RequestContextUtils.getClientIp()));
     }
+
     @PostMapping("/api/user/files/upload-tasks/{uploadId}/complete")
     @Operation(summary = "完成上传")
     public Result<FileUploadResultVO> completeUpload(@PathVariable String uploadId) {
         return Result.success(userFileService.completeUpload(uploadId, RequestContextUtils.getClientIp()));
     }
+
     @GetMapping("/api/user/files")
     @Operation(summary = "查询我的文件")
     public Result<PageResult<UserFileVO>> pageMyFiles(UserFilePageQuery query) {
         return Result.success(userFileService.pageMyFiles(query));
     }
+
     @GetMapping("/api/user/files/upload-tasks")
     @Operation(summary = "查询我的上传任务")
     public Result<PageResult<UserFileTaskVO>> pageMyUploadTasks(UserFileTaskPageQuery query) {
         return Result.success(userFileService.pageMyUploadTasks(query));
     }
+
     @DeleteMapping("/api/user/files/{businessId}")
     @Operation(summary = "删除我的文件引用")
     public Result<Void> deleteMyFile(@PathVariable Long businessId) {

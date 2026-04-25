@@ -12,14 +12,7 @@ import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.authentication.EmailCodeAuthenticationToken;
 import com.cybzacg.blogbackend.module.auth.convert.AuthModelMapper;
-import com.cybzacg.blogbackend.module.auth.model.AuthEmailCodeRequest;
-import com.cybzacg.blogbackend.module.auth.model.AuthEmailLoginRequest;
-import com.cybzacg.blogbackend.module.auth.model.AuthLoginRequest;
-import com.cybzacg.blogbackend.module.auth.model.AuthMenuInfo;
-import com.cybzacg.blogbackend.module.auth.model.AuthRefreshRequest;
-import com.cybzacg.blogbackend.module.auth.model.AuthRegisterRequest;
-import com.cybzacg.blogbackend.module.auth.model.AuthUserInfo;
-import com.cybzacg.blogbackend.module.auth.model.AuthenticationToken;
+import com.cybzacg.blogbackend.module.auth.model.*;
 import com.cybzacg.blogbackend.module.auth.repository.SysConfigRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysMenuRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysRoleRepository;
@@ -48,18 +41,10 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceImplTest {

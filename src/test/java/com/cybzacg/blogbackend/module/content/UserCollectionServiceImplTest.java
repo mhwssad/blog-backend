@@ -7,8 +7,8 @@ import com.cybzacg.blogbackend.domain.SysCollection;
 import com.cybzacg.blogbackend.domain.SysCollectionFolder;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
+import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.user.CollectionFolderSaveRequest;
 import com.cybzacg.blogbackend.module.content.model.user.CollectionFolderVO;
@@ -27,13 +27,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserCollectionServiceImplTest {

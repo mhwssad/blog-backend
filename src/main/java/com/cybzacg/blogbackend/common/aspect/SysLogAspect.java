@@ -12,12 +12,12 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.stereotype.Component;
@@ -32,12 +32,7 @@ import java.security.Principal;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * 控制器操作日志切面。
@@ -52,13 +47,19 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class SysLogAspect {
     private static final Logger log = LoggerFactory.getLogger(SysLogAspect.class);
-    /** 请求参数日志最大长度，避免超长文本撑爆数据库字段。 */
+    /**
+     * 请求参数日志最大长度，避免超长文本撑爆数据库字段。
+     */
     private static final int MAX_REQUEST_LENGTH = 8000;
 
-    /** 响应日志最大长度，避免大量分页数据或异常堆栈写入过长。 */
+    /**
+     * 响应日志最大长度，避免大量分页数据或异常堆栈写入过长。
+     */
     private static final int MAX_RESPONSE_LENGTH = 12000;
 
-    /** 需要统一脱敏的字段名，比较时会忽略下划线和大小写。 */
+    /**
+     * 需要统一脱敏的字段名，比较时会忽略下划线和大小写。
+     */
     private static final Set<String> SENSITIVE_FIELDS = Set.of(
             "password", "oldpassword", "newpassword", "confirmpassword",
             "token", "accesstoken", "refreshtoken", "authorization",

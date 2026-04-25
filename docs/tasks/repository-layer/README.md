@@ -11,16 +11,17 @@
 
 ## 总体进度（2026-04-24 更新）
 
-| 轮次 | 模块 | Repository 创建 | 业务服务迁移 | 旧薄服务删除 | 测试更新 | 状态 |
-| ---- | ---- | --------------- | ------------ | ------------ | -------- | ---- |
-| 1 | follow | 1/1 | 3/3 | 已删除 | 已更新 | **已完成** |
-| 2 | content | 8/8 | 10/10 | 已删除(8个) | 已更新 | **已完成** |
-| 3 | auth | 9/9 | 8/8 | 已删除(8个,保留SysConfigService) | 已更新 | **已完成** |
-| 4 | file | 4/4 | 3/3 | 已删除 | 已更新 | **已完成** |
-| 5 | article | 3/3 | 4/4 | 已删除 | 已更新 | **已完成** |
-| 6 | chat | 6/6(+1额外) | 2/2 | 已删除(5个) | 已更新 | **已完成** |
+| 轮次 | 模块      | Repository 创建 | 业务服务迁移 | 旧薄服务删除                     | 测试更新 | 状态      |
+|----|---------|---------------|--------|----------------------------|------|---------|
+| 1  | follow  | 1/1           | 3/3    | 已删除                        | 已更新  | **已完成** |
+| 2  | content | 8/8           | 10/10  | 已删除(8个)                    | 已更新  | **已完成** |
+| 3  | auth    | 9/9           | 8/8    | 已删除(8个,保留SysConfigService) | 已更新  | **已完成** |
+| 4  | file    | 4/4           | 3/3    | 已删除                        | 已更新  | **已完成** |
+| 5  | article | 3/3           | 4/4    | 已删除                        | 已更新  | **已完成** |
+| 6  | chat    | 6/6(+1额外)     | 2/2    | 已删除(5个)                    | 已更新  | **已完成** |
 
 **统计**：
+
 - 已创建 Repository 接口：**31个**（含 chat 额外补充 1 个）
 - 已删除旧薄服务：**30个**（follow 1 + content 8 + auth 8 + file 4 + article 3 + chat 6，含接口+实现共 60 个文件）
 - 保留为真正业务服务：**SysConfigService**（含缓存逻辑 `getValueOrDefault`/`evictConfigCache`，非薄服务）
@@ -28,7 +29,8 @@
 
 ### 注意事项
 
-- **SysConfigService** 保留为真正的业务服务（含缓存职责），被 `SysConfigAdminServiceImpl`、`ChatMessageGovernanceServiceImpl`、`IpRateLimitFilter` 注入，不删除。
+- **SysConfigService** 保留为真正的业务服务（含缓存职责），被 `SysConfigAdminServiceImpl`、
+  `ChatMessageGovernanceServiceImpl`、`IpRateLimitFilter` 注入，不删除。
 - `AuthUserDetailsServiceImpl` 已改为注入 `SysUserRepository`、`SysRoleRepository`、`SysMenuRepository`。
 - `SysLogAspect` 已改为注入 `SysLogRepository.saveLog()`（含 `REQUIRES_NEW` 传播）。
 
@@ -58,16 +60,16 @@ module/{模块}/
 
 ## 命名规范
 
-| 角色            | 命名                                  | 示例                                           |
-| --------------- | ------------------------------------- | ---------------------------------------------- |
+| 角色            | 命名                                    | 示例                                             |
+|---------------|---------------------------------------|------------------------------------------------|
 | Repository 接口 | `{Entity}Repository`                  | `SysUserFollowRepository`                      |
 | Repository 实现 | `{Entity}RepositoryImpl`              | `SysUserFollowRepositoryImpl`                  |
-| 查询方法        | `findByXxx` / `listByXxx` / `pageXxx` | `findByFollowerAndFollowing(userId, targetId)` |
-| 判断方法        | `existsByXxx`                         | `existsActiveRelation(userId, targetId)`       |
-| 统计方法        | `countByXxx`                          | `countActiveFollowing(userId)`                 |
-| 删除方法        | `removeByXxx`                         | `removeByArticleId(articleId)`                 |
-| 更新方法        | `updateXxxToYyy`                      | `updateDeliveryToDelivered(...)`               |
-| 包装Mapper XML  | 与Mapper方法同名                      | `selectFollowPage(...)`                        |
+| 查询方法          | `findByXxx` / `listByXxx` / `pageXxx` | `findByFollowerAndFollowing(userId, targetId)` |
+| 判断方法          | `existsByXxx`                         | `existsActiveRelation(userId, targetId)`       |
+| 统计方法          | `countByXxx`                          | `countActiveFollowing(userId)`                 |
+| 删除方法          | `removeByXxx`                         | `removeByArticleId(articleId)`                 |
+| 更新方法          | `updateXxxToYyy`                      | `updateDeliveryToDelivered(...)`               |
+| 包装Mapper XML  | 与Mapper方法同名                           | `selectFollowPage(...)`                        |
 
 ## 迁移策略（双阶段并行法）
 
@@ -91,14 +93,14 @@ module/{模块}/
 
 建议按依赖关系分6轮执行，但每轮内的模块计划是自包含的，可并行开发：
 
-| 轮次 | 模块    | 计划文件                                     | 依赖                | 复杂度         |
-| ---- | ------- | -------------------------------------------- | ------------------- | -------------- |
-| 1    | follow  | [01-follow-module.md](01-follow-module.md)   | 无                  | 低（原型验证） |
-| 2    | content | [02-content-module.md](02-content-module.md) | 无                  | 中             |
-| 3    | auth    | [03-auth-module.md](03-auth-module.md)       | 无                  | 中             |
-| 4    | file    | [04-file-module.md](04-file-module.md)       | 无                  | 中             |
-| 5    | article | [05-article-module.md](05-article-module.md) | content, auth, file | 高             |
-| 6    | chat    | [06-chat-module.md](06-chat-module.md)       | auth, file          | 高             |
+| 轮次 | 模块      | 计划文件                                         | 依赖                  | 复杂度     |
+|----|---------|----------------------------------------------|---------------------|---------|
+| 1  | follow  | [01-follow-module.md](01-follow-module.md)   | 无                   | 低（原型验证） |
+| 2  | content | [02-content-module.md](02-content-module.md) | 无                   | 中       |
+| 3  | auth    | [03-auth-module.md](03-auth-module.md)       | 无                   | 中       |
+| 4  | file    | [04-file-module.md](04-file-module.md)       | 无                   | 中       |
+| 5  | article | [05-article-module.md](05-article-module.md) | content, auth, file | 高       |
+| 6  | chat    | [06-chat-module.md](06-chat-module.md)       | auth, file          | 高       |
 
 **并行说明**：
 

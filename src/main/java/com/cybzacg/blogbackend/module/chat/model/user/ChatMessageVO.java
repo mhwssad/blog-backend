@@ -3,8 +3,9 @@ package com.cybzacg.blogbackend.module.chat.model.user;
 import com.cybzacg.blogbackend.module.chat.model.common.ChatFilePayloadVO;
 import com.cybzacg.blogbackend.module.chat.model.common.ChatReplyMessageVO;
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.time.LocalDateTime;
 import lombok.Data;
+
+import java.time.LocalDateTime;
 
 /**
  * 聊天消息信息。

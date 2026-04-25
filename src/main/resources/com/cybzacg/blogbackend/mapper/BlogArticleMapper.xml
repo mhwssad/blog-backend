@@ -5,30 +5,31 @@
 <mapper namespace="com.cybzacg.blogbackend.mapper.BlogArticleMapper">
 
     <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.BlogArticle">
-            <id property="id" column="id" jdbcType="BIGINT"/>
-            <result property="title" column="title" jdbcType="VARCHAR"/>
-            <result property="summary" column="summary" jdbcType="VARCHAR"/>
-            <result property="content" column="content" jdbcType="VARCHAR"/>
-            <result property="coverImage" column="cover_image" jdbcType="VARCHAR"/>
-            <result property="authorId" column="author_id" jdbcType="BIGINT"/>
-            <result property="isTop" column="is_top" jdbcType="TINYINT"/>
-            <result property="isOriginal" column="is_original" jdbcType="TINYINT"/>
-            <result property="sourceUrl" column="source_url" jdbcType="VARCHAR"/>
-            <result property="status" column="status" jdbcType="TINYINT"/>
-            <result property="publishTime" column="publish_time" jdbcType="TIMESTAMP"/>
-            <result property="accessLevel" column="access_level" jdbcType="TINYINT"/>
-            <result property="viewCount" column="view_count" jdbcType="INTEGER"/>
-            <result property="likeCount" column="like_count" jdbcType="INTEGER"/>
-            <result property="commentCount" column="comment_count" jdbcType="INTEGER"/>
-            <result property="collectCount" column="collect_count" jdbcType="INTEGER"/>
-            <result property="shareCount" column="share_count" jdbcType="INTEGER"/>
-            <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
-            <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
-            <result property="remark" column="remark" jdbcType="VARCHAR"/>
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="title" column="title" jdbcType="VARCHAR"/>
+        <result property="summary" column="summary" jdbcType="VARCHAR"/>
+        <result property="content" column="content" jdbcType="VARCHAR"/>
+        <result property="coverImage" column="cover_image" jdbcType="VARCHAR"/>
+        <result property="authorId" column="author_id" jdbcType="BIGINT"/>
+        <result property="isTop" column="is_top" jdbcType="TINYINT"/>
+        <result property="isOriginal" column="is_original" jdbcType="TINYINT"/>
+        <result property="sourceUrl" column="source_url" jdbcType="VARCHAR"/>
+        <result property="status" column="status" jdbcType="TINYINT"/>
+        <result property="publishTime" column="publish_time" jdbcType="TIMESTAMP"/>
+        <result property="accessLevel" column="access_level" jdbcType="TINYINT"/>
+        <result property="viewCount" column="view_count" jdbcType="INTEGER"/>
+        <result property="likeCount" column="like_count" jdbcType="INTEGER"/>
+        <result property="commentCount" column="comment_count" jdbcType="INTEGER"/>
+        <result property="collectCount" column="collect_count" jdbcType="INTEGER"/>
+        <result property="shareCount" column="share_count" jdbcType="INTEGER"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
+        <result property="remark" column="remark" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,title,summary,
+        id
+        ,title,summary,
         content,cover_image,author_id,
         is_top,is_original,source_url,
         status,publish_time,access_level,

@@ -14,8 +14,8 @@ import com.cybzacg.blogbackend.module.auth.repository.SysMenuRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysRoleMenuRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysRoleRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRoleRepository;
-import com.cybzacg.blogbackend.module.auth.service.impl.SysRoleAdminServiceImpl;
 import com.cybzacg.blogbackend.module.auth.service.impl.RbacAssociationFactory;
+import com.cybzacg.blogbackend.module.auth.service.impl.SysRoleAdminServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,9 +30,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyCollection;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class SysRoleAdminServiceImplTest {

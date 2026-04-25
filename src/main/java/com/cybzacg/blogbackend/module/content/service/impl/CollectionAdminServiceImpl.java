@@ -34,7 +34,9 @@ public class CollectionAdminServiceImpl implements CollectionAdminService {
     private final BlogArticleRepository blogArticleService;
     private final ContentModelMapper contentModelMapper;
 
-    /** 按管理端条件分页查询收藏夹列表。 */
+    /**
+     * 按管理端条件分页查询收藏夹列表。
+     */
     @Override
     public PageResult<CollectionFolderVO> pageFolders(CollectionPageQuery query) {
         Page<SysCollectionFolder> page = sysCollectionFolderRepository.pageByAdminConditions(query);
@@ -44,7 +46,9 @@ public class CollectionAdminServiceImpl implements CollectionAdminService {
         return PageResult.of(page, records);
     }
 
-    /** 按管理端条件分页查询收藏记录列表。 */
+    /**
+     * 按管理端条件分页查询收藏记录列表。
+     */
     @Override
     public PageResult<CollectionVO> pageCollections(CollectionPageQuery query) {
         Page<SysCollection> page = sysCollectionRepository.pageByAdminConditions(query);
@@ -54,7 +58,9 @@ public class CollectionAdminServiceImpl implements CollectionAdminService {
         return PageResult.of(page, records);
     }
 
-    /** 删除收藏记录，同步回退收藏夹数量与文章收藏计数。 */
+    /**
+     * 删除收藏记录，同步回退收藏夹数量与文章收藏计数。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteCollection(Long id) {

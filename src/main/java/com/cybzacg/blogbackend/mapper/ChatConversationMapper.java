@@ -5,8 +5,9 @@ import com.cybzacg.blogbackend.domain.ChatConversation;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminConversationPageQuery;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatAdminConversationListItem;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatConversationListItem;
-import java.util.List;
 import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
  * 聊天会话 Mapper。

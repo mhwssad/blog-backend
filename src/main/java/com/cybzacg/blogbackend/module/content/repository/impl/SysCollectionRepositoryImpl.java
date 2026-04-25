@@ -18,7 +18,9 @@ import java.util.List;
 public class SysCollectionRepositoryImpl extends ServiceImpl<SysCollectionMapper, SysCollection>
         implements SysCollectionRepository {
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Page<SysCollection> pageByAdminConditions(CollectionPageQuery query) {
         return page(new Page<>(query.getCurrent(), query.getSize()), new LambdaQueryWrapper<SysCollection>()
@@ -30,7 +32,9 @@ public class SysCollectionRepositoryImpl extends ServiceImpl<SysCollectionMapper
                 .orderByDesc(SysCollection::getId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Page<SysCollection> pageByUserId(Long userId, long current, long size) {
         return page(new Page<>(current, size), new LambdaQueryWrapper<SysCollection>()
@@ -39,21 +43,27 @@ public class SysCollectionRepositoryImpl extends ServiceImpl<SysCollectionMapper
                 .orderByDesc(SysCollection::getId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<SysCollection> findByFolderId(Long folderId) {
         return list(new LambdaQueryWrapper<SysCollection>()
                 .eq(SysCollection::getFolderId, folderId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean removeByFolderId(Long folderId) {
         return remove(new LambdaQueryWrapper<SysCollection>()
                 .eq(SysCollection::getFolderId, folderId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean existsByUserIdAndFolderIdAndTargetIdAndTargetType(Long userId,
                                                                      Long folderId,
@@ -66,7 +76,9 @@ public class SysCollectionRepositoryImpl extends ServiceImpl<SysCollectionMapper
                 .eq(SysCollection::getTargetType, targetType));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<SysCollection> listByTargetTypeAndTargetId(String targetType, Long targetId) {
         return list(new LambdaQueryWrapper<SysCollection>()
@@ -74,7 +86,9 @@ public class SysCollectionRepositoryImpl extends ServiceImpl<SysCollectionMapper
                 .eq(SysCollection::getTargetId, targetId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean removeByTargetTypeAndTargetId(String targetType, Long targetId) {
         return remove(new LambdaQueryWrapper<SysCollection>()
@@ -82,14 +96,18 @@ public class SysCollectionRepositoryImpl extends ServiceImpl<SysCollectionMapper
                 .eq(SysCollection::getTargetId, targetId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public long countByFolderId(Long folderId) {
         return count(new LambdaQueryWrapper<SysCollection>()
                 .eq(SysCollection::getFolderId, folderId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean existsByUserIdAndTargetTypeAndTargetId(Long userId, String targetType, Long targetId) {
         return exists(new LambdaQueryWrapper<SysCollection>()

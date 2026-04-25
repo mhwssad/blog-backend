@@ -5,26 +5,27 @@
 <mapper namespace="com.cybzacg.blogbackend.mapper.SysUserMapper">
 
     <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.SysUser">
-            <id property="id" column="id" jdbcType="BIGINT"/>
-            <result property="username" column="username" jdbcType="VARCHAR"/>
-            <result property="password" column="password" jdbcType="VARCHAR"/>
-            <result property="nickname" column="nickname" jdbcType="VARCHAR"/>
-            <result property="email" column="email" jdbcType="VARCHAR"/>
-            <result property="phone" column="phone" jdbcType="VARCHAR"/>
-            <result property="avatar" column="avatar" jdbcType="VARCHAR"/>
-            <result property="gender" column="gender" jdbcType="TINYINT"/>
-            <result property="birthday" column="birthday" jdbcType="DATE"/>
-            <result property="status" column="status" jdbcType="TINYINT"/>
-            <result property="lastLoginTime" column="last_login_time" jdbcType="TIMESTAMP"/>
-            <result property="lastLoginIp" column="last_login_ip" jdbcType="VARCHAR"/>
-            <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
-            <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
-            <result property="deletedFlag" column="deleted_flag" jdbcType="TINYINT"/>
-            <result property="remark" column="remark" jdbcType="VARCHAR"/>
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="username" column="username" jdbcType="VARCHAR"/>
+        <result property="password" column="password" jdbcType="VARCHAR"/>
+        <result property="nickname" column="nickname" jdbcType="VARCHAR"/>
+        <result property="email" column="email" jdbcType="VARCHAR"/>
+        <result property="phone" column="phone" jdbcType="VARCHAR"/>
+        <result property="avatar" column="avatar" jdbcType="VARCHAR"/>
+        <result property="gender" column="gender" jdbcType="TINYINT"/>
+        <result property="birthday" column="birthday" jdbcType="DATE"/>
+        <result property="status" column="status" jdbcType="TINYINT"/>
+        <result property="lastLoginTime" column="last_login_time" jdbcType="TIMESTAMP"/>
+        <result property="lastLoginIp" column="last_login_ip" jdbcType="VARCHAR"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
+        <result property="deletedFlag" column="deleted_flag" jdbcType="TINYINT"/>
+        <result property="remark" column="remark" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,username,password,
+        id
+        ,username,password,
         nickname,email,phone,
         avatar,gender,birthday,
         status,last_login_time,last_login_ip,
@@ -37,9 +38,9 @@
         <include refid="Base_Column_List"/>
         from sys_user
         where (username = #{username}
-            or email = #{username}
-            or phone = #{username})
-          and deleted_flag = 0
+        or email = #{username}
+        or phone = #{username})
+        and deleted_flag = 0
         limit 1
     </select>
 
@@ -48,15 +49,15 @@
         <include refid="Base_Column_List"/>
         from sys_user
         where email = #{email}
-          and deleted_flag = 0
+        and deleted_flag = 0
         limit 1
     </select>
 
     <update id="updateLoginInfo">
         update sys_user
         set last_login_time = now(),
-            last_login_ip = #{ip},
-            updated_at = now()
+            last_login_ip   = #{ip},
+            updated_at      = now()
         where id = #{userId}
           and deleted_flag = 0
     </update>

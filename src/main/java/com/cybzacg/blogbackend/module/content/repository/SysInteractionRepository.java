@@ -23,8 +23,8 @@ public interface SysInteractionRepository extends IService<SysInteraction> {
     /**
      * 判断用户是否已对目标执行指定互动。
      *
-     * @param userId 用户 ID
-     * @param targetId 目标 ID
+     * @param userId     用户 ID
+     * @param targetId   目标 ID
      * @param targetType 目标类型
      * @param actionType 行为类型
      * @return 是否存在互动
@@ -37,8 +37,8 @@ public interface SysInteractionRepository extends IService<SysInteraction> {
     /**
      * 查询用户对目标的指定互动记录。
      *
-     * @param userId 用户 ID
-     * @param targetId 目标 ID
+     * @param userId     用户 ID
+     * @param targetId   目标 ID
      * @param targetType 目标类型
      * @param actionType 行为类型
      * @return 互动记录
@@ -52,7 +52,7 @@ public interface SysInteractionRepository extends IService<SysInteraction> {
      * 按目标类型和目标 ID 删除互动记录。
      *
      * @param targetType 目标类型
-     * @param targetId 目标 ID
+     * @param targetId   目标 ID
      * @return 是否删除成功
      */
     boolean removeByTargetTypeAndTargetId(String targetType, Long targetId);
@@ -61,7 +61,7 @@ public interface SysInteractionRepository extends IService<SysInteraction> {
      * 按目标类型和目标 ID 集合删除互动记录。
      *
      * @param targetType 目标类型
-     * @param targetIds 目标 ID 集合
+     * @param targetIds  目标 ID 集合
      * @return 是否删除成功
      */
     boolean removeByTargetTypeAndTargetIds(String targetType, Collection<Long> targetIds);
@@ -69,10 +69,10 @@ public interface SysInteractionRepository extends IService<SysInteraction> {
     /**
      * 查询用户在一组目标上的互动记录。
      *
-     * @param userId 用户 ID
+     * @param userId     用户 ID
      * @param targetType 目标类型
      * @param actionType 行为类型
-     * @param targetIds 目标 ID 集合
+     * @param targetIds  目标 ID 集合
      * @return 互动记录列表
      */
     List<SysInteraction> findByUserIdAndTargetTypeAndActionTypeInTargetIds(Long userId,

@@ -9,7 +9,7 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
-public enum StorageStrategyEnum  {
+public enum StorageStrategyEnum {
 
     /**
      * 默认策略，使用配置的默认存储节点

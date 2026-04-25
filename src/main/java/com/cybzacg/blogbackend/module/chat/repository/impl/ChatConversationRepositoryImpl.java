@@ -19,37 +19,49 @@ import java.util.List;
 public class ChatConversationRepositoryImpl extends ServiceImpl<ChatConversationMapper, ChatConversation>
         implements ChatConversationRepository {
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Long countConversationPage(Long userId, String keyword) {
         return baseMapper.countConversationPage(userId, keyword);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<ChatConversationListItem> selectConversationPage(Long userId, String keyword, Long offset, Long size) {
         return baseMapper.selectConversationPage(userId, keyword, offset, size);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ChatConversationListItem selectConversationDetail(Long conversationId, Long userId) {
         return baseMapper.selectConversationDetail(conversationId, userId);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Long countAdminConversationPage(ChatAdminConversationPageQuery query) {
         return baseMapper.countAdminConversationPage(query);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<ChatAdminConversationListItem> selectAdminConversationPage(ChatAdminConversationPageQuery query, Long offset, Long size) {
         return baseMapper.selectAdminConversationPage(query, offset, size);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ChatAdminConversationListItem selectAdminConversationDetail(Long conversationId) {
         return baseMapper.selectAdminConversationDetail(conversationId);

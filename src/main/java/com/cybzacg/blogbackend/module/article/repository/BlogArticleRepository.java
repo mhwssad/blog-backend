@@ -16,7 +16,7 @@ public interface BlogArticleRepository extends IService<BlogArticle> {
     /**
      * 按后台条件分页查询文章。
      *
-     * @param query 查询条件
+     * @param query              查询条件
      * @param filteredArticleIds 分类/标签反查后的文章 ID 集合，为 null 时不做 ID 过滤
      * @return 文章分页结果
      */

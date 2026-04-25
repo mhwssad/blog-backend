@@ -79,7 +79,8 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                 case PING -> session.sendMessage(messageCodec.buildPong(request.getRequestId()));
                 case SEND_MESSAGE -> handleSendMessage(session, request);
                 case MARK_READ -> handleMarkRead(session, request);
-                default -> session.sendMessage(messageCodec.buildIllegalArgument(request.getRequestId(), "当前消息类型不允许由客户端直接发送: " + request.getType()));
+                default ->
+                        session.sendMessage(messageCodec.buildIllegalArgument(request.getRequestId(), "当前消息类型不允许由客户端直接发送: " + request.getType()));
             }
         } catch (BusinessException ex) {
             session.sendMessage(messageCodec.buildBusinessError(request.getRequestId(), ex.getCode(), ex.getMessage()));

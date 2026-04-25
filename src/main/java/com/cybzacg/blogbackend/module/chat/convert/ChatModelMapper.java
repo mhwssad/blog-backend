@@ -13,18 +13,13 @@ import com.cybzacg.blogbackend.module.chat.model.data.ChatAdminConversationListI
 import com.cybzacg.blogbackend.module.chat.model.data.ChatAdminMessageItem;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatConversationListItem;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatMessageHistoryItem;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatConversationLastMessageVO;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatConversationVO;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatCreateGroupRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatMemberVO;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatMessageVO;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatReadStateVO;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatSendTextRequest;
+import com.cybzacg.blogbackend.module.chat.model.user.*;
 import com.cybzacg.blogbackend.utils.StrUtils;
-import java.time.LocalDateTime;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
+
+import java.time.LocalDateTime;
 
 /**
  * 聊天模块对象转换。

@@ -22,9 +22,9 @@ public interface SysCollectionFolderRepository extends IService<SysCollectionFol
     /**
      * 按用户分页查询收藏夹，默认夹优先，其次按排序值和 ID 排序。
      *
-     * @param userId 用户 ID
+     * @param userId  用户 ID
      * @param current 页码
-     * @param size 每页条数
+     * @param size    每页条数
      * @return 收藏夹分页结果
      */
     Page<SysCollectionFolder> pageByUserIdOrderByDefaultAndSort(Long userId, long current, long size);
@@ -32,7 +32,7 @@ public interface SysCollectionFolderRepository extends IService<SysCollectionFol
     /**
      * 查询用户指定类型的默认收藏夹。
      *
-     * @param userId 用户 ID
+     * @param userId     用户 ID
      * @param folderType 收藏夹类型
      * @return 默认收藏夹
      */
@@ -41,7 +41,7 @@ public interface SysCollectionFolderRepository extends IService<SysCollectionFol
     /**
      * 查询用户指定类型的所有默认收藏夹。
      *
-     * @param userId 用户 ID
+     * @param userId     用户 ID
      * @param folderType 收藏夹类型
      * @return 默认收藏夹列表
      */

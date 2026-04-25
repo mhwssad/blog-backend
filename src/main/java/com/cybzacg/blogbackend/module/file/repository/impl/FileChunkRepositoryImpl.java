@@ -12,7 +12,9 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public class FileChunkRepositoryImpl extends ServiceImpl<FileChunkMapper, FileChunk> implements FileChunkRepository {
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public FileChunk findByTaskIdAndChunkNumber(Long uploadTaskId, Integer chunkNumber) {
         return getOne(new LambdaQueryWrapper<FileChunk>()
@@ -21,7 +23,9 @@ public class FileChunkRepositoryImpl extends ServiceImpl<FileChunkMapper, FileCh
                 .last("limit 1"));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public long countByTaskIdAndStatus(Long uploadTaskId, Integer completedStatus) {
         Long count = count(new LambdaQueryWrapper<FileChunk>()
@@ -30,7 +34,9 @@ public class FileChunkRepositoryImpl extends ServiceImpl<FileChunkMapper, FileCh
         return count == null ? 0L : count;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean deleteByUploadTaskId(Long uploadTaskId) {
         return remove(new LambdaQueryWrapper<FileChunk>()

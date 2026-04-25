@@ -3,14 +3,16 @@ package com.cybzacg.blogbackend.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.time.LocalDateTime;
 import lombok.Data;
+
+import java.time.LocalDateTime;
 
 /**
  * 系统菜单表
+ *
  * @TableName sys_menu
  */
-@TableName(value ="sys_menu")
+@TableName(value = "sys_menu")
 @Data
 public class SysMenu {
     /**
@@ -104,4 +106,4 @@ public class SysMenu {
      */
     private Object params;
 
-    }
+}

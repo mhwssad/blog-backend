@@ -3,7 +3,6 @@ package com.cybzacg.blogbackend.common.storage.impl;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.model.*;
-
 import com.cybzacg.blogbackend.common.storage.StorageService;
 import com.cybzacg.blogbackend.config.property.FileUploadProperties;
 import com.cybzacg.blogbackend.config.property.StorageProperties;
@@ -64,7 +63,9 @@ public class OssStorageServiceImpl implements StorageService {
         }
     }
 
-    /** 委托给带 contentType 的重载方法，contentType 传 {@code null}。 */
+    /**
+     * 委托给带 contentType 的重载方法，contentType 传 {@code null}。
+     */
     @Override
     public String upload(InputStream inputStream, String objectName) {
         return upload(inputStream, objectName, null);
@@ -97,7 +98,9 @@ public class OssStorageServiceImpl implements StorageService {
         }
     }
 
-    /** 下载 OSS 对象并返回其内容流。 */
+    /**
+     * 下载 OSS 对象并返回其内容流。
+     */
     @Override
     public InputStream download(String objectName) {
         try {
@@ -110,7 +113,9 @@ public class OssStorageServiceImpl implements StorageService {
         }
     }
 
-    /** 删除单个 OSS 对象。 */
+    /**
+     * 删除单个 OSS 对象。
+     */
     @Override
     public boolean delete(String objectName) {
         try {
@@ -143,7 +148,9 @@ public class OssStorageServiceImpl implements StorageService {
         }
     }
 
-    /** 检查 OSS 对象是否存在。 */
+    /**
+     * 检查 OSS 对象是否存在。
+     */
     @Override
     public boolean exists(String objectName) {
         try {
@@ -178,19 +185,25 @@ public class OssStorageServiceImpl implements StorageService {
         }
     }
 
-    /** 返回 {@link StorageType#OSS}。 */
+    /**
+     * 返回 {@link StorageType#OSS}。
+     */
     @Override
     public StorageType getStorageType() {
         return StorageType.OSS;
     }
 
-    /** 委托给带 contentType 的重载方法，contentType 传 {@code null}。 */
+    /**
+     * 委托给带 contentType 的重载方法，contentType 传 {@code null}。
+     */
     @Override
     public String uploadToTemp(InputStream inputStream, String objectName) {
         return uploadToTemp(inputStream, objectName, null);
     }
 
-    /** 将文件上传到临时目录，路径前缀由配置项 {@code tempDirPrefix} 决定。 */
+    /**
+     * 将文件上传到临时目录，路径前缀由配置项 {@code tempDirPrefix} 决定。
+     */
     @Override
     public String uploadToTemp(InputStream inputStream, String objectName, String contentType) {
         // 构建临时存储路径：temp/{uploadId}/{objectName}
@@ -221,7 +234,9 @@ public class OssStorageServiceImpl implements StorageService {
         }
     }
 
-    /** 按 uploadId 删除对应的临时分片对象。 */
+    /**
+     * 按 uploadId 删除对应的临时分片对象。
+     */
     @Override
     public boolean deleteTempFiles(String uploadId) {
         String prefix = fileUploadProperties.getTempDirPrefix() + "/" + uploadId + "/";

@@ -8,17 +8,28 @@ import com.cybzacg.blogbackend.domain.ChatMessage;
 import com.cybzacg.blogbackend.domain.FileInfo;
 import com.cybzacg.blogbackend.enums.storage.StorageType;
 import com.cybzacg.blogbackend.module.chat.constant.ChatConstants;
+import com.cybzacg.blogbackend.module.chat.convert.ChatModelMapper;
 import com.cybzacg.blogbackend.module.chat.model.common.ChatFilePayloadVO;
 import com.cybzacg.blogbackend.module.chat.model.common.ChatMessagePayloadVO;
 import com.cybzacg.blogbackend.module.chat.model.user.ChatMessageVO;
-import com.cybzacg.blogbackend.module.chat.service.ChatAttachmentMetadataResolver;
 import com.cybzacg.blogbackend.module.chat.repository.ChatAttachmentProcessTaskRepository;
 import com.cybzacg.blogbackend.module.chat.repository.ChatMessageRepository;
+import com.cybzacg.blogbackend.module.chat.service.ChatAttachmentMetadataResolver;
 import com.cybzacg.blogbackend.module.chat.service.ChatMetricsService;
 import com.cybzacg.blogbackend.module.chat.service.ChatPushService;
-import com.cybzacg.blogbackend.module.chat.convert.ChatModelMapper;
 import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
 import com.cybzacg.blogbackend.utils.JsonUtils;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import javax.imageio.ImageIO;
+import javax.sound.sampled.AudioFileFormat;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -28,26 +39,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import javax.imageio.ImageIO;
-import javax.sound.sampled.AudioFileFormat;
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ChatAttachmentAsyncProcessingServiceImplTest {
@@ -69,6 +64,72 @@ class ChatAttachmentAsyncProcessingServiceImplTest {
     private ChatModelMapper chatModelMapper;
 
     private ChatAttachmentAsyncProcessingServiceImpl asyncProcessingService;
+
+    private static ChatAttachmentProcessTask buildTask(Long taskId,
+                                                       Long messageId,
+                                                       String messageType,
+                                                       ChatMessageVO messageVO,
+                                                       List<Long> pushUserIds,
+                                                       int retryCount,
+                                                       int maxRetryCount) {
+        ChatAttachmentProcessTask task = new ChatAttachmentProcessTask();
+        task.setId(taskId);
+        task.setMessageId(messageId);
+        task.setMessageType(messageType);
+        task.setTaskStatus(ChatConstants.ATTACHMENT_TASK_STATUS_PENDING);
+        task.setRetryCount(retryCount);
+        task.setMaxRetryCount(maxRetryCount);
+        task.setMessageSnapshotJson(JsonUtils.toJson(messageVO));
+        task.setPushUserIdsJson(JsonUtils.toJson(pushUserIds));
+        return task;
+    }
+
+    private static ChatMessageVO buildMessageSnapshot(Long messageId, String messageType, ChatFilePayloadVO filePayload) {
+        ChatMessageVO messageVO = new ChatMessageVO();
+        messageVO.setId(messageId);
+        messageVO.setMessageType(messageType);
+        messageVO.setFile(filePayload);
+        return messageVO;
+    }
+
+    private static ChatFilePayloadVO buildFilePayload(Long fileId, String previewUrl, String transcodeStatus) {
+        ChatFilePayloadVO filePayload = new ChatFilePayloadVO();
+        filePayload.setFileId(fileId);
+        filePayload.setPreviewUrl(previewUrl);
+        filePayload.setThumbnailUrl(previewUrl);
+        filePayload.setTranscodeStatus(transcodeStatus);
+        return filePayload;
+    }
+
+    private static String buildPayloadJson(Long fileId, String previewUrl, String transcodeStatus) {
+        ChatMessagePayloadVO payload = new ChatMessagePayloadVO();
+        payload.setFile(buildFilePayload(fileId, previewUrl, transcodeStatus));
+        return JsonUtils.toJson(payload);
+    }
+
+    private static byte[] createPngBytes(int width, int height) throws Exception {
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ImageIO.write(image, "png", outputStream);
+        return outputStream.toByteArray();
+    }
+
+    private static byte[] createWaveBytes() throws Exception {
+        AudioFormat format = new AudioFormat(8000F, 16, 1, true, false);
+        int sampleCount = 8000;
+        byte[] pcm = new byte[sampleCount * 2];
+        for (int index = 0; index < sampleCount; index++) {
+            short sample = (short) (Math.sin(index / 12.0D) * 12000);
+            pcm[index * 2] = (byte) (sample & 0xFF);
+            pcm[index * 2 + 1] = (byte) ((sample >> 8) & 0xFF);
+        }
+        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(pcm);
+             AudioInputStream audioInputStream = new AudioInputStream(inputStream, format, sampleCount);
+             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, outputStream);
+            return outputStream.toByteArray();
+        }
+    }
 
     @BeforeEach
     void setUp() {
@@ -368,72 +429,6 @@ class ChatAttachmentAsyncProcessingServiceImplTest {
 
         assertEquals(2, recovered);
         verify(chatAttachmentProcessTaskService).resetExpiredTasks(any(LocalDateTime.class), eq("processing lease expired"));
-    }
-
-    private static ChatAttachmentProcessTask buildTask(Long taskId,
-                                                       Long messageId,
-                                                       String messageType,
-                                                       ChatMessageVO messageVO,
-                                                       List<Long> pushUserIds,
-                                                       int retryCount,
-                                                       int maxRetryCount) {
-        ChatAttachmentProcessTask task = new ChatAttachmentProcessTask();
-        task.setId(taskId);
-        task.setMessageId(messageId);
-        task.setMessageType(messageType);
-        task.setTaskStatus(ChatConstants.ATTACHMENT_TASK_STATUS_PENDING);
-        task.setRetryCount(retryCount);
-        task.setMaxRetryCount(maxRetryCount);
-        task.setMessageSnapshotJson(JsonUtils.toJson(messageVO));
-        task.setPushUserIdsJson(JsonUtils.toJson(pushUserIds));
-        return task;
-    }
-
-    private static ChatMessageVO buildMessageSnapshot(Long messageId, String messageType, ChatFilePayloadVO filePayload) {
-        ChatMessageVO messageVO = new ChatMessageVO();
-        messageVO.setId(messageId);
-        messageVO.setMessageType(messageType);
-        messageVO.setFile(filePayload);
-        return messageVO;
-    }
-
-    private static ChatFilePayloadVO buildFilePayload(Long fileId, String previewUrl, String transcodeStatus) {
-        ChatFilePayloadVO filePayload = new ChatFilePayloadVO();
-        filePayload.setFileId(fileId);
-        filePayload.setPreviewUrl(previewUrl);
-        filePayload.setThumbnailUrl(previewUrl);
-        filePayload.setTranscodeStatus(transcodeStatus);
-        return filePayload;
-    }
-
-    private static String buildPayloadJson(Long fileId, String previewUrl, String transcodeStatus) {
-        ChatMessagePayloadVO payload = new ChatMessagePayloadVO();
-        payload.setFile(buildFilePayload(fileId, previewUrl, transcodeStatus));
-        return JsonUtils.toJson(payload);
-    }
-
-    private static byte[] createPngBytes(int width, int height) throws Exception {
-        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        ImageIO.write(image, "png", outputStream);
-        return outputStream.toByteArray();
-    }
-
-    private static byte[] createWaveBytes() throws Exception {
-        AudioFormat format = new AudioFormat(8000F, 16, 1, true, false);
-        int sampleCount = 8000;
-        byte[] pcm = new byte[sampleCount * 2];
-        for (int index = 0; index < sampleCount; index++) {
-            short sample = (short) (Math.sin(index / 12.0D) * 12000);
-            pcm[index * 2] = (byte) (sample & 0xFF);
-            pcm[index * 2 + 1] = (byte) ((sample >> 8) & 0xFF);
-        }
-        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(pcm);
-             AudioInputStream audioInputStream = new AudioInputStream(inputStream, format, sampleCount);
-             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, outputStream);
-            return outputStream.toByteArray();
-        }
     }
 
     private static final class InMemoryStorageService implements StorageService {

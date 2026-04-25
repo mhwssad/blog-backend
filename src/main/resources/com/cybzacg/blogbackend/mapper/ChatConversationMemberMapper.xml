@@ -23,7 +23,8 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, conversation_id, user_id, member_role, join_source, status,
+        id
+        , conversation_id, user_id, member_role, join_source, status,
         mute_until, joined_at, last_read_message_id, last_read_at,
         last_delivered_message_id, last_delivered_at, remark, created_at, updated_at
     </sql>

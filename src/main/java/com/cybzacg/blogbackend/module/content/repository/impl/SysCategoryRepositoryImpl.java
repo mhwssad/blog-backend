@@ -17,7 +17,9 @@ import java.util.List;
 public class SysCategoryRepositoryImpl extends ServiceImpl<SysCategoryMapper, SysCategory>
         implements SysCategoryRepository {
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<SysCategory> findByTypeOrderBySortOrderAndId(String type) {
         return list(new LambdaQueryWrapper<SysCategory>()
@@ -26,7 +28,9 @@ public class SysCategoryRepositoryImpl extends ServiceImpl<SysCategoryMapper, Sy
                 .orderByAsc(SysCategory::getId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<SysCategory> findByTypeAndStatusOrderBySortOrderAndId(String type, Integer status) {
         return list(new LambdaQueryWrapper<SysCategory>()
@@ -36,21 +40,27 @@ public class SysCategoryRepositoryImpl extends ServiceImpl<SysCategoryMapper, Sy
                 .orderByAsc(SysCategory::getId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<SysCategory> findByParentId(Long parentId) {
         return list(new LambdaQueryWrapper<SysCategory>()
                 .eq(SysCategory::getParentId, parentId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean existsByParentId(Long parentId) {
         return exists(new LambdaQueryWrapper<SysCategory>()
                 .eq(SysCategory::getParentId, parentId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean existsByTypeAndCodeExcludingId(String type, String code, Long excludeId) {
         return exists(new LambdaQueryWrapper<SysCategory>()
@@ -59,7 +69,9 @@ public class SysCategoryRepositoryImpl extends ServiceImpl<SysCategoryMapper, Sy
                 .ne(excludeId != null, SysCategory::getId, excludeId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<SysCategory> listByTypeAndIds(String type, Collection<Long> ids) {
         return list(new LambdaQueryWrapper<SysCategory>()

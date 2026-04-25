@@ -12,9 +12,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class SpringBeanUtilsTest {
 
@@ -67,6 +65,11 @@ class SpringBeanUtilsTest {
     private interface DemoBean {
     }
 
+    @Target(ElementType.TYPE)
+    @Retention(RetentionPolicy.RUNTIME)
+    private @interface Marker {
+    }
+
     private static final class AlphaBean implements DemoBean {
     }
 
@@ -89,10 +92,5 @@ class SpringBeanUtilsTest {
     }
 
     private static class PlainBean {
-    }
-
-    @Target(ElementType.TYPE)
-    @Retention(RetentionPolicy.RUNTIME)
-    private @interface Marker {
     }
 }

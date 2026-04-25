@@ -37,17 +37,17 @@ module/auth/
 
 ### 2.1 接口方法完成情况
 
-| 服务 | 方法数 | 已实现 | 状态 |
-|------|--------|--------|------|
-| AuthService | 8 | 8 | ✅ 全部完成 |
-| SysUserAdminService | 9 | 9 | ✅ 全部完成 |
-| SysRoleAdminService | 8 | 8 | ✅ 全部完成 |
-| SysMenuAdminService | 5 | 5 | ✅ 全部完成 |
-| SysConfigAdminService | 6 | 6 | ✅ 全部完成 |
-| SysNoticeAdminService | 7 | 7 | ✅ 全部完成 |
-| SysLogAdminService | 4 | 4 | ✅ 全部完成 |
-| UserNoticeInboxService | 5 | 5 | ✅ 全部完成 |
-| 基础仓储(10个) | 各1-4 | 全部 | ✅ 全部完成 |
+| 服务                     | 方法数  | 已实现 | 状态     |
+|------------------------|------|-----|--------|
+| AuthService            | 8    | 8   | ✅ 全部完成 |
+| SysUserAdminService    | 9    | 9   | ✅ 全部完成 |
+| SysRoleAdminService    | 8    | 8   | ✅ 全部完成 |
+| SysMenuAdminService    | 5    | 5   | ✅ 全部完成 |
+| SysConfigAdminService  | 6    | 6   | ✅ 全部完成 |
+| SysNoticeAdminService  | 7    | 7   | ✅ 全部完成 |
+| SysLogAdminService     | 4    | 4   | ✅ 全部完成 |
+| UserNoticeInboxService | 5    | 5   | ✅ 全部完成 |
+| 基础仓储(10个)              | 各1-4 | 全部  | ✅ 全部完成 |
 
 **结论: auth 模块所有接口方法均已完整实现，不存在缺失的方法。**
 
@@ -76,25 +76,25 @@ module/auth/
 
 ## 4. 现有测试文件 (17个)
 
-| 测试文件 | 覆盖范围 |
-|----------|----------|
-| `AuthServiceImplTest` | 登录/注册/邮箱验证码/刷新/退出/当前用户装配 |
-| `EmailCodeAuthenticationProviderTest` | 验证码过期/禁用账号/成功登录后删除验证码 |
-| `SysUserAdminServiceImplTest` | 用户管理 CRUD + 状态切换 + 密码重置 + 角色分配 |
-| `SysRoleAdminServiceImplTest` | 角色管理 CRUD + 状态切换 + 菜单分配 + 级联清理 |
-| `SysNoticeAdminServiceImplTest` | 通知管理 CRUD + 发布/撤回 + 目标用户校验 |
-| `UserNoticeInboxServiceImplTest` | 收件箱分页/详情/未读/已读/全部已读 |
-| `AuthAdminControllerSecurityTest` | 后台管理接口 WebMvc 权限拦截 |
-| `JwtTokenManagerTest` | JWT 令牌生成/解析/刷新/失效 |
-| `RedisTokenManagerTest` | Redis 令牌换发、旧令牌失效与单账号会话策略 |
-| `TokenAuthenticationFilterTest` | 认证过滤器链路 |
-| `IpRateLimitFilterTest` | 全局 IP 限流 |
-| `SysConfigAdminServiceImplTest` | 配置 CRUD + 按键查询 + 缓存淘汰 |
-| `SysMenuAdminServiceImplTest` | 菜单树构建 + 创建/更新/删除 + 子节点检查 + 角色菜单清理 |
-| `SysLogAdminServiceImplTest` | 日志分页 + 详情 + 删除 + 按条件清理 |
-| `SysConfigServiceImplTest` | 配置缓存读取与失效 |
-| `SysRoleMenuServiceImplTest` | 角色菜单替换与级联清理 |
-| `SysUserRoleServiceImplTest` | 用户角色替换与级联清理 |
+| 测试文件                                  | 覆盖范围                              |
+|---------------------------------------|-----------------------------------|
+| `AuthServiceImplTest`                 | 登录/注册/邮箱验证码/刷新/退出/当前用户装配          |
+| `EmailCodeAuthenticationProviderTest` | 验证码过期/禁用账号/成功登录后删除验证码             |
+| `SysUserAdminServiceImplTest`         | 用户管理 CRUD + 状态切换 + 密码重置 + 角色分配    |
+| `SysRoleAdminServiceImplTest`         | 角色管理 CRUD + 状态切换 + 菜单分配 + 级联清理    |
+| `SysNoticeAdminServiceImplTest`       | 通知管理 CRUD + 发布/撤回 + 目标用户校验        |
+| `UserNoticeInboxServiceImplTest`      | 收件箱分页/详情/未读/已读/全部已读               |
+| `AuthAdminControllerSecurityTest`     | 后台管理接口 WebMvc 权限拦截                |
+| `JwtTokenManagerTest`                 | JWT 令牌生成/解析/刷新/失效                 |
+| `RedisTokenManagerTest`               | Redis 令牌换发、旧令牌失效与单账号会话策略          |
+| `TokenAuthenticationFilterTest`       | 认证过滤器链路                           |
+| `IpRateLimitFilterTest`               | 全局 IP 限流                          |
+| `SysConfigAdminServiceImplTest`       | 配置 CRUD + 按键查询 + 缓存淘汰             |
+| `SysMenuAdminServiceImplTest`         | 菜单树构建 + 创建/更新/删除 + 子节点检查 + 角色菜单清理 |
+| `SysLogAdminServiceImplTest`          | 日志分页 + 详情 + 删除 + 按条件清理            |
+| `SysConfigServiceImplTest`            | 配置缓存读取与失效                         |
+| `SysRoleMenuServiceImplTest`          | 角色菜单替换与级联清理                       |
+| `SysUserRoleServiceImplTest`          | 用户角色替换与级联清理                       |
 
 ## 5. 下一批高优先级
 

@@ -1,13 +1,14 @@
 package com.cybzacg.blogbackend.config.websocket;
 
 import com.cybzacg.blogbackend.common.constant.WebSocketConstants;
-import java.security.Principal;
-import java.util.Map;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
+
+import java.security.Principal;
+import java.util.Map;
 
 /**
  * WebSocket 握手用户绑定处理器。<p>在握手阶段从拦截器回填的属性中提取 Authentication，将其作为 WebSocket 会话的 Principal，便于后续获取当前用户信息。</p>

@@ -1,43 +1,22 @@
 package com.cybzacg.blogbackend.module.content.convert;
 
-import com.cybzacg.blogbackend.domain.BlogArticle;
-import com.cybzacg.blogbackend.domain.SysCategory;
-import com.cybzacg.blogbackend.domain.SysCollection;
-import com.cybzacg.blogbackend.domain.SysCollectionFolder;
-import com.cybzacg.blogbackend.domain.SysComment;
-import com.cybzacg.blogbackend.domain.SysInteraction;
-import com.cybzacg.blogbackend.domain.SysTag;
-import com.cybzacg.blogbackend.domain.SysUserFootprint;
-import com.cybzacg.blogbackend.module.content.model.admin.CategoryAdminVO;
-import com.cybzacg.blogbackend.module.content.model.admin.CategorySaveRequest;
-import com.cybzacg.blogbackend.module.content.model.admin.CategoryTreeVO;
-import com.cybzacg.blogbackend.module.content.model.admin.CommentVO;
-import com.cybzacg.blogbackend.module.content.model.admin.FootprintVO;
-import com.cybzacg.blogbackend.module.content.model.admin.InteractionVO;
-import com.cybzacg.blogbackend.module.content.model.admin.TagSaveRequest;
-import com.cybzacg.blogbackend.module.content.model.admin.TagVO;
+import com.cybzacg.blogbackend.domain.*;
+import com.cybzacg.blogbackend.module.content.model.admin.*;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicCategoryTreeVO;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicCommentVO;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicTagVO;
-import com.cybzacg.blogbackend.module.content.model.user.CollectionFolderSaveRequest;
-import com.cybzacg.blogbackend.module.content.model.user.CollectionFolderVO;
-import com.cybzacg.blogbackend.module.content.model.user.CollectionSaveRequest;
-import com.cybzacg.blogbackend.module.content.model.user.CommentSaveRequest;
-import com.cybzacg.blogbackend.module.content.model.user.UserFootprintVO;
+import com.cybzacg.blogbackend.module.content.model.user.*;
 import com.cybzacg.blogbackend.utils.JsonUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
-import org.mapstruct.AfterMapping;
-import org.mapstruct.InheritConfiguration;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.*;
 
-import java.util.ArrayList;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
-/** 内容模块对象转换器，涵盖分类、标签、评论、收藏、互动及足迹的映射。 */
+/**
+ * 内容模块对象转换器，涵盖分类、标签、评论、收藏、互动及足迹的映射。
+ */
 @Mapper(componentModel = "spring", imports = StrUtils.class, unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ContentModelMapper {
     CategoryAdminVO toCategoryAdminVO(SysCategory category);

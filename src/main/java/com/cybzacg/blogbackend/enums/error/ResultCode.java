@@ -37,6 +37,7 @@ public interface ResultCode {
                 CODE_CACHE = new ConcurrentHashMap<>();
         private static final Map<Class<? extends ResultCode>, Map<String, ? extends ResultCode>>
                 MESSAGE_CACHE = new ConcurrentHashMap<>();
+
         private Helper() {
         }
 

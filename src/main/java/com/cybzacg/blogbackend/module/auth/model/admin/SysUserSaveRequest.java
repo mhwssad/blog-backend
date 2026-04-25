@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Data
 @Schema(description = "用户新增/修改请求")

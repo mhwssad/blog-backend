@@ -21,7 +21,8 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,target_id,target_type,
+        id
+        ,target_id,target_type,
         content,images,user_id,
         root_id,parent_id,like_count,
         reply_count,status,created_at,
@@ -33,10 +34,10 @@
         <include refid="Base_Column_List"/>
         from sys_comment
         where target_id = #{targetId}
-          and target_type = #{targetType}
-          and root_id = 0
-          and parent_id = 0
-          and status = 1
+        and target_type = #{targetType}
+        and root_id = 0
+        and parent_id = 0
+        and status = 1
         order by created_at asc, id asc
     </select>
 
@@ -48,7 +49,7 @@
         <foreach collection="rootIds" item="rootId" open="(" separator="," close=")">
             #{rootId}
         </foreach>
-          and status = 1
+        and status = 1
         order by created_at asc, id asc
     </select>
 </mapper>

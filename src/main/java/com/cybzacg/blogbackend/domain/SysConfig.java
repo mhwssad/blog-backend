@@ -3,14 +3,16 @@ package com.cybzacg.blogbackend.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.time.LocalDateTime;
 import lombok.Data;
+
+import java.time.LocalDateTime;
 
 /**
  * 系统配置表
+ *
  * @TableName sys_config
  */
-@TableName(value ="sys_config")
+@TableName(value = "sys_config")
 @Data
 public class SysConfig {
     /**
@@ -64,4 +66,4 @@ public class SysConfig {
      */
     private Integer isDeleted;
 
-    }
+}

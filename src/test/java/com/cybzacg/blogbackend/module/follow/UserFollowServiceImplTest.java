@@ -6,13 +6,8 @@ import com.cybzacg.blogbackend.domain.SysUserFollow;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.follow.convert.FollowModelMapper;
 import com.cybzacg.blogbackend.module.follow.model.data.FollowRelationUserItem;
+import com.cybzacg.blogbackend.module.follow.model.user.*;
 import com.cybzacg.blogbackend.module.follow.repository.SysUserFollowRepository;
-import com.cybzacg.blogbackend.module.follow.model.user.UserFollowCountVO;
-import com.cybzacg.blogbackend.module.follow.model.user.UserFollowMutualVO;
-import com.cybzacg.blogbackend.module.follow.model.user.UserFollowPageQuery;
-import com.cybzacg.blogbackend.module.follow.model.user.UserFollowRemarkUpdateRequest;
-import com.cybzacg.blogbackend.module.follow.model.user.UserFollowSpecialUpdateRequest;
-import com.cybzacg.blogbackend.module.follow.model.user.UserFollowUserVO;
 import com.cybzacg.blogbackend.module.follow.service.FollowNoticeService;
 import com.cybzacg.blogbackend.module.follow.service.impl.UserFollowServiceImpl;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
@@ -25,14 +20,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserFollowServiceImplTest {

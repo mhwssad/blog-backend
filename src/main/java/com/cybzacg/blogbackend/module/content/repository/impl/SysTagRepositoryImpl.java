@@ -15,14 +15,18 @@ import java.util.List;
 @Repository
 public class SysTagRepositoryImpl extends ServiceImpl<SysTagMapper, SysTag> implements SysTagRepository {
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<SysTag> findAllOrderByIdDesc() {
         return list(new LambdaQueryWrapper<SysTag>()
                 .orderByDesc(SysTag::getId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean existsByNameExcludingId(String name, Long excludeId) {
         return exists(new LambdaQueryWrapper<SysTag>()
@@ -30,7 +34,9 @@ public class SysTagRepositoryImpl extends ServiceImpl<SysTagMapper, SysTag> impl
                 .ne(excludeId != null, SysTag::getId, excludeId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<SysTag> findByTargetType(String targetType) {
         return baseMapper.selectByTargetType(targetType);

@@ -2,32 +2,17 @@ package com.cybzacg.blogbackend.module.chat.controller;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.core.web.Result;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminConversationPageQuery;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminConversationVO;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMemberMuteUpdateRequest;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMemberRoleUpdateRequest;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMemberStatusUpdateRequest;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageDetailVO;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessagePageQuery;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageReceiptPageQuery;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageReceiptVO;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageVO;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatConversationStatusUpdateRequest;
+import com.cybzacg.blogbackend.module.chat.model.admin.*;
 import com.cybzacg.blogbackend.module.chat.model.user.ChatMemberVO;
 import com.cybzacg.blogbackend.module.chat.service.ChatAdminService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 聊天后台管理控制器。

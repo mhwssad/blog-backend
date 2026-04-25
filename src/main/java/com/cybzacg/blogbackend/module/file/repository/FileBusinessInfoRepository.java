@@ -15,10 +15,10 @@ public interface FileBusinessInfoRepository extends IService<FileBusinessInfo> {
     /**
      * 按文件、用户和业务引用维度查询单条引用。
      *
-     * @param fileId 文件 ID
-     * @param userId 用户 ID
+     * @param fileId        文件 ID
+     * @param userId        用户 ID
      * @param referenceType 引用类型
-     * @param referenceId 引用目标 ID
+     * @param referenceId   引用目标 ID
      * @return 业务引用
      */
     FileBusinessInfo findByFileUserReference(Long fileId, Long userId, String referenceType, Long referenceId);
@@ -26,10 +26,10 @@ public interface FileBusinessInfoRepository extends IService<FileBusinessInfo> {
     /**
      * 按文件、用户和业务引用维度查询最新引用。
      *
-     * @param fileId 文件 ID
-     * @param userId 用户 ID
+     * @param fileId        文件 ID
+     * @param userId        用户 ID
      * @param referenceType 引用类型
-     * @param referenceId 引用目标 ID
+     * @param referenceId   引用目标 ID
      * @return 最新业务引用
      */
     FileBusinessInfo findLatestByFileUserReference(Long fileId, Long userId, String referenceType, Long referenceId);
@@ -37,8 +37,8 @@ public interface FileBusinessInfoRepository extends IService<FileBusinessInfo> {
     /**
      * 按用户和过滤条件分页查询文件引用。
      *
-     * @param userId 用户 ID
-     * @param query 查询条件
+     * @param userId  用户 ID
+     * @param query   查询条件
      * @param fileIds 物理文件筛选集合
      * @return 文件引用分页
      */
@@ -56,7 +56,7 @@ public interface FileBusinessInfoRepository extends IService<FileBusinessInfo> {
      * 按引用类型和引用目标查询业务引用。
      *
      * @param referenceType 引用类型
-     * @param referenceId 引用目标 ID
+     * @param referenceId   引用目标 ID
      * @return 业务引用列表
      */
     List<FileBusinessInfo> listByReferenceTypeAndReferenceId(String referenceType, Long referenceId);

@@ -11,14 +11,7 @@ import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.auth.authentication.EmailCodeAuthenticationToken;
 import com.cybzacg.blogbackend.module.auth.convert.AuthModelMapper;
-import com.cybzacg.blogbackend.module.auth.model.AuthEmailCodeRequest;
-import com.cybzacg.blogbackend.module.auth.model.AuthEmailLoginRequest;
-import com.cybzacg.blogbackend.module.auth.model.AuthLoginRequest;
-import com.cybzacg.blogbackend.module.auth.model.AuthMenuInfo;
-import com.cybzacg.blogbackend.module.auth.model.AuthRefreshRequest;
-import com.cybzacg.blogbackend.module.auth.model.AuthRegisterRequest;
-import com.cybzacg.blogbackend.module.auth.model.AuthUserInfo;
-import com.cybzacg.blogbackend.module.auth.model.AuthenticationToken;
+import com.cybzacg.blogbackend.module.auth.model.*;
 import com.cybzacg.blogbackend.module.auth.repository.SysConfigRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysMenuRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysRoleRepository;
@@ -34,11 +27,11 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -214,7 +207,9 @@ public class AuthServiceImpl implements AuthService {
         return tokenManager.refreshToken(request.getRefreshToken());
     }
 
-    /** 注销当前会话，立即使令牌失效。 */
+    /**
+     * 注销当前会话，立即使令牌失效。
+     */
     @Override
     public void logout(String token) {
         if (!StringUtils.hasText(token)) {
@@ -223,7 +218,9 @@ public class AuthServiceImpl implements AuthService {
         tokenManager.invalidateToken(token);
     }
 
-    /** 获取当前登录用户的基本信息、角色编码与权限列表。 */
+    /**
+     * 获取当前登录用户的基本信息、角色编码与权限列表。
+     */
     @Override
     public AuthUserInfo getCurrentUser() {
         Authentication authentication = SecurityUtils.requireAuthentication();
@@ -233,7 +230,9 @@ public class AuthServiceImpl implements AuthService {
         return authModelMapper.toAuthUserInfo(user, roleCodes, permissions);
     }
 
-    /** 获取当前登录用户可见的菜单树（过滤按钮类型，仅保留目录和菜单）。 */
+    /**
+     * 获取当前登录用户可见的菜单树（过滤按钮类型，仅保留目录和菜单）。
+     */
     @Override
     public List<AuthMenuInfo> getCurrentUserMenus() {
         Authentication authentication = SecurityUtils.requireAuthentication();
@@ -361,9 +360,9 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private void throwRegisterDuplicateException(String username,
-                                                String email,
-                                                String phone,
-                                                DuplicateKeyException cause) {
+                                                 String email,
+                                                 String phone,
+                                                 DuplicateKeyException cause) {
         if (existsActiveUser(USER_FIELD_USERNAME, username)) {
             ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.ILLEGAL_ARGUMENT, "用户名已存在", cause);
         }

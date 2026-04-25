@@ -22,7 +22,8 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, conversation_type, name, avatar, owner_id, single_pair_key,
+        id
+        , conversation_type, name, avatar, owner_id, single_pair_key,
         is_all_site, all_site_key, status, remark, last_message_id,
         last_message_time, created_at, updated_at
     </sql>
@@ -30,19 +31,19 @@
     <sql id="Conversation_List_From">
         from chat_conversation c
         inner join chat_conversation_member cm
-            on cm.conversation_id = c.id
-            and cm.user_id = #{userId}
-            and cm.status = 1
+        on cm.conversation_id = c.id
+        and cm.user_id = #{userId}
+        and cm.status = 1
         left join chat_message_read_cursor cursor
-            on cursor.conversation_id = c.id
-            and cursor.user_id = #{userId}
+        on cursor.conversation_id = c.id
+        and cursor.user_id = #{userId}
         left join chat_message lm
-            on lm.id = c.last_message_id
+        on lm.id = c.last_message_id
         where c.status = 1
         <if test="keyword != null and keyword != ''">
             and (
-                c.name like concat('%', #{keyword}, '%')
-                or lm.content like concat('%', #{keyword}, '%')
+            c.name like concat('%', #{keyword}, '%')
+            or lm.content like concat('%', #{keyword}, '%')
             )
         </if>
     </sql>
@@ -52,57 +53,59 @@
         <include refid="Conversation_List_From"/>
     </select>
 
-    <select id="selectConversationPage" resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatConversationListItem">
+    <select id="selectConversationPage"
+            resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatConversationListItem">
         select
-            c.id,
-            c.conversation_type as conversationType,
-            c.name,
-            c.avatar,
-            c.owner_id as ownerId,
-            c.remark as notice,
-            c.is_all_site as isAllSite,
-            c.status,
-            cm.member_role as selfRole,
-            cursor.read_message_id as lastReadMessageId,
-            cursor.read_at as lastReadAt,
-            cursor.delivered_message_id as lastDeliveredMessageId,
-            cursor.delivered_at as lastDeliveredAt,
-            cursor.unread_count as unreadCount,
-            c.last_message_id as lastMessageId,
-            lm.message_type as lastMessageType,
-            lm.content as lastMessageContent,
-            lm.sender_id as lastMessageSenderId,
-            c.last_message_time as lastMessageTime,
-            c.created_at as createdAt,
-            c.updated_at as updatedAt
+        c.id,
+        c.conversation_type as conversationType,
+        c.name,
+        c.avatar,
+        c.owner_id as ownerId,
+        c.remark as notice,
+        c.is_all_site as isAllSite,
+        c.status,
+        cm.member_role as selfRole,
+        cursor.read_message_id as lastReadMessageId,
+        cursor.read_at as lastReadAt,
+        cursor.delivered_message_id as lastDeliveredMessageId,
+        cursor.delivered_at as lastDeliveredAt,
+        cursor.unread_count as unreadCount,
+        c.last_message_id as lastMessageId,
+        lm.message_type as lastMessageType,
+        lm.content as lastMessageContent,
+        lm.sender_id as lastMessageSenderId,
+        c.last_message_time as lastMessageTime,
+        c.created_at as createdAt,
+        c.updated_at as updatedAt
         <include refid="Conversation_List_From"/>
         order by coalesce(c.last_message_time, c.updated_at) desc, c.id desc
         limit #{offset}, #{size}
     </select>
 
-    <select id="selectConversationDetail" resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatConversationListItem">
+    <select id="selectConversationDetail"
+            resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatConversationListItem">
         select
-            c.id,
-            c.conversation_type as conversationType,
-            c.name,
-            c.avatar,
-            c.owner_id as ownerId,
-            c.remark as notice,
-            c.is_all_site as isAllSite,
-            c.status,
-            cm.member_role as selfRole,
-            cursor.read_message_id as lastReadMessageId,
-            cursor.read_at as lastReadAt,
-            cursor.delivered_message_id as lastDeliveredMessageId,
-            cursor.delivered_at as lastDeliveredAt,
-            cursor.unread_count as unreadCount,
-            c.last_message_id as lastMessageId,
-            lm.message_type as lastMessageType,
-            lm.content as lastMessageContent,
-            lm.sender_id as lastMessageSenderId,
-            c.last_message_time as lastMessageTime,
-            c.created_at as createdAt,
-            c.updated_at as updatedAt
+        c.id,
+        c.conversation_type as conversationType,
+        c.name,
+        c.avatar,
+        c.owner_id as ownerId,
+        c.remark as notice,
+        c.is_all_site as isAllSite,
+        c.status,
+        cm.member_role as selfRole,
+        cursor.read_message_id as lastReadMessageId,
+        cursor.read_at as lastReadAt,
+        cursor.delivered_message_id as lastDeliveredMessageId,
+        cursor.delivered_at as lastDeliveredAt,
+        cursor.unread_count as unreadCount,
+        c.last_message_id as lastMessageId,
+        lm.message_type as lastMessageType,
+        lm.content as lastMessageContent,
+        lm.sender_id as lastMessageSenderId,
+        c.last_message_time as lastMessageTime,
+        c.created_at as createdAt,
+        c.updated_at as updatedAt
         <include refid="Conversation_List_From"/>
         and c.id = #{conversationId}
         limit 1
@@ -111,19 +114,19 @@
     <sql id="Admin_Conversation_From">
         from chat_conversation c
         left join (
-            select conversation_id, count(1) as member_count
-            from chat_conversation_member
-            where status = 1
-            group by conversation_id
+        select conversation_id, count(1) as member_count
+        from chat_conversation_member
+        where status = 1
+        group by conversation_id
         ) member_stats
-            on member_stats.conversation_id = c.id
+        on member_stats.conversation_id = c.id
         left join chat_message lm
-            on lm.id = c.last_message_id
+        on lm.id = c.last_message_id
         where 1 = 1
         <if test="query != null and query.keyword != null and query.keyword != ''">
             and (
-                c.name like concat('%', #{query.keyword}, '%')
-                or lm.content like concat('%', #{query.keyword}, '%')
+            c.name like concat('%', #{query.keyword}, '%')
+            or lm.content like concat('%', #{query.keyword}, '%')
             )
         </if>
         <if test="query != null and query.conversationType != null and query.conversationType != ''">
@@ -137,10 +140,10 @@
         </if>
         <if test="query != null and query.memberUserId != null">
             and exists (
-                select 1
-                from chat_conversation_member cm_filter
-                where cm_filter.conversation_id = c.id
-                  and cm_filter.user_id = #{query.memberUserId}
+            select 1
+            from chat_conversation_member cm_filter
+            where cm_filter.conversation_id = c.id
+            and cm_filter.user_id = #{query.memberUserId}
             )
         </if>
         <if test="query != null and query.isAllSite != null">
@@ -153,56 +156,54 @@
         <include refid="Admin_Conversation_From"/>
     </select>
 
-    <select id="selectAdminConversationPage" resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatAdminConversationListItem">
+    <select id="selectAdminConversationPage"
+            resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatAdminConversationListItem">
         select
-            c.id,
-            c.conversation_type as conversationType,
-            c.name,
-            c.avatar,
-            c.owner_id as ownerId,
-            c.remark as notice,
-            c.is_all_site as isAllSite,
-            c.status,
-            coalesce(member_stats.member_count, 0) as memberCount,
-            c.last_message_id as lastMessageId,
-            lm.message_type as lastMessageType,
-            lm.content as lastMessageContent,
-            lm.sender_id as lastMessageSenderId,
-            c.last_message_time as lastMessageTime,
-            c.created_at as createdAt,
-            c.updated_at as updatedAt
+        c.id,
+        c.conversation_type as conversationType,
+        c.name,
+        c.avatar,
+        c.owner_id as ownerId,
+        c.remark as notice,
+        c.is_all_site as isAllSite,
+        c.status,
+        coalesce(member_stats.member_count, 0) as memberCount,
+        c.last_message_id as lastMessageId,
+        lm.message_type as lastMessageType,
+        lm.content as lastMessageContent,
+        lm.sender_id as lastMessageSenderId,
+        c.last_message_time as lastMessageTime,
+        c.created_at as createdAt,
+        c.updated_at as updatedAt
         <include refid="Admin_Conversation_From"/>
         order by coalesce(c.last_message_time, c.updated_at) desc, c.id desc
         limit #{offset}, #{size}
     </select>
 
-    <select id="selectAdminConversationDetail" resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatAdminConversationListItem">
-        select
-            c.id,
-            c.conversation_type as conversationType,
-            c.name,
-            c.avatar,
-            c.owner_id as ownerId,
-            c.remark as notice,
-            c.is_all_site as isAllSite,
-            c.status,
-            (
-                select count(1)
+    <select id="selectAdminConversationDetail"
+            resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatAdminConversationListItem">
+        select c.id,
+               c.conversation_type   as conversationType,
+               c.name,
+               c.avatar,
+               c.owner_id            as ownerId,
+               c.remark              as notice,
+               c.is_all_site         as isAllSite,
+               c.status,
+               (select count(1)
                 from chat_conversation_member cm
                 where cm.conversation_id = c.id
-                  and cm.status = 1
-            ) as memberCount,
-            c.last_message_id as lastMessageId,
-            lm.message_type as lastMessageType,
-            lm.content as lastMessageContent,
-            lm.sender_id as lastMessageSenderId,
-            c.last_message_time as lastMessageTime,
-            c.created_at as createdAt,
-            c.updated_at as updatedAt
+                  and cm.status = 1) as memberCount,
+               c.last_message_id     as lastMessageId,
+               lm.message_type       as lastMessageType,
+               lm.content            as lastMessageContent,
+               lm.sender_id          as lastMessageSenderId,
+               c.last_message_time   as lastMessageTime,
+               c.created_at          as createdAt,
+               c.updated_at          as updatedAt
         from chat_conversation c
-        left join chat_message lm
-            on lm.id = c.last_message_id
-        where c.id = #{conversationId}
-        limit 1
+                 left join chat_message lm
+                           on lm.id = c.last_message_id
+        where c.id = #{conversationId} limit 1
     </select>
 </mapper>

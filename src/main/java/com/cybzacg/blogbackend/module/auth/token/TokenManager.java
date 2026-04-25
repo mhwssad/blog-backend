@@ -5,9 +5,9 @@ import com.cybzacg.blogbackend.module.auth.model.AuthenticationToken;
 import org.springframework.security.core.Authentication;
 
 /**
- *  Token 管理器
- *  <p>
- *  用于生成、解析、校验、刷新 Token
+ * Token 管理器
+ * <p>
+ * 用于生成、解析、校验、刷新 Token
  *
  * @author Ray.Hao
  * @since 2.16.0
@@ -25,7 +25,7 @@ public interface TokenManager {
     /**
      * 解析 Token 获取认证信息
      *
-     * @param token  Token
+     * @param token Token
      * @return 用户认证信息
      */
     Authentication parseToken(String token);
@@ -47,7 +47,7 @@ public interface TokenManager {
     boolean validateRefreshToken(String refreshToken);
 
     /**
-     *  刷新 Token
+     * 刷新 Token
      *
      * @param token 刷新令牌
      * @return 认证 Token 响应

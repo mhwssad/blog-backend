@@ -49,7 +49,9 @@ public class AuthUserDetailsServiceImpl implements AuthUserDetailsService {
         return AuthUserDetails.of(user, roleCodes, permissions, authorities);
     }
 
-    /** Spring Security UserDetailsService 契约方法，委托给 {@link #loadAuthUserByUsername}。 */
+    /**
+     * Spring Security UserDetailsService 契约方法，委托给 {@link #loadAuthUserByUsername}。
+     */
     @Override
     public AuthUserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return loadAuthUserByUsername(username);

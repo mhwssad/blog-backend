@@ -2,8 +2,9 @@ package com.cybzacg.blogbackend.module.chat.model.user;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
-import java.util.List;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * 群成员操作请求。

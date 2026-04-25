@@ -7,25 +7,20 @@ import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.follow.convert.FollowModelMapper;
 import com.cybzacg.blogbackend.module.follow.model.data.FollowRelationUserItem;
+import com.cybzacg.blogbackend.module.follow.model.user.*;
 import com.cybzacg.blogbackend.module.follow.repository.SysUserFollowRepository;
-import com.cybzacg.blogbackend.module.follow.model.user.UserFanPageQuery;
-import com.cybzacg.blogbackend.module.follow.model.user.UserFollowCountVO;
-import com.cybzacg.blogbackend.module.follow.model.user.UserFollowMutualVO;
-import com.cybzacg.blogbackend.module.follow.model.user.UserFollowPageQuery;
-import com.cybzacg.blogbackend.module.follow.model.user.UserFollowRemarkUpdateRequest;
-import com.cybzacg.blogbackend.module.follow.model.user.UserFollowSpecialUpdateRequest;
-import com.cybzacg.blogbackend.module.follow.model.user.UserFollowUserVO;
 import com.cybzacg.blogbackend.module.follow.service.FollowNoticeService;
 import com.cybzacg.blogbackend.module.follow.service.UserFollowService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * 用户关注关系服务实现。

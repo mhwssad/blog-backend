@@ -26,7 +26,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Java 17 + Spring Boot 4.0.3 单体博客后端。技术栈：Spring Security、MyBatis-Plus、MySQL、Redis (Redisson)、Druid、Knife4j/OpenAPI、MapStruct、Lombok、WebSocket。
+Java 17 + Spring Boot 4.0.3 单体博客后端。技术栈：Spring Security、MyBatis-Plus、MySQL、Redis (Redisson)
+、Druid、Knife4j/OpenAPI、MapStruct、Lombok、WebSocket。
 
 默认 dev 环境：MySQL `localhost:3306/blog_backend`、Redis `localhost:6379` 数据库 12、应用端口 `8000`。
 
@@ -53,7 +54,8 @@ src/main/java/com/cybzacg/blogbackend
 
 ### 请求链路
 
-HTTP → `TokenAuthenticationFilter` → Spring Security (`SecurityConfig` 白名单/鉴权) → Controller → Service → Repository → Mapper → MySQL
+HTTP → `TokenAuthenticationFilter` → Spring Security (`SecurityConfig` 白名单/鉴权) → Controller → Service →
+Repository → Mapper → MySQL
 
 ### 业务模块标准结构
 
@@ -99,6 +101,7 @@ module/<domain>
 
 ## Documentation
 
-新增/修改接口时必须同步更新 `docs/api文档` 中对应文档。影响项目进度或计划时同步更新 `docs/项目进度文档.md` 与 `docs/后续更新计划.md`。
+新增/修改接口时必须同步更新 `docs/api文档` 中对应文档。影响项目进度或计划时同步更新 `docs/项目进度文档.md` 与
+`docs/后续更新计划.md`。
 
 完整规范详见 [AGENTS.md](AGENTS.md)、[docs/项目代码编写规范.md](docs/项目代码编写规范.md)、[docs/项目结构规范.md](docs/项目结构规范.md)。

@@ -16,7 +16,9 @@ import java.util.List;
 public class SysUserRoleRepositoryImpl extends ServiceImpl<SysUserRoleMapper, SysUserRole>
         implements SysUserRoleRepository {
 
-    /** 根据用户 ID 查询关联的角色 ID 列表并去重。 */
+    /**
+     * 根据用户 ID 查询关联的角色 ID 列表并去重。
+     */
     @Override
     public List<Long> findRoleIdsByUserId(Long userId) {
         return list(new LambdaQueryWrapper<SysUserRole>()
@@ -27,14 +29,18 @@ public class SysUserRoleRepositoryImpl extends ServiceImpl<SysUserRoleMapper, Sy
                 .toList();
     }
 
-    /** 根据用户 ID 删除所有关联的角色关系。 */
+    /**
+     * 根据用户 ID 删除所有关联的角色关系。
+     */
     @Override
     public void deleteByUserId(Long userId) {
         remove(new LambdaQueryWrapper<SysUserRole>()
                 .eq(SysUserRole::getUserId, userId));
     }
 
-    /** 根据角色 ID 删除所有关联的用户关系。 */
+    /**
+     * 根据角色 ID 删除所有关联的用户关系。
+     */
     @Override
     public void deleteByRoleId(Long roleId) {
         remove(new LambdaQueryWrapper<SysUserRole>()

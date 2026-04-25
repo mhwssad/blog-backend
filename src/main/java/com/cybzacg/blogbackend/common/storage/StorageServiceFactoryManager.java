@@ -1,4 +1,5 @@
 package com.cybzacg.blogbackend.common.storage;
+
 import com.cybzacg.blogbackend.common.storage.factory.StorageServiceFactory;
 import com.cybzacg.blogbackend.config.property.FileUploadProperties;
 import com.cybzacg.blogbackend.config.property.StorageProperties;
@@ -6,10 +7,12 @@ import com.cybzacg.blogbackend.enums.storage.StorageType;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * 存储服务工厂管理器。<p>负责注册不同存储类型对应的工厂，并在配置装配阶段创建具体存储实例。
  */
@@ -18,9 +21,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class StorageServiceFactoryManager {
     private final List<StorageServiceFactory> factories;
     private final Map<StorageType, StorageServiceFactory> factoryMap = new ConcurrentHashMap<>();
+
     public StorageServiceFactoryManager(List<StorageServiceFactory> factories) {
         this.factories = factories;
     }
+
     /**
      * 初始化工厂映射
      * 在 Bean 初始化后执行，将所有工厂按存储类型注册到 Map 中
@@ -34,6 +39,7 @@ public class StorageServiceFactoryManager {
         }
         log.info("存储服务工厂管理器初始化完成，共注册 {} 个工厂", factoryMap.size());
     }
+
     /**
      * 根据存储类型创建存储服务实例
      *
@@ -54,6 +60,7 @@ public class StorageServiceFactoryManager {
         log.info("使用工厂创建存储服务: {}", storageType.getValue());
         return factory.createStorageService(storageConfig, fileUploadProperties);
     }
+
     /**
      * 根据存储类型代码创建存储服务实例
      *
@@ -69,6 +76,7 @@ public class StorageServiceFactoryManager {
         StorageType storageType = StorageType.fromCode(storageTypeCode);
         return createStorageService(storageType, storageConfig, fileUploadProperties);
     }
+
     /**
      * 获取所有已注册的存储类型
      *
@@ -77,6 +85,7 @@ public class StorageServiceFactoryManager {
     public Map<StorageType, StorageServiceFactory> getRegisteredFactories() {
         return new HashMap<>(factoryMap);
     }
+
     /**
      * 检查是否支持指定的存储类型
      *
@@ -86,6 +95,7 @@ public class StorageServiceFactoryManager {
     public boolean isSupported(StorageType storageType) {
         return factoryMap.containsKey(storageType);
     }
+
     /**
      * 检查是否支持指定的存储类型
      *

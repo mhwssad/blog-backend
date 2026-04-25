@@ -5,27 +5,28 @@
 <mapper namespace="com.cybzacg.blogbackend.mapper.SysLogMapper">
 
     <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.SysLog">
-            <id property="id" column="id" jdbcType="BIGINT"/>
-            <result property="module" column="module" jdbcType="VARCHAR"/>
-            <result property="requestMethod" column="request_method" jdbcType="VARCHAR"/>
-            <result property="requestParams" column="request_params" jdbcType="VARCHAR"/>
-            <result property="responseContent" column="response_content" jdbcType="VARCHAR"/>
-            <result property="content" column="content" jdbcType="VARCHAR"/>
-            <result property="requestUri" column="request_uri" jdbcType="VARCHAR"/>
-            <result property="method" column="method" jdbcType="VARCHAR"/>
-            <result property="ip" column="ip" jdbcType="VARCHAR"/>
-            <result property="province" column="province" jdbcType="VARCHAR"/>
-            <result property="city" column="city" jdbcType="VARCHAR"/>
-            <result property="executionTime" column="execution_time" jdbcType="BIGINT"/>
-            <result property="browser" column="browser" jdbcType="VARCHAR"/>
-            <result property="browserVersion" column="browser_version" jdbcType="VARCHAR"/>
-            <result property="os" column="os" jdbcType="VARCHAR"/>
-            <result property="createBy" column="create_by" jdbcType="BIGINT"/>
-            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="module" column="module" jdbcType="VARCHAR"/>
+        <result property="requestMethod" column="request_method" jdbcType="VARCHAR"/>
+        <result property="requestParams" column="request_params" jdbcType="VARCHAR"/>
+        <result property="responseContent" column="response_content" jdbcType="VARCHAR"/>
+        <result property="content" column="content" jdbcType="VARCHAR"/>
+        <result property="requestUri" column="request_uri" jdbcType="VARCHAR"/>
+        <result property="method" column="method" jdbcType="VARCHAR"/>
+        <result property="ip" column="ip" jdbcType="VARCHAR"/>
+        <result property="province" column="province" jdbcType="VARCHAR"/>
+        <result property="city" column="city" jdbcType="VARCHAR"/>
+        <result property="executionTime" column="execution_time" jdbcType="BIGINT"/>
+        <result property="browser" column="browser" jdbcType="VARCHAR"/>
+        <result property="browserVersion" column="browser_version" jdbcType="VARCHAR"/>
+        <result property="os" column="os" jdbcType="VARCHAR"/>
+        <result property="createBy" column="create_by" jdbcType="BIGINT"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,module,request_method,
+        id
+        ,module,request_method,
         request_params,response_content,content,
         request_uri,method,ip,
         province,city,execution_time,

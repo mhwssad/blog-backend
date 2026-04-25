@@ -3,23 +3,16 @@ package com.cybzacg.blogbackend.module.auth.convert;
 import com.cybzacg.blogbackend.domain.SysMenu;
 import com.cybzacg.blogbackend.domain.SysRole;
 import com.cybzacg.blogbackend.domain.SysUser;
-import com.cybzacg.blogbackend.module.auth.model.admin.SysMenuAdminVO;
-import com.cybzacg.blogbackend.module.auth.model.admin.SysMenuSaveRequest;
-import com.cybzacg.blogbackend.module.auth.model.admin.SysRoleAdminVO;
-import com.cybzacg.blogbackend.module.auth.model.admin.SysRoleSaveRequest;
-import com.cybzacg.blogbackend.module.auth.model.admin.SysUserAdminVO;
-import com.cybzacg.blogbackend.module.auth.model.admin.SysUserSaveRequest;
+import com.cybzacg.blogbackend.module.auth.model.admin.*;
 import com.cybzacg.blogbackend.utils.StrUtils;
-import org.mapstruct.AfterMapping;
-import org.mapstruct.InheritConfiguration;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
+import org.mapstruct.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/** RBAC 管理端对象转换器，处理用户、角色、菜单的增删改查映射。 */
+/**
+ * RBAC 管理端对象转换器，处理用户、角色、菜单的增删改查映射。
+ */
 @Mapper(componentModel = "spring", imports = StrUtils.class)
 public interface RbacAdminModelMapper {
 

@@ -20,17 +20,21 @@ import org.springframework.util.StringUtils;
 @Service
 @RequiredArgsConstructor
 public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig>
-    implements SysConfigService{
+        implements SysConfigService {
     private final RedisOperator redisOperator;
 
-    /** 根据配置键查询配置实体（不经过缓存）。 */
+    /**
+     * 根据配置键查询配置实体（不经过缓存）。
+     */
     @Override
     public SysConfig getByConfigKey(String configKey) {
         String normalizedKey = StrUtils.normalize(configKey);
         return StringUtils.hasText(normalizedKey) ? baseMapper.selectByConfigKey(normalizedKey) : null;
     }
 
-    /** 根据配置键查询配置值，优先从 Redis 缓存读取，未命中时回写缓存。 */
+    /**
+     * 根据配置键查询配置值，优先从 Redis 缓存读取，未命中时回写缓存。
+     */
     @Override
     public String getValueByKey(String configKey) {
         String normalizedKey = StrUtils.normalize(configKey);
@@ -50,14 +54,18 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
         return config.getConfigValue();
     }
 
-    /** 根据配置键查询配置值，不存在时返回默认值。 */
+    /**
+     * 根据配置键查询配置值，不存在时返回默认值。
+     */
     @Override
     public String getValueOrDefault(String configKey, String defaultValue) {
         String value = getValueByKey(configKey);
         return value != null ? value : defaultValue;
     }
 
-    /** 清除指定配置键的 Redis 缓存。 */
+    /**
+     * 清除指定配置键的 Redis 缓存。
+     */
     @Override
     public void evictConfigCache(String configKey) {
         String normalizedKey = StrUtils.normalize(configKey);

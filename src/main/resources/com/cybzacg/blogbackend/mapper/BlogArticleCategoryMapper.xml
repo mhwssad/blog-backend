@@ -5,15 +5,16 @@
 <mapper namespace="com.cybzacg.blogbackend.mapper.BlogArticleCategoryMapper">
 
     <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.BlogArticleCategory">
-            <id property="id" column="id" jdbcType="BIGINT"/>
-            <result property="articleId" column="article_id" jdbcType="BIGINT"/>
-            <result property="categoryId" column="category_id" jdbcType="BIGINT"/>
-            <result property="sortOrder" column="sort_order" jdbcType="INTEGER"/>
-            <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="articleId" column="article_id" jdbcType="BIGINT"/>
+        <result property="categoryId" column="category_id" jdbcType="BIGINT"/>
+        <result property="sortOrder" column="sort_order" jdbcType="INTEGER"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,article_id,category_id,
+        id
+        ,article_id,category_id,
         sort_order,created_at
     </sql>
 </mapper>

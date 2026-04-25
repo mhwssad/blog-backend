@@ -9,7 +9,7 @@ import lombok.AllArgsConstructor;
  */
 
 @AllArgsConstructor
-public enum StorageType  {
+public enum StorageType {
 
     /**
      * 阿里云 OSS

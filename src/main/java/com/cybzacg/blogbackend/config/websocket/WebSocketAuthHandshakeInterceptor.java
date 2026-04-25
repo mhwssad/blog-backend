@@ -5,8 +5,6 @@ import com.cybzacg.blogbackend.common.constant.WebSocketConstants;
 import com.cybzacg.blogbackend.config.property.WebSocketProperties;
 import com.cybzacg.blogbackend.module.auth.token.TokenManager;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
-import java.net.URI;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServerHttpRequest;
@@ -19,6 +17,9 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.URI;
+import java.util.Map;
 
 /**
  * WebSocket 握手鉴权拦截器。<p>复用现有 TokenManager，在握手阶段从请求头或查询参数中提取访问令牌并完成校验，将用户认证信息回填到握手属性中。</p>

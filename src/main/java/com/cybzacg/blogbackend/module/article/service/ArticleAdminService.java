@@ -1,11 +1,7 @@
 package com.cybzacg.blogbackend.module.article.service;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleAccessItem;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleAdminPageQuery;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleAdminVO;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleDetailVO;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleSaveRequest;
+import com.cybzacg.blogbackend.module.article.model.admin.*;
 
 import java.util.List;
 

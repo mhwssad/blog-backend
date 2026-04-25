@@ -38,7 +38,9 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
     private final RbacAdminModelMapper rbacAdminModelMapper;
     private final RbacAssociationFactory rbacAssociationFactory;
 
-    /** 分页查询用户列表，附带每个用户的角色 ID。 */
+    /**
+     * 分页查询用户列表，附带每个用户的角色 ID。
+     */
     @Override
     public PageResult<SysUserAdminVO> pageUsers(SysUserPageQuery query) {
         Page<SysUser> page = sysUserRepository.pageByAdminConditions(query);
@@ -48,14 +50,18 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
         return PageResult.of(page, records);
     }
 
-    /** 根据 ID 获取用户详情及其关联的角色 ID。 */
+    /**
+     * 根据 ID 获取用户详情及其关联的角色 ID。
+     */
     @Override
     public SysUserAdminVO getUser(Long id) {
         SysUser user = getAvailableUser(id);
         return rbacAdminModelMapper.toUserVO(user, sysUserRoleRepository.findRoleIdsByUserId(id));
     }
 
-    /** 创建用户，校验用户名、邮箱、手机号唯一性。 */
+    /**
+     * 创建用户，校验用户名、邮箱、手机号唯一性。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public SysUserAdminVO createUser(SysUserSaveRequest request) {
@@ -68,7 +74,9 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
         return rbacAdminModelMapper.toUserVO(user, List.of());
     }
 
-    /** 更新用户资料，校验唯一性约束。 */
+    /**
+     * 更新用户资料，校验唯一性约束。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public SysUserAdminVO updateUser(Long id, SysUserSaveRequest request) {
@@ -79,7 +87,9 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
         return rbacAdminModelMapper.toUserVO(user, sysUserRoleRepository.findRoleIdsByUserId(id));
     }
 
-    /** 更新用户状态（启用/禁用）。 */
+    /**
+     * 更新用户状态（启用/禁用）。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, Integer status) {
@@ -88,7 +98,9 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
         sysUserRepository.updateById(user);
     }
 
-    /** 重置用户密码。 */
+    /**
+     * 重置用户密码。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void resetPassword(Long id, String password) {
@@ -98,7 +110,9 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
         sysUserRepository.updateById(user);
     }
 
-    /** 软删除用户并清除用户-角色关联。 */
+    /**
+     * 软删除用户并清除用户-角色关联。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteUser(Long id) {
@@ -108,7 +122,9 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
         sysUserRoleRepository.deleteByUserId(id);
     }
 
-    /** 查询用户已分配的角色 ID 列表。 */
+    /**
+     * 查询用户已分配的角色 ID 列表。
+     */
     @Override
     public List<Long> listRoleIds(Long userId) {
         getAvailableUser(userId);

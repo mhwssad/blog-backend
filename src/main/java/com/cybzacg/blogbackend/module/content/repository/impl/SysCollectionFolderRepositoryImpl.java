@@ -18,7 +18,9 @@ import java.util.List;
 public class SysCollectionFolderRepositoryImpl extends ServiceImpl<SysCollectionFolderMapper, SysCollectionFolder>
         implements SysCollectionFolderRepository {
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Page<SysCollectionFolder> pageByAdminConditions(CollectionPageQuery query) {
         return page(new Page<>(query.getCurrent(), query.getSize()), new LambdaQueryWrapper<SysCollectionFolder>()
@@ -28,7 +30,9 @@ public class SysCollectionFolderRepositoryImpl extends ServiceImpl<SysCollection
                 .orderByDesc(SysCollectionFolder::getId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Page<SysCollectionFolder> pageByUserIdOrderByDefaultAndSort(Long userId, long current, long size) {
         return page(new Page<>(current, size), new LambdaQueryWrapper<SysCollectionFolder>()
@@ -38,7 +42,9 @@ public class SysCollectionFolderRepositoryImpl extends ServiceImpl<SysCollection
                 .orderByDesc(SysCollectionFolder::getId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public SysCollectionFolder findDefaultByUserIdAndFolderType(Long userId, String folderType) {
         return getOne(new LambdaQueryWrapper<SysCollectionFolder>()
@@ -47,7 +53,9 @@ public class SysCollectionFolderRepositoryImpl extends ServiceImpl<SysCollection
                 .eq(SysCollectionFolder::getIsDefault, 1));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<SysCollectionFolder> findDefaultsByUserIdAndFolderType(Long userId, String folderType) {
         return list(new LambdaQueryWrapper<SysCollectionFolder>()

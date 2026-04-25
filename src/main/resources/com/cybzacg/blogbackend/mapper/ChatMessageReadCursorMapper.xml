@@ -18,7 +18,8 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, conversation_id, user_id, read_message_id, read_at,
+        id
+        , conversation_id, user_id, read_message_id, read_at,
         delivered_message_id, delivered_at, unread_count, created_at, updated_at
     </sql>
 </mapper>

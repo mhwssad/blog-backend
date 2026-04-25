@@ -19,7 +19,8 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,user_id,folder_name,
+        id
+        ,user_id,folder_name,
         folder_type,description,is_public,
         is_default,sort_order,collection_count,
         created_at,updated_at

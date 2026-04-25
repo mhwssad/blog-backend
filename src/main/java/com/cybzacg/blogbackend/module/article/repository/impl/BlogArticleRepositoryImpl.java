@@ -8,10 +8,10 @@ import com.cybzacg.blogbackend.mapper.BlogArticleMapper;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleAdminPageQuery;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Set;
-import org.springframework.util.StringUtils;
 
 /**
  * 文章 Repository 实现。<p>基于 MyBatis-Plus ServiceImpl 提供文章数据的增删改查。
@@ -20,7 +20,9 @@ import org.springframework.util.StringUtils;
 public class BlogArticleRepositoryImpl extends ServiceImpl<BlogArticleMapper, BlogArticle>
         implements BlogArticleRepository {
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Page<BlogArticle> pageAdminArticles(ArticleAdminPageQuery query, Set<Long> filteredArticleIds) {
         LambdaQueryWrapper<BlogArticle> wrapper = new LambdaQueryWrapper<>();
@@ -42,7 +44,9 @@ public class BlogArticleRepositoryImpl extends ServiceImpl<BlogArticleMapper, Bl
         return page(new Page<>(query.getCurrent(), query.getSize()), wrapper);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<BlogArticle> listAllPublished() {
         return list(new LambdaQueryWrapper<BlogArticle>()

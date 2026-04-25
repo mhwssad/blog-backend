@@ -7,11 +7,7 @@ import com.cybzacg.blogbackend.domain.FileUploadTask;
 import com.cybzacg.blogbackend.module.file.model.admin.FileAdminVO;
 import com.cybzacg.blogbackend.module.file.model.admin.FileDetailVO;
 import com.cybzacg.blogbackend.module.file.model.admin.FileTaskAdminVO;
-import com.cybzacg.blogbackend.module.file.model.user.ChunkUploadVO;
-import com.cybzacg.blogbackend.module.file.model.user.FileUploadInitVO;
-import com.cybzacg.blogbackend.module.file.model.user.FileUploadResultVO;
-import com.cybzacg.blogbackend.module.file.model.user.UserFileTaskVO;
-import com.cybzacg.blogbackend.module.file.model.user.UserFileVO;
+import com.cybzacg.blogbackend.module.file.model.user.*;
 import org.mapstruct.*;
 
 /**

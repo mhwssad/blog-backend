@@ -1,4 +1,5 @@
 package com.cybzacg.blogbackend.module.file.service.impl;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.common.storage.StorageManager;
 import com.cybzacg.blogbackend.common.storage.StorageService;
@@ -15,15 +16,8 @@ import com.cybzacg.blogbackend.enums.file.FileResultCode;
 import com.cybzacg.blogbackend.enums.file.FileStatusEnum;
 import com.cybzacg.blogbackend.enums.storage.TaskStatusEnum;
 import com.cybzacg.blogbackend.enums.storage.UploadModeEnum;
-import com.cybzacg.blogbackend.module.file.model.user.ChunkUploadVO;
-import com.cybzacg.blogbackend.module.file.model.user.FileUploadInitRequest;
 import com.cybzacg.blogbackend.module.file.convert.FileModelMapper;
-import com.cybzacg.blogbackend.module.file.model.user.FileUploadInitVO;
-import com.cybzacg.blogbackend.module.file.model.user.FileUploadResultVO;
-import com.cybzacg.blogbackend.module.file.model.user.UserFilePageQuery;
-import com.cybzacg.blogbackend.module.file.model.user.UserFileTaskPageQuery;
-import com.cybzacg.blogbackend.module.file.model.user.UserFileTaskVO;
-import com.cybzacg.blogbackend.module.file.model.user.UserFileVO;
+import com.cybzacg.blogbackend.module.file.model.user.*;
 import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
 import com.cybzacg.blogbackend.module.file.repository.FileChunkRepository;
 import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
@@ -39,21 +33,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.InputStream;
 import java.security.MessageDigest;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
+
 /**
  * 用户文件服务实现。
  * 负责上传任务初始化、秒传检测、整文件上传、分片上传与用户侧文件引用维护。
@@ -70,6 +59,7 @@ public class UserFileServiceImpl implements UserFileService {
     private final StorageManager storageManager;
     private final FileUploadProperties fileUploadProperties;
     private final FileModelMapper fileModelMapper;
+
     /**
      * 初始化上传任务，并根据文件指纹预判是否可以直接走秒传。
      * 无论是否秒传命中，都会先固化一条上传任务，保证客户端后续轮询、审计与异常补偿都能基于同一条任务链路展开。
@@ -135,6 +125,7 @@ public class UserFileServiceImpl implements UserFileService {
         vo.setTaskStatus(task.getTaskStatus());
         return vo;
     }
+
     /**
      * 针对已初始化任务再次执行秒传检查，兼容客户端稍后补发检测请求的场景。
      */
@@ -158,6 +149,7 @@ public class UserFileServiceImpl implements UserFileService {
         }
         return finalizeTaskWithReference(task, existing, sourceIp, true);
     }
+
     /**
      * 处理普通整文件上传，在落存储前完成 MD5 校验与重复文件复用判断。
      * 该方法先尝试复用同指纹文件，未命中时才真正写入存储；若落库阶段因唯一键竞争发现同 MD5 文件已被并发请求创建，
@@ -194,6 +186,7 @@ public class UserFileServiceImpl implements UserFileService {
             throw e;
         }
     }
+
     /**
      * 上传单个分片并更新分片进度，为断点续传和最终合并提供元数据基础。
      */
@@ -238,6 +231,7 @@ public class UserFileServiceImpl implements UserFileService {
             throw e;
         }
     }
+
     /**
      * 校验分片完整性并执行合并，必要时复用已存在的同指纹物理文件。
      */
@@ -274,6 +268,7 @@ public class UserFileServiceImpl implements UserFileService {
             throw e;
         }
     }
+
     /**
      * 分页查询当前用户的文件引用，并按关键字回填物理文件信息。
      */
@@ -300,6 +295,7 @@ public class UserFileServiceImpl implements UserFileService {
                 .toList();
         return PageResult.of(page, records);
     }
+
     /**
      * 分页查询当前用户的上传任务，便于展示上传进度与异常状态。
      */
@@ -313,6 +309,7 @@ public class UserFileServiceImpl implements UserFileService {
         List<UserFileTaskVO> records = page.getRecords().stream().map(this::toUserTaskVO).toList();
         return PageResult.of(page, records);
     }
+
     /**
      * 删除用户自己的业务引用，并在最后一个引用消失时回收物理文件。
      */
@@ -326,6 +323,7 @@ public class UserFileServiceImpl implements UserFileService {
         fileBusinessInfoRepository.removeById(businessId);
         fileLifecycleService.syncFileAfterReferenceRemoval(fileId);
     }
+
     /**
      * 校验上传初始化请求的尺寸、扩展名与指纹约束。
      */
@@ -351,6 +349,7 @@ public class UserFileServiceImpl implements UserFileService {
                 "文件分类非法"
         );
     }
+
     /**
      * 校验用户文件列表筛选参数，避免非法枚举值被静默归一化成默认值。
      */
@@ -368,6 +367,7 @@ public class UserFileServiceImpl implements UserFileService {
                 FileResultCode.FILE_STATUS_INVALID
         );
     }
+
     /**
      * 校验任务列表状态筛选值，避免无效状态被当成空结果吞掉。
      */
@@ -377,6 +377,7 @@ public class UserFileServiceImpl implements UserFileService {
                 FileResultCode.UPLOAD_TASK_STATUS_INVALID
         );
     }
+
     /**
      * 根据配置白名单判断扩展名是否允许上传；未配置白名单时默认放行。
      */
@@ -396,6 +397,7 @@ public class UserFileServiceImpl implements UserFileService {
         }
         return false;
     }
+
     private boolean isChunked(FileUploadInitRequest request) {
         if (request.getTotalChunks() != null && request.getTotalChunks() > 1) {
             return true;
@@ -403,12 +405,14 @@ public class UserFileServiceImpl implements UserFileService {
         long threshold = fileUploadProperties.getChunkSizeThreshold() == null ? 0L : fileUploadProperties.getChunkSizeThreshold();
         return threshold > 0 && request.getFileSize() != null && request.getFileSize() > threshold;
     }
+
     private long resolveChunkSize(FileUploadInitRequest request) {
         if (request.getChunkSize() != null && request.getChunkSize() > 0) {
             return request.getChunkSize();
         }
         return fileUploadProperties.getChunkSize() == null ? 5242880L : fileUploadProperties.getChunkSize();
     }
+
     private int resolveTotalChunks(FileUploadInitRequest request, long chunkSize) {
         if (request.getTotalChunks() != null && request.getTotalChunks() > 0) {
             return request.getTotalChunks();
@@ -416,6 +420,7 @@ public class UserFileServiceImpl implements UserFileService {
         long fileSize = request.getFileSize() == null ? 0L : request.getFileSize();
         return (int) ((fileSize + chunkSize - 1) / chunkSize);
     }
+
     private FileUploadTask getTaskOrThrow(String uploadId) {
         Long userId = SecurityUtils.requireUserId();
         ExceptionThrowerCore.throwBusinessIfBlank(uploadId, FileResultCode.UPLOAD_ID_REQUIRED);
@@ -428,11 +433,13 @@ public class UserFileServiceImpl implements UserFileService {
         }
         return task;
     }
+
     private StorageService requireStorageService(String storageKey) {
         StorageService storageService = storageManager.getStorageService(storageKey);
         ExceptionThrowerCore.throwBusinessIf(storageService == null, FileResultCode.STORAGE_NODE_UNAVAILABLE, "存储节点不可用: " + storageKey);
         return storageService;
     }
+
     /**
      * 根据 MD5 和大小尝试复用已有正常文件，避免错误命中不同内容的同指纹记录。
      */
@@ -449,12 +456,14 @@ public class UserFileServiceImpl implements UserFileService {
         }
         return file;
     }
+
     private FileInfo findFileByMd5(String md5) {
         if (!StringUtils.hasText(md5)) {
             return null;
         }
         return fileInfoRepository.findByMd5(md5);
     }
+
     /**
      * 限制上传任务只在允许的生命周期节点执行当前动作，避免终态任务被重复消费。
      */
@@ -468,6 +477,7 @@ public class UserFileServiceImpl implements UserFileService {
         }
         ExceptionThrowerCore.throwBusinessEx(FileResultCode.UPLOAD_TASK_STATUS_INVALID);
     }
+
     /**
      * 仅在状态机允许时推进任务状态，避免任务在异常重试时发生非法回退。
      */
@@ -483,6 +493,7 @@ public class UserFileServiceImpl implements UserFileService {
             fileUploadTaskRepository.updateById(task);
         }
     }
+
     /**
      * 将任务、物理文件和业务引用一次性收口，确保任务状态与引用计数保持同步。
      */
@@ -502,6 +513,7 @@ public class UserFileServiceImpl implements UserFileService {
         cleanupChunkArtifacts(task);
         return toResultVO(task, fileInfo, ref == null ? null : ref.getId());
     }
+
     /**
      * 根据上传任务生成物理文件记录，统一补齐分类、公开性和来源信息。
      */
@@ -532,6 +544,7 @@ public class UserFileServiceImpl implements UserFileService {
             return handleFileInfoConflict(task, fileInfo, objectName, md5, e);
         }
     }
+
     /**
      * 处理 MD5 唯一键冲突，优先复用已存在记录，并尽力清理当前请求产生的多余对象。
      */
@@ -565,6 +578,7 @@ public class UserFileServiceImpl implements UserFileService {
         cleanupUploadedObject(task.getStorageKey(), objectName);
         return new PersistedFileInfo(existing, true);
     }
+
     /**
      * 去重冲突时回收本次请求多上传的对象，避免外部存储残留孤儿文件。
      */
@@ -580,6 +594,7 @@ public class UserFileServiceImpl implements UserFileService {
         } catch (Exception ignored) {
         }
     }
+
     /**
      * 按业务维度创建引用记录，遇到并发重复提交时复用已存在的引用。
      */
@@ -607,6 +622,7 @@ public class UserFileServiceImpl implements UserFileService {
         }
         return ref;
     }
+
     /**
      * 按任务绑定的业务维度回查引用记录 ID，用于已完成任务结果回放。
      */
@@ -619,12 +635,14 @@ public class UserFileServiceImpl implements UserFileService {
         FileBusinessInfo ref = fileBusinessInfoRepository.findLatestByFileUserReference(fileId, userId, type, rid);
         return ref == null ? null : ref.getId();
     }
+
     private void markTaskFailed(FileUploadTask task, FileResultCode resultCode, String message) {
         task.setTaskStatus(TaskStatusEnum.FAILED.getValue());
         task.setErrorCode(resultCode == null ? null : String.valueOf(resultCode.getCode()));
         task.setErrorMessage(truncate(StringUtils.hasText(message) ? message : (resultCode == null ? null : resultCode.getMessage()), 240));
         fileUploadTaskRepository.updateById(task);
     }
+
     /**
      * 分片任务在完成后清理分片记录与临时文件，避免秒传复用和合并成功后残留临时资源。
      * 外部存储清理仅做尽力而为，不阻塞已完成的元数据收口。
@@ -645,6 +663,7 @@ public class UserFileServiceImpl implements UserFileService {
         } catch (Exception ignored) {
         }
     }
+
     /**
      * 对单个分片执行插入或覆盖，保证重复上传同一分片时记录保持最新。
      */
@@ -668,9 +687,11 @@ public class UserFileServiceImpl implements UserFileService {
         chunk.setUploadTime(LocalDateTime.now());
         fileChunkRepository.updateById(chunk);
     }
+
     private int countUploadedChunks(Long taskId) {
         return Math.toIntExact(fileChunkRepository.countByTaskIdAndStatus(taskId, CHUNK_STATUS_COMPLETED));
     }
+
     /**
      * 按上传任务生成分片对象名列表，确保合并顺序与分片编号一致。
      */
@@ -686,6 +707,7 @@ public class UserFileServiceImpl implements UserFileService {
         }
         return names;
     }
+
     private void validateVisibility(Integer isPublic) {
         ExceptionThrowerCore.throwBusinessIf(
                 isPublic != null && !Integer.valueOf(0).equals(isPublic) && !Integer.valueOf(1).equals(isPublic),
@@ -727,6 +749,7 @@ public class UserFileServiceImpl implements UserFileService {
         }
         return map;
     }
+
     /**
      * 将业务引用与物理文件信息拼装成用户文件列表项。
      */
@@ -736,12 +759,14 @@ public class UserFileServiceImpl implements UserFileService {
         }
         return fileModelMapper.toUserFileVOFromBoth(ref, fileInfo);
     }
+
     /**
      * 将上传任务转换为用户侧任务视图，便于展示当前上传进度和异常信息。
      */
     private UserFileTaskVO toUserTaskVO(FileUploadTask task) {
         return fileModelMapper.toUserFileTaskVO(task);
     }
+
     /**
      * 构造统一的上传结果对象，兼容秒传、普通上传和分片上传完成三种返回场景。
      */
@@ -753,6 +778,7 @@ public class UserFileServiceImpl implements UserFileService {
         vo.setReferenceCount(fileInfo == null ? null : fileInfo.getReferenceCount());
         return vo;
     }
+
     /**
      * 统一计算并回填文件 MD5，保证整文件上传与秒传逻辑使用同一份指纹。
      */
@@ -766,6 +792,7 @@ public class UserFileServiceImpl implements UserFileService {
         fileUploadTaskRepository.updateById(task);
         return computed;
     }
+
     /**
      * 计算上传文件的 MD5，用于与客户端指纹比对及秒传复用。
      */
@@ -783,6 +810,7 @@ public class UserFileServiceImpl implements UserFileService {
             return null;
         }
     }
+
     private String toHex(byte[] bytes) {
         StringBuilder sb = new StringBuilder(bytes.length * 2);
         for (byte b : bytes) {
@@ -791,12 +819,14 @@ public class UserFileServiceImpl implements UserFileService {
         }
         return sb.toString();
     }
+
     private String normalizeMd5(String md5) {
         if (!StringUtils.hasText(md5)) {
             return null;
         }
         return md5.trim().toLowerCase(Locale.ROOT);
     }
+
     /**
      * 生成最终对象名，按业务分类和日期分桶，避免目录过深或名称冲突。
      */
@@ -808,12 +838,14 @@ public class UserFileServiceImpl implements UserFileService {
         String suffix = StringUtils.hasText(ext) ? ("." + ext) : "";
         return normalizedCategory + "/" + datePath + "/" + uuid + suffix;
     }
+
     private String normalizeExt(String ext) {
         if (!StringUtils.hasText(ext)) {
             return "";
         }
         return ext.trim().toLowerCase(Locale.ROOT);
     }
+
     private String extractFileName(String objectName) {
         if (!StringUtils.hasText(objectName)) {
             return objectName;
@@ -821,6 +853,7 @@ public class UserFileServiceImpl implements UserFileService {
         int idx = objectName.lastIndexOf('/');
         return idx < 0 ? objectName : objectName.substring(idx + 1);
     }
+
     /**
      * 按 MIME 类型归并出前端更容易消费的文件类型分类。
      */
@@ -842,10 +875,12 @@ public class UserFileServiceImpl implements UserFileService {
         }
         return "other";
     }
+
     private LocalDateTime expireAfterDays(Integer days) {
         int d = days == null ? 2 : Math.max(1, days);
         return LocalDateTime.now().plusDays(d);
     }
+
     private String truncate(String value, int maxLen) {
         if (!StringUtils.hasText(value)) {
             return value;
@@ -853,9 +888,11 @@ public class UserFileServiceImpl implements UserFileService {
         String trimmed = value.trim();
         return trimmed.length() <= maxLen ? trimmed : trimmed.substring(0, maxLen);
     }
+
     private Integer defaultInt(Integer value, Integer defaultValue) {
         return value == null ? defaultValue : value;
     }
+
     private record PersistedFileInfo(FileInfo fileInfo, boolean reusedExisting) {
     }
 }

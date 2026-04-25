@@ -11,14 +11,8 @@ import com.cybzacg.blogbackend.domain.FileUploadTask;
 import com.cybzacg.blogbackend.enums.file.FileStatusEnum;
 import com.cybzacg.blogbackend.enums.storage.TaskStatusEnum;
 import com.cybzacg.blogbackend.enums.storage.UploadModeEnum;
-import com.cybzacg.blogbackend.module.file.model.user.ChunkUploadVO;
-import com.cybzacg.blogbackend.module.file.model.user.FileUploadInitRequest;
-import com.cybzacg.blogbackend.module.file.model.user.FileUploadInitVO;
-import com.cybzacg.blogbackend.module.file.model.user.FileUploadResultVO;
-import com.cybzacg.blogbackend.module.file.model.user.UserFilePageQuery;
-import com.cybzacg.blogbackend.module.file.model.user.UserFileTaskPageQuery;
-import com.cybzacg.blogbackend.module.file.model.user.UserFileVO;
 import com.cybzacg.blogbackend.module.file.convert.FileModelMapper;
+import com.cybzacg.blogbackend.module.file.model.user.*;
 import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
 import com.cybzacg.blogbackend.module.file.repository.FileChunkRepository;
 import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
@@ -36,17 +30,9 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserFileServiceImplTest {

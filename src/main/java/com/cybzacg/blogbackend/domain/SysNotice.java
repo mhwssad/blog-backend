@@ -3,14 +3,16 @@ package com.cybzacg.blogbackend.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.time.LocalDateTime;
 import lombok.Data;
+
+import java.time.LocalDateTime;
 
 /**
  * 系统通知公告表
+ *
  * @TableName sys_notice
  */
-@TableName(value ="sys_notice")
+@TableName(value = "sys_notice")
 @Data
 public class SysNotice {
     /**
@@ -94,4 +96,4 @@ public class SysNotice {
      */
     private Integer isDeleted;
 
-    }
+}

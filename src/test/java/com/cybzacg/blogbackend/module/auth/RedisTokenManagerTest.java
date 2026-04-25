@@ -1,40 +1,33 @@
 package com.cybzacg.blogbackend.module.auth;
 
-import com.cybzacg.blogbackend.config.property.SecurityProperties;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
-import com.cybzacg.blogbackend.module.auth.model.AuthenticationToken;
+import com.cybzacg.blogbackend.config.property.SecurityProperties;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserPrincipal;
+import com.cybzacg.blogbackend.module.auth.model.AuthenticationToken;
 import com.cybzacg.blogbackend.module.auth.token.RedisTokenManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.time.Duration;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class RedisTokenManagerTest {
-    @Mock
-    private RedisOperator redisOperator;
-
     private final Map<String, Object> values = new LinkedHashMap<>();
     private final Map<String, Set<Object>> sets = new LinkedHashMap<>();
+    @Mock
+    private RedisOperator redisOperator;
 
     @BeforeEach
     void setUp() {

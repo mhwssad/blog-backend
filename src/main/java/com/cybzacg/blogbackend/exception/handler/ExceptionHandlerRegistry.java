@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.exception.handler;
 
-import jakarta.annotation.PostConstruct;
 import com.cybzacg.blogbackend.utils.SpringBeanUtils;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;

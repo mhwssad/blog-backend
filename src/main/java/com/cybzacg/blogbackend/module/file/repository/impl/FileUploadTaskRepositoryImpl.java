@@ -19,7 +19,9 @@ import java.util.List;
 @Repository
 public class FileUploadTaskRepositoryImpl extends ServiceImpl<FileUploadTaskMapper, FileUploadTask>
         implements FileUploadTaskRepository {
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public FileUploadTask findByUploadIdAndUserId(String uploadId, Long userId) {
         return getOne(new LambdaQueryWrapper<FileUploadTask>()
@@ -28,7 +30,9 @@ public class FileUploadTaskRepositoryImpl extends ServiceImpl<FileUploadTaskMapp
                 .last("limit 1"));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Page<FileUploadTask> pageByUserAndStatus(Long userId, UserFileTaskPageQuery query) {
         return page(new Page<>(query.getCurrent(), query.getSize()), new LambdaQueryWrapper<FileUploadTask>()
@@ -40,7 +44,9 @@ public class FileUploadTaskRepositoryImpl extends ServiceImpl<FileUploadTaskMapp
                 .orderByDesc(FileUploadTask::getId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Page<FileUploadTask> pageAdminTasks(FileTaskPageQuery query) {
         return page(new Page<>(query.getCurrent(), query.getSize()), new LambdaQueryWrapper<FileUploadTask>()
@@ -52,7 +58,9 @@ public class FileUploadTaskRepositoryImpl extends ServiceImpl<FileUploadTaskMapp
                 .orderByDesc(FileUploadTask::getId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<FileUploadTask> findExpiredTasks(LocalDateTime expireTime, List<Integer> statuses, int limit) {
         return list(new LambdaQueryWrapper<FileUploadTask>()
@@ -63,7 +71,9 @@ public class FileUploadTaskRepositoryImpl extends ServiceImpl<FileUploadTaskMapp
                 .last("limit " + limit));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<FileUploadTask> listRecentByFileId(Long fileId, int limit) {
         return list(new LambdaQueryWrapper<FileUploadTask>()
@@ -73,7 +83,9 @@ public class FileUploadTaskRepositoryImpl extends ServiceImpl<FileUploadTaskMapp
                 .last("limit " + limit));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<FileUploadTask> listByFileId(Long fileId) {
         return list(new LambdaQueryWrapper<FileUploadTask>()

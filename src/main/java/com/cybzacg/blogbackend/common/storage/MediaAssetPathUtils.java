@@ -15,12 +15,16 @@ public final class MediaAssetPathUtils {
     private MediaAssetPathUtils() {
     }
 
-    /** 根据原图路径生成聊天缩略图的 sidecar 路径。 */
+    /**
+     * 根据原图路径生成聊天缩略图的 sidecar 路径。
+     */
     public static String buildChatImageThumbnailPath(String originalPath) {
         return appendSuffixBeforeExtension(originalPath, CHAT_IMAGE_THUMBNAIL_SUFFIX);
     }
 
-    /** 根据原始语音路径生成转码预览的 sidecar 路径。 */
+    /**
+     * 根据原始语音路径生成转码预览的 sidecar 路径。
+     */
     public static String buildChatVoicePreviewPath(String originalPath) {
         return appendSuffixBeforeExtension(originalPath, CHAT_VOICE_PREVIEW_SUFFIX);
     }

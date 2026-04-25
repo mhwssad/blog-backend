@@ -1,7 +1,8 @@
 package com.cybzacg.blogbackend.module.follow.model.data;
 
-import java.time.LocalDateTime;
 import lombok.Data;
+
+import java.time.LocalDateTime;
 
 /**
  * 关注关系后台联表查询结果。

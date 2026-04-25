@@ -5,22 +5,21 @@ import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.SysUserFootprint;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
+import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.user.UserFootprintPageQuery;
 import com.cybzacg.blogbackend.module.content.model.user.UserFootprintVO;
 import com.cybzacg.blogbackend.module.content.repository.SysUserFootprintRepository;
 import com.cybzacg.blogbackend.module.content.service.UserFootprintService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
-
-import java.time.LocalDateTime;
 import com.cybzacg.blogbackend.utils.RequestContextUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -36,7 +35,9 @@ public class UserFootprintServiceImpl implements UserFootprintService {
     private final ArticleAccessControlService articleAccessControlService;
     private final ContentModelMapper contentModelMapper;
 
-    /** 分页查询当前用户的浏览足迹列表。 */
+    /**
+     * 分页查询当前用户的浏览足迹列表。
+     */
     @Override
     public PageResult<UserFootprintVO> pageFootprints(UserFootprintPageQuery query) {
         Long userId = SecurityUtils.requireUserId();
@@ -49,7 +50,9 @@ public class UserFootprintServiceImpl implements UserFootprintService {
         return PageResult.of(page, records);
     }
 
-    /** 删除当前用户的单条足迹记录。 */
+    /**
+     * 删除当前用户的单条足迹记录。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteFootprint(Long id) {
@@ -59,7 +62,9 @@ public class UserFootprintServiceImpl implements UserFootprintService {
         sysUserFootprintRepository.removeById(id);
     }
 
-    /** 清除当前用户的所有浏览足迹。 */
+    /**
+     * 清除当前用户的所有浏览足迹。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void clearFootprints() {

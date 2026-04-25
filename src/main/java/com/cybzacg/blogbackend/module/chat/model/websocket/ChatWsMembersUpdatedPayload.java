@@ -2,9 +2,10 @@ package com.cybzacg.blogbackend.module.chat.model.websocket;
 
 import com.cybzacg.blogbackend.module.chat.model.user.ChatMemberVO;
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.List;
 import lombok.Builder;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * 成员变更 WebSocket 事件载荷。

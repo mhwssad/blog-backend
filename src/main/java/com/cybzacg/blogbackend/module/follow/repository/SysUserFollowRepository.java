@@ -17,7 +17,7 @@ public interface SysUserFollowRepository extends IService<SysUserFollow> {
     /**
      * 根据关注人和被关注人查询单条关系。
      *
-     * @param followerId 关注人 ID
+     * @param followerId  关注人 ID
      * @param followingId 被关注人 ID
      * @return 关注关系
      */
@@ -26,7 +26,7 @@ public interface SysUserFollowRepository extends IService<SysUserFollow> {
     /**
      * 统计用户关注列表总数。
      *
-     * @param userId 用户 ID
+     * @param userId      用户 ID
      * @param specialOnly 是否仅特别关注
      * @return 总数
      */
@@ -35,10 +35,10 @@ public interface SysUserFollowRepository extends IService<SysUserFollow> {
     /**
      * 查询用户关注列表。
      *
-     * @param userId 用户 ID
+     * @param userId      用户 ID
      * @param specialOnly 是否仅特别关注
-     * @param offset 偏移量
-     * @param size 页大小
+     * @param offset      偏移量
+     * @param size        页大小
      * @return 关注列表
      */
     List<FollowRelationUserItem> selectFollowPage(Long userId, Boolean specialOnly, Long offset, Long size);
@@ -56,7 +56,7 @@ public interface SysUserFollowRepository extends IService<SysUserFollow> {
      *
      * @param userId 用户 ID
      * @param offset 偏移量
-     * @param size 页大小
+     * @param size   页大小
      * @return 粉丝列表
      */
     List<FollowRelationUserItem> selectFanPage(Long userId, Long offset, Long size);
@@ -64,7 +64,7 @@ public interface SysUserFollowRepository extends IService<SysUserFollow> {
     /**
      * 统计一对用户之间是否存在有效关注关系。
      *
-     * @param followerId 关注人 ID
+     * @param followerId  关注人 ID
      * @param followingId 被关注人 ID
      * @return 关系数
      */
@@ -99,7 +99,7 @@ public interface SysUserFollowRepository extends IService<SysUserFollow> {
      *
      * @param userId 用户 ID
      * @param offset 偏移量
-     * @param size 页大小
+     * @param size   页大小
      * @return 公开关注列表
      */
     List<PublicFollowUserItem> selectPublicFollowPage(Long userId, Long offset, Long size);
@@ -117,7 +117,7 @@ public interface SysUserFollowRepository extends IService<SysUserFollow> {
      *
      * @param userId 用户 ID
      * @param offset 偏移量
-     * @param size 页大小
+     * @param size   页大小
      * @return 公开粉丝列表
      */
     List<PublicFollowUserItem> selectPublicFanPage(Long userId, Long offset, Long size);
@@ -133,9 +133,9 @@ public interface SysUserFollowRepository extends IService<SysUserFollow> {
     /**
      * 查询后台关注关系分页数据。
      *
-     * @param query 查询条件
+     * @param query  查询条件
      * @param offset 偏移量
-     * @param size 页大小
+     * @param size   页大小
      * @return 分页数据
      */
     List<FollowAdminRelationItem> selectAdminRelationPage(FollowAdminPageQuery query, Long offset, Long size);
@@ -143,8 +143,8 @@ public interface SysUserFollowRepository extends IService<SysUserFollow> {
     /**
      * 统计可清理的无效关系数。
      *
-     * @param cleanInactive 是否清理已取关
-     * @param cleanDeletedUsers 是否清理已删除用户关系
+     * @param cleanInactive      是否清理已取关
+     * @param cleanDeletedUsers  是否清理已删除用户关系
      * @param cleanDisabledUsers 是否清理已禁用用户关系
      * @return 可清理数量
      */
@@ -153,8 +153,8 @@ public interface SysUserFollowRepository extends IService<SysUserFollow> {
     /**
      * 删除符合条件的无效关系。
      *
-     * @param cleanInactive 是否清理已取关
-     * @param cleanDeletedUsers 是否清理已删除用户关系
+     * @param cleanInactive      是否清理已取关
+     * @param cleanDeletedUsers  是否清理已删除用户关系
      * @param cleanDisabledUsers 是否清理已禁用用户关系
      * @return 删除行数
      */

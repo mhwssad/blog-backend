@@ -10,10 +10,11 @@ import com.cybzacg.blogbackend.module.follow.model.publics.PublicFollowUserVO;
 import com.cybzacg.blogbackend.module.follow.repository.SysUserFollowRepository;
 import com.cybzacg.blogbackend.module.follow.service.PublicFollowService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
-import java.util.List;
-import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Objects;
 
 /**
  * 公开关注关系服务实现。

@@ -17,7 +17,8 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,user_id,folder_id,
+        id
+        ,user_id,folder_id,
         target_id,target_type,remark,
         target_title,target_url,created_at
     </sql>

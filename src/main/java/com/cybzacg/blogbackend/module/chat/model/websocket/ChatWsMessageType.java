@@ -28,13 +28,13 @@ public enum ChatWsMessageType {
         this.value = value;
     }
 
-    public String getValue() {
-        return value;
-    }
-
     public static Optional<ChatWsMessageType> fromValue(String value) {
         return Arrays.stream(values())
                 .filter(item -> item.value.equalsIgnoreCase(value))
                 .findFirst();
+    }
+
+    public String getValue() {
+        return value;
     }
 }

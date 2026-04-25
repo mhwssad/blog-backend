@@ -20,10 +20,10 @@ public interface SysUserFootprintRepository extends IService<SysUserFootprint> {
     /**
      * 按用户和目标类型分页查询足迹。
      *
-     * @param userId 用户 ID
+     * @param userId     用户 ID
      * @param targetType 目标类型
-     * @param current 当前页
-     * @param size 分页大小
+     * @param current    当前页
+     * @param size       分页大小
      * @return 足迹分页结果
      */
     Page<SysUserFootprint> pageByUserIdAndTargetType(Long userId, String targetType, long current, long size);
@@ -56,7 +56,7 @@ public interface SysUserFootprintRepository extends IService<SysUserFootprint> {
      * 删除指定目标类型和目标 ID 的全部足迹。
      *
      * @param targetType 目标类型
-     * @param targetId 目标 ID
+     * @param targetId   目标 ID
      * @return 是否删除成功
      */
     boolean removeByTargetTypeAndTargetId(String targetType, Long targetId);

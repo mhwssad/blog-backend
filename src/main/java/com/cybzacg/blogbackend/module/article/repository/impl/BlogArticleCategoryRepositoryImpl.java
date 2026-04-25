@@ -16,7 +16,9 @@ import java.util.List;
 public class BlogArticleCategoryRepositoryImpl extends ServiceImpl<BlogArticleCategoryMapper, BlogArticleCategory>
         implements BlogArticleCategoryRepository {
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<BlogArticleCategory> listByArticleIdOrdered(Long articleId) {
         return list(new LambdaQueryWrapper<BlogArticleCategory>()
@@ -25,21 +27,27 @@ public class BlogArticleCategoryRepositoryImpl extends ServiceImpl<BlogArticleCa
                 .orderByAsc(BlogArticleCategory::getId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<BlogArticleCategory> listArticleIdsByCategoryId(Long categoryId) {
         return list(new LambdaQueryWrapper<BlogArticleCategory>()
                 .eq(BlogArticleCategory::getCategoryId, categoryId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean removeByArticleId(Long articleId) {
         return remove(new LambdaQueryWrapper<BlogArticleCategory>()
                 .eq(BlogArticleCategory::getArticleId, articleId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean existsByCategoryId(Long categoryId) {
         return lambdaQuery().eq(BlogArticleCategory::getCategoryId, categoryId).exists();

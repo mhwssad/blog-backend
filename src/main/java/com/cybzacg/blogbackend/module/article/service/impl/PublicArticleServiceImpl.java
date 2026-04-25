@@ -1,44 +1,29 @@
 package com.cybzacg.blogbackend.module.article.service.impl;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.BlogArticle;
-import com.cybzacg.blogbackend.domain.BlogArticleCategory;
-import com.cybzacg.blogbackend.domain.SysCategory;
-import com.cybzacg.blogbackend.domain.SysTag;
-import com.cybzacg.blogbackend.domain.SysUser;
+import com.cybzacg.blogbackend.domain.*;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.module.article.convert.ArticleModelMapper;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleCardVO;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleDetailVO;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticlePageQuery;
-import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleCategoryRepository;
+import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
+import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
 import com.cybzacg.blogbackend.module.article.service.PublicArticleService;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicCategoryTreeVO;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicTagVO;
-import com.cybzacg.blogbackend.module.content.repository.SysCategoryRepository;
-import com.cybzacg.blogbackend.module.content.repository.SysCollectionRepository;
-import com.cybzacg.blogbackend.module.content.repository.SysInteractionRepository;
-import com.cybzacg.blogbackend.module.content.repository.SysTagRelationRepository;
-import com.cybzacg.blogbackend.module.content.repository.SysTagRepository;
+import com.cybzacg.blogbackend.module.content.repository.*;
 import com.cybzacg.blogbackend.module.content.service.UserFootprintService;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**

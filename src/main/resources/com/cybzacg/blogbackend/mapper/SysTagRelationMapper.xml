@@ -13,6 +13,7 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,tag_id,target_id,target_type,created_at
+        id
+        ,tag_id,target_id,target_type,created_at
     </sql>
 </mapper>

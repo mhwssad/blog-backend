@@ -8,8 +8,8 @@ import com.cybzacg.blogbackend.module.chat.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.repository.ChatConversationMemberRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -43,7 +43,9 @@ public class ChatConversationMemberRepositoryImpl extends ServiceImpl<ChatConver
                 .last("limit 1"), false);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<ChatConversationMember> listActiveByConversationId(Long conversationId) {
         return list(new LambdaQueryWrapper<ChatConversationMember>()
@@ -51,7 +53,9 @@ public class ChatConversationMemberRepositoryImpl extends ServiceImpl<ChatConver
                 .eq(ChatConversationMember::getStatus, ChatConstants.MEMBER_STATUS_NORMAL));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<ChatConversationMember> listActiveByConversationIds(Collection<Long> conversationIds) {
         if (conversationIds == null || conversationIds.isEmpty()) {
@@ -62,14 +66,18 @@ public class ChatConversationMemberRepositoryImpl extends ServiceImpl<ChatConver
                 .eq(ChatConversationMember::getStatus, ChatConstants.MEMBER_STATUS_NORMAL));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<ChatConversationMember> listByConversationId(Long conversationId) {
         return list(new LambdaQueryWrapper<ChatConversationMember>()
                 .eq(ChatConversationMember::getConversationId, conversationId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<ChatConversationMember> listByConversationIds(Collection<Long> conversationIds) {
         if (conversationIds == null || conversationIds.isEmpty()) {
@@ -79,7 +87,9 @@ public class ChatConversationMemberRepositoryImpl extends ServiceImpl<ChatConver
                 .in(ChatConversationMember::getConversationId, conversationIds));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean removeAllActiveMembers(Long conversationId) {
         return lambdaUpdate()

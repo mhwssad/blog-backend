@@ -7,12 +7,14 @@ import com.cybzacg.blogbackend.module.auth.model.admin.UserNoticeVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import java.util.Arrays;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-/** 系统通知对象转换器，处理通知视图映射及目标用户 ID 解析。 */
+/**
+ * 系统通知对象转换器，处理通知视图映射及目标用户 ID 解析。
+ */
 @Mapper(componentModel = "spring")
 public interface SysNoticeModelMapper {
     @Mapping(target = "targetUserIds", ignore = true)

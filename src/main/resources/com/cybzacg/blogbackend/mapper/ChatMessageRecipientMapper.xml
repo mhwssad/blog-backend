@@ -19,7 +19,8 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, message_id, conversation_id, recipient_user_id, receive_type,
+        id
+        , message_id, conversation_id, recipient_user_id, receive_type,
         delivery_status, delivered_at, read_at, visible_status, created_at, updated_at
     </sql>
 </mapper>

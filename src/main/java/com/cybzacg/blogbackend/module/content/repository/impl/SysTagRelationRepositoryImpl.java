@@ -17,21 +17,27 @@ import java.util.stream.Collectors;
 public class SysTagRelationRepositoryImpl extends ServiceImpl<SysTagRelationMapper, SysTagRelation>
         implements SysTagRelationRepository {
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean existsByTagId(Long tagId) {
         return exists(new LambdaQueryWrapper<SysTagRelation>()
                 .eq(SysTagRelation::getTagId, tagId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean removeByTagId(Long tagId) {
         return remove(new LambdaQueryWrapper<SysTagRelation>()
                 .eq(SysTagRelation::getTagId, tagId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean removeByTargetTypeAndTargetId(String targetType, Long targetId) {
         return remove(new LambdaQueryWrapper<SysTagRelation>()
@@ -39,7 +45,9 @@ public class SysTagRelationRepositoryImpl extends ServiceImpl<SysTagRelationMapp
                 .eq(SysTagRelation::getTargetId, targetId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<Long> listTargetIdsByTargetTypeAndTagId(String targetType, Long tagId) {
         return list(new LambdaQueryWrapper<SysTagRelation>()
@@ -50,7 +58,9 @@ public class SysTagRelationRepositoryImpl extends ServiceImpl<SysTagRelationMapp
                 .collect(Collectors.toList());
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<Long> listTagIdsByTargetTypeAndTargetId(String targetType, Long targetId) {
         return list(new LambdaQueryWrapper<SysTagRelation>()

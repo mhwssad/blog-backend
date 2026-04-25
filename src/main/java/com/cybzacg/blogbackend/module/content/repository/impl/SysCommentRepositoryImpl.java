@@ -18,7 +18,9 @@ import java.util.List;
 public class SysCommentRepositoryImpl extends ServiceImpl<SysCommentMapper, SysComment>
         implements SysCommentRepository {
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Page<SysComment> pageByAdminConditions(CommentPageQuery query) {
         return page(new Page<>(query.getCurrent(), query.getSize()), new LambdaQueryWrapper<SysComment>()
@@ -32,7 +34,9 @@ public class SysCommentRepositoryImpl extends ServiceImpl<SysCommentMapper, SysC
                 .orderByDesc(SysComment::getId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<SysComment> findByTargetTypeAndTargetId(String targetType, Long targetId) {
         return list(new LambdaQueryWrapper<SysComment>()
@@ -40,19 +44,25 @@ public class SysCommentRepositoryImpl extends ServiceImpl<SysCommentMapper, SysC
                 .eq(SysComment::getTargetId, targetId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<SysComment> selectRootCommentsByTarget(Long targetId, String targetType) {
         return baseMapper.selectRootCommentsByTarget(targetId, targetType);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<SysComment> selectRepliesByRootIds(List<Long> rootIds) {
         return baseMapper.selectRepliesByRootIds(rootIds);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean removeByTargetTypeAndTargetId(String targetType, Long targetId) {
         return remove(new LambdaQueryWrapper<SysComment>()

@@ -19,7 +19,7 @@ public interface SysTagRepository extends IService<SysTag> {
     /**
      * 校验标签名称在排除指定 ID 后是否仍然存在。
      *
-     * @param name 标签名称
+     * @param name      标签名称
      * @param excludeId 需要排除的标签 ID
      * @return 是否存在重名标签
      */

@@ -1,27 +1,13 @@
 package com.cybzacg.blogbackend.module.chat;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.cybzacg.blogbackend.domain.ChatConversation;
-import com.cybzacg.blogbackend.domain.ChatConversationMember;
-import com.cybzacg.blogbackend.domain.ChatMessage;
-import com.cybzacg.blogbackend.domain.ChatMessageRecipient;
-import com.cybzacg.blogbackend.domain.FileBusinessInfo;
-import com.cybzacg.blogbackend.domain.SysUser;
+import com.cybzacg.blogbackend.domain.*;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.chat.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.convert.ChatModelMapper;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminConversationPageQuery;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminConversationVO;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMemberMuteUpdateRequest;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMemberRoleUpdateRequest;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMemberStatusUpdateRequest;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageDetailVO;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessagePageQuery;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageReceiptPageQuery;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageReceiptVO;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageVO;
+import com.cybzacg.blogbackend.module.chat.model.admin.*;
 import com.cybzacg.blogbackend.module.chat.model.common.ChatMessagePayloadVO;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatAdminConversationListItem;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatAdminMessageItem;
@@ -47,17 +33,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyCollection;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ChatAdminServiceImplTest {
@@ -81,6 +59,14 @@ class ChatAdminServiceImplTest {
     private FileLifecycleService fileLifecycleService;
 
     private ChatAdminServiceImpl chatAdminService;
+
+    private static SysUser buildUser(Long userId, String username, String nickname) {
+        SysUser user = new SysUser();
+        user.setId(userId);
+        user.setUsername(username);
+        user.setNickname(nickname);
+        return user;
+    }
 
     @BeforeEach
     void setUp() {
@@ -1385,14 +1371,6 @@ class ChatAdminServiceImplTest {
 
         assertEquals(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), exception.getCode());
         assertEquals("后台成员治理仅支持普通群聊会话", exception.getMessage());
-    }
-
-    private static SysUser buildUser(Long userId, String username, String nickname) {
-        SysUser user = new SysUser();
-        user.setId(userId);
-        user.setUsername(username);
-        user.setNickname(nickname);
-        return user;
     }
 }
 

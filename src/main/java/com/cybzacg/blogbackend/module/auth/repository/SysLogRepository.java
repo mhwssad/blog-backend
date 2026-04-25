@@ -13,13 +13,19 @@ import org.springframework.transaction.annotation.Transactional;
  * <p>封装操作日志实体的持久化操作，提供管理端分页、条件统计及批量清理等能力。
  */
 public interface SysLogRepository extends IService<SysLog> {
-    /** 根据管理端查询条件对日志进行分页。 */
+    /**
+     * 根据管理端查询条件对日志进行分页。
+     */
     Page<SysLog> pageByAdminConditions(SysLogPageQuery query);
 
-    /** 根据清理条件统计匹配的日志数量。 */
+    /**
+     * 根据清理条件统计匹配的日志数量。
+     */
     long countByConditions(SysLogCleanRequest request);
 
-    /** 根据清理条件删除匹配的日志并返回删除数量。 */
+    /**
+     * 根据清理条件删除匹配的日志并返回删除数量。
+     */
     long removeByConditions(SysLogCleanRequest request);
 
     /**

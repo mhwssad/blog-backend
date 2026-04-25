@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.auth.service;
 
-import com.cybzacg.blogbackend.domain.SysConfig;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.cybzacg.blogbackend.domain.SysConfig;
 
 /**
  * 系统配置服务接口。

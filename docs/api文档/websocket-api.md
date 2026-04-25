@@ -24,10 +24,10 @@ const socket = new WebSocket(
 
 令牌解析优先级：
 
-| 优先级 | 来源                     | 说明               |
-| ------ | ------------------------ | ------------------ |
-| 1      | `Authorization` 请求头   | 非浏览器客户端可用 |
-| 2      | Query 参数 `accessToken` | 浏览器推荐方式     |
+| 优先级 | 来源                     | 说明        |
+|-----|------------------------|-----------|
+| 1   | `Authorization` 请求头    | 非浏览器客户端可用 |
+| 2   | Query 参数 `accessToken` | 浏览器推荐方式   |
 
 认证失败时握手阶段直接返回 HTTP `401`，不会建立连接。
 
@@ -53,11 +53,11 @@ const socket = new WebSocket(
 }
 ```
 
-| 字段        | 类型   | 必填   | 说明                                                         |
-| ----------- | ------ | ------ | ------------------------------------------------------------ |
-| `type`      | String | 是     | 消息类型，见第 3 节                                          |
-| `requestId` | String | 否     | 客户端生成的请求 ID，服务端会在响应中回传，用于关联请求/响应 |
-| `payload`   | Object | 视类型 | 业务载荷，具体结构见各类型说明                               |
+| 字段          | 类型     | 必填  | 说明                               |
+|-------------|--------|-----|----------------------------------|
+| `type`      | String | 是   | 消息类型，见第 3 节                      |
+| `requestId` | String | 否   | 客户端生成的请求 ID，服务端会在响应中回传，用于关联请求/响应 |
+| `payload`   | Object | 视类型 | 业务载荷，具体结构见各类型说明                  |
 
 ### 2.2 服务端响应
 
@@ -72,14 +72,14 @@ const socket = new WebSocket(
 }
 ```
 
-| 字段        | 类型    | 说明                                           |
-| ----------- | ------- | ---------------------------------------------- |
-| `type`      | String  | 消息类型                                       |
+| 字段          | 类型      | 说明                           |
+|-------------|---------|------------------------------|
+| `type`      | String  | 消息类型                         |
 | `requestId` | String  | 回传客户端的请求 ID；服务端主动推送时为 `null` |
-| `timestamp` | Long    | 服务端时间戳（毫秒）                           |
-| `code`      | Integer | 业务状态码，`200` 表示成功                     |
-| `message`   | String  | 提示信息                                       |
-| `payload`   | Object  | 业务载荷，具体结构见各类型说明                 |
+| `timestamp` | Long    | 服务端时间戳（毫秒）                   |
+| `code`      | Integer | 业务状态码，`200` 表示成功             |
+| `message`   | String  | 提示信息                         |
+| `payload`   | Object  | 业务载荷，具体结构见各类型说明              |
 
 **区分响应与推送**：
 
@@ -90,27 +90,27 @@ const socket = new WebSocket(
 
 ### 3.1 客户端可发送的类型
 
-| type           | 方向            | 说明                                |
-| -------------- | --------------- | ----------------------------------- |
+| type           | 方向        | 说明                    |
+|----------------|-----------|-----------------------|
 | `ping`         | 客户端 → 服务端 | 心跳检测，也可以直接发送文本 `ping` |
-| `send_message` | 客户端 → 服务端 | 发送文本消息                        |
-| `mark_read`    | 客户端 → 服务端 | 推进会话已读                        |
+| `send_message` | 客户端 → 服务端 | 发送文本消息                |
+| `mark_read`    | 客户端 → 服务端 | 推进会话已读                |
 
 ### 3.2 服务端推送的类型
 
-| type                   | 方向            | 说明                                 |
-| ---------------------- | --------------- | ------------------------------------ |
-| `ready`                | 服务端 → 客户端 | 连接建立成功通知                     |
-| `pong`                 | 服务端 → 客户端 | 心跳响应                             |
-| `ack`                  | 服务端 → 客户端 | 业务请求确认                         |
-| `message_created`      | 服务端 → 客户端 | 新消息                               |
-| `message_updated`      | 服务端 → 客户端 | 消息内容已编辑                       |
-| `message_revoked`      | 服务端 → 客户端 | 消息已撤回                           |
-| `message_deleted`      | 服务端 → 客户端 | 消息已删除（仅推送给操作者本人）     |
-| `conversation_updated` | 服务端 → 客户端 | 会话信息变更（群名、公告、群主等）   |
+| type                   | 方向        | 说明                 |
+|------------------------|-----------|--------------------|
+| `ready`                | 服务端 → 客户端 | 连接建立成功通知           |
+| `pong`                 | 服务端 → 客户端 | 心跳响应               |
+| `ack`                  | 服务端 → 客户端 | 业务请求确认             |
+| `message_created`      | 服务端 → 客户端 | 新消息                |
+| `message_updated`      | 服务端 → 客户端 | 消息内容已编辑            |
+| `message_revoked`      | 服务端 → 客户端 | 消息已撤回              |
+| `message_deleted`      | 服务端 → 客户端 | 消息已删除（仅推送给操作者本人）   |
+| `conversation_updated` | 服务端 → 客户端 | 会话信息变更（群名、公告、群主等）  |
 | `members_updated`      | 服务端 → 客户端 | 群成员变更（加入、移除、角色变化等） |
-| `read_updated`         | 服务端 → 客户端 | 已读状态推进                         |
-| `error`                | 服务端 → 客户端 | 错误响应                             |
+| `read_updated`         | 服务端 → 客户端 | 已读状态推进             |
+| `error`                | 服务端 → 客户端 | 错误响应               |
 
 ## 4. 连接就绪 (`ready`)
 
@@ -132,11 +132,11 @@ const socket = new WebSocket(
 }
 ```
 
-| 字段                    | 类型     | 说明                               |
-| ----------------------- | -------- | ---------------------------------- |
-| `sessionId`             | String   | WebSocket 会话 ID                  |
-| `userId`                | Long     | 当前登录用户 ID                    |
-| `username`              | String   | 当前登录用户名                     |
+| 字段                      | 类型       | 说明                |
+|-------------------------|----------|-------------------|
+| `sessionId`             | String   | WebSocket 会话 ID   |
+| `userId`                | Long     | 当前登录用户 ID         |
+| `username`              | String   | 当前登录用户名           |
 | `supportedRequestTypes` | String[] | 服务端当前支持的客户端请求类型列表 |
 
 前端可根据 `supportedRequestTypes` 判断服务端支持哪些操作。
@@ -212,13 +212,13 @@ ping
 
 payload 字段：
 
-| 字段              | 类型   | 必填                       | 说明                                                |
-| ----------------- | ------ | -------------------------- | --------------------------------------------------- |
-| `conversationId`  | Long   | 与 `targetUserId` 二选一   | 目标会话 ID                                         |
-| `targetUserId`    | Long   | 与 `conversationId` 二选一 | 自动创建/查找单聊的目标用户 ID                      |
-| `content`         | String | 是                         | 文本内容，最大 2000 字符                            |
-| `clientMessageId` | String | 否                         | 客户端幂等键，最大 64 字符；重复提交返回已有消息    |
-| `replyMessageId`  | Long   | 否                         | 回复的消息 ID，必须是当前用户在当前会话内可见的消息 |
+| 字段                | 类型     | 必填                     | 说明                          |
+|-------------------|--------|------------------------|-----------------------------|
+| `conversationId`  | Long   | 与 `targetUserId` 二选一   | 目标会话 ID                     |
+| `targetUserId`    | Long   | 与 `conversationId` 二选一 | 自动创建/查找单聊的目标用户 ID           |
+| `content`         | String | 是                      | 文本内容，最大 2000 字符             |
+| `clientMessageId` | String | 否                      | 客户端幂等键，最大 64 字符；重复提交返回已有消息  |
+| `replyMessageId`  | Long   | 否                      | 回复的消息 ID，必须是当前用户在当前会话内可见的消息 |
 
 成功确认 (`ack`)：
 
@@ -288,10 +288,10 @@ payload 字段：
 
 payload 字段：
 
-| 字段             | 类型 | 必填 | 说明            |
-| ---------------- | ---- | ---- | --------------- |
-| `conversationId` | Long | 是   | 会话 ID         |
-| `readMessageId`  | Long | 是   | 已读到的消息 ID |
+| 字段               | 类型   | 必填 | 说明        |
+|------------------|------|----|-----------|
+| `conversationId` | Long | 是  | 会话 ID     |
+| `readMessageId`  | Long | 是  | 已读到的消息 ID |
 
 成功确认 (`ack`)：
 
@@ -359,66 +359,66 @@ payload 字段：
 
 消息对象字段说明：
 
-| 字段                | 类型     | 说明                                          |
-| ------------------- | -------- | --------------------------------------------- |
-| `id`                | Long     | 消息 ID                                       |
-| `conversationId`    | Long     | 所属会话 ID                                   |
-| `senderId`          | Long     | 发送人 ID                                     |
-| `senderUsername`    | String   | 发送人用户名                                  |
+| 字段                  | 类型       | 说明                                       |
+|---------------------|----------|------------------------------------------|
+| `id`                | Long     | 消息 ID                                    |
+| `conversationId`    | Long     | 所属会话 ID                                  |
+| `senderId`          | Long     | 发送人 ID                                   |
+| `senderUsername`    | String   | 发送人用户名                                   |
 | `senderNickname`    | String   | 发送人昵称                                    |
 | `senderAvatar`      | String   | 发送人头像                                    |
 | `messageType`       | String   | 消息类型：`text` / `file` / `image` / `voice` |
-| `content`           | String   | 文本内容；撤回后固定为"消息已撤回"            |
-| `file`              | Object   | 附件载荷，文本消息为 `null`（字段结构见下方） |
+| `content`           | String   | 文本内容；撤回后固定为"消息已撤回"                       |
+| `file`              | Object   | 附件载荷，文本消息为 `null`（字段结构见下方）               |
 | `replyMessageId`    | Long     | 回复的消息 ID                                 |
-| `reply`             | Object   | 回复消息快照（字段结构见下方）                |
+| `reply`             | Object   | 回复消息快照（字段结构见下方）                          |
 | `clientMessageId`   | String   | 客户端幂等 ID                                 |
-| `self`              | Boolean  | 是否是当前用户发送的                          |
-| `deliveryStatus`    | Integer  | 投递状态：`0` 待投递 / `1` 已送达 / `2` 已读  |
-| `readByCurrentUser` | Boolean  | 当前用户是否已读                              |
-| `readAt`            | DateTime | 当前用户已读时间                              |
+| `self`              | Boolean  | 是否是当前用户发送的                               |
+| `deliveryStatus`    | Integer  | 投递状态：`0` 待投递 / `1` 已送达 / `2` 已读          |
+| `readByCurrentUser` | Boolean  | 当前用户是否已读                                 |
+| `readAt`            | DateTime | 当前用户已读时间                                 |
 | `revoked`           | Boolean  | 是否已撤回                                    |
-| `edited`            | Boolean  | 是否已编辑（仅文本消息）                      |
-| `updatedAt`         | DateTime | 更新时间                                      |
-| `createdAt`         | DateTime | 发送时间                                      |
+| `edited`            | Boolean  | 是否已编辑（仅文本消息）                             |
+| `updatedAt`         | DateTime | 更新时间                                     |
+| `createdAt`         | DateTime | 发送时间                                     |
 
 附件载荷 `file` 字段：
 
-| 字段              | 类型    | 说明                                                |
-| ----------------- | ------- | --------------------------------------------------- |
-| `businessId`      | Long    | 聊天文件业务引用 ID                                 |
-| `fileId`          | Long    | 文件 ID                                             |
-| `fileName`        | String  | 文件名                                              |
+| 字段                | 类型      | 说明                                             |
+|-------------------|---------|------------------------------------------------|
+| `businessId`      | Long    | 聊天文件业务引用 ID                                    |
+| `fileId`          | Long    | 文件 ID                                          |
+| `fileName`        | String  | 文件名                                            |
 | `originalName`    | String  | 原始文件名                                          |
-| `fileUrl`         | String  | 文件地址                                            |
-| `fileSize`        | Long    | 文件大小                                            |
-| `fileType`        | String  | 文件类型                                            |
-| `mimeType`        | String  | MIME 类型                                           |
-| `previewUrl`      | String  | 预览地址                                            |
+| `fileUrl`         | String  | 文件地址                                           |
+| `fileSize`        | Long    | 文件大小                                           |
+| `fileType`        | String  | 文件类型                                           |
+| `mimeType`        | String  | MIME 类型                                        |
+| `previewUrl`      | String  | 预览地址                                           |
 | `thumbnailUrl`    | String  | 缩略图地址                                          |
-| `width`           | Integer | 图片宽度                                            |
-| `height`          | Integer | 图片高度                                            |
-| `durationSeconds` | Integer | 语音时长（秒）                                      |
-| `waveform`        | String  | 语音波形采样点                                      |
+| `width`           | Integer | 图片宽度                                           |
+| `height`          | Integer | 图片高度                                           |
+| `durationSeconds` | Integer | 语音时长（秒）                                        |
+| `waveform`        | String  | 语音波形采样点                                        |
 | `transcodeStatus` | String  | 转码状态：`source` / `pending` / `ready` / `failed` |
 
 回复快照 `reply` 字段：
 
-| 字段               | 类型     | 说明                                       |
-| ------------------ | -------- | ------------------------------------------ |
-| `id`               | Long     | 被回复消息 ID                              |
+| 字段                 | 类型       | 说明                                      |
+|--------------------|----------|-----------------------------------------|
+| `id`               | Long     | 被回复消息 ID                                |
 | `senderId`         | Long     | 发送人 ID                                  |
-| `senderUsername`   | String   | 发送人用户名                               |
-| `senderNickname`   | String   | 发送人昵称                                 |
-| `senderAvatar`     | String   | 发送人头像                                 |
-| `messageType`      | String   | 消息类型                                   |
-| `replyToMessageId` | Long     | 被回复消息自身又回复了哪条消息             |
-| `content`          | String   | 消息摘要                                   |
-| `file`             | Object   | 附件快照                                   |
-| `revoked`          | Boolean  | 是否已撤回                                 |
-| `deleted`          | Boolean  | 原消息是否已不可见                         |
+| `senderUsername`   | String   | 发送人用户名                                  |
+| `senderNickname`   | String   | 发送人昵称                                   |
+| `senderAvatar`     | String   | 发送人头像                                   |
+| `messageType`      | String   | 消息类型                                    |
+| `replyToMessageId` | Long     | 被回复消息自身又回复了哪条消息                         |
+| `content`          | String   | 消息摘要                                    |
+| `file`             | Object   | 附件快照                                    |
+| `revoked`          | Boolean  | 是否已撤回                                   |
+| `deleted`          | Boolean  | 原消息是否已不可见                               |
 | `state`            | String   | 状态：`normal` / `revoked` / `unavailable` |
-| `createdAt`        | DateTime | 发送时间                                   |
+| `createdAt`        | DateTime | 发送时间                                    |
 
 ### 7.2 消息已编辑 (`message_updated`)
 
@@ -477,11 +477,11 @@ payload 字段：
 }
 ```
 
-| 字段             | 类型    | 说明                 |
-| ---------------- | ------- | -------------------- |
-| `conversationId` | Long    | 会话 ID              |
-| `messageId`      | Long    | 被删除的消息 ID      |
-| `userId`         | Long    | 执行删除的用户 ID    |
+| 字段               | 类型      | 说明         |
+|------------------|---------|------------|
+| `conversationId` | Long    | 会话 ID      |
+| `messageId`      | Long    | 被删除的消息 ID  |
+| `userId`         | Long    | 执行删除的用户 ID |
 | `unreadCount`    | Integer | 删除后该会话的未读数 |
 
 ### 7.5 已读状态推进 (`read_updated`)
@@ -507,14 +507,14 @@ payload 字段：
 }
 ```
 
-| 字段                 | 类型     | 说明              |
-| -------------------- | -------- | ----------------- |
-| `conversationId`     | Long     | 会话 ID           |
+| 字段                   | 类型       | 说明         |
+|----------------------|----------|------------|
+| `conversationId`     | Long     | 会话 ID      |
 | `userId`             | Long     | 推进已读的用户 ID |
-| `readMessageId`      | Long     | 已读到的消息 ID   |
-| `readAt`             | DateTime | 已读时间          |
+| `readMessageId`      | Long     | 已读到的消息 ID  |
+| `readAt`             | DateTime | 已读时间       |
 | `deliveredMessageId` | Long     | 已送达到的消息 ID |
-| `deliveredAt`        | DateTime | 送达时间          |
+| `deliveredAt`        | DateTime | 送达时间       |
 | `unreadCount`        | Integer  | 该用户的未读数    |
 
 ### 7.6 会话信息变更 (`conversation_updated`)
@@ -542,17 +542,17 @@ payload 字段：
 }
 ```
 
-| 字段               | 类型    | 说明                                         |
-| ------------------ | ------- | -------------------------------------------- |
+| 字段                 | 类型      | 说明                                     |
+|--------------------|---------|----------------------------------------|
 | `action`           | String  | 变更动作：`updated` / `owner_transferred` 等 |
-| `conversationId`   | Long    | 会话 ID                                      |
-| `conversationType` | String  | 会话类型：`single` / `group` / `global`      |
-| `name`             | String  | 会话名称                                     |
-| `avatar`           | String  | 会话头像                                     |
-| `ownerId`          | Long    | 群主 ID                                      |
-| `notice`           | String  | 群公告                                       |
-| `status`           | Integer | 会话状态                                     |
-| `memberCount`      | Long    | 当前活跃成员数                               |
+| `conversationId`   | Long    | 会话 ID                                  |
+| `conversationType` | String  | 会话类型：`single` / `group` / `global`     |
+| `name`             | String  | 会话名称                                   |
+| `avatar`           | String  | 会话头像                                   |
+| `ownerId`          | Long    | 群主 ID                                  |
+| `notice`           | String  | 群公告                                    |
+| `status`           | Integer | 会话状态                                   |
+| `memberCount`      | Long    | 当前活跃成员数                                |
 
 ### 7.7 群成员变更 (`members_updated`)
 
@@ -585,25 +585,25 @@ payload 字段：
 }
 ```
 
-| 字段             | 类型   | 说明                                                         |
-| ---------------- | ------ | ------------------------------------------------------------ |
+| 字段               | 类型     | 说明                                                     |
+|------------------|--------|--------------------------------------------------------|
 | `action`         | String | 变更动作：`joined` / `removed` / `role_changed` / `muted` 等 |
-| `conversationId` | Long   | 会话 ID                                                      |
+| `conversationId` | Long   | 会话 ID                                                  |
 | `affectedUserId` | Long   | 受影响的用户 ID                                              |
-| `members`        | Array  | 当前活跃成员列表                                             |
+| `members`        | Array  | 当前活跃成员列表                                               |
 
 `members` 数组中的成员对象：
 
-| 字段        | 类型     | 说明                                                  |
-| ----------- | -------- | ----------------------------------------------------- |
-| `userId`    | Long     | 用户 ID                                               |
-| `username`  | String   | 用户名                                                |
-| `nickname`  | String   | 昵称                                                  |
-| `avatar`    | String   | 头像                                                  |
-| `role`      | String   | 角色：`owner` / `admin` / `member`                    |
+| 字段          | 类型       | 说明                                      |
+|-------------|----------|-----------------------------------------|
+| `userId`    | Long     | 用户 ID                                   |
+| `username`  | String   | 用户名                                     |
+| `nickname`  | String   | 昵称                                      |
+| `avatar`    | String   | 头像                                      |
+| `role`      | String   | 角色：`owner` / `admin` / `member`         |
 | `status`    | Integer  | 状态：`0` 已退出 / `1` 正常 / `2` 已移除 / `3` 已禁用 |
-| `joinedAt`  | DateTime | 加入时间                                              |
-| `muteUntil` | DateTime | 禁言截止时间，`null` 表示未禁言                       |
+| `joinedAt`  | DateTime | 加入时间                                    |
+| `muteUntil` | DateTime | 禁言截止时间，`null` 表示未禁言                     |
 
 ## 8. 错误处理
 
@@ -622,23 +622,23 @@ payload 字段：
 
 ### 8.2 错误码
 
-| code       | 场景                                     |
-| ---------- | ---------------------------------------- |
-| `40011`    | 参数错误（缺少必填字段、格式不合法等）   |
-| `50008`    | 消息不是合法 JSON                        |
-| `50000`    | 系统异常                                 |
-| `50011`    | 未实现的消息类型                         |
-| 其他业务码 | 对应具体业务异常（如禁言、会话不可用等） |
+| code    | 场景                   |
+|---------|----------------------|
+| `40011` | 参数错误（缺少必填字段、格式不合法等）  |
+| `50008` | 消息不是合法 JSON          |
+| `50000` | 系统异常                 |
+| `50011` | 未实现的消息类型             |
+| 其他业务码   | 对应具体业务异常（如禁言、会话不可用等） |
 
 ### 8.3 连接级错误
 
-| 场景                | 表现                       | 处理建议                              |
-| ------------------- | -------------------------- | ------------------------------------- |
-| 令牌无效或过期      | 握手阶段 HTTP `401`        | 刷新令牌后重连                        |
-| JSON 格式错误       | 收到 `error`，`code=50008` | 检查发送内容格式                      |
-| 发送未支持的 type   | 收到 `error`，`code=50011` | 检查 `type` 拼写                      |
+| 场景           | 表现                      | 处理建议                         |
+|--------------|-------------------------|------------------------------|
+| 令牌无效或过期      | 握手阶段 HTTP `401`         | 刷新令牌后重连                      |
+| JSON 格式错误    | 收到 `error`，`code=50008` | 检查发送内容格式                     |
+| 发送未支持的 type  | 收到 `error`，`code=50011` | 检查 `type` 拼写                 |
 | 发送服务端专有 type | 收到 `error`，`code=40011` | 如 `message_created` 不允许客户端发送 |
-| 连接意外断开        | `onclose` 触发             | 按第 9 节策略重连                     |
+| 连接意外断开       | `onclose` 触发            | 按第 9 节策略重连                   |
 
 ## 9. 前端集成建议
 
@@ -744,17 +744,17 @@ class ChatWebSocket {
 
 ### 9.5 与 HTTP 接口配合
 
-| 操作              | 推荐方式                                              | 说明                         |
-| ----------------- | ----------------------------------------------------- | ---------------------------- |
-| 发送文本消息      | WebSocket `send_message`                              | 实时性好                     |
-| 发送文件消息      | HTTP `POST /api/user/chat/messages/file`              | WebSocket 不支持文件上传     |
-| 拉取历史消息      | HTTP `GET /api/user/chat/conversations/{id}/messages` | 分页加载                     |
-| 拉取会话列表      | HTTP `GET /api/user/chat/conversations`               | 初始化加载                   |
-| 编辑消息          | HTTP `PUT /api/user/chat/messages/{id}`               | 编辑后推送 `message_updated` |
-| 撤回消息          | HTTP `POST /api/user/chat/messages/{id}/revoke`       | 撤回后推送 `message_revoked` |
-| 推进已读          | WebSocket `mark_read`                                 | 实时性好                     |
-| 实时接收新消息    | 监听 `message_created`                                | 不需要轮询                   |
-| 实时接收编辑/撤回 | 监听 `message_updated` / `message_revoked`            | 不需要轮询                   |
+| 操作        | 推荐方式                                                  | 说明                      |
+|-----------|-------------------------------------------------------|-------------------------|
+| 发送文本消息    | WebSocket `send_message`                              | 实时性好                    |
+| 发送文件消息    | HTTP `POST /api/user/chat/messages/file`              | WebSocket 不支持文件上传       |
+| 拉取历史消息    | HTTP `GET /api/user/chat/conversations/{id}/messages` | 分页加载                    |
+| 拉取会话列表    | HTTP `GET /api/user/chat/conversations`               | 初始化加载                   |
+| 编辑消息      | HTTP `PUT /api/user/chat/messages/{id}`               | 编辑后推送 `message_updated` |
+| 撤回消息      | HTTP `POST /api/user/chat/messages/{id}/revoke`       | 撤回后推送 `message_revoked` |
+| 推进已读      | WebSocket `mark_read`                                 | 实时性好                    |
+| 实时接收新消息   | 监听 `message_created`                                  | 不需要轮询                   |
+| 实时接收编辑/撤回 | 监听 `message_updated` / `message_revoked`              | 不需要轮询                   |
 
 ## 10. 快速参考
 

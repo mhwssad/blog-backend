@@ -1,22 +1,18 @@
 package com.cybzacg.blogbackend.module.file.service.impl;
+
 import com.cybzacg.blogbackend.common.storage.StorageManager;
 import com.cybzacg.blogbackend.common.storage.StorageService;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.FileBusinessInfo;
 import com.cybzacg.blogbackend.domain.FileInfo;
 import com.cybzacg.blogbackend.domain.FileUploadTask;
-import com.cybzacg.blogbackend.enums.file.FileCategoryEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.enums.file.FileCategoryEnum;
 import com.cybzacg.blogbackend.enums.file.FileReferenceTypeEnum;
 import com.cybzacg.blogbackend.enums.file.FileResultCode;
 import com.cybzacg.blogbackend.enums.file.FileStatusEnum;
 import com.cybzacg.blogbackend.enums.storage.TaskStatusEnum;
-import com.cybzacg.blogbackend.module.file.model.admin.FileAdminPageQuery;
-import com.cybzacg.blogbackend.module.file.model.admin.FileAdminVO;
-import com.cybzacg.blogbackend.module.file.model.admin.FileDetailVO;
-import com.cybzacg.blogbackend.module.file.model.admin.FileReferenceVO;
-import com.cybzacg.blogbackend.module.file.model.admin.FileTaskAdminVO;
-import com.cybzacg.blogbackend.module.file.model.admin.FileTaskPageQuery;
+import com.cybzacg.blogbackend.module.file.model.admin.*;
 import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
 import com.cybzacg.blogbackend.module.file.repository.FileChunkRepository;
 import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
@@ -29,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+
 /**
  * 后台文件管理服务实现。
  * 负责聚合文件本体、业务引用和上传任务，供管理端统一查询与清理。
@@ -41,6 +38,7 @@ public class FileAdminServiceImpl implements FileAdminService {
     private final FileChunkRepository fileChunkRepository;
     private final FileBusinessInfoRepository fileBusinessInfoRepository;
     private final StorageManager storageManager;
+
     /**
      * 按文件属性与业务引用维度分页查询后台文件列表。
      */
@@ -55,6 +53,7 @@ public class FileAdminServiceImpl implements FileAdminService {
         List<FileAdminVO> records = page.getRecords().stream().map(this::toAdminVO).toList();
         return PageResult.of(page, records);
     }
+
     /**
      * 查询单个文件详情，并补齐引用记录与最近上传任务。
      */
@@ -77,6 +76,7 @@ public class FileAdminServiceImpl implements FileAdminService {
         detail.setTasks(tasks);
         return detail;
     }
+
     /**
      * 按任务维度分页查询后台上传任务列表。
      */
@@ -91,6 +91,7 @@ public class FileAdminServiceImpl implements FileAdminService {
         List<FileTaskAdminVO> records = page.getRecords().stream().map(this::toTaskAdminVO).toList();
         return PageResult.of(page, records);
     }
+
     /**
      * 更新文件状态，但不允许通过此接口将文件设为已删除或操作已删除文件。
      */
@@ -109,6 +110,7 @@ public class FileAdminServiceImpl implements FileAdminService {
         file.setStatus(status);
         fileInfoRepository.updateById(file);
     }
+
     /**
      * 删除文件相关的业务引用、任务、分片和物理对象。
      */
@@ -148,11 +150,13 @@ public class FileAdminServiceImpl implements FileAdminService {
         file.setStatus(FileStatusEnum.DELETED.getValue());
         fileInfoRepository.updateById(file);
     }
+
     private FileAdminVO toAdminVO(FileInfo file) {
         FileAdminVO vo = new FileAdminVO();
         copyToAdminVO(file, vo);
         return vo;
     }
+
     /**
      * 复用文件列表和详情页共同需要的基础字段映射。
      */
@@ -174,6 +178,7 @@ public class FileAdminServiceImpl implements FileAdminService {
         vo.setReferenceCount(file.getReferenceCount());
         vo.setCreatedAt(file.getCreatedAt());
     }
+
     /**
      * 将文件业务引用转换为后台详情页展示对象。
      */
@@ -189,6 +194,7 @@ public class FileAdminServiceImpl implements FileAdminService {
         vo.setCreatedAt(ref.getCreatedAt());
         return vo;
     }
+
     /**
      * 将上传任务转换为后台任务视图，便于排查失败或重试场景。
      */
@@ -211,6 +217,7 @@ public class FileAdminServiceImpl implements FileAdminService {
         vo.setCompleteTime(task.getCompleteTime());
         return vo;
     }
+
     private void validatePageFilesQuery(FileAdminPageQuery query) {
         ExceptionThrowerCore.throwBusinessIf(
                 StringUtils.hasText(query.getCategory()) && !FileCategoryEnum.contains(query.getCategory()),
@@ -225,6 +232,7 @@ public class FileAdminServiceImpl implements FileAdminService {
                 FileResultCode.FILE_STATUS_INVALID
         );
     }
+
     private void validateTaskPageQuery(FileTaskPageQuery query) {
         ExceptionThrowerCore.throwBusinessIf(
                 query.getTaskStatus() != null && TaskStatusEnum.getByCode(query.getTaskStatus()) == null,

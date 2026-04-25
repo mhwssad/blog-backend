@@ -3,14 +3,16 @@ package com.cybzacg.blogbackend.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.time.LocalDateTime;
 import lombok.Data;
+
+import java.time.LocalDateTime;
 
 /**
  * 用户通知公告关联表
+ *
  * @TableName sys_user_notice
  */
-@TableName(value ="sys_user_notice")
+@TableName(value = "sys_user_notice")
 @Data
 public class SysUserNotice {
     /**
@@ -54,4 +56,4 @@ public class SysUserNotice {
      */
     private Integer isDeleted;
 
-    }
+}

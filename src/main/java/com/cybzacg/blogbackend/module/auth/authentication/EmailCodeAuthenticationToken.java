@@ -11,8 +11,8 @@ import java.util.List;
  */
 public class EmailCodeAuthenticationToken extends AbstractAuthenticationToken {
     private final Object principal;
-    private Object credentials;
     private final boolean authenticated;
+    private Object credentials;
 
     private EmailCodeAuthenticationToken(Object principal,
                                          Object credentials,

@@ -44,38 +44,39 @@ module/content/
     └── user/            (5个DTO: 评论请求/收藏夹请求/收藏请求/分页查询)
 ```
 
-数据库: 8张表 (`sys_category` / `sys_tag` / `sys_tag_relation` / `sys_comment` / `sys_collection_folder` / `sys_collection` / `sys_interaction` / `sys_user_footprint`)
+数据库: 8张表 (`sys_category` / `sys_tag` / `sys_tag_relation` / `sys_comment` / `sys_collection_folder` /
+`sys_collection` / `sys_interaction` / `sys_user_footprint`)
 
 ## 2. 功能完成度评估
 
 ### 2.1 接口方法完成情况
 
-| 服务                      | 方法数  | 已实现 | 状态                    |
-| ------------------------- | ------- | ------ | ----------------------- |
-| CategoryAdminService      | 6       | 6      | ✅ 全部完成             |
-| TagAdminService           | 5       | 5      | ✅ 全部完成             |
-| CommentAdminService       | 4       | 4      | ✅ 全部完成             |
-| CollectionAdminService    | 3       | 3      | ✅ 全部完成             |
-| InteractionAdminService   | 2       | 2      | ✅ 全部完成             |
-| FootprintAdminService     | 3       | 3      | ✅ 全部完成             |
-| PublicContentQueryService | 3       | 3      | ✅ 全部完成             |
-| UserCommentService        | 4       | 4      | ✅ 全部完成             |
-| UserCollectionService     | 7       | 7      | ✅ 全部完成             |
-| UserFootprintService      | 4       | 4      | ✅ 全部完成             |
-| 基础仓储(8个)             | 0自定义 | 全部   | ✅ MyBatis-Plus标准CRUD |
+| 服务                        | 方法数  | 已实现 | 状态                   |
+|---------------------------|------|-----|----------------------|
+| CategoryAdminService      | 6    | 6   | ✅ 全部完成               |
+| TagAdminService           | 5    | 5   | ✅ 全部完成               |
+| CommentAdminService       | 4    | 4   | ✅ 全部完成               |
+| CollectionAdminService    | 3    | 3   | ✅ 全部完成               |
+| InteractionAdminService   | 2    | 2   | ✅ 全部完成               |
+| FootprintAdminService     | 3    | 3   | ✅ 全部完成               |
+| PublicContentQueryService | 3    | 3   | ✅ 全部完成               |
+| UserCommentService        | 4    | 4   | ✅ 全部完成               |
+| UserCollectionService     | 7    | 7   | ✅ 全部完成               |
+| UserFootprintService      | 4    | 4   | ✅ 全部完成               |
+| 基础仓储(8个)                  | 0自定义 | 全部  | ✅ MyBatis-Plus标准CRUD |
 
 **结论: content 模块所有接口方法均已完整实现，不存在缺失的方法。**
 
 ### 2.2 Mapper XML 自定义查询
 
-| Mapper                 | 自定义查询                                                               |
-| ---------------------- | ------------------------------------------------------------------------ |
+| Mapper                 | 自定义查询                                                             |
+|------------------------|-------------------------------------------------------------------|
 | SysCategoryMapper      | `selectTreeByType` - 按类型查分类树                                      |
-| SysTagMapper           | `selectByTargetType` - 按目标类型查标签                                  |
+| SysTagMapper           | `selectByTargetType` - 按目标类型查标签                                   |
 | SysCommentMapper       | `selectRootCommentsByTarget` + `selectRepliesByRootIds` - 评论树两段查询 |
-| SysCollectionMapper    | `selectUserCollectionPage` - 用户收藏分页                                |
+| SysCollectionMapper    | `selectUserCollectionPage` - 用户收藏分页                               |
 | SysInteractionMapper   | `existsUserAction` - 互动存在性检查                                      |
-| SysUserFootprintMapper | `upsertFootprint` - 浏览足迹 UPSERT                                      |
+| SysUserFootprintMapper | `upsertFootprint` - 浏览足迹 UPSERT                                   |
 
 ## 3. 本轮已完成
 
@@ -101,84 +102,84 @@ module/content/
 
 ## 4. 现有测试文件 (13个)
 
-| 测试文件                            | 覆盖范围                                                |
-| ----------------------------------- | ------------------------------------------------------- |
-| `UserCommentServiceImplTest`        | 评论创建/删除 + 点赞/取消点赞幂等、计数同步与回退       |
-| `UserCollectionServiceImplTest`     | 收藏创建/删除 + 收藏夹创建/更新/删除与收藏分页          |
-| `TagAdminServiceImplTest`           | 标签列表/详情/创建/更新/删除 + 名称唯一性/关联关系清理  |
+| 测试文件                                | 覆盖范围                            |
+|-------------------------------------|---------------------------------|
+| `UserCommentServiceImplTest`        | 评论创建/删除 + 点赞/取消点赞幂等、计数同步与回退     |
+| `UserCollectionServiceImplTest`     | 收藏创建/删除 + 收藏夹创建/更新/删除与收藏分页      |
+| `TagAdminServiceImplTest`           | 标签列表/详情/创建/更新/删除 + 名称唯一性/关联关系清理 |
 | `CommentAdminServiceImplTest`       | 评论分页/详情/状态切换/子树删除 + 用户信息回填/计数回退 |
 | `CollectionAdminServiceImplTest`    | 收藏夹分页/收藏分页/删除 + 收藏夹数量与文章收藏数回退   |
-| `InteractionAdminServiceImplTest`   | 互动分页/删除 + 文章/评论点赞计数回退                   |
-| `FootprintAdminServiceImplTest`     | 足迹分页/删除/批量清理                                  |
-| `UserFootprintServiceImplTest`      | 用户足迹分页/删除/清空 + 文章浏览足迹 UPSERT            |
-| `PublicContentQueryServiceImplTest` | 分类树/标签过滤/评论树组装 + 用户信息与点赞状态回填     |
-| `CategoryAdminServiceImplTest`      | 分类详情/创建/更新/状态/删除 + 层级路径刷新             |
-| `ContentSecurityIntegrationTest`    | 公开端点暴露/权限SQL范围                                |
-| `CategoryAdminServiceTest`          | 分类树查询(控制器层)                                    |
-| `UserCollectionServiceTest`         | 收藏夹分页/收藏创建(控制器层)                           |
+| `InteractionAdminServiceImplTest`   | 互动分页/删除 + 文章/评论点赞计数回退           |
+| `FootprintAdminServiceImplTest`     | 足迹分页/删除/批量清理                    |
+| `UserFootprintServiceImplTest`      | 用户足迹分页/删除/清空 + 文章浏览足迹 UPSERT    |
+| `PublicContentQueryServiceImplTest` | 分类树/标签过滤/评论树组装 + 用户信息与点赞状态回填    |
+| `CategoryAdminServiceImplTest`      | 分类详情/创建/更新/状态/删除 + 层级路径刷新       |
+| `ContentSecurityIntegrationTest`    | 公开端点暴露/权限SQL范围                  |
+| `CategoryAdminServiceTest`          | 分类树查询(控制器层)                     |
+| `UserCollectionServiceTest`         | 收藏夹分页/收藏创建(控制器层)                |
 
 ## 5. 下一批高优先级
 
 ### 5.1 管理服务服务级测试收口 (已完成)
 
 - [x] **TagAdminServiceImpl** 服务级测试
-  - [x] `listTags` - 标签列表查询
-  - [x] `getTag` - 标签详情
-  - [x] `createTag` - 创建标签（名称唯一性校验）
-  - [x] `updateTag` - 更新标签
-  - [x] `deleteTag` - 删除标签（关联关系清理）
+    - [x] `listTags` - 标签列表查询
+    - [x] `getTag` - 标签详情
+    - [x] `createTag` - 创建标签（名称唯一性校验）
+    - [x] `updateTag` - 更新标签
+    - [x] `deleteTag` - 删除标签（关联关系清理）
 
 - [x] **CommentAdminServiceImpl** 服务级测试
-  - [x] `pageComments` - 评论分页+过滤
-  - [x] `getComment` - 评论详情
-  - [x] `updateStatus` - 状态切换
-  - [x] `deleteComment` - 删除评论（子树级联）
+    - [x] `pageComments` - 评论分页+过滤
+    - [x] `getComment` - 评论详情
+    - [x] `updateStatus` - 状态切换
+    - [x] `deleteComment` - 删除评论（子树级联）
 
 - [x] **CollectionAdminServiceImpl** 服务级测试
-  - [x] `pageFolders` - 收藏夹分页
-  - [x] `pageCollections` - 收藏分页
-  - [x] `deleteCollection` - 删除收藏
+    - [x] `pageFolders` - 收藏夹分页
+    - [x] `pageCollections` - 收藏分页
+    - [x] `deleteCollection` - 删除收藏
 
 - [x] **InteractionAdminServiceImpl** 服务级测试
-  - [x] `pageInteractions` - 互动分页
-  - [x] `deleteInteraction` - 删除互动
+    - [x] `pageInteractions` - 互动分页
+    - [x] `deleteInteraction` - 删除互动
 
 - [x] **FootprintAdminServiceImpl** 服务级测试
-  - [x] `pageFootprints` - 足迹分页
-  - [x] `deleteFootprint` - 删除足迹
-  - [x] `cleanFootprints` - 批量清理
+    - [x] `pageFootprints` - 足迹分页
+    - [x] `deleteFootprint` - 删除足迹
+    - [x] `cleanFootprints` - 批量清理
 
 ### 5.2 用户/公开服务服务级测试收口 (已完成)
 
 - [x] **UserFootprintServiceImpl** 服务级测试
-  - [x] `pageFootprints` - 用户足迹分页
-  - [x] `deleteFootprint` - 删除足迹
-  - [x] `clearFootprints` - 清空足迹
-  - [x] `recordArticleFootprint` - 记录浏览足迹（UPSERT逻辑）
+    - [x] `pageFootprints` - 用户足迹分页
+    - [x] `deleteFootprint` - 删除足迹
+    - [x] `clearFootprints` - 清空足迹
+    - [x] `recordArticleFootprint` - 记录浏览足迹（UPSERT逻辑）
 
 - [x] **PublicContentQueryServiceImpl** 服务级测试
-  - [x] `listCategoryTree` - 分类树构建（层级/排序）
-  - [x] `listTags` - 标签列表（按目标类型过滤）
-  - [x] `listComments` - 评论树构建（根评论+回复两段查询）
+    - [x] `listCategoryTree` - 分类树构建（层级/排序）
+    - [x] `listTags` - 标签列表（按目标类型过滤）
+    - [x] `listComments` - 评论树构建（根评论+回复两段查询）
 
 ### 5.3 部分覆盖的服务补充 (已完成)
 
 - [x] **CategoryAdminServiceImpl** 服务级测试 (仅树查询已测)
-  - [x] `getCategory` - 分类详情
-  - [x] `createCategory` - 创建分类（树路径/层级计算）
-  - [x] `updateCategory` - 更新分类
-  - [x] `updateStatus` - 状态切换
-  - [x] `deleteCategory` - 删除分类（子分类检查/文章绑定检查）
+    - [x] `getCategory` - 分类详情
+    - [x] `createCategory` - 创建分类（树路径/层级计算）
+    - [x] `updateCategory` - 更新分类
+    - [x] `updateStatus` - 状态切换
+    - [x] `deleteCategory` - 删除分类（子分类检查/文章绑定检查）
 
 - [x] **UserCommentServiceImpl** 补充测试
-  - [x] `likeComment` - 评论点赞（幂等+计数同步）
-  - [x] `unlikeComment` - 取消点赞（幂等+计数回退）
+    - [x] `likeComment` - 评论点赞（幂等+计数同步）
+    - [x] `unlikeComment` - 取消点赞（幂等+计数回退）
 
 - [x] **UserCollectionServiceImpl** 补充测试
-  - [x] `createFolder` - 创建收藏夹
-  - [x] `updateFolder` - 更新收藏夹
-  - [x] `deleteFolder` - 删除收藏夹（默认夹不可删除）
-  - [x] `pageCollections` - 收藏分页
+    - [x] `createFolder` - 创建收藏夹
+    - [x] `updateFolder` - 更新收藏夹
+    - [x] `deleteFolder` - 删除收藏夹（默认夹不可删除）
+    - [x] `pageCollections` - 收藏分页
 
 ## 6. 中期一致性补强
 
@@ -193,13 +194,18 @@ module/content/
 ## 7. 中长期基础设施
 
 - [x] 评估是否需要评论内容审核/敏感词过滤接入
-  结论：当前评论入口仍受登录态与文章访问控制约束，先不在 `content` 侧直接接入审核链路；若后续开放匿名评论、违规反馈增多或需要后台审核台，优先复用 `chat` 域“系统配置敏感词 + 命中留痕”模式扩展为内容审核服务。
+  结论：当前评论入口仍受登录态与文章访问控制约束，先不在 `content` 侧直接接入审核链路；若后续开放匿名评论、违规反馈增多或需要后台审核台，优先复用
+  `chat` 域“系统配置敏感词 + 命中留痕”模式扩展为内容审核服务。
 - [x] 评估是否需要分类树缓存（频繁查询场景）
-  结论：当前公开分类树是单表读取 + 内存组装，查询成本低，暂不引入 Redis 缓存；若首页导航成为明显热点或分类层级、数量显著增长，再按 `type` 维度缓存，并在分类增删改/状态变更时统一失效。
+  结论：当前公开分类树是单表读取 + 内存组装，查询成本低，暂不引入 Redis 缓存；若首页导航成为明显热点或分类层级、数量显著增长，再按
+  `type` 维度缓存，并在分类增删改/状态变更时统一失效。
 - [x] 评估是否需要足迹归档策略（数据量增长后）
-  结论：当前 `sys_user_footprint` 依赖 `uk_user_target` 唯一键，同一用户同一目标只保留最新记录，短期先复用现有后台清理能力；当表规模增长到需要长期保留审计/运营分析时，再拆冷热表或按月份归档并补 retention 配置。
+  结论：当前 `sys_user_footprint` 依赖 `uk_user_target`
+  唯一键，同一用户同一目标只保留最新记录，短期先复用现有后台清理能力；当表规模增长到需要长期保留审计/运营分析时，再拆冷热表或按月份归档并补
+  retention 配置。
 - [x] 评估是否需要互动统计聚合（如文章总互动数查询优化）
-  结论：当前文章/评论点赞数已冗余在业务表，`sys_interaction` 主要承担幂等校验和明细查询，暂不追加总互动聚合层；若后续出现作者看板、排行榜或跨动作综合统计，再引入离线聚合或冗余总互动字段。
+  结论：当前文章/评论点赞数已冗余在业务表，`sys_interaction`
+  主要承担幂等校验和明细查询，暂不追加总互动聚合层；若后续出现作者看板、排行榜或跨动作综合统计，再引入离线聚合或冗余总互动字段。
 
 ## 8. 完成标志
 

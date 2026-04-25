@@ -2,13 +2,6 @@ package com.cybzacg.blogbackend.config;
 
 import com.cybzacg.blogbackend.config.property.ThreadPoolProperties;
 import com.cybzacg.blogbackend.utils.TransmittableContextUtils;
-import java.util.concurrent.Executor;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicInteger;
 import lombok.RequiredArgsConstructor;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -18,6 +11,9 @@ import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * 统一线程池配置。<p>集中管理项目默认异步线程池和定时任务线程池，同时作为 {@code @Async} 的默认执行器，并通过 TTL 包装透传请求上下文。</p>
  */
@@ -26,6 +22,16 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @RequiredArgsConstructor
 public class ThreadPoolConfig implements AsyncConfigurer {
     private final ThreadPoolProperties threadPoolProperties;
+
+    private static ThreadFactory namedDaemonThreadFactory(String prefix) {
+        AtomicInteger idx = new AtomicInteger(1);
+        return runnable -> {
+            Thread thread = new Thread(runnable);
+            thread.setName(prefix + idx.getAndIncrement());
+            thread.setDaemon(true);
+            return thread;
+        };
+    }
 
     /**
      * 创建项目默认异步线程池，同时保留 shortTaskExecutor 别名以兼容既有注入点。
@@ -118,16 +124,6 @@ public class ThreadPoolConfig implements AsyncConfigurer {
             case "discard-oldest", "discard_oldest", "discardoldest" -> discardOldestPolicy();
             case "abort", "" -> abortPolicy();
             default -> callerRunsPolicy();
-        };
-    }
-
-    private static ThreadFactory namedDaemonThreadFactory(String prefix) {
-        AtomicInteger idx = new AtomicInteger(1);
-        return runnable -> {
-            Thread thread = new Thread(runnable);
-            thread.setName(prefix + idx.getAndIncrement());
-            thread.setDaemon(true);
-            return thread;
         };
     }
 }

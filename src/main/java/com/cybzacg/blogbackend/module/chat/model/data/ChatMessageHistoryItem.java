@@ -1,7 +1,8 @@
 package com.cybzacg.blogbackend.module.chat.model.data;
 
-import java.time.LocalDateTime;
 import lombok.Data;
+
+import java.time.LocalDateTime;
 
 /**
  * 消息历史查询结果。

@@ -1,14 +1,14 @@
 package com.cybzacg.blogbackend.domain;
 
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 /**
  * 用户角色关联表
+ *
  * @TableName sys_user_role
  */
-@TableName(value ="sys_user_role")
+@TableName(value = "sys_user_role")
 @Data
 public class SysUserRole {
     /**
@@ -21,4 +21,4 @@ public class SysUserRole {
      */
     private Long roleId;
 
-    }
+}

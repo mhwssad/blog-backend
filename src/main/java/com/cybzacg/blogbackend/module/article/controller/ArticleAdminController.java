@@ -2,26 +2,14 @@ package com.cybzacg.blogbackend.module.article.controller;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.core.web.Result;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleAccessAssignRequest;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleAdminPageQuery;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleAdminVO;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleDetailVO;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleSaveRequest;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleStatusRequest;
+import com.cybzacg.blogbackend.module.article.model.admin.*;
 import com.cybzacg.blogbackend.module.article.service.ArticleAdminService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 文章后台管理控制器。

@@ -5,9 +5,10 @@ import lombok.Data;
 
 /**
  * 角色菜单关联表
+ *
  * @TableName sys_role_menu
  */
-@TableName(value ="sys_role_menu")
+@TableName(value = "sys_role_menu")
 @Data
 public class SysRoleMenu {
     /**
@@ -20,4 +21,4 @@ public class SysRoleMenu {
      */
     private Long menuId;
 
-    }
+}

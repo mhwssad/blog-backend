@@ -8,7 +8,7 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
-public enum StorageHealthStatus  {
+public enum StorageHealthStatus {
 
     /**
      * 健康

@@ -33,7 +33,9 @@ public class InteractionAdminServiceImpl implements InteractionAdminService {
     private final SysCommentRepository sysCommentRepository;
     private final ContentModelMapper contentModelMapper;
 
-    /** 按管理端条件分页查询互动记录列表。 */
+    /**
+     * 按管理端条件分页查询互动记录列表。
+     */
     @Override
     public PageResult<InteractionVO> pageInteractions(InteractionPageQuery query) {
         Page<SysInteraction> page = sysInteractionRepository.pageByAdminConditions(query);
@@ -43,7 +45,9 @@ public class InteractionAdminServiceImpl implements InteractionAdminService {
         return PageResult.of(page, records);
     }
 
-    /** 删除互动记录，并根据目标类型回退文章或评论的点赞计数。 */
+    /**
+     * 删除互动记录，并根据目标类型回退文章或评论的点赞计数。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteInteraction(Long id) {

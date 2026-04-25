@@ -11,10 +11,15 @@
 
 ### 已完成
 
-- [x] 已新增 `ChatConversationRepository`、`ChatConversationMemberRepository`、`ChatMessageRepository`、`ChatMessageRecipientRepository`、`ChatMessageReadCursorRepository` 及对应实现，收口 chat 模块 Repository 访问入口。
+- [x] 已新增 `ChatConversationRepository`、`ChatConversationMemberRepository`、`ChatMessageRepository`、
+  `ChatMessageRecipientRepository`、`ChatMessageReadCursorRepository` 及对应实现，收口 chat 模块 Repository 访问入口。
 - [x] 已额外新增 `ChatAttachmentProcessTaskRepository` 及实现（原计划未列出，迁移过程中按需补充）。
-- [x] 已将 `ChatAdminServiceImpl` 改为注入 Chat 模块各 Repository，后台会话分页/详情、消息分页、回执分页、成员列表与成员治理都已改走 Repository。无遗留 `lambdaQuery`/直接 Mapper 注入。
-- [x] 已将 `UserChatServiceImpl` 改为注入 `ChatConversationRepository`、`ChatConversationMemberRepository`、`ChatMessageRepository`、`ChatMessageRecipientRepository`、`ChatMessageReadCursorRepository`，以及跨模块的 `SysUserRepository`、`FileBusinessInfoRepository`、`FileInfoRepository`。无遗留 `lambdaQuery`/`lambdaUpdate`/直接 Mapper 注入。
+- [x] 已将 `ChatAdminServiceImpl` 改为注入 Chat 模块各 Repository，后台会话分页/详情、消息分页、回执分页、成员列表与成员治理都已改走
+  Repository。无遗留 `lambdaQuery`/直接 Mapper 注入。
+- [x] 已将 `UserChatServiceImpl` 改为注入 `ChatConversationRepository`、`ChatConversationMemberRepository`、
+  `ChatMessageRepository`、`ChatMessageRecipientRepository`、`ChatMessageReadCursorRepository`，以及跨模块的
+  `SysUserRepository`、`FileBusinessInfoRepository`、`FileInfoRepository`。无遗留 `lambdaQuery`/`lambdaUpdate`/直接 Mapper
+  注入。
 - [x] 已同步更新 `ChatAdminServiceImplTest` 和 `UserChatServiceImplTest`，测试 mock 已切换到 Repository。
 - [x] `ChatMessageGovernanceServiceImpl` 和 `ChatMetricsServiceImpl` 无数据库访问，无需迁移。
 
@@ -22,15 +27,16 @@
 
 - [x] ~~5 个旧薄服务仍保留~~ → 已确认无外部引用后全部删除。
 - [x] ~~`ChatAttachmentProcessTaskService` 旧薄服务仍保留~~ → 已删除（接口+实现），其 Repository 已存在且被业务服务直接注入。
+
 ## Repository 列表
 
-| Repository 接口 | 对应实体 | 薄服务来源 | Mapper自定义方法 |
-|---|---|---|---|
-| `ChatConversationRepository` | ChatConversation | ChatConversationService | 6个XML方法 |
-| `ChatConversationMemberRepository` | ChatConversationMember | ChatConversationMemberService | 无 |
-| `ChatMessageRepository` | ChatMessage | ChatMessageService | 7个XML方法 |
-| `ChatMessageRecipientRepository` | ChatMessageRecipient | ChatMessageRecipientService | 无 |
-| `ChatMessageReadCursorRepository` | ChatMessageReadCursor | ChatMessageReadCursorService | 无 |
+| Repository 接口                      | 对应实体                   | 薄服务来源                         | Mapper自定义方法 |
+|------------------------------------|------------------------|-------------------------------|-------------|
+| `ChatConversationRepository`       | ChatConversation       | ChatConversationService       | 6个XML方法     |
+| `ChatConversationMemberRepository` | ChatConversationMember | ChatConversationMemberService | 无           |
+| `ChatMessageRepository`            | ChatMessage            | ChatMessageService            | 7个XML方法     |
+| `ChatMessageRecipientRepository`   | ChatMessageRecipient   | ChatMessageRecipientService   | 无           |
+| `ChatMessageReadCursorRepository`  | ChatMessageReadCursor  | ChatMessageReadCursorService  | 无           |
 
 ## 各 Repository 方法设计
 
@@ -52,16 +58,16 @@ public interface ChatConversationRepository extends IService<ChatConversation> {
 }
 ```
 
-| 方法 | 来源 | 说明 |
-|---|---|---|
-| `countConversationPage` | ChatConversationMapper | 用户会话列表计数 |
-| `selectConversationPage` | ChatConversationMapper | 用户会话列表 |
-| `selectConversationDetail` | ChatConversationMapper | 会话详情 |
-| `countAdminConversationPage` | ChatConversationMapper | 管理端会话计数 |
-| `selectAdminConversationPage` | ChatConversationMapper | 管理端会话列表 |
-| `selectAdminConversationDetail` | ChatConversationMapper | 管理端会话详情 |
-| `findBySinglePairKey` | UserChatServiceImpl:637, `lambdaQuery().eq(singlePairKey).last("limit 1").one()` | 单聊会话查找 |
-| `findGlobalConversation` | UserChatServiceImpl:670, `lambdaQuery().eq(isAllSite,1).last("limit 1").one()` | 全站会话查找 |
+| 方法                              | 来源                                                                               | 说明       |
+|---------------------------------|----------------------------------------------------------------------------------|----------|
+| `countConversationPage`         | ChatConversationMapper                                                           | 用户会话列表计数 |
+| `selectConversationPage`        | ChatConversationMapper                                                           | 用户会话列表   |
+| `selectConversationDetail`      | ChatConversationMapper                                                           | 会话详情     |
+| `countAdminConversationPage`    | ChatConversationMapper                                                           | 管理端会话计数  |
+| `selectAdminConversationPage`   | ChatConversationMapper                                                           | 管理端会话列表  |
+| `selectAdminConversationDetail` | ChatConversationMapper                                                           | 管理端会话详情  |
+| `findBySinglePairKey`           | UserChatServiceImpl:637, `lambdaQuery().eq(singlePairKey).last("limit 1").one()` | 单聊会话查找   |
+| `findGlobalConversation`        | UserChatServiceImpl:670, `lambdaQuery().eq(isAllSite,1).last("limit 1").one()`   | 全站会话查找   |
 
 ### ChatConversationMemberRepository
 
@@ -77,15 +83,15 @@ public interface ChatConversationMemberRepository extends IService<ChatConversat
 }
 ```
 
-| 方法 | 来源 | 说明 |
-|---|---|---|
-| `findByConversationAndUser` | UserChatServiceImpl:1264, ChatAdminServiceImpl:512, `lambdaQuery().eq(convId).eq(userId).last("limit 1").one()` | 查成员关系 |
-| `findOwnerByConversationId` | ChatAdminServiceImpl:523, `lambdaQuery().eq(role OWNER).last("limit 1").one()` | 查群主 |
-| `listActiveByConversationId` | UserChatServiceImpl:1189, ChatAdminServiceImpl:472, `lambdaQuery().eq(convId).eq(status NORMAL).list()` | 活跃成员 |
-| `listActiveByConversationIds` | UserChatServiceImpl:1177, `lambdaQuery().in(convIds).eq(status NORMAL).list()` | 批量活跃成员 |
-| `listByConversationId` | ChatAdminServiceImpl:466, `lambdaQuery().eq(convId).list()` | 所有成员 |
-| `listByConversationIds` | ChatAdminServiceImpl:455, `lambdaQuery().in(convIds).list()` | 批量所有成员 |
-| `removeAllActiveMembers` | UserChatServiceImpl:523, `lambdaUpdate().eq(convId).eq(status NORMAL).set(status REMOVED).update()` | 解散群组 |
+| 方法                            | 来源                                                                                                              | 说明     |
+|-------------------------------|-----------------------------------------------------------------------------------------------------------------|--------|
+| `findByConversationAndUser`   | UserChatServiceImpl:1264, ChatAdminServiceImpl:512, `lambdaQuery().eq(convId).eq(userId).last("limit 1").one()` | 查成员关系  |
+| `findOwnerByConversationId`   | ChatAdminServiceImpl:523, `lambdaQuery().eq(role OWNER).last("limit 1").one()`                                  | 查群主    |
+| `listActiveByConversationId`  | UserChatServiceImpl:1189, ChatAdminServiceImpl:472, `lambdaQuery().eq(convId).eq(status NORMAL).list()`         | 活跃成员   |
+| `listActiveByConversationIds` | UserChatServiceImpl:1177, `lambdaQuery().in(convIds).eq(status NORMAL).list()`                                  | 批量活跃成员 |
+| `listByConversationId`        | ChatAdminServiceImpl:466, `lambdaQuery().eq(convId).list()`                                                     | 所有成员   |
+| `listByConversationIds`       | ChatAdminServiceImpl:455, `lambdaQuery().in(convIds).list()`                                                    | 批量所有成员 |
+| `removeAllActiveMembers`      | UserChatServiceImpl:523, `lambdaUpdate().eq(convId).eq(status NORMAL).set(status REMOVED).update()`             | 解散群组   |
 
 ### ChatMessageRepository（含大量XML）
 
@@ -105,16 +111,16 @@ public interface ChatMessageRepository extends IService<ChatMessage> {
 }
 ```
 
-| 方法 | 来源 | 说明 |
-|---|---|---|
-| `countMessagePage` | ChatMessageMapper | 消息分页计数 |
-| `selectMessagePage` | ChatMessageMapper | 消息分页列表 |
-| `selectVisibleMessageById` | ChatMessageMapper | 单条可见消息 |
-| `selectVisibleMessagesByIds` | ChatMessageMapper | 批量可见消息 |
-| `countAdminMessagePage` | ChatMessageMapper | 管理端消息计数 |
-| `selectAdminMessagePage` | ChatMessageMapper | 管理端消息列表 |
-| `selectAdminMessagesByIds` | ChatMessageMapper | 管理端批量消息 |
-| `findBySenderAndClientMessageId` | UserChatServiceImpl:1056, `lambdaQuery().eq(senderId).eq(clientMsgId).last("limit 1").one()` | 幂等查重 |
+| 方法                               | 来源                                                                                           | 说明      |
+|----------------------------------|----------------------------------------------------------------------------------------------|---------|
+| `countMessagePage`               | ChatMessageMapper                                                                            | 消息分页计数  |
+| `selectMessagePage`              | ChatMessageMapper                                                                            | 消息分页列表  |
+| `selectVisibleMessageById`       | ChatMessageMapper                                                                            | 单条可见消息  |
+| `selectVisibleMessagesByIds`     | ChatMessageMapper                                                                            | 批量可见消息  |
+| `countAdminMessagePage`          | ChatMessageMapper                                                                            | 管理端消息计数 |
+| `selectAdminMessagePage`         | ChatMessageMapper                                                                            | 管理端消息列表 |
+| `selectAdminMessagesByIds`       | ChatMessageMapper                                                                            | 管理端批量消息 |
+| `findBySenderAndClientMessageId` | UserChatServiceImpl:1056, `lambdaQuery().eq(senderId).eq(clientMsgId).last("limit 1").one()` | 幂等查重    |
 
 ### ChatMessageRecipientRepository
 
@@ -136,16 +142,16 @@ public interface ChatMessageRecipientRepository extends IService<ChatMessageReci
 }
 ```
 
-| 方法 | 来源 | 说明 |
-|---|---|---|
-| `hideMessage` | UserChatServiceImpl:292, `lambdaUpdate().set(HIDDEN).update()` | 隐藏消息 |
-| `markReadUpTo` | UserChatServiceImpl:333, `lambdaUpdate().set(READ).update()` | 标记已读 |
-| `markDelivered` | UserChatServiceImpl:795, `lambdaUpdate().eq(PENDING).set(DELIVERED).update()` | 标记投递 |
-| `batchMarkDelivered` | UserChatServiceImpl:828, `lambdaUpdate().in(messageIds).set(DELIVERED).update()` | 批量标记投递 |
-| `countUnread` | UserChatServiceImpl:857, `lambdaQuery().lt(READ).count()` | 未读计数 |
+| 方法                            | 来源                                                                                   | 说明      |
+|-------------------------------|--------------------------------------------------------------------------------------|---------|
+| `hideMessage`                 | UserChatServiceImpl:292, `lambdaUpdate().set(HIDDEN).update()`                       | 隐藏消息    |
+| `markReadUpTo`                | UserChatServiceImpl:333, `lambdaUpdate().set(READ).update()`                         | 标记已读    |
+| `markDelivered`               | UserChatServiceImpl:795, `lambdaUpdate().eq(PENDING).set(DELIVERED).update()`        | 标记投递    |
+| `batchMarkDelivered`          | UserChatServiceImpl:828, `lambdaUpdate().in(messageIds).set(DELIVERED).update()`     | 批量标记投递  |
+| `countUnread`                 | UserChatServiceImpl:857, `lambdaQuery().lt(READ).count()`                            | 未读计数    |
 | `findVisibleByUserAndMessage` | UserChatServiceImpl:1011, `lambdaQuery().eq(userId).eq(msgId).last("limit 1").one()` | 查可见接收记录 |
-| `listByMessageId` | ChatAdminServiceImpl:532, `lambdaQuery().eq(messageId).list()` | 消息接收人列表 |
-| `pageAdminReceipts` | ChatAdminServiceImpl:188, `LambdaQueryWrapper + page()` | 管理端回执分页 |
+| `listByMessageId`             | ChatAdminServiceImpl:532, `lambdaQuery().eq(messageId).list()`                       | 消息接收人列表 |
+| `pageAdminReceipts`           | ChatAdminServiceImpl:188, `LambdaQueryWrapper + page()`                              | 管理端回执分页 |
 
 ### ChatMessageReadCursorRepository
 
@@ -155,27 +161,28 @@ public interface ChatMessageReadCursorRepository extends IService<ChatMessageRea
 }
 ```
 
-| 方法 | 来源 | 说明 |
-|---|---|---|
+| 方法                          | 来源                                                                                    | 说明   |
+|-----------------------------|---------------------------------------------------------------------------------------|------|
 | `findByConversationAndUser` | UserChatServiceImpl:1273, `lambdaQuery().eq(convId).eq(userId).last("limit 1").one()` | 查读游标 |
 
 ## 直接 Mapper 注入迁移
 
-| 服务 | 直接注入的 Mapper | 迁移到 |
-|---|---|---|
-| UserChatServiceImpl | ChatConversationMapper, ChatMessageMapper | ChatConversationRepository, ChatMessageRepository |
+| 服务                   | 直接注入的 Mapper                              | 迁移到                                               |
+|----------------------|-------------------------------------------|---------------------------------------------------|
+| UserChatServiceImpl  | ChatConversationMapper, ChatMessageMapper | ChatConversationRepository, ChatMessageRepository |
 | ChatAdminServiceImpl | ChatConversationMapper, ChatMessageMapper | ChatConversationRepository, ChatMessageRepository |
 
 ## 需迁移的业务服务
 
-| 服务 | 数据操作数 | 复杂度 |
-|---|---|---|
-| `UserChatServiceImpl` | ~50处 | 极高（1600+行） |
-| `ChatAdminServiceImpl` | ~25处 | 高 |
-| `ChatMessageGovernanceServiceImpl` | 少量 | 低 |
-| `ChatMetricsServiceImpl` | 少量 | 低 |
+| 服务                                 | 数据操作数 | 复杂度        |
+|------------------------------------|-------|------------|
+| `UserChatServiceImpl`              | ~50处  | 极高（1600+行） |
+| `ChatAdminServiceImpl`             | ~25处  | 高          |
+| `ChatMessageGovernanceServiceImpl` | 少量    | 低          |
+| `ChatMetricsServiceImpl`           | 少量    | 低          |
 
 **无需迁移的服务**（无直接数据操作或仅有少量调用）：
+
 - `ChatPushServiceImpl` — 推送逻辑，通过其他服务间接操作
 - `ChatWebSocketSessionRegistryImpl` — 会话管理，无DB操作
 - `ChatAttachmentAsyncProcessingServiceImpl` — 异步处理，注入的是 Service 非 Mapper
@@ -188,18 +195,18 @@ public interface ChatMessageReadCursorRepository extends IService<ChatMessageRea
 ### Step 2: 修改业务服务
 
 1. **`UserChatServiceImpl`**（最高优先级，最大文件）：
-   - 移除 `ChatConversationMapper` 和 `ChatMessageMapper` 直接注入
-   - 注入 `ChatConversationRepository`, `ChatConversationMemberRepository`
-   - 注入 `ChatMessageRepository`, `ChatMessageRecipientRepository`, `ChatMessageReadCursorRepository`
-   - 注入 `SysUserRepository`（auth模块）, `FileInfoRepository`/`FileBusinessInfoRepository`（file模块）
-   - 提取14处 lambdaQuery、6处 lambdaUpdate 到对应 Repository 方法
+    - 移除 `ChatConversationMapper` 和 `ChatMessageMapper` 直接注入
+    - 注入 `ChatConversationRepository`, `ChatConversationMemberRepository`
+    - 注入 `ChatMessageRepository`, `ChatMessageRecipientRepository`, `ChatMessageReadCursorRepository`
+    - 注入 `SysUserRepository`（auth模块）, `FileInfoRepository`/`FileBusinessInfoRepository`（file模块）
+    - 提取14处 lambdaQuery、6处 lambdaUpdate 到对应 Repository 方法
 
 2. **`ChatAdminServiceImpl`**：
-   - 移除 `ChatConversationMapper` 和 `ChatMessageMapper` 直接注入
-   - 注入各 Chat Repository
+    - 移除 `ChatConversationMapper` 和 `ChatMessageMapper` 直接注入
+    - 注入各 Chat Repository
 
 3. **`ChatMessageGovernanceServiceImpl`**、**`ChatMetricsServiceImpl`**：
-   - 替换注入的薄服务为 Repository
+    - 替换注入的薄服务为 Repository
 
 ### Step 3: 更新测试
 

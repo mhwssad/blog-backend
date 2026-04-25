@@ -18,13 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayDeque;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -40,7 +34,9 @@ public class CommentAdminServiceImpl implements CommentAdminService {
     private final SysUserRepository sysUserRepository;
     private final ContentModelMapper contentModelMapper;
 
-    /** 按管理端条件分页查询评论列表，并填充用户昵称与头像。 */
+    /**
+     * 按管理端条件分页查询评论列表，并填充用户昵称与头像。
+     */
     @Override
     public PageResult<CommentVO> pageComments(CommentPageQuery query) {
         Page<SysComment> page = sysCommentRepository.pageByAdminConditions(query);
@@ -53,7 +49,9 @@ public class CommentAdminServiceImpl implements CommentAdminService {
         return PageResult.of(page, records);
     }
 
-    /** 按ID获取评论详情，并填充用户信息。 */
+    /**
+     * 按ID获取评论详情，并填充用户信息。
+     */
     @Override
     public CommentVO getComment(Long id) {
         SysComment comment = getCommentOrThrow(id);
@@ -63,7 +61,9 @@ public class CommentAdminServiceImpl implements CommentAdminService {
         return vo;
     }
 
-    /** 修改评论状态（正常/隐藏/删除）。 */
+    /**
+     * 修改评论状态（正常/隐藏/删除）。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, Integer status) {

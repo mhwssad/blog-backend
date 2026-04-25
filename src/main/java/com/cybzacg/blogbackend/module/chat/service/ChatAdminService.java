@@ -1,17 +1,9 @@
 package com.cybzacg.blogbackend.module.chat.service;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminConversationPageQuery;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminConversationVO;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMemberMuteUpdateRequest;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMemberRoleUpdateRequest;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMemberStatusUpdateRequest;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageDetailVO;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessagePageQuery;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageReceiptPageQuery;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageReceiptVO;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageVO;
+import com.cybzacg.blogbackend.module.chat.model.admin.*;
 import com.cybzacg.blogbackend.module.chat.model.user.ChatMemberVO;
+
 import java.util.List;
 
 /**

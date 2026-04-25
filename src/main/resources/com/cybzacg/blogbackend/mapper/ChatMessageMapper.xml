@@ -24,7 +24,8 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, conversation_id, sender_id, message_type, content, payload_json,
+        id
+        , conversation_id, sender_id, message_type, content, payload_json,
         reply_message_id, mention_all, mentioned_user_ids, send_status,
         revoke_status, revoked_by, revoked_at, client_message_id, created_at, updated_at
     </sql>
@@ -32,9 +33,9 @@
     <sql id="Visible_Message_From">
         from chat_message m
         inner join chat_message_recipient r
-            on r.message_id = m.id
-            and r.recipient_user_id = #{userId}
-            and r.visible_status = 1
+        on r.message_id = m.id
+        and r.recipient_user_id = #{userId}
+        and r.visible_status = 1
         where m.conversation_id = #{conversationId}
         <if test="beforeMessageId != null">
             and m.id &lt; #{beforeMessageId}
@@ -48,74 +49,74 @@
 
     <select id="selectMessagePage" resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatMessageHistoryItem">
         select
-            m.id,
-            m.conversation_id as conversationId,
-            m.sender_id as senderId,
-            m.message_type as messageType,
-            m.content,
-            m.payload_json as payloadJson,
-            m.reply_message_id as replyMessageId,
-            m.client_message_id as clientMessageId,
-            r.delivery_status as deliveryStatus,
-            m.revoke_status as revokeStatus,
-            r.read_at as readAt,
-            m.created_at as createdAt,
-            m.updated_at as updatedAt
+        m.id,
+        m.conversation_id as conversationId,
+        m.sender_id as senderId,
+        m.message_type as messageType,
+        m.content,
+        m.payload_json as payloadJson,
+        m.reply_message_id as replyMessageId,
+        m.client_message_id as clientMessageId,
+        r.delivery_status as deliveryStatus,
+        m.revoke_status as revokeStatus,
+        r.read_at as readAt,
+        m.created_at as createdAt,
+        m.updated_at as updatedAt
         <include refid="Visible_Message_From"/>
         order by m.id desc
         limit #{offset}, #{size}
     </select>
 
-    <select id="selectVisibleMessageById" resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatMessageHistoryItem">
-        select
-            m.id,
-            m.conversation_id as conversationId,
-            m.sender_id as senderId,
-            m.message_type as messageType,
-            m.content,
-            m.payload_json as payloadJson,
-            m.reply_message_id as replyMessageId,
-            m.client_message_id as clientMessageId,
-            r.delivery_status as deliveryStatus,
-            m.revoke_status as revokeStatus,
-            r.read_at as readAt,
-            m.created_at as createdAt,
-            m.updated_at as updatedAt
+    <select id="selectVisibleMessageById"
+            resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatMessageHistoryItem">
+        select m.id,
+               m.conversation_id   as conversationId,
+               m.sender_id         as senderId,
+               m.message_type      as messageType,
+               m.content,
+               m.payload_json      as payloadJson,
+               m.reply_message_id  as replyMessageId,
+               m.client_message_id as clientMessageId,
+               r.delivery_status   as deliveryStatus,
+               m.revoke_status     as revokeStatus,
+               r.read_at           as readAt,
+               m.created_at        as createdAt,
+               m.updated_at        as updatedAt
         from chat_message m
-        inner join chat_message_recipient r
-            on r.message_id = m.id
-            and r.recipient_user_id = #{userId}
-            and r.visible_status = 1
+                 inner join chat_message_recipient r
+                            on r.message_id = m.id
+                                and r.recipient_user_id = #{userId}
+                                and r.visible_status = 1
         where m.conversation_id = #{conversationId}
-          and m.id = #{messageId}
-        limit 1
+          and m.id = #{messageId} limit 1
     </select>
 
-    <select id="selectVisibleMessagesByIds" resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatMessageHistoryItem">
+    <select id="selectVisibleMessagesByIds"
+            resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatMessageHistoryItem">
         select
-            m.id,
-            m.conversation_id as conversationId,
-            m.sender_id as senderId,
-            m.message_type as messageType,
-            m.content,
-            m.payload_json as payloadJson,
-            m.reply_message_id as replyMessageId,
-            m.client_message_id as clientMessageId,
-            r.delivery_status as deliveryStatus,
-            m.revoke_status as revokeStatus,
-            r.read_at as readAt,
-            m.created_at as createdAt,
-            m.updated_at as updatedAt
+        m.id,
+        m.conversation_id as conversationId,
+        m.sender_id as senderId,
+        m.message_type as messageType,
+        m.content,
+        m.payload_json as payloadJson,
+        m.reply_message_id as replyMessageId,
+        m.client_message_id as clientMessageId,
+        r.delivery_status as deliveryStatus,
+        m.revoke_status as revokeStatus,
+        r.read_at as readAt,
+        m.created_at as createdAt,
+        m.updated_at as updatedAt
         from chat_message m
         inner join chat_message_recipient r
-            on r.message_id = m.id
-            and r.recipient_user_id = #{userId}
-            and r.visible_status = 1
+        on r.message_id = m.id
+        and r.recipient_user_id = #{userId}
+        and r.visible_status = 1
         where m.conversation_id = #{conversationId}
-          and m.id in
-          <foreach collection="messageIds" item="messageId" open="(" separator="," close=")">
-              #{messageId}
-          </foreach>
+        and m.id in
+        <foreach collection="messageIds" item="messageId" open="(" separator="," close=")">
+            #{messageId}
+        </foreach>
     </select>
 
     <sql id="Admin_Message_From">
@@ -140,28 +141,29 @@
         <include refid="Admin_Message_From"/>
     </select>
 
-    <select id="selectAdminMessagePage" resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatAdminMessageItem">
+    <select id="selectAdminMessagePage"
+            resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatAdminMessageItem">
         select
-            m.id,
-            m.conversation_id as conversationId,
-            m.sender_id as senderId,
-            m.message_type as messageType,
-            m.content,
-            m.payload_json as payloadJson,
-            m.reply_message_id as replyMessageId,
-            m.client_message_id as clientMessageId,
-            m.send_status as sendStatus,
-            m.revoke_status as revokeStatus,
-            m.revoked_by as revokedBy,
-            m.revoked_at as revokedAt,
-            count(r.id) as totalRecipientCount,
-            sum(case when r.delivery_status &gt;= 1 then 1 else 0 end) as deliveredRecipientCount,
-            sum(case when r.delivery_status &gt;= 2 then 1 else 0 end) as readRecipientCount,
-            m.created_at as createdAt,
-            m.updated_at as updatedAt
+        m.id,
+        m.conversation_id as conversationId,
+        m.sender_id as senderId,
+        m.message_type as messageType,
+        m.content,
+        m.payload_json as payloadJson,
+        m.reply_message_id as replyMessageId,
+        m.client_message_id as clientMessageId,
+        m.send_status as sendStatus,
+        m.revoke_status as revokeStatus,
+        m.revoked_by as revokedBy,
+        m.revoked_at as revokedAt,
+        count(r.id) as totalRecipientCount,
+        sum(case when r.delivery_status &gt;= 1 then 1 else 0 end) as deliveredRecipientCount,
+        sum(case when r.delivery_status &gt;= 2 then 1 else 0 end) as readRecipientCount,
+        m.created_at as createdAt,
+        m.updated_at as updatedAt
         from chat_message m
         left join chat_message_recipient r
-            on r.message_id = m.id
+        on r.message_id = m.id
         where m.conversation_id = #{conversationId}
         <if test="query != null and query.beforeMessageId != null">
             and m.id &lt; #{query.beforeMessageId}
@@ -176,65 +178,66 @@
             and m.content like concat('%', #{query.keyword}, '%')
         </if>
         group by
-            m.id,
-            m.conversation_id,
-            m.sender_id,
-            m.message_type,
-            m.content,
-            m.payload_json,
-            m.reply_message_id,
-            m.client_message_id,
-            m.send_status,
-            m.revoke_status,
-            m.revoked_by,
-            m.revoked_at,
-            m.created_at,
-            m.updated_at
+        m.id,
+        m.conversation_id,
+        m.sender_id,
+        m.message_type,
+        m.content,
+        m.payload_json,
+        m.reply_message_id,
+        m.client_message_id,
+        m.send_status,
+        m.revoke_status,
+        m.revoked_by,
+        m.revoked_at,
+        m.created_at,
+        m.updated_at
         order by m.id desc
         limit #{offset}, #{size}
     </select>
 
-    <select id="selectAdminMessagesByIds" resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatAdminMessageItem">
+    <select id="selectAdminMessagesByIds"
+            resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatAdminMessageItem">
         select
-            m.id,
-            m.conversation_id as conversationId,
-            m.sender_id as senderId,
-            m.message_type as messageType,
-            m.content,
-            m.payload_json as payloadJson,
-            m.reply_message_id as replyMessageId,
-            m.client_message_id as clientMessageId,
-            m.send_status as sendStatus,
-            m.revoke_status as revokeStatus,
-            m.revoked_by as revokedBy,
-            m.revoked_at as revokedAt,
-            count(r.id) as totalRecipientCount,
-            sum(case when r.delivery_status >= 1 then 1 else 0 end) as deliveredRecipientCount,
-            sum(case when r.delivery_status >= 2 then 1 else 0 end) as readRecipientCount,
-            m.created_at as createdAt,
-            m.updated_at as updatedAt
+        m.id,
+        m.conversation_id as conversationId,
+        m.sender_id as senderId,
+        m.message_type as messageType,
+        m.content,
+        m.payload_json as payloadJson,
+        m.reply_message_id as replyMessageId,
+        m.client_message_id as clientMessageId,
+        m.send_status as sendStatus,
+        m.revoke_status as revokeStatus,
+        m.revoked_by as revokedBy,
+        m.revoked_at as revokedAt,
+        count(r.id) as totalRecipientCount,
+        sum(case when r.delivery_status >= 1 then 1 else 0 end) as deliveredRecipientCount,
+        sum(case when r.delivery_status >= 2 then 1 else 0 end) as readRecipientCount,
+        m.created_at as createdAt,
+        m.updated_at as updatedAt
         from chat_message m
         left join chat_message_recipient r
-            on r.message_id = m.id
+        on r.message_id = m.id
         where m.conversation_id = #{conversationId}
-          and m.id in
-          <foreach collection="messageIds" item="messageId" open="(" separator="," close=")">
-              #{messageId}
-          </foreach>
+        and m.id in
+        <foreach collection="messageIds" item="messageId" open="(" separator="," close=")">
+            #{messageId}
+        </foreach>
         group by
-            m.id,
-            m.conversation_id,
-            m.sender_id,
-            m.message_type,
-            m.content,
-            m.payload_json,
-            m.reply_message_id,
-            m.client_message_id,
-            m.send_status,
-            m.revoke_status,
-            m.revoked_by,
-            m.revoked_at,
-            m.created_at,
-            m.updated_at
+        m.id,
+        m.conversation_id,
+        m.sender_id,
+        m.message_type,
+        m.content,
+        m.payload_json,
+        m.reply_message_id,
+        m.client_message_id,
+        m.send_status,
+        m.revoke_status,
+        m.revoked_by,
+        m.revoked_at,
+        m.created_at,
+        m.updated_at
     </select>
 </mapper>

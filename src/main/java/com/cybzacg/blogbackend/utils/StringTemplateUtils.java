@@ -54,6 +54,11 @@ public final class StringTemplateUtils {
      * SpEL风格占位符模式：#{key}
      */
     private static final Pattern SPEL_PATTERN = Pattern.compile("#\\{([^}:]+)(?::([^}]*))?\\}");
+    /**
+     * 索引占位符模式：{数字} 或 {}
+     * 匹配 {0}、{1}、{2} 等以及 {}
+     */
+    private static final Pattern INDEX_PATTERN = Pattern.compile("\\{(\\d*)\\}");
 
     /**
      * 私有构造函数，防止实例化
@@ -278,8 +283,8 @@ public final class StringTemplateUtils {
             return false;
         }
         return SPRING_PATTERN.matcher(template).find() ||
-               SIMPLE_PATTERN.matcher(template).find() ||
-               SPEL_PATTERN.matcher(template).find();
+                SIMPLE_PATTERN.matcher(template).find() ||
+                SPEL_PATTERN.matcher(template).find();
     }
 
     /**
@@ -305,8 +310,8 @@ public final class StringTemplateUtils {
     /**
      * 使用指定模式提取占位符
      *
-     * @param template    模板字符串
-     * @param pattern     占位符模式
+     * @param template     模板字符串
+     * @param pattern      占位符模式
      * @param placeholders 占位符集合
      */
     private static void extractPlaceholdersWithPattern(String template, Pattern pattern, java.util.Set<String> placeholders) {
@@ -433,12 +438,6 @@ public final class StringTemplateUtils {
         matcher.appendTail(result);
         return result.toString();
     }
-
-    /**
-     * 索引占位符模式：{数字} 或 {}
-     * 匹配 {0}、{1}、{2} 等以及 {}
-     */
-    private static final Pattern INDEX_PATTERN = Pattern.compile("\\{(\\d*)\\}");
 
     /**
      * 按索引占位符渲染字符串（安全模式）

@@ -3,8 +3,9 @@ package com.cybzacg.blogbackend.module.chat.service.impl;
 import com.cybzacg.blogbackend.module.chat.service.ChatMetricsService;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
-import java.util.concurrent.TimeUnit;
 import org.springframework.stereotype.Service;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * 聊天指标埋点实现。
@@ -32,8 +33,8 @@ public class ChatMetricsServiceImpl implements ChatMetricsService {
     /**
      * 记录媒体文件异步处理耗时指标。
      *
-     * @param messageType  消息类型（image/voice）
-     * @param result       处理结果（success/failed/skipped）
+     * @param messageType   消息类型（image/voice）
+     * @param result        处理结果（success/failed/skipped）
      * @param durationNanos 处理耗时（纳秒）
      */
     @Override

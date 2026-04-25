@@ -5,21 +5,22 @@
 <mapper namespace="com.cybzacg.blogbackend.mapper.SysRoleMapper">
 
     <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.SysRole">
-            <id property="id" column="id" jdbcType="BIGINT"/>
-            <result property="name" column="name" jdbcType="VARCHAR"/>
-            <result property="code" column="code" jdbcType="VARCHAR"/>
-            <result property="sort" column="sort" jdbcType="INTEGER"/>
-            <result property="status" column="status" jdbcType="TINYINT"/>
-            <result property="dataScope" column="data_scope" jdbcType="TINYINT"/>
-            <result property="createBy" column="create_by" jdbcType="BIGINT"/>
-            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
-            <result property="updateBy" column="update_by" jdbcType="BIGINT"/>
-            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
-            <result property="isDeleted" column="is_deleted" jdbcType="TINYINT"/>
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="code" column="code" jdbcType="VARCHAR"/>
+        <result property="sort" column="sort" jdbcType="INTEGER"/>
+        <result property="status" column="status" jdbcType="TINYINT"/>
+        <result property="dataScope" column="data_scope" jdbcType="TINYINT"/>
+        <result property="createBy" column="create_by" jdbcType="BIGINT"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="updateBy" column="update_by" jdbcType="BIGINT"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+        <result property="isDeleted" column="is_deleted" jdbcType="TINYINT"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,name,code,
+        id
+        ,name,code,
         sort,status,data_scope,
         create_by,create_time,update_by,
         update_time,is_deleted

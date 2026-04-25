@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Result <T> implements Serializable {
+public class Result<T> implements Serializable {
     private Integer code;
 
     private T data;
@@ -29,13 +29,6 @@ public class Result <T> implements Serializable {
      */
     @Builder.Default
     private LocalDateTime timestamp = LocalDateTime.now();
-
-    /**
-     * 判断是否成功
-     */
-    public boolean isSuccess() {
-        return ResultErrorCode.SUCCESS.getCode().equals(this.code);
-    }
 
     public static <T> Result<T> of(Integer code, String msg, T data) {
         return Result.<T>builder()
@@ -109,6 +102,13 @@ public class Result <T> implements Serializable {
     public static <T> Result<T> condition(boolean success, String successMessage,
                                           String failMessage, T data) {
         return success ? success(successMessage, data) : fail(failMessage);
+    }
+
+    /**
+     * 判断是否成功
+     */
+    public boolean isSuccess() {
+        return ResultErrorCode.SUCCESS.getCode().equals(this.code);
     }
 
 }

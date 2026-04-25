@@ -20,7 +20,9 @@ import java.time.LocalDateTime;
 public class SysLogRepositoryImpl extends ServiceImpl<SysLogMapper, SysLog>
         implements SysLogRepository {
 
-    /** 根据管理端查询条件进行分页，按创建时间降序排列。 */
+    /**
+     * 根据管理端查询条件进行分页，按创建时间降序排列。
+     */
     @Override
     public Page<SysLog> pageByAdminConditions(SysLogPageQuery query) {
         return page(new Page<>(query.getCurrent(), query.getSize()), buildConditionWrapper(
@@ -35,7 +37,9 @@ public class SysLogRepositoryImpl extends ServiceImpl<SysLogMapper, SysLog>
                 .orderByDesc(SysLog::getId));
     }
 
-    /** 根据清理条件统计匹配的日志数量。 */
+    /**
+     * 根据清理条件统计匹配的日志数量。
+     */
     @Override
     public long countByConditions(SysLogCleanRequest request) {
         return count(buildConditionWrapper(
@@ -48,7 +52,9 @@ public class SysLogRepositoryImpl extends ServiceImpl<SysLogMapper, SysLog>
                 request.getCreateTimeEnd()));
     }
 
-    /** 根据清理条件删除匹配的日志，先统计数量再执行删除。 */
+    /**
+     * 根据清理条件删除匹配的日志，先统计数量再执行删除。
+     */
     @Override
     public long removeByConditions(SysLogCleanRequest request) {
         LambdaQueryWrapper<SysLog> queryWrapper = buildConditionWrapper(

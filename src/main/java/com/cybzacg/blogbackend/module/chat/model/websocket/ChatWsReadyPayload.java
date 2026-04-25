@@ -1,8 +1,9 @@
 package com.cybzacg.blogbackend.module.chat.model.websocket;
 
-import java.util.List;
 import lombok.Builder;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * WebSocket 握手完成后的 ready 载荷。

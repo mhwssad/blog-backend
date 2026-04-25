@@ -3,10 +3,13 @@
 ## 当前状态（2026-04-24 更新）
 
 - [x] 已完成 `FileInfoRepository`、`FileUploadTaskRepository`、`FileChunkRepository`、`FileBusinessInfoRepository` 及其实现。
-- [x] 已完成 `UserFileServiceImpl`、`FileAdminServiceImpl`、`FileLifecycleServiceImpl` 的 Repository 迁移，`file` 模块业务服务内不再直接拼装 `lambdaQuery/lambdaUpdate/LambdaQueryWrapper`。
-- [x] 已同步把 `ArticleAdminServiceImpl`、`ChatAdminServiceImpl`、`UserChatServiceImpl`、`ChatAttachmentAsyncProcessingServiceImpl` 的跨模块文件数据访问切到 Repository。
+- [x] 已完成 `UserFileServiceImpl`、`FileAdminServiceImpl`、`FileLifecycleServiceImpl` 的 Repository 迁移，`file`
+  模块业务服务内不再直接拼装 `lambdaQuery/lambdaUpdate/LambdaQueryWrapper`。
+- [x] 已同步把 `ArticleAdminServiceImpl`、`ChatAdminServiceImpl`、`UserChatServiceImpl`、
+  `ChatAttachmentAsyncProcessingServiceImpl` 的跨模块文件数据访问切到 Repository。
 - [x] 已删除 `FileInfoService`、`FileUploadTaskService`、`FileChunkService`、`FileBusinessInfoService` 及对应薄实现。
-- [x] 已同步调整 `UserFileServiceImplTest`、`FileAdminServiceImplTest`、`FileLifecycleServiceImplTest`，并更新受影响的 article/chat 测试依赖。
+- [x] 已同步调整 `UserFileServiceImplTest`、`FileAdminServiceImplTest`、`FileLifecycleServiceImplTest`，并更新受影响的
+  article/chat 测试依赖。
 - [x] **file 模块 Repository 迁移已全部完成**，无遗留问题。
 
 ## 模块信息
@@ -20,12 +23,12 @@
 
 ## Repository 列表
 
-| Repository 接口 | 对应实体 | 薄服务来源 | Mapper自定义方法 |
-|---|---|---|---|
-| `FileInfoRepository` | FileInfo | FileInfoService | 无 |
-| `FileUploadTaskRepository` | FileUploadTask | FileUploadTaskService | 无 |
-| `FileChunkRepository` | FileChunk | FileChunkService | 无 |
-| `FileBusinessInfoRepository` | FileBusinessInfo | FileBusinessInfoService | 无 |
+| Repository 接口                | 对应实体             | 薄服务来源                   | Mapper自定义方法 |
+|------------------------------|------------------|-------------------------|-------------|
+| `FileInfoRepository`         | FileInfo         | FileInfoService         | 无           |
+| `FileUploadTaskRepository`   | FileUploadTask   | FileUploadTaskService   | 无           |
+| `FileChunkRepository`        | FileChunk        | FileChunkService        | 无           |
+| `FileBusinessInfoRepository` | FileBusinessInfo | FileBusinessInfoService | 无           |
 
 ## 各 Repository 方法设计
 
@@ -42,14 +45,14 @@ public interface FileInfoRepository extends IService<FileInfo> {
 }
 ```
 
-| 方法 | 来源 | 说明 |
-|---|---|---|
-| `findByMd5AndNormalStatus` | UserFileServiceImpl:465, `lambdaQuery().eq(md5).eq(status).one()` | 秒传查重 |
-| `findByMd5` | UserFileServiceImpl:481, `lambdaQuery().eq(md5).one()` | MD5查文件 |
+| 方法                          | 来源                                                                                 | 说明      |
+|-----------------------------|------------------------------------------------------------------------------------|---------|
+| `findByMd5AndNormalStatus`  | UserFileServiceImpl:465, `lambdaQuery().eq(md5).eq(status).one()`                  | 秒传查重    |
+| `findByMd5`                 | UserFileServiceImpl:481, `lambdaQuery().eq(md5).one()`                             | MD5查文件  |
 | `findIdsByStatusAndKeyword` | UserFileServiceImpl:291, `lambdaQuery().select(id).eq(status).and(keyword).list()` | 条件查ID列表 |
-| `pageAdminFiles` | FileAdminServiceImpl:54, `LambdaQueryWrapper + page()` | 管理端分页 |
-| `recalcReferenceCount` | FileLifecycleServiceImpl:53, `LambdaUpdateWrapper.setSql(...)` | 重算引用计数 |
-| `markDeletedIfNoReferences` | FileLifecycleServiceImpl:80, `LambdaUpdateWrapper + not exists` | 无引用标记删除 |
+| `pageAdminFiles`            | FileAdminServiceImpl:54, `LambdaQueryWrapper + page()`                             | 管理端分页   |
+| `recalcReferenceCount`      | FileLifecycleServiceImpl:53, `LambdaUpdateWrapper.setSql(...)`                     | 重算引用计数  |
+| `markDeletedIfNoReferences` | FileLifecycleServiceImpl:80, `LambdaUpdateWrapper + not exists`                    | 无引用标记删除 |
 
 ### FileUploadTaskRepository
 
@@ -64,14 +67,14 @@ public interface FileUploadTaskRepository extends IService<FileUploadTask> {
 }
 ```
 
-| 方法 | 来源 | 说明 |
-|---|---|---|
-| `findByUploadIdAndUserId` | UserFileServiceImpl:444, `lambdaQuery().eq(uploadId).eq(userId).one()` | 查上传任务 |
-| `pageByUserAndStatus` | UserFileServiceImpl:327, `LambdaQueryWrapper + page()` | 用户任务分页 |
-| `pageAdminTasks` | FileAdminServiceImpl:111, `LambdaQueryWrapper + page()` | 管理端任务分页 |
-| `findExpiredTasks` | FileLifecycleServiceImpl:131, `lambdaQuery().le(expireTime).in(statuses).list()` | 查过期任务 |
-| `listRecentByFileId` | FileAdminServiceImpl:91, `lambdaQuery().eq(fileId).last("limit 20").list()` | 文件关联任务 |
-| `listByFileId` | FileAdminServiceImpl:150, `lambdaQuery().eq(fileId).list()` | 文件所有任务 |
+| 方法                        | 来源                                                                               | 说明      |
+|---------------------------|----------------------------------------------------------------------------------|---------|
+| `findByUploadIdAndUserId` | UserFileServiceImpl:444, `lambdaQuery().eq(uploadId).eq(userId).one()`           | 查上传任务   |
+| `pageByUserAndStatus`     | UserFileServiceImpl:327, `LambdaQueryWrapper + page()`                           | 用户任务分页  |
+| `pageAdminTasks`          | FileAdminServiceImpl:111, `LambdaQueryWrapper + page()`                          | 管理端任务分页 |
+| `findExpiredTasks`        | FileLifecycleServiceImpl:131, `lambdaQuery().le(expireTime).in(statuses).list()` | 查过期任务   |
+| `listRecentByFileId`      | FileAdminServiceImpl:91, `lambdaQuery().eq(fileId).last("limit 20").list()`      | 文件关联任务  |
+| `listByFileId`            | FileAdminServiceImpl:150, `lambdaQuery().eq(fileId).list()`                      | 文件所有任务  |
 
 ### FileChunkRepository
 
@@ -83,11 +86,11 @@ public interface FileChunkRepository extends IService<FileChunk> {
 }
 ```
 
-| 方法 | 来源 | 说明 |
-|---|---|---|
-| `findByTaskAndChunkNumber` | UserFileServiceImpl:694, `lambdaQuery().eq(taskId).eq(chunkNumber).one()` | 查分片 |
-| `countCompletedByTaskId` | UserFileServiceImpl:717, `lambdaQuery().eq(taskId).eq(COMPLETED).count()` | 统计完成分片 |
-| `deleteByUploadTaskId` | UserFileServiceImpl:678, `remove(LambdaQueryWrapper)` | 删除任务分片 |
+| 方法                         | 来源                                                                        | 说明     |
+|----------------------------|---------------------------------------------------------------------------|--------|
+| `findByTaskAndChunkNumber` | UserFileServiceImpl:694, `lambdaQuery().eq(taskId).eq(chunkNumber).one()` | 查分片    |
+| `countCompletedByTaskId`   | UserFileServiceImpl:717, `lambdaQuery().eq(taskId).eq(COMPLETED).count()` | 统计完成分片 |
+| `deleteByUploadTaskId`     | UserFileServiceImpl:678, `remove(LambdaQueryWrapper)`                     | 删除任务分片 |
 
 ### FileBusinessInfoRepository
 
@@ -105,17 +108,17 @@ public interface FileBusinessInfoRepository extends IService<FileBusinessInfo> {
 }
 ```
 
-| 方法 | 来源 | 说明 |
-|---|---|---|
-| `findByFileUserReference` | UserFileServiceImpl:615, `lambdaQuery().eq(fileId).eq(userId).eq(refType).eq(refId).one()` | 查业务引用 |
-| `findLatestByFileUserReference` | UserFileServiceImpl:654, `lambdaQuery()...last("limit 1").one()` | 查最新引用 |
-| `pageByUserAndFilters` | UserFileServiceImpl:303, `LambdaQueryWrapper + page()` | 用户文件分页 |
-| `listByFileId` | FileAdminServiceImpl:82, `lambdaQuery().eq(fileId).list()` | 文件关联业务 |
-| `listByReferenceTypeAndReferenceId` | 跨模块通用 | 按类型+ID查引用 |
-| `listArticleAttachments` | ArticleAdminServiceImpl:555 | 文章附件 |
-| `listByChatMessageId` | UserChatServiceImpl:994, ChatAdminServiceImpl:565 | 聊天附件 |
-| `countByFileId` | FileLifecycleServiceImpl:186, `lambdaQuery().eq(fileId).count()` | 引用计数 |
-| `deleteByFileId` | FileAdminServiceImpl:148, `remove(LambdaQueryWrapper)` | 删除文件关联 |
+| 方法                                  | 来源                                                                                         | 说明        |
+|-------------------------------------|--------------------------------------------------------------------------------------------|-----------|
+| `findByFileUserReference`           | UserFileServiceImpl:615, `lambdaQuery().eq(fileId).eq(userId).eq(refType).eq(refId).one()` | 查业务引用     |
+| `findLatestByFileUserReference`     | UserFileServiceImpl:654, `lambdaQuery()...last("limit 1").one()`                           | 查最新引用     |
+| `pageByUserAndFilters`              | UserFileServiceImpl:303, `LambdaQueryWrapper + page()`                                     | 用户文件分页    |
+| `listByFileId`                      | FileAdminServiceImpl:82, `lambdaQuery().eq(fileId).list()`                                 | 文件关联业务    |
+| `listByReferenceTypeAndReferenceId` | 跨模块通用                                                                                      | 按类型+ID查引用 |
+| `listArticleAttachments`            | ArticleAdminServiceImpl:555                                                                | 文章附件      |
+| `listByChatMessageId`               | UserChatServiceImpl:994, ChatAdminServiceImpl:565                                          | 聊天附件      |
+| `countByFileId`                     | FileLifecycleServiceImpl:186, `lambdaQuery().eq(fileId).count()`                           | 引用计数      |
+| `deleteByFileId`                    | FileAdminServiceImpl:148, `remove(LambdaQueryWrapper)`                                     | 删除文件关联    |
 
 ## 执行步骤
 
@@ -148,4 +151,6 @@ mvn test -Dtest="com.cybzacg.blogbackend.module.file.*Test"
 
 - `rg` 已确认 file 模块业务服务内无直接数据访问拼装。
 - `rg` 已确认仓库内无 `FileInfoService` / `FileUploadTaskService` / `FileChunkService` / `FileBusinessInfoService` 残留引用。
-- `mvn -q -Dtest="UserFileServiceImplTest,FileAdminServiceImplTest,FileLifecycleServiceImplTest,ArticleAdminServiceImplTest,ChatAdminServiceImplTest,UserChatServiceImplTest,ChatAttachmentAsyncProcessingServiceImplTest" test` 被无关的 `auth` 编译错误阻塞，未能完成全量验证。
+-
+`mvn -q -Dtest="UserFileServiceImplTest,FileAdminServiceImplTest,FileLifecycleServiceImplTest,ArticleAdminServiceImplTest,ChatAdminServiceImplTest,UserChatServiceImplTest,ChatAttachmentAsyncProcessingServiceImplTest" test`
+被无关的 `auth` 编译错误阻塞，未能完成全量验证。

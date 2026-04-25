@@ -5,8 +5,9 @@ import com.cybzacg.blogbackend.domain.ChatMessage;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessagePageQuery;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatAdminMessageItem;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatMessageHistoryItem;
-import java.util.List;
 import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
  * 聊天消息 Mapper。

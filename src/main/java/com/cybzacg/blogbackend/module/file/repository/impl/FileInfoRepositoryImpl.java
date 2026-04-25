@@ -23,7 +23,9 @@ import java.util.stream.Collectors;
  */
 @Repository
 public class FileInfoRepositoryImpl extends ServiceImpl<FileInfoMapper, FileInfo> implements FileInfoRepository {
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public FileInfo findByMd5AndStatus(String md5, Integer status) {
         return getOne(new LambdaQueryWrapper<FileInfo>()
@@ -32,7 +34,9 @@ public class FileInfoRepositoryImpl extends ServiceImpl<FileInfoMapper, FileInfo
                 .last("limit 1"));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public FileInfo findByMd5(String md5) {
         return getOne(new LambdaQueryWrapper<FileInfo>()
@@ -40,7 +44,9 @@ public class FileInfoRepositoryImpl extends ServiceImpl<FileInfoMapper, FileInfo
                 .last("limit 1"));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Set<Long> findIdsByStatusAndKeyword(Integer status, String keyword) {
         return list(new LambdaQueryWrapper<FileInfo>()
@@ -54,7 +60,9 @@ public class FileInfoRepositoryImpl extends ServiceImpl<FileInfoMapper, FileInfo
                 .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Page<FileInfo> pageAdminFiles(FileAdminPageQuery query) {
         LambdaQueryWrapper<FileInfo> wrapper = new LambdaQueryWrapper<FileInfo>()
@@ -75,7 +83,9 @@ public class FileInfoRepositoryImpl extends ServiceImpl<FileInfoMapper, FileInfo
         return page(new Page<>(query.getCurrent(), query.getSize()), wrapper);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean refreshReferenceMetadata(Long fileId, boolean promotePublic) {
         // 通过子查询实时统计引用数，保证与 file_business_info 表一致
@@ -88,7 +98,9 @@ public class FileInfoRepositoryImpl extends ServiceImpl<FileInfoMapper, FileInfo
         return update(updateWrapper);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean markDeletedIfNoReferences(Long fileId) {
         return update(new LambdaUpdateWrapper<FileInfo>()

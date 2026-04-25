@@ -11,12 +11,7 @@ import com.cybzacg.blogbackend.enums.storage.StorageType;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -138,9 +133,9 @@ public class StorageManagerImpl implements StorageManager {
      * 在选中的节点上执行一次存储操作，并按策略决定是否允许切换到其他节点重试。
      * 上传类操作依赖单次消费输入流，因此只标记失败，不在管理器层复用同一个流做自动重试。
      *
-     * @param operation      存储操作
-     * @param allowFailover  是否允许切换到其他节点重试
-     * @param <T>            返回值类型
+     * @param operation     存储操作
+     * @param allowFailover 是否允许切换到其他节点重试
+     * @param <T>           返回值类型
      * @return 操作结果
      */
     private <T> T executeOnSelectedStorage(StorageOperation<T> operation, boolean allowFailover) {
@@ -167,9 +162,9 @@ public class StorageManagerImpl implements StorageManager {
     /**
      * 在故障转移策略下尝试使用其他节点继续执行本次操作。
      *
-     * @param operation  存储操作
-     * @param failedKey  已失败的节点标识
-     * @param <T>        返回值类型
+     * @param operation 存储操作
+     * @param failedKey 已失败的节点标识
+     * @param <T>       返回值类型
      * @return 操作结果
      */
     private <T> T tryFailover(StorageOperation<T> operation, String failedKey) {

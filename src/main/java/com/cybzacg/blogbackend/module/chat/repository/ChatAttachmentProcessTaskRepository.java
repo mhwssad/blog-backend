@@ -14,12 +14,12 @@ public interface ChatAttachmentProcessTaskRepository extends IService<ChatAttach
     /**
      * 为消息创建或重置一个待执行的附件处理任务。
      *
-     * @param messageId 消息 ID
-     * @param messageType 消息类型
+     * @param messageId           消息 ID
+     * @param messageType         消息类型
      * @param messageSnapshotJson 消息快照 JSON
-     * @param pushUserIdsJson 推送用户列表 JSON
-     * @param maxRetryCount 最大重试次数
-     * @param nextRetryAt 首次执行时间
+     * @param pushUserIdsJson     推送用户列表 JSON
+     * @param maxRetryCount       最大重试次数
+     * @param nextRetryAt         首次执行时间
      * @return 持久化后的任务
      */
     ChatAttachmentProcessTask saveOrResetPendingTask(Long messageId,
@@ -33,7 +33,7 @@ public interface ChatAttachmentProcessTaskRepository extends IService<ChatAttach
      * 查询当前到期且可执行的任务列表。
      *
      * @param executeBefore 允许执行的截止时间
-     * @param limit 批次大小
+     * @param limit         批次大小
      * @return 任务列表
      */
     List<ChatAttachmentProcessTask> listDispatchableTasks(LocalDateTime executeBefore, int limit);
@@ -41,7 +41,7 @@ public interface ChatAttachmentProcessTaskRepository extends IService<ChatAttach
     /**
      * 尝试抢占待执行任务，避免多节点重复处理。
      *
-     * @param taskId 任务 ID
+     * @param taskId        任务 ID
      * @param executeBefore 允许执行的截止时间
      * @param leaseExpireAt 本次执行租约过期时间
      * @return 是否抢占成功
@@ -51,7 +51,7 @@ public interface ChatAttachmentProcessTaskRepository extends IService<ChatAttach
     /**
      * 将处理超时的任务恢复为待执行状态。
      *
-     * @param now 当前时间
+     * @param now       当前时间
      * @param lastError 恢复原因
      * @return 恢复的任务数
      */
@@ -60,7 +60,7 @@ public interface ChatAttachmentProcessTaskRepository extends IService<ChatAttach
     /**
      * 标记任务处理成功。
      *
-     * @param taskId 任务 ID
+     * @param taskId      任务 ID
      * @param completedAt 完成时间
      * @return 是否更新成功
      */
@@ -69,10 +69,10 @@ public interface ChatAttachmentProcessTaskRepository extends IService<ChatAttach
     /**
      * 标记任务稍后重试。
      *
-     * @param taskId 任务 ID
-     * @param retryCount 最新重试次数
+     * @param taskId      任务 ID
+     * @param retryCount  最新重试次数
      * @param nextRetryAt 下次重试时间
-     * @param lastError 最近一次错误信息
+     * @param lastError   最近一次错误信息
      * @return 是否更新成功
      */
     boolean markRetry(Long taskId, int retryCount, LocalDateTime nextRetryAt, String lastError);
@@ -80,10 +80,10 @@ public interface ChatAttachmentProcessTaskRepository extends IService<ChatAttach
     /**
      * 标记任务最终失败。
      *
-     * @param taskId 任务 ID
-     * @param retryCount 最新重试次数
+     * @param taskId      任务 ID
+     * @param retryCount  最新重试次数
      * @param completedAt 完成时间
-     * @param lastError 最近一次错误信息
+     * @param lastError   最近一次错误信息
      * @return 是否更新成功
      */
     boolean markFailed(Long taskId, int retryCount, LocalDateTime completedAt, String lastError);

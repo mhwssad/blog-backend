@@ -19,11 +19,13 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, follower_id, following_id, follow_status, is_special_follow,
+        id
+        , follower_id, following_id, follow_status, is_special_follow,
         source, follow_time, unfollow_time, remark, created_at, updated_at
     </sql>
 
-    <resultMap id="FollowRelationUserItemMap" type="com.cybzacg.blogbackend.module.follow.model.data.FollowRelationUserItem">
+    <resultMap id="FollowRelationUserItemMap"
+               type="com.cybzacg.blogbackend.module.follow.model.data.FollowRelationUserItem">
         <result property="relationId" column="relation_id" jdbcType="BIGINT"/>
         <result property="userId" column="user_id" jdbcType="BIGINT"/>
         <result property="username" column="username" jdbcType="VARCHAR"/>
@@ -35,7 +37,8 @@
         <result property="followTime" column="follow_time" jdbcType="TIMESTAMP"/>
     </resultMap>
 
-    <resultMap id="PublicFollowUserItemMap" type="com.cybzacg.blogbackend.module.follow.model.data.PublicFollowUserItem">
+    <resultMap id="PublicFollowUserItemMap"
+               type="com.cybzacg.blogbackend.module.follow.model.data.PublicFollowUserItem">
         <result property="userId" column="user_id" jdbcType="BIGINT"/>
         <result property="username" column="username" jdbcType="VARCHAR"/>
         <result property="nickname" column="nickname" jdbcType="VARCHAR"/>
@@ -43,7 +46,8 @@
         <result property="followTime" column="follow_time" jdbcType="TIMESTAMP"/>
     </resultMap>
 
-    <resultMap id="FollowAdminRelationItemMap" type="com.cybzacg.blogbackend.module.follow.model.data.FollowAdminRelationItem">
+    <resultMap id="FollowAdminRelationItemMap"
+               type="com.cybzacg.blogbackend.module.follow.model.data.FollowAdminRelationItem">
         <result property="relationId" column="relation_id" jdbcType="BIGINT"/>
         <result property="followerId" column="follower_id" jdbcType="BIGINT"/>
         <result property="followerUsername" column="follower_username" jdbcType="VARCHAR"/>
@@ -98,10 +102,10 @@
             </if>
             <if test="query != null and query.keyword != null and query.keyword != ''">
                 and (
-                    follower.username like concat('%', #{query.keyword}, '%')
-                    or follower.nickname like concat('%', #{query.keyword}, '%')
-                    or following.username like concat('%', #{query.keyword}, '%')
-                    or following.nickname like concat('%', #{query.keyword}, '%')
+                follower.username like concat('%', #{query.keyword}, '%')
+                or follower.nickname like concat('%', #{query.keyword}, '%')
+                or following.username like concat('%', #{query.keyword}, '%')
+                or following.nickname like concat('%', #{query.keyword}, '%')
                 )
             </if>
         </where>
@@ -130,7 +134,7 @@
         from sys_user_follow f
         <include refid="ActiveUserJoinByFollowing"/>
         where f.follower_id = #{userId}
-          and f.follow_status = 1
+        and f.follow_status = 1
         <if test="specialOnly != null and specialOnly">
             and f.is_special_follow = 1
         </if>
@@ -138,22 +142,22 @@
 
     <select id="selectFollowPage" resultMap="FollowRelationUserItemMap">
         select f.id as relation_id,
-               u.id as user_id,
-               u.username,
-               u.nickname,
-               u.avatar,
-               f.is_special_follow,
-               f.remark,
-               case when reverse_relation.id is null then 0 else 1 end as mutual_follow,
-               f.follow_time
+        u.id as user_id,
+        u.username,
+        u.nickname,
+        u.avatar,
+        f.is_special_follow,
+        f.remark,
+        case when reverse_relation.id is null then 0 else 1 end as mutual_follow,
+        f.follow_time
         from sys_user_follow f
         <include refid="ActiveUserJoinByFollowing"/>
         left join sys_user_follow reverse_relation
-               on reverse_relation.follower_id = f.following_id
-              and reverse_relation.following_id = f.follower_id
-              and reverse_relation.follow_status = 1
+        on reverse_relation.follower_id = f.following_id
+        and reverse_relation.following_id = f.follower_id
+        and reverse_relation.follow_status = 1
         where f.follower_id = #{userId}
-          and f.follow_status = 1
+        and f.follow_status = 1
         <if test="specialOnly != null and specialOnly">
             and f.is_special_follow = 1
         </if>
@@ -166,27 +170,27 @@
         from sys_user_follow f
         <include refid="ActiveUserJoinByFollower"/>
         where f.following_id = #{userId}
-          and f.follow_status = 1
+        and f.follow_status = 1
     </select>
 
     <select id="selectFanPage" resultMap="FollowRelationUserItemMap">
         select f.id as relation_id,
-               u.id as user_id,
-               u.username,
-               u.nickname,
-               u.avatar,
-               coalesce(reverse_relation.is_special_follow, 0) as is_special_follow,
-               reverse_relation.remark as remark,
-               case when reverse_relation.id is null then 0 else 1 end as mutual_follow,
-               f.follow_time
+        u.id as user_id,
+        u.username,
+        u.nickname,
+        u.avatar,
+        coalesce(reverse_relation.is_special_follow, 0) as is_special_follow,
+        reverse_relation.remark as remark,
+        case when reverse_relation.id is null then 0 else 1 end as mutual_follow,
+        f.follow_time
         from sys_user_follow f
         <include refid="ActiveUserJoinByFollower"/>
         left join sys_user_follow reverse_relation
-               on reverse_relation.follower_id = #{userId}
-              and reverse_relation.following_id = f.follower_id
-              and reverse_relation.follow_status = 1
+        on reverse_relation.follower_id = #{userId}
+        and reverse_relation.following_id = f.follower_id
+        and reverse_relation.follow_status = 1
         where f.following_id = #{userId}
-          and f.follow_status = 1
+        and f.follow_status = 1
         order by f.follow_time desc, f.id desc
         limit #{offset}, #{size}
     </select>
@@ -196,7 +200,7 @@
         from sys_user_follow f
         <include refid="ActiveUserJoinByFollowing"/>
         where f.follower_id = #{userId}
-          and f.follow_status = 1
+        and f.follow_status = 1
     </select>
 
     <select id="countActiveFans" resultType="java.lang.Long">
@@ -204,7 +208,7 @@
         from sys_user_follow f
         <include refid="ActiveUserJoinByFollower"/>
         where f.following_id = #{userId}
-          and f.follow_status = 1
+        and f.follow_status = 1
     </select>
 
     <select id="countActiveRelation" resultType="java.lang.Long">
@@ -220,19 +224,19 @@
         from sys_user_follow f
         <include refid="ActiveUserJoinByFollowing"/>
         where f.follower_id = #{userId}
-          and f.follow_status = 1
+        and f.follow_status = 1
     </select>
 
     <select id="selectPublicFollowPage" resultMap="PublicFollowUserItemMap">
         select u.id as user_id,
-               u.username,
-               u.nickname,
-               u.avatar,
-               f.follow_time
+        u.username,
+        u.nickname,
+        u.avatar,
+        f.follow_time
         from sys_user_follow f
         <include refid="ActiveUserJoinByFollowing"/>
         where f.follower_id = #{userId}
-          and f.follow_status = 1
+        and f.follow_status = 1
         order by f.follow_time desc, f.id desc
         limit #{offset}, #{size}
     </select>
@@ -242,19 +246,19 @@
         from sys_user_follow f
         <include refid="ActiveUserJoinByFollower"/>
         where f.following_id = #{userId}
-          and f.follow_status = 1
+        and f.follow_status = 1
     </select>
 
     <select id="selectPublicFanPage" resultMap="PublicFollowUserItemMap">
         select u.id as user_id,
-               u.username,
-               u.nickname,
-               u.avatar,
-               f.follow_time
+        u.username,
+        u.nickname,
+        u.avatar,
+        f.follow_time
         from sys_user_follow f
         <include refid="ActiveUserJoinByFollower"/>
         where f.following_id = #{userId}
-          and f.follow_status = 1
+        and f.follow_status = 1
         order by f.follow_time desc, f.id desc
         limit #{offset}, #{size}
     </select>
@@ -269,24 +273,24 @@
 
     <select id="selectAdminRelationPage" resultMap="FollowAdminRelationItemMap">
         select f.id as relation_id,
-               f.follower_id,
-               follower.username as follower_username,
-               follower.nickname as follower_nickname,
-               follower.status as follower_status,
-               follower.deleted_flag as follower_deleted_flag,
-               f.following_id,
-               following.username as following_username,
-               following.nickname as following_nickname,
-               following.status as following_status,
-               following.deleted_flag as following_deleted_flag,
-               f.follow_status,
-               f.is_special_follow,
-               f.source,
-               f.remark,
-               f.follow_time,
-               f.unfollow_time,
-               f.created_at,
-               f.updated_at
+        f.follower_id,
+        follower.username as follower_username,
+        follower.nickname as follower_nickname,
+        follower.status as follower_status,
+        follower.deleted_flag as follower_deleted_flag,
+        f.following_id,
+        following.username as following_username,
+        following.nickname as following_nickname,
+        following.status as following_status,
+        following.deleted_flag as following_deleted_flag,
+        f.follow_status,
+        f.is_special_follow,
+        f.source,
+        f.remark,
+        f.follow_time,
+        f.unfollow_time,
+        f.created_at,
+        f.updated_at
         from sys_user_follow f
         left join sys_user follower on follower.id = f.follower_id
         left join sys_user following on following.id = f.following_id

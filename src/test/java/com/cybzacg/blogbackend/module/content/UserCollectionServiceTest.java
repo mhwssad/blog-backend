@@ -4,7 +4,6 @@ import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.module.content.controller.UserCollectionController;
 import com.cybzacg.blogbackend.module.content.model.user.CollectionFolderVO;
 import com.cybzacg.blogbackend.module.content.model.user.CollectionSaveRequest;
-import com.cybzacg.blogbackend.module.content.model.user.CollectionVO;
 import com.cybzacg.blogbackend.module.content.service.UserCollectionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

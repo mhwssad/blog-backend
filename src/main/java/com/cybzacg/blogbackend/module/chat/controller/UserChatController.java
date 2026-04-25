@@ -2,36 +2,15 @@ package com.cybzacg.blogbackend.module.chat.controller;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.core.web.Result;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatConversationPageQuery;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatConversationVO;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatCreateGroupRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatEditMessageRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatGroupNoticeUpdateRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatGroupMemberOperateRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatMarkReadRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatMemberVO;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatMessagePageQuery;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatMessageVO;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatMuteMemberRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatOpenSingleConversationRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatReadStateVO;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatSendFileRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatSendTextRequest;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatTransferGroupOwnerRequest;
+import com.cybzacg.blogbackend.module.chat.model.user.*;
 import com.cybzacg.blogbackend.module.chat.service.UserChatService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 用户侧聊天控制器。

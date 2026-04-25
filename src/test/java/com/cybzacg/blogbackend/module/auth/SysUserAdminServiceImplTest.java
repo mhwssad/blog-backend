@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.domain.SysUserRole;
-import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.convert.RbacAdminModelMapper;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysUserAdminVO;
@@ -13,8 +12,8 @@ import com.cybzacg.blogbackend.module.auth.model.admin.SysUserSaveRequest;
 import com.cybzacg.blogbackend.module.auth.repository.SysRoleRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRoleRepository;
-import com.cybzacg.blogbackend.module.auth.service.impl.SysUserAdminServiceImpl;
 import com.cybzacg.blogbackend.module.auth.service.impl.RbacAssociationFactory;
+import com.cybzacg.blogbackend.module.auth.service.impl.SysUserAdminServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,15 +26,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class SysUserAdminServiceImplTest {

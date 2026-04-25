@@ -8,8 +8,8 @@ import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.convert.SysNoticeModelMapper;
 import com.cybzacg.blogbackend.module.auth.repository.SysNoticeRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserNoticeRepository;
-import com.cybzacg.blogbackend.module.auth.service.impl.UserNoticeInboxServiceImpl;
 import com.cybzacg.blogbackend.module.auth.service.impl.SysNoticeFactory;
+import com.cybzacg.blogbackend.module.auth.service.impl.UserNoticeInboxServiceImpl;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,14 +23,10 @@ import org.springframework.dao.DuplicateKeyException;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserNoticeInboxServiceImplTest {

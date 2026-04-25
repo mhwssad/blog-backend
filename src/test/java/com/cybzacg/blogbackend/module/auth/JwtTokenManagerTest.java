@@ -3,8 +3,8 @@ package com.cybzacg.blogbackend.module.auth;
 import com.cybzacg.blogbackend.common.constant.AuthConstants;
 import com.cybzacg.blogbackend.config.property.SecurityProperties;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.auth.model.AuthenticationToken;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserPrincipal;
+import com.cybzacg.blogbackend.module.auth.model.AuthenticationToken;
 import com.cybzacg.blogbackend.module.auth.token.JwtTokenManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,11 +15,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class JwtTokenManagerTest {
     private JwtTokenManager jwtTokenManager;

@@ -4,9 +4,9 @@ import com.cybzacg.blogbackend.common.constant.AuthConstants;
 import com.cybzacg.blogbackend.config.property.SecurityProperties;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.auth.model.AuthenticationToken;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserDetails;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserPrincipal;
+import com.cybzacg.blogbackend.module.auth.model.AuthenticationToken;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import io.jsonwebtoken.Claims;
@@ -26,9 +26,9 @@ import org.springframework.util.StringUtils;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 /**

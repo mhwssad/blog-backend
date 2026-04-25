@@ -21,7 +21,8 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,parent_id,name,
+        id
+        ,parent_id,name,
         code,type,ancestors,
         level,sort_order,icon,
         description,status,created_at,

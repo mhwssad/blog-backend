@@ -4,7 +4,8 @@
 
 ## 1. 修复背景
 
-- 截至 2026-03-28，仓库内已经存在 `1.sys.sql`、`02_article.sql`、`04_file.sql`、`05_chat.sql`、`06_follow.sql` 等脚本，但实际 `blog_backend` 库未完全与仓库脚本保持同步。
+- 截至 2026-03-28，仓库内已经存在 `1.sys.sql`、`02_article.sql`、`04_file.sql`、`05_chat.sql`、`06_follow.sql` 等脚本，但实际
+  `blog_backend` 库未完全与仓库脚本保持同步。
 - 实库此前缺少文件域表，以及聊天、粉丝关注预留表；这会导致“代码能力已存在 / 数据库基础未补齐”的状态不一致。
 - 系统基础表中还存在一批不会立刻导致编译失败，但会在业务扩展、数据治理和线上稳定性上持续放大的结构问题。
 
@@ -46,7 +47,8 @@
 ### 4.1 存量库同步
 
 - 为已有存量库新增缺失的文件域表：`file_info`、`file_upload_task`、`file_chunk`、`file_business_info`
-- 为已有存量库新增缺失的聊天预留表：`chat_conversation`、`chat_conversation_member`、`chat_message`、`chat_message_recipient`、`chat_message_read_cursor`
+- 为已有存量库新增缺失的聊天预留表：`chat_conversation`、`chat_conversation_member`、`chat_message`、
+  `chat_message_recipient`、`chat_message_read_cursor`
 - 为已有存量库新增缺失的粉丝关注表：`sys_user_follow`
 
 说明：

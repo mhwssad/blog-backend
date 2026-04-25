@@ -17,12 +17,12 @@ ws://localhost:8000/ws/chat?accessToken=<jwt>
 
 ### 连接失败处理
 
-| 错误 | 原因 | 处理 |
-|------|------|------|
-| 401 | Token 无效或过期 | 刷新 Token 后重连 |
-| 403 | 无权限 | 提示用户 |
-| 连接超时 | 网络问题 | 按重连策略自动重连 |
-| 连接被关闭 | 服务端重启 | 按重连策略自动重连 |
+| 错误    | 原因          | 处理           |
+|-------|-------------|--------------|
+| 401   | Token 无效或过期 | 刷新 Token 后重连 |
+| 403   | 无权限         | 提示用户         |
+| 连接超时  | 网络问题        | 按重连策略自动重连    |
+| 连接被关闭 | 服务端重启       | 按重连策略自动重连    |
 
 ```javascript
 // 连接示例
@@ -84,11 +84,11 @@ ws.onclose = (event) => {
 
 字段说明：
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| type | String | 是 | 消息类型，见 ChatWsMessageType 枚举 |
-| requestId | String | 是 | 客户端生成的唯一请求ID，用于匹配服务端 ack |
-| payload | JsonNode | 否 | 业务载荷，部分类型（如 ping）不需要 |
+| 字段        | 类型       | 必填 | 说明                          |
+|-----------|----------|----|-----------------------------|
+| type      | String   | 是  | 消息类型，见 ChatWsMessageType 枚举 |
+| requestId | String   | 是  | 客户端生成的唯一请求ID，用于匹配服务端 ack    |
+| payload   | JsonNode | 否  | 业务载荷，部分类型（如 ping）不需要        |
 
 #### 服务端响应 (ChatWsResponse)
 
@@ -107,14 +107,14 @@ ws.onclose = (event) => {
 
 字段说明：
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| type | String | 消息类型 |
-| requestId | String | 对应客户端请求ID，服务端主动推送时为 null |
-| timestamp | Long | 服务器时间戳（毫秒） |
-| code | Integer | 状态码，200 表示成功 |
-| message | String | 状态描述 |
-| payload | T | 业务载荷，泛型，类型取决于 type |
+| 字段        | 类型      | 说明                       |
+|-----------|---------|--------------------------|
+| type      | String  | 消息类型                     |
+| requestId | String  | 对应客户端请求ID，服务端主动推送时为 null |
+| timestamp | Long    | 服务器时间戳（毫秒）               |
+| code      | Integer | 状态码，200 表示成功             |
+| message   | String  | 状态描述                     |
+| payload   | T       | 业务载荷，泛型，类型取决于 type       |
 
 ## 4. 客户端请求详情
 
@@ -135,6 +135,7 @@ ws.onclose = (event) => {
 ```
 
 字段优先级说明：
+
 - 同时传 `conversationId` 和 `targetUserId` 时，以 `conversationId` 为准
 - 仅传 `targetUserId` 时，服务端自动查找或创建单聊会话
 
@@ -481,17 +482,17 @@ ping
 
 以下 action 值用于 `conversation_updated` 和 `members_updated` 推送消息的 `payload.action` 字段：
 
-| action 值 | 适用推送类型 | 说明 |
-|-----------|-------------|------|
-| `members_invited` | members_updated | 新成员被邀请加入群组 |
-| `admin_appointed` | members_updated | 成员被任命为管理员 |
-| `admin_removed` | members_updated | 成员被取消管理员身份 |
-| `owner_transferred` | members_updated | 群主身份转让 |
-| `member_mute_updated` | members_updated | 成员禁言状态变更 |
-| `notice_updated` | conversation_updated | 群公告更新 |
-| `member_removed` | members_updated | 成员被移出群组 |
-| `member_left` | members_updated | 成员主动退出群组 |
-| `conversation_dissolved` | conversation_updated | 群组被解散 |
+| action 值                 | 适用推送类型               | 说明         |
+|--------------------------|----------------------|------------|
+| `members_invited`        | members_updated      | 新成员被邀请加入群组 |
+| `admin_appointed`        | members_updated      | 成员被任命为管理员  |
+| `admin_removed`          | members_updated      | 成员被取消管理员身份 |
+| `owner_transferred`      | members_updated      | 群主身份转让     |
+| `member_mute_updated`    | members_updated      | 成员禁言状态变更   |
+| `notice_updated`         | conversation_updated | 群公告更新      |
+| `member_removed`         | members_updated      | 成员被移出群组    |
+| `member_left`            | members_updated      | 成员主动退出群组   |
+| `conversation_dissolved` | conversation_updated | 群组被解散      |
 
 ## 7. 心跳机制
 
@@ -938,18 +939,19 @@ function handleMarkRead(conversationId) {
 重连延迟 = min(baseDelay * 2^attempts, maxDelay)
 ```
 
-| 重连次数 | 延迟 |
-|---------|------|
-| 第 1 次 | 1s |
-| 第 2 次 | 2s |
-| 第 3 次 | 4s |
-| 第 4 次 | 8s |
-| 第 5 次 | 16s |
+| 重连次数   | 延迟      |
+|--------|---------|
+| 第 1 次  | 1s      |
+| 第 2 次  | 2s      |
+| 第 3 次  | 4s      |
+| 第 4 次  | 8s      |
+| 第 5 次  | 16s     |
 | 第 6 次+ | 30s（上限） |
 
 ### 重连后拉取消息历史
 
 重连成功后，客户端需要：
+
 1. 等待 `ready` 消息确认连接就绪
 2. 通过 HTTP 接口拉取断线期间的消息历史
 
@@ -1089,6 +1091,7 @@ function replaceOptimisticMessage(clientMessageId, serverMsg) {
 - 前端**无需关心**多节点部署细节，所有消息通过统一的 WebSocket 连接接收
 
 前端注意事项：
+
 - 每个用户同时只需维持**一个** WebSocket 连接
 - 如果建立新连接，旧连接会被服务端自动断开
 - 建议在页面 `visibilitychange` 事件中检查连接状态，页面恢复可见时确保连接正常

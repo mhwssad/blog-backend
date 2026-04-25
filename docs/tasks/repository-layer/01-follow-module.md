@@ -11,10 +11,12 @@
 ## 当前进展（2026-03-31）
 
 - [x] 已新增 `SysUserFollowRepository` 与 `SysUserFollowRepositoryImpl`，统一收口关注关系的 Repository 访问入口。
-- [x] 已将 `UserFollowServiceImpl` 改为注入 `SysUserFollowRepository`，关注关系读写、互关判断、关注/粉丝分页和计数统计都已改走 Repository。
+- [x] 已将 `UserFollowServiceImpl` 改为注入 `SysUserFollowRepository`，关注关系读写、互关判断、关注/粉丝分页和计数统计都已改走
+  Repository。
 - [x] 已将 `PublicFollowServiceImpl` 改为注入 `SysUserFollowRepository`，公开关注/粉丝分页已改走 Repository。
 - [x] 已将 `FollowAdminServiceImpl` 改为注入 `SysUserFollowRepository`，后台关系分页与无效关系清理已改走 Repository。
-- [x] 已同步更新 `UserFollowServiceImplTest`、`PublicFollowServiceImplTest`、`FollowAdminServiceImplTest`，测试 mock 已切换到 Repository。
+- [x] 已同步更新 `UserFollowServiceImplTest`、`PublicFollowServiceImplTest`、`FollowAdminServiceImplTest`，测试 mock 已切换到
+  Repository。
 - [x] 已删除 `SysUserFollowService`、`SysUserFollowServiceImpl` 两个未再被引用的薄服务。
 - [x] follow 模块 Repository 迁移已完成。
 
@@ -22,9 +24,9 @@
 
 ### 薄服务（Tier-1）
 
-| 服务 | 位置 | 自定义方法 |
-|---|---|---|
-| `SysUserFollowService` | `module/follow/service/` | 无（空壳） |
+| 服务                         | 位置                            | 自定义方法 |
+|----------------------------|-------------------------------|-------|
+| `SysUserFollowService`     | `module/follow/service/`      | 无（空壳） |
 | `SysUserFollowServiceImpl` | `module/follow/service/impl/` | 无（空壳） |
 
 ### 业务服务数据访问分析
@@ -33,40 +35,40 @@
 
 该服务直接注入 `SysUserFollowMapper`，所有数据操作通过 Mapper 完成：
 
-| 行号 | 当前调用 | 操作类型 | 迁移到 Repository 方法 |
-|---|---|---|---|
-| 79 | `sysUserFollowMapper.updateById(relation)` | Mapper直接调用 | `updateById(relation)` — 继承自IService |
-| 88 | `sysUserFollowMapper.countFollowPage(userId, specialOnly)` | Mapper XML | `countFollowPage(userId, specialOnly)` |
-| 94 | `sysUserFollowMapper.selectFollowPage(userId, specialOnly, offset, size)` | Mapper XML | `selectFollowPage(userId, specialOnly, offset, size)` |
-| 109 | `sysUserFollowMapper.countFanPage(userId)` | Mapper XML | `countFanPage(userId)` |
-| 114 | `sysUserFollowMapper.selectFanPage(userId, offset, size)` | Mapper XML | `selectFanPage(userId, offset, size)` |
-| 127 | `sysUserFollowMapper.countActiveRelation(userId, targetUserId)` | Mapper XML | `countActiveRelation(followerId, followingId)` |
-| 128 | `sysUserFollowMapper.countActiveRelation(targetUserId, userId)` | Mapper XML | 同上 |
-| 141 | `sysUserFollowMapper.countActiveFollowing(userId)` | Mapper XML | `countActiveFollowing(userId)` |
-| 142 | `sysUserFollowMapper.countActiveFans(userId)` | Mapper XML | `countActiveFans(userId)` |
-| 156 | `sysUserFollowMapper.updateById(relation)` | Mapper直接调用 | `updateById(relation)` — 继承自IService |
-| 168 | `sysUserFollowMapper.updateById(relation)` | Mapper直接调用 | `updateById(relation)` — 继承自IService |
-| 177 | `sysUserFollowMapper.insert(created)` | Mapper直接调用 | `save(entity)` — 继承自IService |
-| 197 | `sysUserFollowMapper.updateById(relation)` | Mapper直接调用 | `updateById(relation)` — 继承自IService |
-| 212 | `sysUserFollowMapper.selectOne(Wrappers.lambdaQuery(SysUserFollow.class).eq(...).eq(...).last("limit 1"))` | Wrapper查询 | `findByFollowerAndFollowing(followerId, followingId)` |
+| 行号  | 当前调用                                                                                                       | 操作类型       | 迁移到 Repository 方法                                     |
+|-----|------------------------------------------------------------------------------------------------------------|------------|-------------------------------------------------------|
+| 79  | `sysUserFollowMapper.updateById(relation)`                                                                 | Mapper直接调用 | `updateById(relation)` — 继承自IService                  |
+| 88  | `sysUserFollowMapper.countFollowPage(userId, specialOnly)`                                                 | Mapper XML | `countFollowPage(userId, specialOnly)`                |
+| 94  | `sysUserFollowMapper.selectFollowPage(userId, specialOnly, offset, size)`                                  | Mapper XML | `selectFollowPage(userId, specialOnly, offset, size)` |
+| 109 | `sysUserFollowMapper.countFanPage(userId)`                                                                 | Mapper XML | `countFanPage(userId)`                                |
+| 114 | `sysUserFollowMapper.selectFanPage(userId, offset, size)`                                                  | Mapper XML | `selectFanPage(userId, offset, size)`                 |
+| 127 | `sysUserFollowMapper.countActiveRelation(userId, targetUserId)`                                            | Mapper XML | `countActiveRelation(followerId, followingId)`        |
+| 128 | `sysUserFollowMapper.countActiveRelation(targetUserId, userId)`                                            | Mapper XML | 同上                                                    |
+| 141 | `sysUserFollowMapper.countActiveFollowing(userId)`                                                         | Mapper XML | `countActiveFollowing(userId)`                        |
+| 142 | `sysUserFollowMapper.countActiveFans(userId)`                                                              | Mapper XML | `countActiveFans(userId)`                             |
+| 156 | `sysUserFollowMapper.updateById(relation)`                                                                 | Mapper直接调用 | `updateById(relation)` — 继承自IService                  |
+| 168 | `sysUserFollowMapper.updateById(relation)`                                                                 | Mapper直接调用 | `updateById(relation)` — 继承自IService                  |
+| 177 | `sysUserFollowMapper.insert(created)`                                                                      | Mapper直接调用 | `save(entity)` — 继承自IService                          |
+| 197 | `sysUserFollowMapper.updateById(relation)`                                                                 | Mapper直接调用 | `updateById(relation)` — 继承自IService                  |
+| 212 | `sysUserFollowMapper.selectOne(Wrappers.lambdaQuery(SysUserFollow.class).eq(...).eq(...).last("limit 1"))` | Wrapper查询  | `findByFollowerAndFollowing(followerId, followingId)` |
 
 **`PublicFollowServiceImpl`**（`module/follow/service/impl/PublicFollowServiceImpl.java`）
 
-| 当前调用 | 操作类型 | 迁移到 Repository 方法 |
-|---|---|---|
-| `sysUserFollowMapper.countPublicFollowPage(userId)` | Mapper XML | `countPublicFollowPage(userId)` |
+| 当前调用                                                               | 操作类型       | 迁移到 Repository 方法                              |
+|--------------------------------------------------------------------|------------|------------------------------------------------|
+| `sysUserFollowMapper.countPublicFollowPage(userId)`                | Mapper XML | `countPublicFollowPage(userId)`                |
 | `sysUserFollowMapper.selectPublicFollowPage(userId, offset, size)` | Mapper XML | `selectPublicFollowPage(userId, offset, size)` |
-| `sysUserFollowMapper.countPublicFanPage(userId)` | Mapper XML | `countPublicFanPage(userId)` |
-| `sysUserFollowMapper.selectPublicFanPage(userId, offset, size)` | Mapper XML | `selectPublicFanPage(userId, offset, size)` |
+| `sysUserFollowMapper.countPublicFanPage(userId)`                   | Mapper XML | `countPublicFanPage(userId)`                   |
+| `sysUserFollowMapper.selectPublicFanPage(userId, offset, size)`    | Mapper XML | `selectPublicFanPage(userId, offset, size)`    |
 
 **`FollowAdminServiceImpl`**（`module/follow/service/impl/FollowAdminServiceImpl.java`）
 
-| 当前调用 | 操作类型 | 迁移到 Repository 方法 |
-|---|---|---|
-| `sysUserFollowMapper.countAdminRelationPage(query)` | Mapper XML | `countAdminRelationPage(query)` |
+| 当前调用                                                               | 操作类型       | 迁移到 Repository 方法                              |
+|--------------------------------------------------------------------|------------|------------------------------------------------|
+| `sysUserFollowMapper.countAdminRelationPage(query)`                | Mapper XML | `countAdminRelationPage(query)`                |
 | `sysUserFollowMapper.selectAdminRelationPage(query, offset, size)` | Mapper XML | `selectAdminRelationPage(query, offset, size)` |
-| `sysUserFollowMapper.countCleanableRelations(...)` | Mapper XML | `countCleanableRelations(...)` |
-| `sysUserFollowMapper.deleteCleanableRelations(...)` | Mapper XML | `deleteCleanableRelations(...)` |
+| `sysUserFollowMapper.countCleanableRelations(...)`                 | Mapper XML | `countCleanableRelations(...)`                 |
+| `sysUserFollowMapper.deleteCleanableRelations(...)`                | Mapper XML | `deleteCleanableRelations(...)`                |
 
 ### 跨模块依赖
 
@@ -239,14 +241,14 @@ public class SysUserFollowRepositoryImpl extends ServiceImpl<SysUserFollowMapper
 **变更清单**：
 
 1. **替换依赖注入**：
-   - 移除 `private final SysUserFollowMapper sysUserFollowMapper;`
-   - 新增 `private final SysUserFollowRepository sysUserFollowRepository;`
-   - 保留 `private final SysUserService sysUserService;`（等auth模块完成后替换为 `SysUserRepository`）
+    - 移除 `private final SysUserFollowMapper sysUserFollowMapper;`
+    - 新增 `private final SysUserFollowRepository sysUserFollowRepository;`
+    - 保留 `private final SysUserService sysUserService;`（等auth模块完成后替换为 `SysUserRepository`）
 
 2. **替换所有数据调用**：
 
    | 原代码 | 替换为 |
-   |---|---|
+      |---|---|
    | `sysUserFollowMapper.updateById(relation)` | `sysUserFollowRepository.updateById(relation)` |
    | `sysUserFollowMapper.insert(created)` | `sysUserFollowRepository.save(created)` |
    | `sysUserFollowMapper.selectOne(Wrappers.lambdaQuery...)` | `sysUserFollowRepository.findByFollowerAndFollowing(userId, targetUserId)` |
@@ -259,8 +261,8 @@ public class SysUserFollowRepositoryImpl extends ServiceImpl<SysUserFollowMapper
    | `sysUserFollowMapper.countActiveFans(...)` | `sysUserFollowRepository.countActiveFans(...)` |
 
 3. **移除不再需要的 import**：
-   - `com.baomidou.mybatisplus.core.toolkit.Wrappers`
-   - `com.cybzacg.blogbackend.mapper.SysUserFollowMapper`
+    - `com.baomidou.mybatisplus.core.toolkit.Wrappers`
+    - `com.cybzacg.blogbackend.mapper.SysUserFollowMapper`
 
 ### Step 4: 更新测试
 
@@ -282,16 +284,16 @@ public class SysUserFollowRepositoryImpl extends ServiceImpl<SysUserFollowMapper
 
 ## 文件清单
 
-| 操作 | 文件路径 |
-|---|---|
-| 新建 | `module/follow/repository/SysUserFollowRepository.java` |
+| 操作 | 文件路径                                                             |
+|----|------------------------------------------------------------------|
+| 新建 | `module/follow/repository/SysUserFollowRepository.java`          |
 | 新建 | `module/follow/repository/impl/SysUserFollowRepositoryImpl.java` |
-| 修改 | `module/follow/service/impl/UserFollowServiceImpl.java` |
-| 修改 | `module/follow/service/impl/PublicFollowServiceImpl.java` |
-| 修改 | `module/follow/service/impl/FollowAdminServiceImpl.java` |
-| 修改 | `module/follow` 对应测试文件 |
-| 删除 | `module/follow/service/SysUserFollowService.java` |
-| 删除 | `module/follow/service/impl/SysUserFollowServiceImpl.java` |
+| 修改 | `module/follow/service/impl/UserFollowServiceImpl.java`          |
+| 修改 | `module/follow/service/impl/PublicFollowServiceImpl.java`        |
+| 修改 | `module/follow/service/impl/FollowAdminServiceImpl.java`         |
+| 修改 | `module/follow` 对应测试文件                                           |
+| 删除 | `module/follow/service/SysUserFollowService.java`                |
+| 删除 | `module/follow/service/impl/SysUserFollowServiceImpl.java`       |
 
 ## 验证
 
@@ -306,9 +308,12 @@ mvn test -Dtest="com.cybzacg.blogbackend.module.follow.*Test"
 mvn -q -Dtest="UserFollowServiceImplTest,PublicFollowServiceImplTest,FollowAdminServiceImplTest" test
 ```
 
-> 说明：`mvn -q -DskipTests compile` 当前会被无关的 `target/generated-sources/annotations/com/cybzacg/blogbackend/module/auth/convert/SysNoticeModelMapperImpl.java` 语法错误阻塞，需在 auth 模块另行修复。
+> 说明：`mvn -q -DskipTests compile` 当前会被无关的
+`target/generated-sources/annotations/com/cybzacg/blogbackend/module/auth/convert/SysNoticeModelMapperImpl.java`
+> 语法错误阻塞，需在 auth 模块另行修复。
 
 确认 `follow` 模块业务服务中：
+
 - 无 `lambdaQuery()` / `lambdaUpdate()` 调用
 - 无 `LambdaQueryWrapper` / `Wrappers` 使用
 - 无 Mapper 直接注入

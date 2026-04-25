@@ -16,14 +16,18 @@ import java.util.List;
 public class BlogArticleAccessRepositoryImpl extends ServiceImpl<BlogArticleAccessMapper, BlogArticleAccess>
         implements BlogArticleAccessRepository {
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean removeByArticleId(Long articleId) {
         return remove(new LambdaQueryWrapper<BlogArticleAccess>()
                 .eq(BlogArticleAccess::getArticleId, articleId));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<BlogArticleAccess> listByArticleIdOrdered(Long articleId) {
         return list(new LambdaQueryWrapper<BlogArticleAccess>()

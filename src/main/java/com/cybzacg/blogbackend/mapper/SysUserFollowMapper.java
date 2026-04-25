@@ -6,8 +6,9 @@ import com.cybzacg.blogbackend.module.follow.model.admin.FollowAdminPageQuery;
 import com.cybzacg.blogbackend.module.follow.model.data.FollowAdminRelationItem;
 import com.cybzacg.blogbackend.module.follow.model.data.FollowRelationUserItem;
 import com.cybzacg.blogbackend.module.follow.model.data.PublicFollowUserItem;
-import java.util.List;
 import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
  * 用户关注关系 Mapper。

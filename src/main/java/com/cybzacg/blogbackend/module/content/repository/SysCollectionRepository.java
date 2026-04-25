@@ -22,9 +22,9 @@ public interface SysCollectionRepository extends IService<SysCollection> {
     /**
      * 按用户分页查询收藏记录。
      *
-     * @param userId 用户 ID
+     * @param userId  用户 ID
      * @param current 页码
-     * @param size 每页条数
+     * @param size    每页条数
      * @return 收藏分页结果
      */
     Page<SysCollection> pageByUserId(Long userId, long current, long size);
@@ -48,9 +48,9 @@ public interface SysCollectionRepository extends IService<SysCollection> {
     /**
      * 判断用户是否已在指定收藏夹收藏目标对象。
      *
-     * @param userId 用户 ID
-     * @param folderId 收藏夹 ID
-     * @param targetId 目标 ID
+     * @param userId     用户 ID
+     * @param folderId   收藏夹 ID
+     * @param targetId   目标 ID
      * @param targetType 目标类型
      * @return 是否已存在收藏
      */
@@ -63,7 +63,7 @@ public interface SysCollectionRepository extends IService<SysCollection> {
      * 查询指定目标类型和目标 ID 的全部收藏记录。
      *
      * @param targetType 目标类型
-     * @param targetId 目标 ID
+     * @param targetId   目标 ID
      * @return 收藏记录列表
      */
     List<SysCollection> listByTargetTypeAndTargetId(String targetType, Long targetId);
@@ -72,7 +72,7 @@ public interface SysCollectionRepository extends IService<SysCollection> {
      * 删除指定目标类型和目标 ID 的全部收藏记录。
      *
      * @param targetType 目标类型
-     * @param targetId 目标 ID
+     * @param targetId   目标 ID
      * @return 是否删除成功
      */
     boolean removeByTargetTypeAndTargetId(String targetType, Long targetId);
@@ -88,9 +88,9 @@ public interface SysCollectionRepository extends IService<SysCollection> {
     /**
      * 判断用户是否已收藏指定目标对象（不限收藏夹）。
      *
-     * @param userId 用户 ID
+     * @param userId     用户 ID
      * @param targetType 目标类型
-     * @param targetId 目标 ID
+     * @param targetId   目标 ID
      * @return 是否已收藏
      */
     boolean existsByUserIdAndTargetTypeAndTargetId(Long userId, String targetType, Long targetId);

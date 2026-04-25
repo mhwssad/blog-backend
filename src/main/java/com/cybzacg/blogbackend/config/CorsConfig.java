@@ -36,7 +36,7 @@ public class CorsConfig {
         source.registerCorsConfiguration("/**", corsConfiguration);
         CorsFilter corsFilter = new CorsFilter(source);
 
-        FilterRegistrationBean<CorsFilter> filterRegistrationBean=new FilterRegistrationBean<>(corsFilter);
+        FilterRegistrationBean<CorsFilter> filterRegistrationBean = new FilterRegistrationBean<>(corsFilter);
         filterRegistrationBean.setOrder(-101);  // 小于 SpringSecurity Filter的 Order(-100) 即可
 
         return filterRegistrationBean;

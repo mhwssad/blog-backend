@@ -14,7 +14,8 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,user_id,target_id,target_type,action_type,created_at
+        id
+        ,user_id,target_id,target_type,action_type,created_at
     </sql>
 
     <select id="existsUserAction" resultType="boolean">

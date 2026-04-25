@@ -17,7 +17,7 @@ public interface FileUploadTaskRepository extends IService<FileUploadTask> {
      * 按上传 ID 和用户 ID 查询任务。
      *
      * @param uploadId 上传 ID
-     * @param userId 用户 ID
+     * @param userId   用户 ID
      * @return 上传任务
      */
     FileUploadTask findByUploadIdAndUserId(String uploadId, Long userId);
@@ -25,10 +25,10 @@ public interface FileUploadTaskRepository extends IService<FileUploadTask> {
     /**
      * 按用户和状态分页查询上传任务。
      *
-     * @param userId 用户 ID
+     * @param userId     用户 ID
      * @param taskStatus 任务状态
-     * @param current 页码
-     * @param size 页大小
+     * @param current    页码
+     * @param size       页大小
      * @return 上传任务分页
      */
     Page<FileUploadTask> pageByUserAndStatus(Long userId, UserFileTaskPageQuery query);
@@ -45,8 +45,8 @@ public interface FileUploadTaskRepository extends IService<FileUploadTask> {
      * 查询过期上传任务。
      *
      * @param expireTime 过期时间
-     * @param statuses 可清理状态
-     * @param limit 限制数量
+     * @param statuses   可清理状态
+     * @param limit      限制数量
      * @return 过期任务列表
      */
     List<FileUploadTask> findExpiredTasks(LocalDateTime expireTime, List<Integer> statuses, int limit);
@@ -55,7 +55,7 @@ public interface FileUploadTaskRepository extends IService<FileUploadTask> {
      * 查询文件最近关联的上传任务。
      *
      * @param fileId 文件 ID
-     * @param limit 限制数量
+     * @param limit  限制数量
      * @return 上传任务列表
      */
     List<FileUploadTask> listRecentByFileId(Long fileId, int limit);

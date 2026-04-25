@@ -140,6 +140,7 @@
 > 为工具类公开方法补全 Javadoc。
 
 已处理：
+
 - common/redis/ — RedisOperator、RedisKeyUtils
 - common/storage/ — StorageService 接口及所有实现、工厂类、健康检查
 - common/constant/ — 7 个常量类
@@ -158,6 +159,7 @@
 > 为配置类和异常处理器补全注释。
 
 已处理：
+
 - config/ — 24 个配置类（含 property 和 websocket 子包）
 - module/chat/config/ — ChatRedisPushConfig
 - exception/ — 10 个异常类和处理器
