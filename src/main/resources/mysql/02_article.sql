@@ -170,7 +170,7 @@ CREATE TABLE sys_collection_folder
     description      VARCHAR(256) NULL COMMENT '描述',
     is_public        TINYINT     DEFAULT 0                 NOT NULL COMMENT '是否公开：0-私有，1-公开',
     is_default       TINYINT     DEFAULT 0                 NOT NULL COMMENT '是否默认收藏夹：0-否，1-是',
-    default_folder_type VARCHAR(32) GENERATED ALWAYS AS (CASE WHEN is_default = 1 THEN folder_type ELSE NULL END) STORED COMMENT '默认收藏夹唯一键辅助列',
+    default_folder_type VARCHAR(32) GENERATED ALWAYS AS (IF(is_default = 1, folder_type, NULL)) STORED COMMENT '默认收藏夹唯一键辅助列',
     sort_order       INT         DEFAULT 0                 NOT NULL COMMENT '排序',
     collection_count INT         DEFAULT 0                 NOT NULL COMMENT '收藏数量',
 
