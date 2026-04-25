@@ -11,6 +11,7 @@ import com.cybzacg.blogbackend.enums.storage.StorageType;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayInputStream;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -164,7 +165,7 @@ public class StorageHealthCheckServiceImpl implements StorageHealthCheckService 
      * @return 是否健康
      */
     private boolean performHealthCheck(String key, StorageService storageService) {
-        String testFileName = HEALTH_CHECK_FILE_PREFIX + System.currentTimeMillis() + ".txt";
+        String testFileName = HEALTH_CHECK_FILE_PREFIX + Instant.now().toEpochMilli() + ".txt";
 
         try {
             // 上传测试文件

@@ -29,8 +29,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.lang.reflect.Method;
 import java.security.Principal;
-import java.util.ArrayList;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -81,7 +83,7 @@ public class SysLogAspect {
             return joinPoint.proceed();
         }
 
-        long start = System.currentTimeMillis();
+        Instant start = Instant.now();
         Object result = null;
         Throwable throwable = null;
         try {
@@ -94,7 +96,7 @@ public class SysLogAspect {
         } finally {
             try {
                 persistLog(joinPoint, targetClass, method, request, result, throwable,
-                        System.currentTimeMillis() - start);
+                        Duration.between(start, Instant.now()).toMillis());
             } catch (Exception logEx) {
                 // 日志记录失败不能反向影响主业务请求。
                 log.error("记录系统操作日志失败", logEx);

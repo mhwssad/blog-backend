@@ -20,6 +20,8 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -167,7 +169,7 @@ public class OssStorageServiceImpl implements StorageService {
 
         // 否则使用临时签名 URL（7天有效期）
         try {
-            Date expiration = new Date(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000);
+            Date expiration = Date.from(Instant.now().plus(7, ChronoUnit.DAYS));
             URL url = ossClient.generatePresignedUrl(bucketName, objectName, expiration);
             return url.toString();
         } catch (Exception e) {
