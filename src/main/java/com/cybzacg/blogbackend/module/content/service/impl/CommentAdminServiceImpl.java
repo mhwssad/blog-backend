@@ -14,6 +14,7 @@ import com.cybzacg.blogbackend.module.content.model.admin.CommentVO;
 import com.cybzacg.blogbackend.module.content.repository.SysCommentRepository;
 import com.cybzacg.blogbackend.module.content.service.CommentAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
+import com.cybzacg.blogbackend.utils.TreeTraversalUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -80,7 +81,8 @@ public class CommentAdminServiceImpl implements CommentAdminService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteComment(Long id) {
         SysComment comment = getCommentOrThrow(id);
-        List<SysComment> subtree = collectSubtree(comment);
+        List<SysComment> allComments = sysCommentRepository.findByTargetTypeAndTargetId(comment.getTargetType(), comment.getTargetId());
+        List<SysComment> subtree = TreeTraversalUtils.bfsCollectSubtree(comment, SysComment::getId, SysComment::getParentId, allComments);
         Set<Long> deleteIds = subtree.stream().map(SysComment::getId).collect(Collectors.toSet());
         sysCommentRepository.removeByIds(deleteIds);
 
@@ -101,29 +103,6 @@ public class CommentAdminServiceImpl implements CommentAdminService {
                 sysCommentRepository.updateById(parent);
             }
         }
-    }
-
-    /**
-     * 通过广度优先遍历收集整棵评论子树，确保批量删除时不会遗漏后代节点。
-     */
-    private List<SysComment> collectSubtree(SysComment root) {
-        List<SysComment> allComments = sysCommentRepository.findByTargetTypeAndTargetId(root.getTargetType(), root.getTargetId());
-        Map<Long, List<SysComment>> byParent = allComments.stream().collect(Collectors.groupingBy(SysComment::getParentId));
-        ArrayDeque<SysComment> queue = new ArrayDeque<>();
-        queue.add(root);
-        List<SysComment> result = new java.util.ArrayList<>();
-        Set<Long> visited = new HashSet<>();
-        while (!queue.isEmpty()) {
-            SysComment current = queue.poll();
-            if (!visited.add(current.getId())) {
-                continue;
-            }
-            result.add(current);
-            for (SysComment child : byParent.getOrDefault(current.getId(), List.of())) {
-                queue.add(child);
-            }
-        }
-        return result;
     }
 
     private Map<Long, SysUser> loadUserMap(Collection<Long> userIds) {

@@ -13,15 +13,12 @@ import com.cybzacg.blogbackend.module.content.repository.SysInteractionRepositor
 import com.cybzacg.blogbackend.module.content.service.UserCommentService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
+import com.cybzacg.blogbackend.utils.TreeTraversalUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayDeque;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * 用户评论服务实现。
@@ -128,7 +125,8 @@ public class UserCommentServiceImpl implements UserCommentService {
         Long userId = SecurityUtils.requireUserId();
         SysComment comment = getCommentOrThrow(commentId);
         ExceptionThrowerCore.throwBusinessIfNot(userId.equals(comment.getUserId()), ResultErrorCode.FORBIDDEN, "只能删除自己的评论");
-        List<SysComment> subtree = collectSubtree(comment);
+        List<SysComment> allComments = sysCommentRepository.findByTargetTypeAndTargetId(comment.getTargetType(), comment.getTargetId());
+        List<SysComment> subtree = TreeTraversalUtils.bfsCollectSubtree(comment, SysComment::getId, SysComment::getParentId, allComments);
         List<Long> subtreeIds = subtree.stream().map(SysComment::getId).toList();
         sysCommentRepository.removeByIds(subtreeIds);
         sysInteractionRepository.removeByTargetTypeAndTargetIds("comment", subtreeIds);
@@ -145,29 +143,6 @@ public class UserCommentServiceImpl implements UserCommentService {
                 sysCommentRepository.updateById(parent);
             }
         }
-    }
-
-    /**
-     * 通过广度优先遍历收集评论子树，便于删除评论时一并清理其所有后代节点。
-     */
-    private List<SysComment> collectSubtree(SysComment root) {
-        List<SysComment> allComments = sysCommentRepository.findByTargetTypeAndTargetId(root.getTargetType(), root.getTargetId());
-        java.util.Map<Long, List<SysComment>> byParent = allComments.stream().collect(Collectors.groupingBy(SysComment::getParentId));
-        ArrayDeque<SysComment> queue = new ArrayDeque<>();
-        queue.add(root);
-        List<SysComment> result = new java.util.ArrayList<>();
-        Set<Long> visited = new HashSet<>();
-        while (!queue.isEmpty()) {
-            SysComment current = queue.poll();
-            if (!visited.add(current.getId())) {
-                continue;
-            }
-            result.add(current);
-            for (SysComment child : byParent.getOrDefault(current.getId(), List.of())) {
-                queue.add(child);
-            }
-        }
-        return result;
     }
 
     /**
