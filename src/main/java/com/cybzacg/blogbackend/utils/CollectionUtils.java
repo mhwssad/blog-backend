@@ -30,6 +30,17 @@ public final class CollectionUtils {
     }
 
     /**
+     * 空安全整数默认值。
+     *
+     * @param value        原值
+     * @param defaultValue 默认值
+     * @return value 为 null 时返回 defaultValue，否则返回 value
+     */
+    public static Integer defaultInt(Integer value, Integer defaultValue) {
+        return value == null ? defaultValue : value;
+    }
+
+    /**
      * 空安全长整数默认值，固定返回 0L。
      */
     public static long defaultLong(Long value) {

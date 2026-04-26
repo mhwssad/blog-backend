@@ -5,7 +5,9 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
+import org.springframework.util.StringUtils;
 
 /**
  * 文件操作工具类
@@ -808,6 +810,60 @@ public class FileUtils {
      */
     public static String getAbsolutePath(String path) {
         return new File(path).getAbsolutePath();
+    }
+
+    // ==================== 文件元数据标准化 ====================
+
+    /**
+     * 字节数组转十六进制字符串。
+     */
+    public static String toHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder(bytes.length * 2);
+        for (byte b : bytes) {
+            sb.append(Character.forDigit((b >> 4) & 0xF, 16));
+            sb.append(Character.forDigit(b & 0xF, 16));
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 标准化 MD5 字符串。
+     *
+     * @return 空或空白输入返回 null，否则返回 trim + lowercase 结果
+     */
+    public static String normalizeMd5(String md5) {
+        if (!StringUtils.hasText(md5)) {
+            return null;
+        }
+        return md5.trim().toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * 标准化文件扩展名。
+     *
+     * @return null 输入返回 null，空或空白输入返回 ""，否则返回 trim + lowercase 结果
+     */
+    public static String normalizeExt(String ext) {
+        if (ext == null) {
+            return null;
+        }
+        if (!StringUtils.hasText(ext)) {
+            return "";
+        }
+        return ext.trim().toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * 截断字符串到最大长度。
+     *
+     * @return 空或空白输入原样返回，否则截断到 maxLen 字符
+     */
+    public static String truncate(String value, int maxLen) {
+        if (!StringUtils.hasText(value)) {
+            return value;
+        }
+        String trimmed = value.trim();
+        return trimmed.length() <= maxLen ? trimmed : trimmed.substring(0, maxLen);
     }
 }
 

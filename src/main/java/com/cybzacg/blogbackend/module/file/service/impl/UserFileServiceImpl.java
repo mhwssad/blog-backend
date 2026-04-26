@@ -24,6 +24,7 @@ import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
 import com.cybzacg.blogbackend.module.file.repository.FileUploadTaskRepository;
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
 import com.cybzacg.blogbackend.module.file.service.UserFileService;
+import com.cybzacg.blogbackend.utils.CollectionUtils;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.FileUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
@@ -70,7 +71,7 @@ public class UserFileServiceImpl implements UserFileService {
     public FileUploadInitVO initUploadTask(FileUploadInitRequest request, String sourceIp) {
         Long userId = SecurityUtils.requireUserId();
         validateInitRequest(request);
-        String md5 = normalizeMd5(request.getFileMd5());
+        String md5 = FileUtils.normalizeMd5(request.getFileMd5());
         Long fileSize = request.getFileSize();
         String storageKey = storageManager.getCurrentStorageKey();
         ExceptionThrowerCore.throwBusinessIfBlank(storageKey, FileResultCode.STORAGE_NODE_NOT_CONFIGURED);
@@ -90,7 +91,7 @@ public class UserFileServiceImpl implements UserFileService {
         task.setReferenceType(FileReferenceTypeEnum.normalize(request.getReferenceType()));
         task.setReferenceId(request.getReferenceId() == null ? 0L : request.getReferenceId());
         task.setCategory(FileCategoryEnum.normalize(request.getCategory()));
-        task.setIsPublic(defaultInt(request.getIsPublic(), 0));
+        task.setIsPublic(CollectionUtils.defaultInt(request.getIsPublic(), 0));
         task.setRemark(StringUtils.hasText(request.getRemark()) ? request.getRemark().trim() : null);
         task.setIsChunked(chunked ? 1 : 0);
         task.setChunkSize(chunked ? chunkSize : null);
@@ -141,7 +142,7 @@ public class UserFileServiceImpl implements UserFileService {
         }
         assertTaskActionAllowed(task, TaskStatusEnum.INIT, TaskStatusEnum.UPLOADING, TaskStatusEnum.FAILED);
         // 秒传检测只依赖文件指纹与大小，不要求客户端重新上传文件体。
-        FileInfo existing = tryFindExistingFile(normalizeMd5(task.getFileMd5()), task.getFileSize());
+        FileInfo existing = tryFindExistingFile(FileUtils.normalizeMd5(task.getFileMd5()), task.getFileSize());
         if (existing == null) {
             FileUploadResultVO vo = fileModelMapper.toFileUploadResultVO(task);
             vo.setQuickUpload(false);
@@ -215,7 +216,7 @@ public class UserFileServiceImpl implements UserFileService {
         }
         try {
             // 分片记录既用于断点续传，也用于最终合并前的完整性校验。
-            upsertChunkRecord(task.getId(), chunkNumber, file.getSize(), normalizeMd5(chunkMd5));
+            upsertChunkRecord(task.getId(), chunkNumber, file.getSize(), FileUtils.normalizeMd5(chunkMd5));
             int uploadedChunks = countUploadedChunks(task.getId());
             task.setUploadedChunks(uploadedChunks);
             fileUploadTaskRepository.updateById(task);
@@ -244,7 +245,7 @@ public class UserFileServiceImpl implements UserFileService {
         int uploaded = countUploadedChunks(task.getId());
         ExceptionThrowerCore.throwBusinessIf(task.getTotalChunks() == null || uploaded < task.getTotalChunks(), FileResultCode.CHUNK_INCOMPLETE);
         updateTaskStatusIfNeeded(task, TaskStatusEnum.MERGING);
-        String md5 = normalizeMd5(task.getFileMd5());
+        String md5 = FileUtils.normalizeMd5(task.getFileMd5());
         ExceptionThrowerCore.throwBusinessIf(Boolean.TRUE.equals(fileUploadProperties.getEnableMd5Check()) && !StringUtils.hasText(md5), FileResultCode.FILE_MD5_REQUIRED, "缺少文件MD5，无法完成上传");
         FileInfo existing = tryFindExistingFile(md5, task.getFileSize());
         if (existing != null) {
@@ -501,7 +502,7 @@ public class UserFileServiceImpl implements UserFileService {
         FileBusinessInfo ref = createOrGetBusinessReference(task, fileInfo.getId(), sourceIp);
         fileLifecycleService.refreshReferenceMetadata(fileInfo.getId(), Integer.valueOf(1).equals(task.getIsPublic()));
         fileInfo = fileInfoRepository.getById(fileInfo.getId());
-        task.setIsQuickUpload(quick ? 1 : defaultInt(task.getIsQuickUpload(), 0));
+        task.setIsQuickUpload(quick ? 1 : CollectionUtils.defaultInt(task.getIsQuickUpload(), 0));
         if (quick) {
             task.setReferencedFileId(fileInfo.getId());
             task.setQuickUploadTime(LocalDateTime.now());
@@ -528,10 +529,10 @@ public class UserFileServiceImpl implements UserFileService {
         fileInfo.setFileSize(task.getFileSize());
         fileInfo.setMimeType(task.getMimeType());
         fileInfo.setFileType(resolveFileType(task.getMimeType()));
-        fileInfo.setFileExtension(normalizeExt(FileUtils.getExtension(task.getOriginalName())));
+        fileInfo.setFileExtension(FileUtils.normalizeExt(FileUtils.getExtension(task.getOriginalName())));
         fileInfo.setMd5(md5);
         fileInfo.setReferenceCount(0);
-        fileInfo.setIsPublic(defaultInt(task.getIsPublic(), 0));
+        fileInfo.setIsPublic(CollectionUtils.defaultInt(task.getIsPublic(), 0));
         fileInfo.setCategory(FileCategoryEnum.normalize(task.getCategory()));
         fileInfo.setDownloadCount(0);
         fileInfo.setUploadUserId(task.getUploadUserId());
@@ -612,7 +613,7 @@ public class UserFileServiceImpl implements UserFileService {
         ref.setReferenceType(referenceType);
         ref.setReferenceId(referenceId);
         ref.setSourceIp(sourceIp);
-        ref.setIsPublic(defaultInt(task.getIsPublic(), 0));
+        ref.setIsPublic(CollectionUtils.defaultInt(task.getIsPublic(), 0));
         ref.setCategory(FileCategoryEnum.normalize(task.getCategory()));
         ref.setRemark(task.getRemark());
         try {
@@ -639,7 +640,7 @@ public class UserFileServiceImpl implements UserFileService {
     private void markTaskFailed(FileUploadTask task, FileResultCode resultCode, String message) {
         task.setTaskStatus(TaskStatusEnum.FAILED.getValue());
         task.setErrorCode(resultCode == null ? null : String.valueOf(resultCode.getCode()));
-        task.setErrorMessage(truncate(StringUtils.hasText(message) ? message : (resultCode == null ? null : resultCode.getMessage()), 240));
+        task.setErrorMessage(FileUtils.truncate(StringUtils.hasText(message) ? message : (resultCode == null ? null : resultCode.getMessage()), 240));
         fileUploadTaskRepository.updateById(task);
     }
 
@@ -784,7 +785,7 @@ public class UserFileServiceImpl implements UserFileService {
      */
     private String resolveAndValidateMd5(FileUploadTask task, MultipartFile file) {
         String computed = md5Hex(file);
-        String expected = normalizeMd5(task.getFileMd5());
+        String expected = FileUtils.normalizeMd5(task.getFileMd5());
         if (Boolean.TRUE.equals(fileUploadProperties.getEnableMd5Check()) && StringUtils.hasText(expected)) {
             ExceptionThrowerCore.throwBusinessIfNot(expected.equalsIgnoreCase(computed), FileResultCode.FILE_MD5_MISMATCH);
         }
@@ -804,27 +805,11 @@ public class UserFileServiceImpl implements UserFileService {
             while ((read = inputStream.read(buffer)) > 0) {
                 md.update(buffer, 0, read);
             }
-            return toHex(md.digest());
+            return FileUtils.toHex(md.digest());
         } catch (Exception e) {
             ExceptionThrowerCore.throwBusinessEx(FileResultCode.FILE_MD5_CALCULATE_FAILED);
             return null;
         }
-    }
-
-    private String toHex(byte[] bytes) {
-        StringBuilder sb = new StringBuilder(bytes.length * 2);
-        for (byte b : bytes) {
-            sb.append(Character.forDigit((b >> 4) & 0xF, 16));
-            sb.append(Character.forDigit(b & 0xF, 16));
-        }
-        return sb.toString();
-    }
-
-    private String normalizeMd5(String md5) {
-        if (!StringUtils.hasText(md5)) {
-            return null;
-        }
-        return md5.trim().toLowerCase(Locale.ROOT);
     }
 
     /**
@@ -832,18 +817,11 @@ public class UserFileServiceImpl implements UserFileService {
      */
     private String buildFinalObjectName(String category, String originalName) {
         String normalizedCategory = FileCategoryEnum.normalize(category);
-        String ext = normalizeExt(FileUtils.getExtension(originalName));
+        String ext = FileUtils.normalizeExt(FileUtils.getExtension(originalName));
         String datePath = LocalDate.now(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
         String uuid = UUID.randomUUID().toString().replace("-", "");
         String suffix = StringUtils.hasText(ext) ? ("." + ext) : "";
         return normalizedCategory + "/" + datePath + "/" + uuid + suffix;
-    }
-
-    private String normalizeExt(String ext) {
-        if (!StringUtils.hasText(ext)) {
-            return "";
-        }
-        return ext.trim().toLowerCase(Locale.ROOT);
     }
 
     private String extractFileName(String objectName) {
@@ -881,25 +859,9 @@ public class UserFileServiceImpl implements UserFileService {
         return LocalDateTime.now().plusDays(d);
     }
 
-    private String truncate(String value, int maxLen) {
-        if (!StringUtils.hasText(value)) {
-            return value;
-        }
-        String trimmed = value.trim();
-        return trimmed.length() <= maxLen ? trimmed : trimmed.substring(0, maxLen);
-    }
-
-    private Integer defaultInt(Integer value, Integer defaultValue) {
-        return value == null ? defaultValue : value;
-    }
-
     private record PersistedFileInfo(FileInfo fileInfo, boolean reusedExisting) {
     }
 }
-
-
-
-
 
 
 
