@@ -28,6 +28,7 @@ import com.cybzacg.blogbackend.utils.JsonUtils;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
+import com.cybzacg.blogbackend.utils.UserDisplayNameUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
@@ -1079,7 +1080,7 @@ public class UserChatServiceImpl implements UserChatService {
         if (item.getLastMessageId() != null) {
             var lastMessage = chatModelMapper.toConversationLastMessageVO(item);
             SysUser sender = userMap.get(item.getLastMessageSenderId());
-            lastMessage.setSenderNickname(displayName(sender, item.getLastMessageSenderId()));
+            lastMessage.setSenderNickname(UserDisplayNameUtils.resolveDisplayName(sender, item.getLastMessageSenderId()));
             vo.setLastMessage(lastMessage);
         }
         if (Objects.equals(item.getConversationType(), ChatConstants.CONVERSATION_TYPE_SINGLE)) {
@@ -1092,7 +1093,7 @@ public class UserChatServiceImpl implements UserChatService {
                 vo.setTargetUserId(targetMember.getUserId());
                 vo.setTargetUsername(targetUser != null ? targetUser.getUsername() : null);
                 vo.setTargetNickname(targetUser != null ? targetUser.getNickname() : null);
-                vo.setName(displayName(targetUser, targetMember.getUserId()));
+                vo.setName(UserDisplayNameUtils.resolveDisplayName(targetUser, targetMember.getUserId()));
                 vo.setAvatar(targetUser != null ? targetUser.getAvatar() : null);
             }
         }
@@ -1135,7 +1136,7 @@ public class UserChatServiceImpl implements UserChatService {
         ChatMessageVO vo = chatModelMapper.toMessageVO(item);
         SysUser sender = userMap.get(item.getSenderId());
         vo.setSenderUsername(sender != null ? sender.getUsername() : null);
-        vo.setSenderNickname(displayName(sender, item.getSenderId()));
+        vo.setSenderNickname(UserDisplayNameUtils.resolveDisplayName(sender, item.getSenderId()));
         vo.setSenderAvatar(sender != null ? sender.getAvatar() : null);
         vo.setFile(extractFilePayload(item.getPayloadJson()));
         vo.setReplyMessageId(item.getReplyMessageId());
@@ -1332,19 +1333,6 @@ public class UserChatServiceImpl implements UserChatService {
         return left + ":" + right;
     }
 
-    private String displayName(SysUser user, Long fallbackUserId) {
-        if (user == null) {
-            return fallbackUserId == null ? null : "用户" + fallbackUserId;
-        }
-        if (StrUtils.hasText(user.getNickname())) {
-            return user.getNickname().trim();
-        }
-        if (StrUtils.hasText(user.getUsername())) {
-            return user.getUsername().trim();
-        }
-        return user.getId() == null ? null : "用户" + user.getId();
-    }
-
     private String trimKeyword(String keyword) {
         return StrUtils.trimToNull(keyword);
     }
@@ -1490,7 +1478,7 @@ public class UserChatServiceImpl implements UserChatService {
         reply.setSenderId(item.getSenderId());
         SysUser sender = userMap.get(item.getSenderId());
         reply.setSenderUsername(sender != null ? sender.getUsername() : null);
-        reply.setSenderNickname(displayName(sender, item.getSenderId()));
+        reply.setSenderNickname(UserDisplayNameUtils.resolveDisplayName(sender, item.getSenderId()));
         reply.setSenderAvatar(sender != null ? sender.getAvatar() : null);
         reply.setMessageType(item.getMessageType());
         reply.setReplyToMessageId(item.getReplyMessageId());
