@@ -22,8 +22,10 @@ import com.cybzacg.blogbackend.module.chat.service.*;
 import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
 import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
+import com.cybzacg.blogbackend.utils.CollectionUtils;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.JsonUtils;
+import com.cybzacg.blogbackend.utils.PaginationUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
@@ -65,8 +67,8 @@ public class UserChatServiceImpl implements UserChatService {
     public PageResult<ChatConversationVO> pageMyConversations(ChatConversationPageQuery query) {
         Long userId = SecurityUtils.requireUserId();
         ensureGlobalConversationMembership(userId);
-        long current = normalizeCurrent(query.getCurrent());
-        long size = normalizeSize(query.getSize(), 20L, 100L);
+        long current = PaginationUtils.normalizeCurrent(query.getCurrent());
+        long size = PaginationUtils.normalizeSize(query.getSize(), 20L, 100L);
         String keyword = trimKeyword(query.getKeyword());
         long total = Objects.requireNonNullElse(chatConversationRepository.countConversationPage(userId, keyword), 0L);
         if (total == 0L) {
@@ -566,8 +568,8 @@ public class UserChatServiceImpl implements UserChatService {
      */
     private PageResult<ChatMessageVO> pageMessages(Long userId, Long conversationId, ChatMessagePageQuery query) {
         requireConversationAccess(userId, conversationId);
-        long current = normalizeCurrent(query.getCurrent());
-        long size = normalizeSize(query.getSize(), 20L, 100L);
+        long current = PaginationUtils.normalizeCurrent(query.getCurrent());
+        long size = PaginationUtils.normalizeSize(query.getSize(), 20L, 100L);
         Long beforeMessageId = query.getBeforeMessageId();
         long total = Objects.requireNonNullElse(chatMessageRepository.countMessagePage(conversationId, userId, beforeMessageId), 0L);
         if (total == 0L) {
@@ -1345,15 +1347,6 @@ public class UserChatServiceImpl implements UserChatService {
 
     private String trimKeyword(String keyword) {
         return StrUtils.trimToNull(keyword);
-    }
-
-    private long normalizeCurrent(Long current) {
-        return current == null || current < 1 ? 1L : current;
-    }
-
-    private long normalizeSize(Long size, long defaultValue, long maxValue) {
-        long normalized = size == null || size < 1 ? defaultValue : size;
-        return Math.min(normalized, maxValue);
     }
 
     private int memberRoleOrder(ChatConversationMember member) {

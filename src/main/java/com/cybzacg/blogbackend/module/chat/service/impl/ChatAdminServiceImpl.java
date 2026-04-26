@@ -28,6 +28,7 @@ import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.JsonUtils;
+import com.cybzacg.blogbackend.utils.PaginationUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -59,8 +60,8 @@ public class ChatAdminServiceImpl implements ChatAdminService {
      */
     @Override
     public PageResult<ChatAdminConversationVO> pageConversations(ChatAdminConversationPageQuery query) {
-        long current = normalizeCurrent(query.getCurrent());
-        long size = normalizeSize(query.getSize(), 10L, 100L);
+        long current = PaginationUtils.normalizeCurrent(query.getCurrent());
+        long size = PaginationUtils.normalizeSize(query.getSize(), 10L, 100L);
         long total = Objects.requireNonNullElse(chatConversationRepository.countAdminConversationPage(query), 0L);
         if (total == 0L) {
             return PageResult.<ChatAdminConversationVO>builder()
@@ -106,8 +107,8 @@ public class ChatAdminServiceImpl implements ChatAdminService {
     @Override
     public PageResult<ChatAdminMessageVO> pageMessages(Long conversationId, ChatAdminMessagePageQuery query) {
         requireConversation(conversationId);
-        long current = normalizeCurrent(query.getCurrent());
-        long size = normalizeSize(query.getSize(), 20L, 100L);
+        long current = PaginationUtils.normalizeCurrent(query.getCurrent());
+        long size = PaginationUtils.normalizeSize(query.getSize(), 20L, 100L);
         long total = Objects.requireNonNullElse(chatMessageRepository.countAdminMessagePage(conversationId, query), 0L);
         if (total == 0L) {
             return PageResult.<ChatAdminMessageVO>builder()
@@ -174,8 +175,8 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         requireConversation(conversationId);
         requireMessage(conversationId, messageId);
         ChatAdminMessageReceiptPageQuery safeQuery = query == null ? new ChatAdminMessageReceiptPageQuery() : query;
-        long current = normalizeCurrent(safeQuery.getCurrent());
-        long size = normalizeSize(safeQuery.getSize(), 20L, 100L);
+        long current = PaginationUtils.normalizeCurrent(safeQuery.getCurrent());
+        long size = PaginationUtils.normalizeSize(safeQuery.getSize(), 20L, 100L);
         Page<ChatMessageRecipient> page = chatMessageRecipientRepository.pageAdminReceipts(conversationId, messageId, safeQuery);
         Map<Long, SysUser> userMap = loadUsers(page.getRecords().stream()
                 .map(ChatMessageRecipient::getRecipientUserId)
@@ -803,15 +804,6 @@ public class ChatAdminServiceImpl implements ChatAdminService {
             return user.getUsername().trim();
         }
         return user.getId() == null ? null : "用户" + user.getId();
-    }
-
-    private long normalizeCurrent(Long current) {
-        return current == null || current < 1 ? 1L : current;
-    }
-
-    private long normalizeSize(Long size, long defaultValue, long maxValue) {
-        long normalized = size == null || size < 1 ? defaultValue : size;
-        return Math.min(normalized, maxValue);
     }
 
     private int memberRoleOrder(ChatConversationMember member) {
