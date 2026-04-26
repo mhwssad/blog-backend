@@ -17,8 +17,10 @@ import com.cybzacg.blogbackend.module.content.model.publics.PublicCategoryTreeVO
 import com.cybzacg.blogbackend.module.content.model.publics.PublicTagVO;
 import com.cybzacg.blogbackend.module.content.repository.*;
 import com.cybzacg.blogbackend.module.content.service.UserFootprintService;
+import com.cybzacg.blogbackend.utils.CollectionUtils;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -61,8 +63,8 @@ public class PublicArticleServiceImpl implements PublicArticleService {
         List<BlogArticle> matched = publishedArticles.stream()
                 .filter(article -> filteredIds == null || filteredIds.contains(article.getId()))
                 .filter(article -> !StringUtils.hasText(query.getKeyword())
-                        || contains(article.getTitle(), query.getKeyword())
-                        || contains(article.getSummary(), query.getKeyword()))
+                        || StrUtils.contains(article.getTitle(), query.getKeyword())
+                        || StrUtils.contains(article.getSummary(), query.getKeyword()))
                 .filter(article -> articleAccessControlService.canAccessArticle(article, currentUserId))
                 .sorted(resolveComparator(query.getSort()))
                 .toList();
@@ -138,12 +140,12 @@ public class PublicArticleServiceImpl implements PublicArticleService {
      */
     private Comparator<BlogArticle> resolveComparator(String sort) {
         if ("hot".equalsIgnoreCase(sort)) {
-            return Comparator.comparingInt((BlogArticle article) -> defaultInt(article.getViewCount()) + defaultInt(article.getLikeCount()) + defaultInt(article.getCommentCount()))
+            return Comparator.comparingInt((BlogArticle article) -> CollectionUtils.defaultInt(article.getViewCount()) + CollectionUtils.defaultInt(article.getLikeCount()) + CollectionUtils.defaultInt(article.getCommentCount()))
                     .reversed()
                     .thenComparing(BlogArticle::getId, Comparator.reverseOrder());
         }
         if ("top".equalsIgnoreCase(sort)) {
-            return Comparator.comparing((BlogArticle article) -> defaultInt(article.getIsTop()), Comparator.reverseOrder())
+            return Comparator.comparing((BlogArticle article) -> CollectionUtils.defaultInt(article.getIsTop()), Comparator.reverseOrder())
                     .thenComparing(BlogArticle::getPublishTime, Comparator.nullsLast(Comparator.reverseOrder()))
                     .thenComparing(BlogArticle::getId, Comparator.reverseOrder());
         }
@@ -241,13 +243,6 @@ public class PublicArticleServiceImpl implements PublicArticleService {
         return StringUtils.hasText(user.getNickname()) ? user.getNickname() : user.getUsername();
     }
 
-    private boolean contains(String source, String keyword) {
-        return StringUtils.hasText(source) && source.contains(keyword);
-    }
-
-    private int defaultInt(Integer value) {
-        return value == null ? 0 : value;
-    }
 }
 
 

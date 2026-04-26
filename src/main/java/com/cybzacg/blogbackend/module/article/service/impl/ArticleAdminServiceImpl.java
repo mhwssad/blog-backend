@@ -195,11 +195,11 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
     private void applyArticleFields(BlogArticle article, ArticleSaveRequest request, boolean creating) {
         LocalDateTime existingPublishTime = article.getPublishTime();
         articleModelMapper.updateArticle(request, article);
-        article.setIsTop(defaultIfNull(article.getIsTop(), 0));
-        article.setIsOriginal(defaultIfNull(article.getIsOriginal(), 1));
-        article.setStatus(defaultIfNull(article.getStatus(), 0));
+        article.setIsTop(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(article.getIsTop(), 0));
+        article.setIsOriginal(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(article.getIsOriginal(), 1));
+        article.setStatus(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(article.getStatus(), 0));
         article.setPublishTime(resolvePublishTime(article.getStatus(), request.getPublishTime(), existingPublishTime));
-        article.setAccessLevel(defaultIfNull(article.getAccessLevel(), 0));
+        article.setAccessLevel(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(article.getAccessLevel(), 0));
         if (creating && article.getPublishTime() == null && Integer.valueOf(1).equals(article.getStatus())) {
             article.setPublishTime(LocalDateTime.now());
         }
@@ -209,7 +209,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
      * 根据目标状态和请求发布时间推导最终发布时间，保证已发布文章始终有稳定的发布时间。
      */
     private LocalDateTime resolvePublishTime(Integer status, LocalDateTime requestPublishTime, LocalDateTime existingPublishTime) {
-        if (Integer.valueOf(1).equals(defaultIfNull(status, 0))) {
+        if (Integer.valueOf(1).equals(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(status, 0))) {
             return requestPublishTime != null ? requestPublishTime : (existingPublishTime != null ? existingPublishTime : LocalDateTime.now());
         }
         return requestPublishTime;
@@ -219,23 +219,23 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
      * 初始化文章的统计字段，避免新建文章后计数字段为空。
      */
     private void initializeCounters(BlogArticle article) {
-        article.setViewCount(defaultIfNull(article.getViewCount(), 0));
-        article.setLikeCount(defaultIfNull(article.getLikeCount(), 0));
-        article.setCommentCount(defaultIfNull(article.getCommentCount(), 0));
-        article.setCollectCount(defaultIfNull(article.getCollectCount(), 0));
-        article.setShareCount(defaultIfNull(article.getShareCount(), 0));
+        article.setViewCount(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(article.getViewCount(), 0));
+        article.setLikeCount(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(article.getLikeCount(), 0));
+        article.setCommentCount(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(article.getCommentCount(), 0));
+        article.setCollectCount(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(article.getCollectCount(), 0));
+        article.setShareCount(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(article.getShareCount(), 0));
     }
 
     /**
      * 校验文章保存请求，包括作者、状态、访问级别、分类标签和授权项合法性。
      */
     private void validateSaveRequest(ArticleSaveRequest request) {
-        validateStatus(defaultIfNull(request.getStatus(), 0));
-        validateAccessLevel(defaultIfNull(request.getAccessLevel(), 0));
+        validateStatus(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(request.getStatus(), 0));
+        validateAccessLevel(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(request.getAccessLevel(), 0));
         validateAuthor(request.getAuthorId());
 
         ExceptionThrowerCore.throwBusinessIf(
-                Integer.valueOf(0).equals(defaultIfNull(request.getIsOriginal(), 1))
+                Integer.valueOf(0).equals(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(request.getIsOriginal(), 1))
                         && !StringUtils.hasText(request.getSourceUrl()),
                 ResultErrorCode.ILLEGAL_ARGUMENT,
                 "转载文章必须提供原文链接");
@@ -292,7 +292,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         Set<Long> userIds = new LinkedHashSet<>();
         for (ArticleAccessItem item : accessList) {
             ExceptionThrowerCore.throwBusinessIfNull(item.getUserId(), ResultErrorCode.ILLEGAL_ARGUMENT, "授权用户不能为空");
-            Integer accessType = defaultIfNull(item.getAccessType(), 1);
+            Integer accessType = com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(item.getAccessType(), 1);
             ExceptionThrowerCore.throwBusinessIf(!Integer.valueOf(1).equals(accessType) && !Integer.valueOf(2).equals(accessType),
                     ResultErrorCode.ILLEGAL_ARGUMENT, "访问类型非法");
             item.setAccessType(accessType);
@@ -517,9 +517,4 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         }
         return StringUtils.hasText(user.getNickname()) ? user.getNickname() : user.getUsername();
     }
-
-    private Integer defaultIfNull(Integer value, Integer defaultValue) {
-        return value == null ? defaultValue : value;
-    }
-
 }
