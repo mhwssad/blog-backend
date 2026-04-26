@@ -9,7 +9,9 @@ import com.cybzacg.blogbackend.module.follow.model.publics.PublicFollowPageQuery
 import com.cybzacg.blogbackend.module.follow.model.publics.PublicFollowUserVO;
 import com.cybzacg.blogbackend.module.follow.repository.SysUserFollowRepository;
 import com.cybzacg.blogbackend.module.follow.service.PublicFollowService;
+import com.cybzacg.blogbackend.utils.CollectionUtils;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
+import com.cybzacg.blogbackend.utils.PaginationUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -35,9 +37,9 @@ public class PublicFollowServiceImpl implements PublicFollowService {
     @Override
     public PageResult<PublicFollowUserVO> pageUserFollows(Long userId, PublicFollowPageQuery query) {
         requireActiveUser(userId);
-        long current = normalizeCurrent(query == null ? null : query.getCurrent());
-        long size = normalizeSize(query == null ? null : query.getSize());
-        long total = defaultLong(sysUserFollowRepository.countPublicFollowPage(userId));
+        long current = PaginationUtils.normalizeCurrent(query == null ? null : query.getCurrent());
+        long size = PaginationUtils.normalizeSize(query == null ? null : query.getSize(), DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
+        long total = CollectionUtils.defaultLong(sysUserFollowRepository.countPublicFollowPage(userId));
         if (total == 0L) {
             return emptyPage(current, size);
         }
@@ -60,9 +62,9 @@ public class PublicFollowServiceImpl implements PublicFollowService {
     @Override
     public PageResult<PublicFollowUserVO> pageUserFans(Long userId, PublicFollowPageQuery query) {
         requireActiveUser(userId);
-        long current = normalizeCurrent(query == null ? null : query.getCurrent());
-        long size = normalizeSize(query == null ? null : query.getSize());
-        long total = defaultLong(sysUserFollowRepository.countPublicFanPage(userId));
+        long current = PaginationUtils.normalizeCurrent(query == null ? null : query.getCurrent());
+        long size = PaginationUtils.normalizeSize(query == null ? null : query.getSize(), DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
+        long total = CollectionUtils.defaultLong(sysUserFollowRepository.countPublicFanPage(userId));
         if (total == 0L) {
             return emptyPage(current, size);
         }
@@ -98,16 +100,4 @@ public class PublicFollowServiceImpl implements PublicFollowService {
                 .build();
     }
 
-    private long normalizeCurrent(Long current) {
-        return current == null || current < 1L ? 1L : current;
-    }
-
-    private long normalizeSize(Long size) {
-        long normalized = size == null || size < 1L ? DEFAULT_PAGE_SIZE : size;
-        return Math.min(normalized, MAX_PAGE_SIZE);
-    }
-
-    private long defaultLong(Long value) {
-        return value == null ? 0L : value;
-    }
 }

@@ -8,7 +8,9 @@ import com.cybzacg.blogbackend.module.follow.model.admin.FollowAdminRelationVO;
 import com.cybzacg.blogbackend.module.follow.model.admin.FollowRelationCleanRequest;
 import com.cybzacg.blogbackend.module.follow.repository.SysUserFollowRepository;
 import com.cybzacg.blogbackend.module.follow.service.FollowAdminService;
+import com.cybzacg.blogbackend.utils.CollectionUtils;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
+import com.cybzacg.blogbackend.utils.PaginationUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,9 +34,9 @@ public class FollowAdminServiceImpl implements FollowAdminService {
      */
     @Override
     public PageResult<FollowAdminRelationVO> pageRelations(FollowAdminPageQuery query) {
-        long current = normalizeCurrent(query == null ? null : query.getCurrent());
-        long size = normalizeSize(query == null ? null : query.getSize());
-        long total = defaultLong(sysUserFollowRepository.countAdminRelationPage(query));
+        long current = PaginationUtils.normalizeCurrent(query == null ? null : query.getCurrent());
+        long size = PaginationUtils.normalizeSize(query == null ? null : query.getSize(), DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
+        long total = CollectionUtils.defaultLong(sysUserFollowRepository.countAdminRelationPage(query));
         if (total == 0L) {
             return PageResult.<FollowAdminRelationVO>builder()
                     .total(0L)
@@ -63,7 +65,7 @@ public class FollowAdminServiceImpl implements FollowAdminService {
     @Transactional(rollbackFor = Exception.class)
     public long cleanRelations(FollowRelationCleanRequest request) {
         validateCleanRequest(request);
-        long count = defaultLong(sysUserFollowRepository.countCleanableRelations(
+        long count = CollectionUtils.defaultLong(sysUserFollowRepository.countCleanableRelations(
                 isTrue(request.getCleanInactive()),
                 isTrue(request.getCleanDeletedUsers()),
                 isTrue(request.getCleanDisabledUsers())
@@ -94,16 +96,4 @@ public class FollowAdminServiceImpl implements FollowAdminService {
         return Boolean.TRUE.equals(value);
     }
 
-    private long normalizeCurrent(Long current) {
-        return current == null || current < 1L ? 1L : current;
-    }
-
-    private long normalizeSize(Long size) {
-        long normalized = size == null || size < 1L ? DEFAULT_PAGE_SIZE : size;
-        return Math.min(normalized, MAX_PAGE_SIZE);
-    }
-
-    private long defaultLong(Long value) {
-        return value == null ? 0L : value;
-    }
 }

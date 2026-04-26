@@ -11,7 +11,9 @@ import com.cybzacg.blogbackend.module.follow.model.user.*;
 import com.cybzacg.blogbackend.module.follow.repository.SysUserFollowRepository;
 import com.cybzacg.blogbackend.module.follow.service.FollowNoticeService;
 import com.cybzacg.blogbackend.module.follow.service.UserFollowService;
+import com.cybzacg.blogbackend.utils.CollectionUtils;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
+import com.cybzacg.blogbackend.utils.PaginationUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
@@ -84,10 +86,10 @@ public class UserFollowServiceImpl implements UserFollowService {
     @Override
     public PageResult<UserFollowUserVO> pageMyFollows(UserFollowPageQuery query) {
         Long userId = SecurityUtils.requireUserId();
-        long current = normalizeCurrent(query == null ? null : query.getCurrent());
-        long size = normalizeSize(query == null ? null : query.getSize());
+        long current = PaginationUtils.normalizeCurrent(query == null ? null : query.getCurrent());
+        long size = PaginationUtils.normalizeSize(query == null ? null : query.getSize(), DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
         Boolean specialOnly = query == null ? null : query.getSpecialOnly();
-        long total = defaultLong(sysUserFollowRepository.countFollowPage(userId, specialOnly));
+        long total = CollectionUtils.defaultLong(sysUserFollowRepository.countFollowPage(userId, specialOnly));
         if (total == 0L) {
             return emptyPageResult(current, size);
         }
@@ -109,9 +111,9 @@ public class UserFollowServiceImpl implements UserFollowService {
     @Override
     public PageResult<UserFollowUserVO> pageMyFans(UserFanPageQuery query) {
         Long userId = SecurityUtils.requireUserId();
-        long current = normalizeCurrent(query == null ? null : query.getCurrent());
-        long size = normalizeSize(query == null ? null : query.getSize());
-        long total = defaultLong(sysUserFollowRepository.countFanPage(userId));
+        long current = PaginationUtils.normalizeCurrent(query == null ? null : query.getCurrent());
+        long size = PaginationUtils.normalizeSize(query == null ? null : query.getSize(), DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
+        long total = CollectionUtils.defaultLong(sysUserFollowRepository.countFanPage(userId));
         if (total == 0L) {
             return emptyPageResult(current, size);
         }
@@ -135,8 +137,8 @@ public class UserFollowServiceImpl implements UserFollowService {
     public UserFollowMutualVO getMutualFollowStatus(Long targetUserId) {
         Long userId = SecurityUtils.requireUserId();
         requireActiveTargetUser(userId, targetUserId);
-        boolean following = defaultLong(sysUserFollowRepository.countActiveRelation(userId, targetUserId)) > 0L;
-        boolean followedBy = defaultLong(sysUserFollowRepository.countActiveRelation(targetUserId, userId)) > 0L;
+        boolean following = CollectionUtils.defaultLong(sysUserFollowRepository.countActiveRelation(userId, targetUserId)) > 0L;
+        boolean followedBy = CollectionUtils.defaultLong(sysUserFollowRepository.countActiveRelation(targetUserId, userId)) > 0L;
         return UserFollowMutualVO.builder()
                 .targetUserId(targetUserId)
                 .following(following)
@@ -152,8 +154,8 @@ public class UserFollowServiceImpl implements UserFollowService {
     public UserFollowCountVO getMyFollowCount() {
         Long userId = SecurityUtils.requireUserId();
         return UserFollowCountVO.builder()
-                .followingCount(defaultLong(sysUserFollowRepository.countActiveFollowing(userId)))
-                .fanCount(defaultLong(sysUserFollowRepository.countActiveFans(userId)))
+                .followingCount(CollectionUtils.defaultLong(sysUserFollowRepository.countActiveFollowing(userId)))
+                .fanCount(CollectionUtils.defaultLong(sysUserFollowRepository.countActiveFans(userId)))
                 .build();
     }
 
@@ -279,16 +281,4 @@ public class UserFollowServiceImpl implements UserFollowService {
                 .build();
     }
 
-    private long normalizeCurrent(Long current) {
-        return current == null || current < 1L ? 1L : current;
-    }
-
-    private long normalizeSize(Long size) {
-        long normalized = size == null || size < 1L ? DEFAULT_PAGE_SIZE : size;
-        return Math.min(normalized, MAX_PAGE_SIZE);
-    }
-
-    private long defaultLong(Long value) {
-        return value == null ? 0L : value;
-    }
 }
