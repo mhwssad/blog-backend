@@ -56,4 +56,13 @@ public final class StrUtils {
     public static String trimToDefault(String value, String defaultValue) {
         return hasText(value) ? value.trim() : defaultValue;
     }
+
+    /**
+     * 空安全字符串包含检查。
+     *
+     * @return source 为空白或不含 keyword 时返回 false
+     */
+    public static boolean contains(String source, String keyword) {
+        return StringUtils.hasText(source) && source.contains(keyword);
+    }
 }
