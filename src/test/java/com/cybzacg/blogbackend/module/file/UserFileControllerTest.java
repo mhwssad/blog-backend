@@ -18,6 +18,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -43,7 +44,7 @@ class UserFileControllerTest {
         FileUploadInitVO initVO = new FileUploadInitVO();
         initVO.setUploadId("u1");
         initVO.setTaskId(1L);
-        when(userFileService.initUploadTask(any(FileUploadInitRequest.class), anyString())).thenReturn(initVO);
+        when(userFileService.initUploadTask(any(FileUploadInitRequest.class), nullable(String.class))).thenReturn(initVO);
 
         mockMvc.perform(post("/api/user/files/upload-tasks/init")
                         .contentType(APPLICATION_JSON)

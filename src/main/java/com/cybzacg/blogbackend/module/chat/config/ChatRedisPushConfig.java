@@ -5,6 +5,7 @@ import com.cybzacg.blogbackend.module.chat.service.impl.ChatPushRedisSubscriber;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
@@ -14,6 +15,7 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
  */
 @Configuration
 @RequiredArgsConstructor
+@Profile("!test")
 public class ChatRedisPushConfig {
     private final ChatPushRedisSubscriber chatPushRedisSubscriber;
 

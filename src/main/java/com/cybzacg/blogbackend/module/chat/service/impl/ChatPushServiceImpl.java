@@ -35,6 +35,13 @@ public class ChatPushServiceImpl implements ChatPushService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final String localNodeId;
 
+    /**
+     * 仅供 Spring 测试上下文使用，实际依赖通过有参构造器注入。
+     */
+    ChatPushServiceImpl() {
+        this(null, null, null, UUID.randomUUID().toString());
+    }
+
     public ChatPushServiceImpl(ChatWebSocketSessionRegistry sessionRegistry,
                                ChatWebSocketMessageCodec messageCodec,
                                RedisTemplate<String, Object> redisTemplate) {

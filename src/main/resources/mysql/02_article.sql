@@ -13,8 +13,11 @@ CREATE TABLE blog_article
     is_original   TINYINT  DEFAULT 1                 NOT NULL COMMENT '是否原创：0-转载，1-原创',
     source_url    VARCHAR(512)                       NULL COMMENT '原文链接（转载用）',
     status        TINYINT  DEFAULT 0                 NOT NULL COMMENT '状态：0-草稿，1-已发布，2-已下架',
+    review_status TINYINT  DEFAULT 0                 NOT NULL COMMENT '审核状态：0-未送审/免审，1-审核中，2-审核通过，3-审核拒绝',
     publish_time  DATETIME                           NULL COMMENT '发布时间（草稿为NULL）',
+    scheduled_publish_time DATETIME                  NULL COMMENT '定时发布时间',
     access_level  TINYINT  DEFAULT 0                 NOT NULL COMMENT '访问级别：0-公开，1-登录可见，2-付费可见，3-VIP可见，4-指定用户可见',
+    visibility_scope TINYINT DEFAULT 0               NOT NULL COMMENT '可见范围：0-公开，1-仅自己可见，2-白名单可见，3-登录可见',
     view_count    INT      DEFAULT 0                 NOT NULL COMMENT '浏览量',
     like_count    INT      DEFAULT 0                 NOT NULL COMMENT '点赞数',
     comment_count INT      DEFAULT 0                 NOT NULL COMMENT '评论数',
@@ -258,3 +261,61 @@ CREATE TABLE sys_user_footprint
     DEFAULT CHARSET = utf8mb4
     COLLATE = utf8mb4_unicode_ci;
 
+
+
+DROP TABLE IF EXISTS blog_article_series;
+CREATE TABLE blog_article_series
+(
+    id               BIGINT AUTO_INCREMENT COMMENT '系列ID' PRIMARY KEY,
+    owner_user_id    BIGINT                                NOT NULL COMMENT '创建人ID',
+    title            VARCHAR(128)                          NOT NULL COMMENT '系列标题',
+    description      VARCHAR(1024)                         NULL COMMENT '系列描述',
+    cover_image      VARCHAR(512)                          NULL COMMENT '封面图',
+    status           TINYINT     DEFAULT 1                 NOT NULL COMMENT '状态：0-停用，1-正常',
+    visibility_scope TINYINT     DEFAULT 0                 NOT NULL COMMENT '可见范围：0-公开，1-仅自己可见，2-白名单可见，3-登录可见',
+    article_count    INT         DEFAULT 0                 NOT NULL COMMENT '文章数',
+    sort_order       INT         DEFAULT 0                 NOT NULL COMMENT '排序值',
+    created_at       DATETIME    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    updated_at       DATETIME    DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+    INDEX idx_owner_status (owner_user_id, status, sort_order, id) COMMENT '作者系列列表',
+    INDEX idx_visibility_status (visibility_scope, status, sort_order, id) COMMENT '公开系列列表'
+) COMMENT '文章系列/专栏表'
+    ENGINE = InnoDB
+    DEFAULT CHARSET = utf8mb4
+    COLLATE = utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS blog_article_series_item;
+CREATE TABLE blog_article_series_item
+(
+    id         BIGINT AUTO_INCREMENT COMMENT '关联ID' PRIMARY KEY,
+    series_id  BIGINT                                NOT NULL COMMENT '系列ID',
+    article_id BIGINT                                NOT NULL COMMENT '文章ID',
+    seq_no     INT         DEFAULT 1                 NOT NULL COMMENT '系列内顺序',
+    created_at DATETIME    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+
+    UNIQUE KEY uk_series_article (series_id, article_id) COMMENT '系列文章唯一',
+    UNIQUE KEY uk_series_seq (series_id, seq_no) COMMENT '系列顺序唯一',
+    INDEX idx_article_series (article_id) COMMENT '按文章查询所在系列'
+) COMMENT '文章系列关联表'
+    ENGINE = InnoDB
+    DEFAULT CHARSET = utf8mb4
+    COLLATE = utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS blog_article_review_log;
+CREATE TABLE blog_article_review_log
+(
+    id             BIGINT AUTO_INCREMENT COMMENT '审核记录ID' PRIMARY KEY,
+    article_id     BIGINT                                NOT NULL COMMENT '文章ID',
+    review_status  TINYINT                               NOT NULL COMMENT '审核状态：1-审核中，2-审核通过，3-审核拒绝',
+    reviewer_id    BIGINT                                NULL COMMENT '审核人ID',
+    review_comment VARCHAR(512)                          NULL COMMENT '审核意见',
+    reviewed_at    DATETIME                              NULL COMMENT '审核时间',
+    created_at     DATETIME    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+
+    INDEX idx_article_reviewed (article_id, created_at DESC) COMMENT '按文章查看审核历史',
+    INDEX idx_reviewer_reviewed (reviewer_id, created_at DESC) COMMENT '按审核人查看处理历史'
+) COMMENT '文章审核记录表'
+    ENGINE = InnoDB
+    DEFAULT CHARSET = utf8mb4
+    COLLATE = utf8mb4_unicode_ci;

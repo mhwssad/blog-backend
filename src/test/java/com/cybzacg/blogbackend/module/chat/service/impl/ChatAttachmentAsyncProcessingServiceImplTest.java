@@ -284,10 +284,13 @@ class ChatAttachmentAsyncProcessingServiceImplTest {
         legacyFilePayload.setPreviewUrl("https://example.com/legacy.png");
         legacyFilePayload.setThumbnailUrl("https://example.com/legacy.png");
 
+        ChatMessagePayloadVO payloadWrapper = new ChatMessagePayloadVO();
+        payloadWrapper.setFile(legacyFilePayload);
+
         ChatMessage message = new ChatMessage();
         message.setId(messageId);
         message.setMessageType(ChatConstants.MESSAGE_TYPE_IMAGE);
-        message.setPayloadJson(JsonUtils.toJson(legacyFilePayload));
+        message.setPayloadJson(JsonUtils.toJson(payloadWrapper));
 
         FileInfo fileInfo = new FileInfo();
         fileInfo.setId(7003L);

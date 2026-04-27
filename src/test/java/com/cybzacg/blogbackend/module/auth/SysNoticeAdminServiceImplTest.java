@@ -62,6 +62,16 @@ class SysNoticeAdminServiceImplTest {
 
         when(sysNoticeRepository.getById(10L)).thenReturn(notice);
         when(sysNoticeModelMapper.toIdList("7,9")).thenReturn(List.of(7L, 9L));
+        when(sysNoticeFactory.createDeliveryRecord(any(), any(), any())).thenAnswer(inv -> {
+            SysUserNotice record = new SysUserNotice();
+            record.setNoticeId(inv.getArgument(0));
+            record.setUserId(inv.getArgument(1));
+            record.setIsRead(NoticeConstants.READ_UNREAD);
+            record.setIsDeleted(0);
+            record.setCreateTime(inv.getArgument(2));
+            record.setUpdateTime(inv.getArgument(2));
+            return record;
+        });
 
         try (MockedStatic<?> securityUtils = SecurityTestUtils.mockUserId(99L)) {
             sysNoticeAdminService.publishNotice(10L);

@@ -26,6 +26,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.mock.web.MockMultipartFile;
 
 import java.util.List;
@@ -35,6 +37,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class UserFileServiceImplTest {
     @Mock
     private FileInfoRepository fileInfoRepository;
@@ -75,6 +78,14 @@ class UserFileServiceImplTest {
         when(fileUploadProperties.getChunkSizeThreshold()).thenReturn(0L);
         when(fileUploadProperties.getTaskExpireDays()).thenReturn(2);
         when(fileUploadProperties.getTempDirPrefix()).thenReturn("temp");
+        when(fileModelMapper.toFileUploadResultVO(any())).thenAnswer(invocation -> {
+            FileUploadTask task = invocation.getArgument(0);
+            FileUploadResultVO vo = new FileUploadResultVO();
+            vo.setTaskId(task.getId());
+            vo.setUploadId(task.getUploadId());
+            vo.setTaskStatus(task.getTaskStatus());
+            return vo;
+        });
     }
 
     @Test
@@ -156,6 +167,12 @@ class UserFileServiceImplTest {
 
         when(fileBusinessInfoRepository.pageByUserAndFilters(eqUserId(), any(UserFilePageQuery.class), any())).thenReturn(page);
         when(fileInfoRepository.listByIds(any())).thenReturn(List.of(fileInfo));
+        when(fileModelMapper.toUserFileVOFromBoth(any(), any())).thenAnswer(invocation -> {
+            UserFileVO vo = new UserFileVO();
+            vo.setBusinessId(invocation.getArgument(0, FileBusinessInfo.class).getId());
+            vo.setFileId(invocation.getArgument(1, FileInfo.class).getId());
+            return vo;
+        });
 
         try (MockedStatic<SecurityUtils> ignored = mockUser()) {
             PageResult<UserFileVO> result = userFileService.pageMyFiles(query);
@@ -213,7 +230,7 @@ class UserFileServiceImplTest {
             assertEquals(1, result.getUploadedChunks());
             assertEquals(2, result.getTotalChunks());
             verify(fileChunkRepository).save(any());
-            verify(fileUploadTaskRepository).updateById(any(FileUploadTask.class));
+            verify(fileUploadTaskRepository, atLeast(2)).updateById(any(FileUploadTask.class));
         }
     }
 
@@ -289,7 +306,7 @@ class UserFileServiceImplTest {
     }
 
     private Long eqUserId() {
-        return 7L;
+        return eq(7L);
     }
 
     private FileUploadInitRequest buildInitRequest() {

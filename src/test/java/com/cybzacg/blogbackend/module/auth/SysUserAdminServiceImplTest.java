@@ -210,7 +210,13 @@ class SysUserAdminServiceImplTest {
         user.setDeletedFlag(0);
 
         when(sysUserRepository.getById(6L)).thenReturn(user);
-        when(sysRoleRepository.countActiveByIds(List.of(2L, 4L))).thenReturn(2L);
+        when(sysRoleRepository.countActiveByIds(anyList())).thenReturn(2L);
+        when(rbacAssociationFactory.createUserRole(any(), any())).thenAnswer(inv -> {
+            SysUserRole ur = new SysUserRole();
+            ur.setUserId(inv.getArgument(0));
+            ur.setRoleId(inv.getArgument(1));
+            return ur;
+        });
         when(sysUserRoleRepository.saveBatch(anyCollection())).thenReturn(true);
 
         sysUserAdminService.assignRoles(6L, List.of(2L, 2L, 4L));

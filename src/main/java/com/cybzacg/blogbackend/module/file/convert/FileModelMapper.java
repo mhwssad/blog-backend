@@ -6,6 +6,7 @@ import com.cybzacg.blogbackend.domain.FileInfo;
 import com.cybzacg.blogbackend.domain.FileUploadTask;
 import com.cybzacg.blogbackend.module.file.model.admin.FileAdminVO;
 import com.cybzacg.blogbackend.module.file.model.admin.FileDetailVO;
+import com.cybzacg.blogbackend.module.file.model.admin.FileReferenceVO;
 import com.cybzacg.blogbackend.module.file.model.admin.FileTaskAdminVO;
 import com.cybzacg.blogbackend.module.file.model.user.*;
 import org.mapstruct.*;
@@ -79,6 +80,16 @@ public interface FileModelMapper {
 
     @Mapping(target = "id", source = "id")
     FileAdminVO toFileAdminVO(FileInfo fileInfo);
+
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "userId", source = "userId")
+    @Mapping(target = "referenceType", source = "referenceType")
+    @Mapping(target = "referenceId", source = "referenceId")
+    @Mapping(target = "isPublic", source = "isPublic")
+    @Mapping(target = "category", source = "category")
+    @Mapping(target = "remark", source = "remark")
+    @Mapping(target = "createdAt", source = "createdAt")
+    FileReferenceVO toFileReferenceVO(FileBusinessInfo businessInfo);
 
     @Mapping(target = "references", ignore = true)
     @Mapping(target = "tasks", ignore = true)

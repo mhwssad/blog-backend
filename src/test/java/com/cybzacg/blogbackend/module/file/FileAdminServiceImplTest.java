@@ -11,6 +11,7 @@ import com.cybzacg.blogbackend.enums.file.FileResultCode;
 import com.cybzacg.blogbackend.enums.file.FileStatusEnum;
 import com.cybzacg.blogbackend.enums.storage.TaskStatusEnum;
 import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.module.file.convert.FileModelMapper;
 import com.cybzacg.blogbackend.module.file.model.admin.*;
 import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
 import com.cybzacg.blogbackend.module.file.repository.FileChunkRepository;
@@ -43,6 +44,8 @@ class FileAdminServiceImplTest {
     private StorageManager storageManager;
     @Mock
     private StorageService storageService;
+    @Mock
+    private FileModelMapper fileModelMapper;
     private FileAdminServiceImpl fileAdminService;
 
     @BeforeEach
@@ -52,8 +55,42 @@ class FileAdminServiceImplTest {
                 fileUploadTaskRepository,
                 fileChunkRepository,
                 fileBusinessInfoRepository,
-                storageManager
+                storageManager,
+                fileModelMapper
         );
+        lenient().when(fileModelMapper.toFileAdminVO(any(FileInfo.class))).thenAnswer(inv -> {
+            FileInfo f = inv.getArgument(0);
+            FileAdminVO vo = new FileAdminVO();
+            vo.setId(f.getId());
+            vo.setOriginalName(f.getOriginalName());
+            vo.setCategory(f.getCategory());
+            vo.setStatus(f.getStatus());
+            return vo;
+        });
+        lenient().when(fileModelMapper.toFileDetailVO(any(FileInfo.class))).thenAnswer(inv -> {
+            FileInfo f = inv.getArgument(0);
+            FileDetailVO vo = new FileDetailVO();
+            vo.setId(f.getId());
+            vo.setOriginalName(f.getOriginalName());
+            return vo;
+        });
+        lenient().when(fileModelMapper.toFileReferenceVO(any(FileBusinessInfo.class))).thenAnswer(inv -> {
+            FileBusinessInfo b = inv.getArgument(0);
+            FileReferenceVO vo = new FileReferenceVO();
+            vo.setId(b.getId());
+            vo.setReferenceType(b.getReferenceType());
+            return vo;
+        });
+        lenient().when(fileModelMapper.toFileTaskAdminVO(any(FileUploadTask.class))).thenAnswer(inv -> {
+            FileUploadTask t = inv.getArgument(0);
+            FileTaskAdminVO vo = new FileTaskAdminVO();
+            vo.setId(t.getId());
+            vo.setUploadId(t.getUploadId());
+            vo.setTaskStatus(t.getTaskStatus());
+            vo.setUploadedChunks(t.getUploadedChunks());
+            vo.setTotalChunks(t.getTotalChunks());
+            return vo;
+        });
     }
 
     @Test

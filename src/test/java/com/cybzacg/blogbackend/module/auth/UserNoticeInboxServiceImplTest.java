@@ -73,6 +73,17 @@ class UserNoticeInboxServiceImplTest {
         when(sysUserNoticeRepository.findByUserId(7L)).thenReturn(List.of(unreadTargetRelation, readGlobalRelation));
         when(sysNoticeRepository.findGlobalUnread(anyCollection())).thenReturn(List.of(unreadGlobalNotice));
         when(sysUserNoticeRepository.findLatestByNoticeIdAndUserId(300L, 7L)).thenReturn(Optional.empty());
+        when(sysNoticeFactory.createReadRecord(any(), any(), any())).thenAnswer(inv -> {
+            SysUserNotice record = new SysUserNotice();
+            record.setNoticeId(inv.getArgument(0));
+            record.setUserId(inv.getArgument(1));
+            record.setIsRead(NoticeConstants.READ_READ);
+            record.setReadTime(inv.getArgument(2));
+            record.setCreateTime(inv.getArgument(2));
+            record.setUpdateTime(inv.getArgument(2));
+            record.setIsDeleted(0);
+            return record;
+        });
         when(sysUserNoticeRepository.save(any(SysUserNotice.class))).thenAnswer(invocation -> {
             SysUserNotice relation = invocation.getArgument(0);
             relation.setId(3L);
@@ -160,6 +171,14 @@ class UserNoticeInboxServiceImplTest {
         when(sysUserNoticeRepository.findByUserId(7L)).thenReturn(List.of());
         when(sysNoticeRepository.findGlobalUnread(anyCollection())).thenReturn(List.of(unreadGlobalNotice));
         when(sysUserNoticeRepository.findLatestByNoticeIdAndUserId(300L, 7L)).thenReturn(Optional.empty(), Optional.of(existingReadRelation));
+        when(sysNoticeFactory.createReadRecord(any(), any(), any())).thenAnswer(inv -> {
+            SysUserNotice record = new SysUserNotice();
+            record.setNoticeId(inv.getArgument(0));
+            record.setUserId(inv.getArgument(1));
+            record.setIsRead(NoticeConstants.READ_READ);
+            record.setIsDeleted(0);
+            return record;
+        });
         when(sysUserNoticeRepository.save(any(SysUserNotice.class)))
                 .thenThrow(new DuplicateKeyException("uk_notice_user"));
 

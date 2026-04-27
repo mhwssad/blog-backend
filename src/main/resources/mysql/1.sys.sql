@@ -13,6 +13,9 @@ CREATE TABLE `sys_user`
     `gender`          tinyint(1) DEFAULT 0 COMMENT '性别：0-未知，1-男，2-女, 3-保密',
     `birthday`        date COMMENT '生日',
     `status`          tinyint(1) DEFAULT 1 COMMENT '状态：0-禁用，1-启用',
+    `user_level`      tinyint(1) DEFAULT 1 COMMENT '用户等级：1-10，第一阶段默认 1',
+    `experience_points` int DEFAULT 0 COMMENT '经验值',
+    `level_updated_at` datetime COMMENT '最近一次等级变更时间',
     `last_login_time` datetime COMMENT '最后登录时间',
     `last_login_ip`   varchar(50) COMMENT '最后登录IP',
     `created_at`      datetime   DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
@@ -190,3 +193,178 @@ CREATE TABLE `sys_user_notice`
 
 
 
+
+
+DROP TABLE IF EXISTS `sys_author_application`;
+CREATE TABLE `sys_author_application`
+(
+    `id`                bigint      NOT NULL AUTO_INCREMENT COMMENT '申请ID',
+    `user_id`           bigint      NOT NULL COMMENT '申请用户ID',
+    `apply_status`      tinyint     DEFAULT 0 COMMENT '申请状态：0-待审核，1-已通过，2-已拒绝，3-待补充',
+    `apply_reason`      varchar(512) COMMENT '申请说明',
+    `content_direction` varchar(128) COMMENT '擅长内容方向',
+    `introduction`      varchar(1024) COMMENT '个人简介',
+    `sample_links_json` json COMMENT '示例链接JSON数组',
+    `reviewer_id`       bigint COMMENT '审核人ID',
+    `review_comment`    varchar(512) COMMENT '审核备注',
+    `submitted_at`      datetime    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '提交时间',
+    `reviewed_at`       datetime COMMENT '审核时间',
+    `created_at`        datetime    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    `updated_at`        datetime    DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    KEY `idx_author_application_user_status` (`user_id`, `apply_status`, `submitted_at` DESC) COMMENT '按用户查询申请记录',
+    KEY `idx_author_application_status_submitted` (`apply_status`, `submitted_at` DESC) COMMENT '按状态处理申请'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='作者申请表';
+
+DROP TABLE IF EXISTS `sys_user_notification_setting`;
+CREATE TABLE `sys_user_notification_setting`
+(
+    `id`                           bigint   NOT NULL AUTO_INCREMENT COMMENT '设置ID',
+    `user_id`                      bigint   NOT NULL COMMENT '用户ID',
+    `comment_notice_enabled`       tinyint DEFAULT 1 COMMENT '评论通知开关',
+    `like_notice_enabled`          tinyint DEFAULT 1 COMMENT '点赞通知开关',
+    `collect_notice_enabled`       tinyint DEFAULT 1 COMMENT '收藏通知开关',
+    `follow_notice_enabled`        tinyint DEFAULT 1 COMMENT '关注通知开关',
+    `private_chat_notice_enabled`  tinyint DEFAULT 1 COMMENT '私聊通知开关',
+    `mention_notice_enabled`       tinyint DEFAULT 1 COMMENT '@提醒开关',
+    `channel_announcement_enabled` tinyint DEFAULT 1 COMMENT '频道公告通知开关',
+    `system_notice_enabled`        tinyint DEFAULT 1 COMMENT '系统公告通知开关',
+    `ai_task_notice_enabled`       tinyint DEFAULT 1 COMMENT 'AI任务完成通知开关',
+    `created_at`                   datetime DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    `updated_at`                   datetime DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    UNIQUE KEY `uk_user_notification_setting` (`user_id`) COMMENT '每个用户一份通知设置'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='用户通知偏好设置表';
+
+DROP TABLE IF EXISTS `ai_channel_config`;
+CREATE TABLE `ai_channel_config`
+(
+    `id`                     bigint       NOT NULL AUTO_INCREMENT COMMENT '配置ID',
+    `channel_code`           varchar(64) NOT NULL COMMENT '渠道编码',
+    `channel_name`           varchar(128) NOT NULL COMMENT '渠道名称',
+    `provider`               varchar(64) NOT NULL COMMENT '提供方',
+    `model_name`             varchar(128) NOT NULL COMMENT '模型名称',
+    `api_base_url`           varchar(512) COMMENT '接口基础地址',
+    `api_key_encrypted`      text COMMENT '加密后的 API Key',
+    `daily_quota`            int          DEFAULT 0 COMMENT '全局每日额度：0-不限制',
+    `user_daily_quota`       int          DEFAULT 0 COMMENT '单用户每日额度：0-不限制',
+    `max_context_tokens`     int          DEFAULT 0 COMMENT '上下文长度上限：0-不限制',
+    `data_scope_json`        json COMMENT '可读取数据范围配置JSON',
+    `system_prompt_template` text COMMENT '系统提示词模板',
+    `status`                 tinyint      DEFAULT 1 COMMENT '状态：0-停用，1-启用',
+    `is_default`             tinyint      DEFAULT 0 COMMENT '是否默认渠道：0-否，1-是',
+    `created_by`             bigint COMMENT '创建人ID',
+    `updated_by`             bigint COMMENT '更新人ID',
+    `created_at`             datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    `updated_at`             datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    UNIQUE KEY `uk_ai_channel_config_channel_code` (`channel_code`) COMMENT '渠道编码唯一',
+    KEY `idx_ai_channel_config_status_default` (`status`, `is_default`, `id`) COMMENT '启用和默认渠道查询'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='AI 渠道配置表';
+
+DROP TABLE IF EXISTS `ai_chat_session`;
+CREATE TABLE `ai_chat_session`
+(
+    `id`                bigint      NOT NULL AUTO_INCREMENT COMMENT '会话ID',
+    `user_id`           bigint      NOT NULL COMMENT '用户ID',
+    `channel_config_id` bigint      NOT NULL COMMENT '渠道配置ID',
+    `title`             varchar(256) COMMENT '会话标题',
+    `scene_type`        varchar(32) DEFAULT 'general' COMMENT '会话场景：general/article/chat/profile',
+    `status`            tinyint     DEFAULT 1 COMMENT '状态：0-关闭，1-正常',
+    `last_message_at`   datetime COMMENT '最后消息时间',
+    `created_at`        datetime    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    `updated_at`        datetime    DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    KEY `idx_ai_chat_session_user_updated` (`user_id`, `updated_at` DESC) COMMENT '用户最近会话',
+    KEY `idx_ai_chat_session_channel_scene` (`channel_config_id`, `scene_type`, `status`) COMMENT '按渠道和场景查询'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='AI 对话会话表';
+
+DROP TABLE IF EXISTS `ai_chat_message`;
+CREATE TABLE `ai_chat_message`
+(
+    `id`                  bigint      NOT NULL AUTO_INCREMENT COMMENT '消息ID',
+    `session_id`          bigint      NOT NULL COMMENT '会话ID',
+    `user_id`             bigint COMMENT '关联用户ID（助手消息可为空）',
+    `role_type`           varchar(16) NOT NULL COMMENT '角色类型：user/assistant/system',
+    `content`             longtext    NOT NULL COMMENT '消息内容',
+    `request_scene_type`  varchar(32) DEFAULT 'general' COMMENT '请求场景：general/article/chat/profile',
+    `request_target_id`   bigint COMMENT '关联目标ID（文章/聊天等）',
+    `token_count`         int         DEFAULT 0 COMMENT '消息 token 数',
+    `data_scope_snapshot` json COMMENT '当次读取范围快照 JSON',
+    `response_status`     tinyint     DEFAULT 1 COMMENT '响应状态：0-失败，1-成功',
+    `error_message`       varchar(512) COMMENT '错误信息',
+    `created_at`          datetime    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    KEY `idx_ai_chat_message_session_created` (`session_id`, `id`) COMMENT '按会话顺序查询消息',
+    KEY `idx_ai_chat_message_user_created` (`user_id`, `created_at` DESC) COMMENT '按用户查看消息历史'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='AI 对话消息表';
+
+DROP TABLE IF EXISTS `ai_usage_log`;
+CREATE TABLE `ai_usage_log`
+(
+    `id`                 bigint      NOT NULL AUTO_INCREMENT COMMENT '日志ID',
+    `user_id`            bigint      NOT NULL COMMENT '用户ID',
+    `channel_config_id`  bigint      NOT NULL COMMENT '渠道配置ID',
+    `session_id`         bigint COMMENT '会话ID',
+    `request_scene_type` varchar(32) DEFAULT 'general' COMMENT '请求场景：general/article/chat/profile',
+    `request_tokens`     int         DEFAULT 0 COMMENT '请求 token 数',
+    `response_tokens`    int         DEFAULT 0 COMMENT '响应 token 数',
+    `total_tokens`       int         DEFAULT 0 COMMENT '总 token 数',
+    `quota_cost`         int         DEFAULT 1 COMMENT '额度消耗',
+    `success_status`     tinyint     DEFAULT 1 COMMENT '成功状态：0-失败，1-成功',
+    `error_code`         varchar(64) COMMENT '错误码',
+    `created_at`         datetime    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    KEY `idx_ai_usage_log_user_created` (`user_id`, `created_at` DESC) COMMENT '按用户查询使用记录',
+    KEY `idx_ai_usage_log_channel_created` (`channel_config_id`, `created_at` DESC) COMMENT '按渠道查询调用记录'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='AI 使用日志表';
+
+DROP TABLE IF EXISTS `sys_report_record`;
+CREATE TABLE `sys_report_record`
+(
+    `id`                 bigint      NOT NULL AUTO_INCREMENT COMMENT '举报单ID',
+    `report_target_type` varchar(32) NOT NULL COMMENT '举报对象类型：article/comment/chat_message',
+    `report_target_id`   bigint      NOT NULL COMMENT '举报对象ID',
+    `reporter_user_id`   bigint      NOT NULL COMMENT '举报人ID',
+    `reason_code`        varchar(32) COMMENT '举报原因编码',
+    `reason_detail`      varchar(1024) COMMENT '举报说明',
+    `status`             tinyint     DEFAULT 0 COMMENT '状态：0-待处理，1-处理中，2-已处理，3-已驳回',
+    `handler_user_id`    bigint COMMENT '当前处理人ID',
+    `result_type`        varchar(32) COMMENT '处理结果：delete_content/revoke_message/mute_user/ban_user/record_only',
+    `punishment_type`    varchar(32) COMMENT '处罚类型：content_delete/message_revoke/mute/ban/none',
+    `evidence_json`      json COMMENT '补充证据JSON',
+    `reported_at`        datetime    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '举报时间',
+    `handled_at`         datetime COMMENT '处理完成时间',
+    `remark`             varchar(512) COMMENT '备注',
+    `created_at`         datetime    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    `updated_at`         datetime    DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    KEY `idx_sys_report_record_target_status` (`report_target_type`, `report_target_id`, `status`) COMMENT '按对象查看举报记录',
+    KEY `idx_sys_report_record_reporter_time` (`reporter_user_id`, `reported_at` DESC) COMMENT '按举报人查看历史',
+    KEY `idx_sys_report_record_status_reported` (`status`, `reported_at` DESC) COMMENT '按状态处理举报'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='举报单主表';
+
+DROP TABLE IF EXISTS `sys_report_handle_log`;
+CREATE TABLE `sys_report_handle_log`
+(
+    `id`               bigint      NOT NULL AUTO_INCREMENT COMMENT '处理日志ID',
+    `report_id`        bigint      NOT NULL COMMENT '举报单ID',
+    `from_status`      tinyint COMMENT '变更前状态',
+    `to_status`        tinyint     NOT NULL COMMENT '变更后状态',
+    `action_type`      varchar(32) NOT NULL COMMENT '动作类型：claim/approve/reject/close/reassign',
+    `action_result`    varchar(32) COMMENT '动作结果/处罚类型',
+    `operator_user_id` bigint      NOT NULL COMMENT '操作人ID',
+    `action_remark`    varchar(512) COMMENT '处理备注',
+    `created_at`       datetime    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    KEY `idx_sys_report_handle_log_report_created` (`report_id`, `created_at` DESC) COMMENT '按举报单查看处理历史',
+    KEY `idx_sys_report_handle_log_operator_created` (`operator_user_id`, `created_at` DESC) COMMENT '按操作人查看历史'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='举报处理日志表';

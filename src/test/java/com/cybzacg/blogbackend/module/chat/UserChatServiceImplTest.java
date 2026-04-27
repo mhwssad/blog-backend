@@ -483,6 +483,8 @@ class UserChatServiceImplTest {
         });
         when(chatConversationRepository.updateById(conversation)).thenReturn(true);
         when(chatMessageRecipientRepository.saveBatch(anyCollection())).thenReturn(true);
+        when(chatMessageReadCursorRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(senderCursor);
+        when(chatMessageReadCursorRepository.findByConversationAndUser(conversationId, targetUserId)).thenReturn(targetCursor);
         when(chatMessageReadCursorRepository.updateById(any(ChatMessageReadCursor.class))).thenReturn(true);
 
         when(chatWebSocketSessionRegistry.getSessions(targetUserId)).thenReturn(List.of(mock(WebSocketSession.class)));
@@ -595,9 +597,17 @@ class UserChatServiceImplTest {
         });
         when(chatConversationRepository.updateById(conversation)).thenReturn(true);
         when(chatMessageRecipientRepository.saveBatch(anyCollection())).thenReturn(true);
+        when(chatMessageReadCursorRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(senderCursor);
+        when(chatMessageReadCursorRepository.findByConversationAndUser(conversationId, targetUserId)).thenReturn(targetCursor);
         when(chatMessageReadCursorRepository.updateById(any(ChatMessageReadCursor.class))).thenReturn(true);
         when(chatConversationMemberRepository.updateById(any(ChatConversationMember.class))).thenReturn(true);
         when(chatWebSocketSessionRegistry.getSessions(targetUserId)).thenReturn(List.of());
+        when(chatModelMapper.toMessagePayloadVO(any(), any())).thenAnswer(inv -> {
+            ChatMessagePayloadVO p = new ChatMessagePayloadVO();
+            p.setFile(inv.getArgument(0));
+            p.setReply(inv.getArgument(1));
+            return p;
+        });
         when(chatMessageRepository.selectVisibleMessageById(conversationId, currentUserId, replyMessageId)).thenReturn(replyItem);
         when(chatMessageRepository.selectVisibleMessageById(conversationId, currentUserId, messageId)).thenReturn(historyItem);
         when(chatModelMapper.toMessageVO(historyItem)).thenReturn(messageVO);
@@ -1093,8 +1103,17 @@ class UserChatServiceImplTest {
 
         when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
         when(chatConversationMemberRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(ownerMember);
+        when(chatConversationMemberRepository.findByConversationAndUser(conversationId, memberUserId)).thenReturn(targetMember);
         when(chatConversationMemberRepository.listActiveByConversationId(conversationId)).thenReturn(List.of(ownerMember, targetMember));
         when(chatConversationMemberRepository.updateById(targetMember)).thenReturn(true);
+        when(sysUserRepository.listByIds(any())).thenReturn(List.of());
+        when(chatModelMapper.toMemberVO(any(ChatConversationMember.class))).thenAnswer(invocation -> {
+            ChatConversationMember source = invocation.getArgument(0);
+            ChatMemberVO vo = new ChatMemberVO();
+            vo.setRole(source.getMemberRole());
+            vo.setStatus(source.getStatus());
+            return vo;
+        });
 
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(currentUserId)) {
             userChatService.removeGroupMember(conversationId, memberUserId);
@@ -1560,6 +1579,7 @@ class UserChatServiceImplTest {
 
         when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
         when(chatConversationMemberRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(ownerMember);
+        when(chatConversationMemberRepository.findByConversationAndUser(conversationId, memberUserId)).thenReturn(member);
         when(chatConversationMemberRepository.listActiveByConversationId(conversationId))
                 .thenReturn(List.of(ownerMember, member), List.of(ownerMember, member));
         when(chatConversationMemberRepository.updateById(member)).thenReturn(true);
@@ -1611,6 +1631,7 @@ class UserChatServiceImplTest {
 
         when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
         when(chatConversationMemberRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(ownerMember);
+        when(chatConversationMemberRepository.findByConversationAndUser(conversationId, memberUserId)).thenReturn(adminMember);
         when(chatConversationMemberRepository.listActiveByConversationId(conversationId))
                 .thenReturn(List.of(ownerMember, adminMember), List.of(ownerMember, adminMember));
         when(chatConversationMemberRepository.updateById(adminMember)).thenReturn(true);
@@ -1738,6 +1759,7 @@ class UserChatServiceImplTest {
 
         when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
         when(chatConversationMemberRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(adminMember);
+        when(chatConversationMemberRepository.findByConversationAndUser(conversationId, memberUserId)).thenReturn(targetMember);
         when(chatConversationMemberRepository.listActiveByConversationId(conversationId))
                 .thenReturn(List.of(adminMember, targetMember), List.of(adminMember, targetMember));
         when(chatConversationMemberRepository.updateById(targetMember)).thenReturn(true);
@@ -1842,7 +1864,7 @@ class UserChatServiceImplTest {
 
         when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
         when(chatConversationMemberRepository.findByConversationAndUser(conversationId, currentUserId))
-                .thenReturn(null, null, selfMember);
+                .thenReturn(null, selfMember);
         when(chatConversationMemberRepository.findByConversationAndUser(conversationId, targetUserId))
                 .thenReturn(null);
         when(chatConversationMemberRepository.listActiveByConversationId(conversationId)).thenReturn(List.of(selfMember, targetMember));
@@ -2036,8 +2058,9 @@ class UserChatServiceImplTest {
         when(chatConversationMemberRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(selfMember);
         when(chatConversationMemberRepository.listActiveByConversationId(conversationId)).thenReturn(List.of(selfMember, targetMember));
         when(chatModelMapper.toTextMessage(any(ChatSendTextRequest.class))).thenReturn(mappedMessage);
+        // findExistingMessage returns null first (proceeds to save), then findBySenderAndClientMessageId returns existing after DuplicateKeyException
+        when(chatMessageRepository.findBySenderAndClientMessageId(currentUserId, "dup-1")).thenReturn(null).thenReturn(existingMessage);
         when(chatMessageRepository.save(mappedMessage)).thenThrow(new org.springframework.dao.DuplicateKeyException("duplicate client message"));
-        when(chatMessageRepository.findBySenderAndClientMessageId(currentUserId, "dup-1")).thenReturn(existingMessage);
         when(chatMessageRepository.selectVisibleMessageById(conversationId, currentUserId, messageId)).thenReturn(historyItem);
         when(chatModelMapper.toMessageVO(historyItem)).thenReturn(messageVO);
         when(sysUserRepository.listByIds(any())).thenReturn(List.of(currentUser));
@@ -2173,7 +2196,6 @@ class UserChatServiceImplTest {
         when(chatMessageRepository.selectMessagePage(conversationId, currentUserId, null, 0L, 100L)).thenReturn(List.of(item));
         when(sysUserRepository.listByIds(any())).thenReturn(List.of(sender));
         when(chatModelMapper.toMessageVO(item)).thenReturn(messageVO);
-        when(chatConversationMemberRepository.updateById(selfMember)).thenReturn(true);
         when(chatMessageRecipientRepository.batchMarkDelivered(eq(conversationId), eq(currentUserId), any(), any())).thenReturn(true);
         when(chatMessageReadCursorRepository.advanceDeliveredState(eq(cursor.getId()), eq(messageId), any())).thenReturn(true);
         when(chatConversationMemberRepository.advanceDeliveredState(eq(selfMember.getId()), eq(messageId), any())).thenReturn(true);
@@ -3115,6 +3137,8 @@ class UserChatServiceImplTest {
         when(chatMessageRepository.updateById(any(ChatMessage.class))).thenReturn(true);
         when(chatConversationRepository.updateById(conversation)).thenReturn(true);
         when(chatMessageRecipientRepository.saveBatch(any())).thenReturn(true);
+        when(chatMessageReadCursorRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(senderCursor);
+        when(chatMessageReadCursorRepository.findByConversationAndUser(conversationId, targetUserId)).thenReturn(targetCursor);
         when(chatMessageReadCursorRepository.updateById(any(ChatMessageReadCursor.class))).thenReturn(true);
         when(chatConversationMemberRepository.updateById(any(ChatConversationMember.class))).thenReturn(true);
         when(chatMessageRepository.selectVisibleMessageById(conversationId, currentUserId, replyMessageId)).thenReturn(replyItem);
@@ -3122,6 +3146,12 @@ class UserChatServiceImplTest {
         when(chatModelMapper.toMessageVO(createdItem)).thenReturn(messageVO);
         when(sysUserRepository.listByIds(any())).thenReturn(List.of(sender));
         when(chatWebSocketSessionRegistry.getSessions(targetUserId)).thenReturn(List.of());
+        when(chatModelMapper.toMessagePayloadVO(any(), any())).thenAnswer(inv -> {
+            ChatMessagePayloadVO p = new ChatMessagePayloadVO();
+            p.setFile(inv.getArgument(0));
+            p.setReply(inv.getArgument(1));
+            return p;
+        });
 
         ChatSendFileRequest request = new ChatSendFileRequest();
         request.setConversationId(conversationId);
@@ -3255,12 +3285,20 @@ class UserChatServiceImplTest {
         when(chatMessageRepository.updateById(any(ChatMessage.class))).thenReturn(true);
         when(chatConversationRepository.updateById(conversation)).thenReturn(true);
         when(chatMessageRecipientRepository.saveBatch(any())).thenReturn(true);
+        when(chatMessageReadCursorRepository.findByConversationAndUser(conversationId, currentUserId)).thenReturn(senderCursor);
+        when(chatMessageReadCursorRepository.findByConversationAndUser(conversationId, targetUserId)).thenReturn(targetCursor);
         when(chatMessageReadCursorRepository.updateById(any(ChatMessageReadCursor.class))).thenReturn(true);
         when(chatConversationMemberRepository.updateById(any(ChatConversationMember.class))).thenReturn(true);
         when(chatMessageRepository.selectVisibleMessageById(conversationId, currentUserId, messageId)).thenReturn(createdItem);
         when(chatModelMapper.toMessageVO(createdItem)).thenReturn(messageVO);
         when(sysUserRepository.listByIds(any())).thenReturn(List.of(sender));
         when(chatWebSocketSessionRegistry.getSessions(targetUserId)).thenReturn(List.of());
+        when(chatModelMapper.toMessagePayloadVO(any(), any())).thenAnswer(inv -> {
+            ChatMessagePayloadVO p = new ChatMessagePayloadVO();
+            p.setFile(inv.getArgument(0));
+            p.setReply(inv.getArgument(1));
+            return p;
+        });
 
         ChatSendFileRequest request = new ChatSendFileRequest();
         request.setConversationId(conversationId);

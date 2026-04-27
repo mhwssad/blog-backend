@@ -3,7 +3,7 @@ USE blog_backend;
 -- 权限初始化脚本
 -- 执行顺序建议：
 -- 1. 先执行 1.sys.sql 建表
--- 2. 再执行 02_article.sql 建立内容域表
+-- 2. 再执行 02_article.sql、04_file.sql、05_chat.sql、06_follow.sql 建立业务域表
 -- 3. 最后执行本脚本初始化基础数据、菜单、权限和演示内容
 
 -- 兼容旧版本表结构：通知等级可能仍为 varchar(5)，无法容纳 success/warning
@@ -546,4 +546,5 @@ VALUES (1, 2, 1, 'article', 'Spring Boot 4 + JWT 认证实践', '/article/1', '1
         DATE_SUB(NOW(), INTERVAL 2 HOUR));
 
 COMMIT;
+
 

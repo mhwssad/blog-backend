@@ -153,7 +153,13 @@ class SysRoleAdminServiceImplTest {
         role.setIsDeleted(0);
 
         when(sysRoleRepository.getById(8L)).thenReturn(role);
-        when(sysMenuRepository.countByIds(List.of(3L, 5L))).thenReturn(2L);
+        when(sysMenuRepository.countByIds(anyList())).thenReturn(2L);
+        when(rbacAssociationFactory.createRoleMenu(any(), any())).thenAnswer(inv -> {
+            SysRoleMenu rm = new SysRoleMenu();
+            rm.setRoleId(inv.getArgument(0));
+            rm.setMenuId(inv.getArgument(1));
+            return rm;
+        });
         when(sysRoleMenuRepository.saveBatch(anyCollection())).thenReturn(true);
 
         sysRoleAdminService.assignMenus(8L, List.of(3L, 3L, 5L));

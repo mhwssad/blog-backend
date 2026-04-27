@@ -10,6 +10,9 @@ blog_backend;
 -- ----------------------------
 -- 聊天会话主表
 -- ----------------------------
+DROP TABLE IF EXISTS forum_post_channel_link;
+DROP TABLE IF EXISTS chat_group_join_application;
+DROP TABLE IF EXISTS chat_channel_create_application;
 DROP TABLE IF EXISTS chat_message_read_cursor;
 DROP TABLE IF EXISTS chat_message_recipient;
 DROP TABLE IF EXISTS chat_message;
@@ -21,6 +24,7 @@ CREATE TABLE chat_conversation
 (
     id                BIGINT AUTO_INCREMENT COMMENT '会话ID' PRIMARY KEY,
     conversation_type VARCHAR(16)                        NOT NULL COMMENT '会话类型：single-单聊，group-群聊，global-全站特殊群聊',
+    scene_type        VARCHAR(32) DEFAULT 'user_group'   NOT NULL COMMENT '业务场景：single_chat/user_group/hall_channel/topic_channel/global_channel',
     name              VARCHAR(128) NULL COMMENT '会话名称（群聊/全站群使用，单聊可为空）',
     avatar            VARCHAR(512) NULL COMMENT '会话头像',
     owner_id          BIGINT NULL COMMENT '会话拥有者ID（普通群聊群主）',
@@ -28,7 +32,17 @@ CREATE TABLE chat_conversation
     is_all_site       TINYINT  DEFAULT 0                 NOT NULL COMMENT '是否全站特殊群聊：0-否，1-是',
     all_site_key      VARCHAR(16) GENERATED ALWAYS AS (CASE WHEN is_all_site = 1 THEN 'global' ELSE NULL END) STORED COMMENT '全站群唯一键辅助列',
     status            TINYINT  DEFAULT 1                 NOT NULL COMMENT '会话状态：0-禁用，1-正常，2-已解散',
+    visibility_scope  VARCHAR(16) DEFAULT 'private'      NOT NULL COMMENT '可见范围：public/member/private',
+    allow_guest_view  TINYINT  DEFAULT 0                 NOT NULL COMMENT '访客是否可见：0-否，1-是',
+    require_join_to_speak TINYINT DEFAULT 1              NOT NULL COMMENT '是否需要加入后发言：0-否，1-是',
+    join_rule         VARCHAR(16) DEFAULT 'free'         NOT NULL COMMENT '加入规则：free/approval/invite_only',
+    speak_level_limit TINYINT  DEFAULT 1                 NOT NULL COMMENT '发言最低等级限制',
+    member_limit      INT      DEFAULT 0                 NOT NULL COMMENT '成员上限：0-不限制',
     remark            VARCHAR(256) NULL COMMENT '备注',
+    announcement      VARCHAR(512) NULL COMMENT '频道/群公告',
+    slow_mode_seconds INT      DEFAULT 0                 NOT NULL COMMENT '慢速模式秒数：0-关闭',
+    display_sort      INT      DEFAULT 0                 NOT NULL COMMENT '展示排序',
+    channel_category_code VARCHAR(32) NULL COMMENT '频道分类编码/群分类编码',
     last_message_id   BIGINT NULL COMMENT '最后一条消息ID',
     last_message_time DATETIME NULL COMMENT '最后一条消息时间',
     created_at        DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
@@ -176,6 +190,69 @@ CREATE TABLE chat_attachment_process_task
     INDEX                 idx_status_retry_time (task_status, next_retry_at, id) COMMENT '按状态和下次执行时间扫描任务',
     INDEX                 idx_status_lease_expire (task_status, lease_expire_at) COMMENT '按租约过期时间恢复处理中任务'
 ) COMMENT '聊天附件异步处理任务表'
+    ENGINE = InnoDB
+    DEFAULT CHARSET = utf8mb4
+    COLLATE = utf8mb4_unicode_ci;
+
+
+CREATE TABLE chat_channel_create_application
+(
+    id                    BIGINT AUTO_INCREMENT COMMENT '申请ID' PRIMARY KEY,
+    applicant_user_id     BIGINT                                NOT NULL COMMENT '申请用户ID',
+    desired_name          VARCHAR(128)                          NOT NULL COMMENT '期望频道名称',
+    desired_scene_type    VARCHAR(32) DEFAULT 'topic_channel'   NOT NULL COMMENT '期望频道类型',
+    desired_category_code VARCHAR(32)                           NULL COMMENT '期望分类编码',
+    description           VARCHAR(1024)                         NULL COMMENT '申请说明',
+    apply_status          TINYINT     DEFAULT 0                 NOT NULL COMMENT '申请状态：0-待审核，1-已通过，2-已拒绝，3-待补充',
+    conversation_id       BIGINT                                NULL COMMENT '审核通过后关联频道ID',
+    reviewer_id           BIGINT                                NULL COMMENT '审核人ID',
+    review_comment        VARCHAR(512)                          NULL COMMENT '审核意见',
+    submitted_at          DATETIME    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '提交时间',
+    reviewed_at           DATETIME                              NULL COMMENT '审核时间',
+    created_at            DATETIME    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    updated_at            DATETIME    DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+    INDEX idx_applicant_status (applicant_user_id, apply_status, submitted_at DESC) COMMENT '按申请人查看记录',
+    INDEX idx_status_submitted (apply_status, submitted_at DESC) COMMENT '按状态处理申请'
+) COMMENT '频道创建申请表'
+    ENGINE = InnoDB
+    DEFAULT CHARSET = utf8mb4
+    COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE chat_group_join_application
+(
+    id                BIGINT AUTO_INCREMENT COMMENT '申请ID' PRIMARY KEY,
+    conversation_id   BIGINT                                NOT NULL COMMENT '会话/群ID',
+    applicant_user_id BIGINT                                NOT NULL COMMENT '申请用户ID',
+    apply_message     VARCHAR(512)                          NULL COMMENT '申请附言',
+    apply_status      TINYINT     DEFAULT 0                 NOT NULL COMMENT '申请状态：0-待审核，1-已通过，2-已拒绝，3-已取消',
+    reviewer_id       BIGINT                                NULL COMMENT '审核人ID',
+    review_comment    VARCHAR(512)                          NULL COMMENT '审核意见',
+    submitted_at      DATETIME    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '提交时间',
+    reviewed_at       DATETIME                              NULL COMMENT '审核时间',
+    created_at        DATETIME    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    updated_at        DATETIME    DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+    INDEX idx_conversation_status (conversation_id, apply_status, submitted_at DESC) COMMENT '按群查看申请',
+    INDEX idx_applicant_status (applicant_user_id, apply_status, submitted_at DESC) COMMENT '按用户查看申请'
+) COMMENT '群聊入群申请表'
+    ENGINE = InnoDB
+    DEFAULT CHARSET = utf8mb4
+    COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE forum_post_channel_link
+(
+    id              BIGINT AUTO_INCREMENT COMMENT '关联ID' PRIMARY KEY,
+    forum_post_id   BIGINT                                NOT NULL COMMENT '论坛帖子ID（预留）',
+    conversation_id BIGINT                                NOT NULL COMMENT '频道会话ID',
+    link_type       VARCHAR(16) DEFAULT 'manual_share'    NOT NULL COMMENT '关联方式：manual_share',
+    linked_by       BIGINT                                NOT NULL COMMENT '关联人ID',
+    linked_at       DATETIME    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '关联时间',
+    created_at      DATETIME    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+
+    UNIQUE KEY uk_forum_post (forum_post_id) COMMENT '一个帖子第一阶段只能挂一个频道',
+    INDEX idx_conversation_linked (conversation_id, linked_at DESC) COMMENT '按频道查看挂接帖子'
+) COMMENT '论坛帖子与频道关联表（第一阶段手动分享预留）'
     ENGINE = InnoDB
     DEFAULT CHARSET = utf8mb4
     COLLATE = utf8mb4_unicode_ci;

@@ -24,6 +24,7 @@ import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
 import com.cybzacg.blogbackend.module.file.repository.FileUploadTaskRepository;
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
 import com.cybzacg.blogbackend.module.file.service.UserFileService;
+import com.cybzacg.blogbackend.utils.BeanConverterUtils;
 import com.cybzacg.blogbackend.utils.CollectionUtils;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.FileUtils;
@@ -607,9 +608,10 @@ public class UserFileServiceImpl implements UserFileService {
         if (existing != null) {
             return existing;
         }
-        FileBusinessInfo ref = new FileBusinessInfo();
+        FileBusinessInfo ref = BeanConverterUtils.convert(task, FileBusinessInfo::new, "id", "uploadTaskId", "fileMd5", "fileSize", "mimeType",
+                "referenceType", "referenceId", "isPublic", "category", "remark", "uploadUserId");
         ref.setFileId(fileId);
-        ref.setUserId(task.getUploadUserId());
+        ref.setUserId(userId);
         ref.setReferenceType(referenceType);
         ref.setReferenceId(referenceId);
         ref.setSourceIp(sourceIp);

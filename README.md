@@ -16,7 +16,7 @@
     - 内容域：文章、分类、标签、评论、收藏、互动、足迹接口。
     - 文件域：用户上传、秒传/分片上传、文件后台管理。
 - 当前阶段重点：
-    - 继续整理公共能力、测试支撑、文档入口和历史结构问题。
+    - 继续整理公共能力、测试支撑和文档入口。
     - 聊天 / WebSocket 当前仅保留数据库与单机握手骨架，待主线能力继续稳定后再进入正式业务实现。
 
 ## 架构概览
@@ -59,8 +59,7 @@ src/main/java/com/cybzacg/blogbackend
 - `src/main/resources/mysql/03_permission_init.sql`：权限与菜单初始化脚本。
 - `src/main/resources/mysql/04_file.sql`：文件域表结构。
 - `src/main/resources/mysql/05_chat.sql`：聊天域表结构（单聊 / 群聊 / 全站群、消息、接收状态、已读游标）。
-- `src/main/resources/mysql/06_follow.sql`：粉丝关注关系表结构（关注、取关、粉丝列表、关注列表、互关判断）。
-- `src/main/resources/mysql/07_schema_repair.sql`：存量库修复脚本，用于补齐缺失表并修复系统表唯一约束、索引和引擎问题。
+- src/main/resources/mysql/06_follow.sql：粉丝关注关系表结构（关注、取关、粉丝列表、关注列表、互关判断）。
 - `src/main/java/com/cybzacg/blogbackend/config/WebSocketConfig.java`：WebSocket 入口配置，当前默认端点为 `/ws/chat`。
 - `docs/chat-implementation.md`：聊天模块实现说明。
 - `docs/api文档/chat-api.md`：聊天 HTTP 接口与 WebSocket 协议文档。
@@ -85,9 +84,7 @@ src/main/java/com/cybzacg/blogbackend
 
 1. 创建数据库 `blog_backend`。
 2. 空库按顺序执行 `1.sys.sql`、`02_article.sql`、`04_file.sql`、`05_chat.sql`、`06_follow.sql`、`03_permission_init.sql`。
-3. 如果是历史库升级，不要直接把 `04_file.sql`、`05_chat.sql`、`06_follow.sql` 当增量脚本执行；应改为执行
-   `07_schema_repair.sql` 做存量库修复。
-4. 根据本机环境修改 `application-dev.yml` 中的数据库、Redis、邮件配置。
+3. 根据本机环境修改 `application-dev.yml` 中的数据库、Redis、邮件配置。
 
 ## 怎么样编译
 
@@ -162,9 +159,7 @@ mvn test
 - 聊天 / WebSocket 预留说明：`docs/api文档/chat-api.md`
 - 关注关系接口说明：`docs/api文档/follow-api.md`
 - 项目进度文档：`docs/项目进度文档.md`
-- 后续更新计划：`docs/后续更新计划.md`
-- 数据库修复说明：`docs/db-schema-repair.md`
-- 内容域任务拆分：`docs/tasks/content-domain/`
+- 任务执行清单：`docs/tasks/README.md`
 - Swagger / Knife4j：
     - `http://localhost:8000/doc.html`
     - `http://localhost:8000/swagger-ui.html`
@@ -173,6 +168,7 @@ mvn test
 
 - 优先复用 `docs/README.md` 中的正式入口文档，不再在 README 外散落平行说明。
 - 继续把更多真正依赖 Spring 上下文的测试接入 `test` profile，并优先抽公共测试支撑，减少重复样板代码。
-- 在 `P2` 阶段保持“先整理公共能力与历史遗留，再进入聊天 / WebSocket 业务实现”的推进节奏。
+- 具体需求和开发任务统一按 `docs/tasks/README.md` 拆分推进。
+
 
 

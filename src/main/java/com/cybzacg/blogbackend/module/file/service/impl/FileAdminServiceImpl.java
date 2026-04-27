@@ -12,6 +12,7 @@ import com.cybzacg.blogbackend.enums.file.FileReferenceTypeEnum;
 import com.cybzacg.blogbackend.enums.file.FileResultCode;
 import com.cybzacg.blogbackend.enums.file.FileStatusEnum;
 import com.cybzacg.blogbackend.enums.storage.TaskStatusEnum;
+import com.cybzacg.blogbackend.module.file.convert.FileModelMapper;
 import com.cybzacg.blogbackend.module.file.model.admin.*;
 import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
 import com.cybzacg.blogbackend.module.file.repository.FileChunkRepository;
@@ -38,6 +39,7 @@ public class FileAdminServiceImpl implements FileAdminService {
     private final FileChunkRepository fileChunkRepository;
     private final FileBusinessInfoRepository fileBusinessInfoRepository;
     private final StorageManager storageManager;
+    private final FileModelMapper fileModelMapper;
 
     /**
      * 按文件属性与业务引用维度分页查询后台文件列表。
@@ -50,7 +52,7 @@ public class FileAdminServiceImpl implements FileAdminService {
         query.setCurrent(current);
         query.setSize(size);
         var page = fileInfoRepository.pageAdminFiles(query);
-        List<FileAdminVO> records = page.getRecords().stream().map(this::toAdminVO).toList();
+        List<FileAdminVO> records = page.getRecords().stream().map(fileModelMapper::toFileAdminVO).toList();
         return PageResult.of(page, records);
     }
 
@@ -61,17 +63,15 @@ public class FileAdminServiceImpl implements FileAdminService {
     public FileDetailVO getFile(Long id) {
         FileInfo file = fileInfoRepository.getById(id);
         ExceptionThrowerCore.throwBusinessIfNull(file, FileResultCode.FILE_NOT_FOUND);
-        FileDetailVO detail = new FileDetailVO();
-        // 详情主体与列表视图共用同一套基础字段映射，避免管理端展示口径不一致。
-        copyToAdminVO(file, detail);
+        FileDetailVO detail = fileModelMapper.toFileDetailVO(file);
         List<FileReferenceVO> references = fileBusinessInfoRepository.listByFileId(id)
                 .stream()
-                .map(this::toReferenceVO)
+                .map(fileModelMapper::toFileReferenceVO)
                 .toList();
         detail.setReferences(references);
         List<FileTaskAdminVO> tasks = fileUploadTaskRepository.listRecentByFileId(id, 20)
                 .stream()
-                .map(this::toTaskAdminVO)
+                .map(fileModelMapper::toFileTaskAdminVO)
                 .toList();
         detail.setTasks(tasks);
         return detail;
@@ -88,7 +88,7 @@ public class FileAdminServiceImpl implements FileAdminService {
         query.setCurrent(current);
         query.setSize(size);
         var page = fileUploadTaskRepository.pageAdminTasks(query);
-        List<FileTaskAdminVO> records = page.getRecords().stream().map(this::toTaskAdminVO).toList();
+        List<FileTaskAdminVO> records = page.getRecords().stream().map(fileModelMapper::toFileTaskAdminVO).toList();
         return PageResult.of(page, records);
     }
 
@@ -149,73 +149,6 @@ public class FileAdminServiceImpl implements FileAdminService {
         file.setReferenceCount(0);
         file.setStatus(FileStatusEnum.DELETED.getValue());
         fileInfoRepository.updateById(file);
-    }
-
-    private FileAdminVO toAdminVO(FileInfo file) {
-        FileAdminVO vo = new FileAdminVO();
-        copyToAdminVO(file, vo);
-        return vo;
-    }
-
-    /**
-     * 复用文件列表和详情页共同需要的基础字段映射。
-     */
-    private void copyToAdminVO(FileInfo file, FileAdminVO vo) {
-        vo.setId(file.getId());
-        vo.setFileName(file.getFileName());
-        vo.setOriginalName(file.getOriginalName());
-        vo.setFilePath(file.getFilePath());
-        vo.setFileUrl(file.getFileUrl());
-        vo.setStorageKey(file.getStorageKey());
-        vo.setFileSize(file.getFileSize());
-        vo.setFileType(file.getFileType());
-        vo.setMimeType(file.getMimeType());
-        vo.setFileExtension(file.getFileExtension());
-        vo.setUploadUserId(file.getUploadUserId());
-        vo.setIsPublic(file.getIsPublic());
-        vo.setCategory(file.getCategory());
-        vo.setStatus(file.getStatus());
-        vo.setReferenceCount(file.getReferenceCount());
-        vo.setCreatedAt(file.getCreatedAt());
-    }
-
-    /**
-     * 将文件业务引用转换为后台详情页展示对象。
-     */
-    private FileReferenceVO toReferenceVO(FileBusinessInfo ref) {
-        FileReferenceVO vo = new FileReferenceVO();
-        vo.setId(ref.getId());
-        vo.setUserId(ref.getUserId());
-        vo.setReferenceType(ref.getReferenceType());
-        vo.setReferenceId(ref.getReferenceId());
-        vo.setIsPublic(ref.getIsPublic());
-        vo.setCategory(ref.getCategory());
-        vo.setRemark(ref.getRemark());
-        vo.setCreatedAt(ref.getCreatedAt());
-        return vo;
-    }
-
-    /**
-     * 将上传任务转换为后台任务视图，便于排查失败或重试场景。
-     */
-    private FileTaskAdminVO toTaskAdminVO(FileUploadTask task) {
-        FileTaskAdminVO vo = new FileTaskAdminVO();
-        vo.setId(task.getId());
-        vo.setUploadId(task.getUploadId());
-        vo.setFileId(task.getFileId());
-        vo.setUploadUserId(task.getUploadUserId());
-        vo.setOriginalName(task.getOriginalName());
-        vo.setFileSize(task.getFileSize());
-        vo.setStorageKey(task.getStorageKey());
-        vo.setIsQuickUpload(task.getIsQuickUpload());
-        vo.setIsChunked(task.getIsChunked());
-        vo.setUploadedChunks(task.getUploadedChunks());
-        vo.setTotalChunks(task.getTotalChunks());
-        vo.setTaskStatus(task.getTaskStatus());
-        vo.setErrorMessage(task.getErrorMessage());
-        vo.setCreatedAt(task.getCreatedAt());
-        vo.setCompleteTime(task.getCompleteTime());
-        return vo;
     }
 
     private void validatePageFilesQuery(FileAdminPageQuery query) {
