@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cybzacg.blogbackend.mapper.AiUsageLogMapper">
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.AiUsageLog">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="userId" column="user_id" jdbcType="BIGINT"/>
+        <result property="channelConfigId" column="channel_config_id" jdbcType="BIGINT"/>
+        <result property="sessionId" column="session_id" jdbcType="BIGINT"/>
+        <result property="requestSceneType" column="request_scene_type" jdbcType="VARCHAR"/>
+        <result property="requestTokens" column="request_tokens" jdbcType="INTEGER"/>
+        <result property="responseTokens" column="response_tokens" jdbcType="INTEGER"/>
+        <result property="totalTokens" column="total_tokens" jdbcType="INTEGER"/>
+        <result property="quotaCost" column="quota_cost" jdbcType="INTEGER"/>
+        <result property="successStatus" column="success_status" jdbcType="TINYINT"/>
+        <result property="errorCode" column="error_code" jdbcType="VARCHAR"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id, user_id, channel_config_id, session_id, request_scene_type,
+        request_tokens, response_tokens, total_tokens, quota_cost,
+        success_status, error_code, created_at
+    </sql>
+</mapper>
