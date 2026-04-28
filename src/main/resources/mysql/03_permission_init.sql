@@ -61,7 +61,7 @@ WHERE `id` IN (1, 2, 3, 4, 5, 6);
 DELETE
 FROM `sys_user_role`
 WHERE `user_id` IN (1, 2)
-   OR `role_id` IN (1, 2);
+   OR `role_id` IN (1, 2, 3);
 DELETE
 FROM `sys_user`
 WHERE `id` IN (1, 2);
@@ -77,15 +77,16 @@ WHERE `id` BETWEEN 1000 AND 1999;
 -- 初始化超级管理员角色与普通用户角色
 DELETE
 FROM `sys_role_menu`
-WHERE `role_id` IN (1, 2);
+WHERE `role_id` IN (1, 2, 3);
 DELETE
 FROM `sys_role`
-WHERE `id` IN (1, 2);
+WHERE `id` IN (1, 2, 3);
 
 INSERT INTO `sys_role` (`id`, `name`, `code`, `sort`, `status`, `data_scope`, `create_by`, `create_time`, `update_by`,
                         `update_time`, `is_deleted`)
 VALUES (1, '超级管理员', 'admin', 1, 1, 1, 1, NOW(), 1, NOW(), 0),
-       (2, '普通用户', 'user', 2, 1, 4, 1, NOW(), 1, NOW(), 0);
+       (2, '普通用户', 'user', 2, 1, 4, 1, NOW(), 1, NOW(), 0),
+       (3, '作者', 'author', 3, 1, 4, 1, NOW(), 1, NOW(), 0);
 
 -- 初始化基础用户数据
 -- 默认密码：password
@@ -146,11 +147,35 @@ VALUES (1100, 1000, '0,1000', '用户管理', 'M', 'SysUser', 'users', 'system/u
        (1106, 1100, '0,1000,1100', '分配角色', 'B', NULL, NULL, NULL, 'sys:user:assign-role', 0, 0, 1, 6, NULL, NULL,
         NOW(), NOW(), NULL);
 
+-- 作者申请管理
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1110, 1000, '0,1000', '作者申请', 'M', 'SysAuthorApplication', 'author-applications',
+        'system/author-application/index', NULL, 0, 1, 1, 2, 'document-checked', NULL, NOW(), NOW(), NULL),
+       (1111, 1110, '0,1000,1110', '作者申请查询', 'B', NULL, NULL, NULL, 'sys:author-application:query', 0, 0, 1, 1,
+        NULL, NULL, NOW(), NOW(), NULL),
+       (1112, 1110, '0,1000,1110', '作者申请审核', 'B', NULL, NULL, NULL, 'sys:author-application:review', 0, 0, 1, 2,
+        NULL, NULL, NOW(), NOW(), NULL);
+
+-- 经验体系管理
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1140, 1000, '0,1000', '经验管理', 'M', 'SysExperience', 'experience', 'system/experience/index', NULL, 0, 1, 1, 5, 'star',
+        NULL, NOW(), NOW(), NULL),
+       (1141, 1140, '0,1000,1140', '经验查询', 'B', NULL, NULL, NULL, 'sys:experience:query', 0, 0, 1, 1, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1142, 1140, '0,1000,1140', '等级调整', 'B', NULL, NULL, NULL, 'sys:experience:adjust', 0, 0, 1, 2, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1143, 1140, '0,1000,1140', '经验配置', 'B', NULL, NULL, NULL, 'sys:experience:config', 0, 0, 1, 3, NULL, NULL, NOW(),
+        NOW(), NULL);
+
 -- 角色管理
 INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
                         `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
                         `update_time`, `params`)
-VALUES (1200, 1000, '0,1000', '角色管理', 'M', 'SysRole', 'roles', 'system/role/index', NULL, 0, 1, 1, 2, 'peoples',
+VALUES (1200, 1000, '0,1000', '角色管理', 'M', 'SysRole', 'roles', 'system/role/index', NULL, 0, 1, 1, 3, 'peoples',
         NULL, NOW(), NOW(), NULL),
        (1201, 1200, '0,1000,1200', '角色查询', 'B', NULL, NULL, NULL, 'sys:role:query', 0, 0, 1, 1, NULL, NULL, NOW(),
         NOW(), NULL),
@@ -249,6 +274,17 @@ VALUES (1710, 1700, '0,1700', '文章管理', 'M', 'ContentArticle', 'articles',
        (1715, 1710, '0,1700,1710', '文章状态', 'B', NULL, NULL, NULL, 'content:article:update', 0, 0, 1, 5, NULL, NULL,
         NOW(), NOW(), NULL),
        (1716, 1710, '0,1700,1710', '访问控制', 'B', NULL, NULL, NULL, 'content:article:access', 0, 0, 1, 6, NULL, NULL,
+        NOW(), NOW(), NULL);
+
+-- 文章审核管理
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1717, 1700, '0,1700', '文章审核', 'M', 'ContentArticleReview', 'article-reviews', 'content/article-review/index', NULL, 0, 1, 1, 2,
+        'document-checked', NULL, NOW(), NOW(), NULL),
+       (1718, 1717, '0,1700,1717', '审核查询', 'B', NULL, NULL, NULL, 'content:article-review:query', 0, 0, 1, 1, NULL, NULL,
+        NOW(), NOW(), NULL),
+       (1719, 1717, '0,1700,1717', '审核处理', 'B', NULL, NULL, NULL, 'content:article-review:review', 0, 0, 1, 2, NULL, NULL,
         NOW(), NOW(), NULL);
 
 -- 分类管理
@@ -372,6 +408,13 @@ VALUES (1, 1000),
        (1, 1104),
        (1, 1105),
        (1, 1106),
+       (1, 1110),
+       (1, 1111),
+       (1, 1112),
+       (1, 1140),
+       (1, 1141),
+       (1, 1142),
+       (1, 1143),
        (1, 1200),
        (1, 1201),
        (1, 1202),
@@ -407,6 +450,9 @@ VALUES (1, 1000),
        (1, 1714),
        (1, 1715),
        (1, 1716),
+       (1, 1717),
+       (1, 1718),
+       (1, 1719),
        (1, 1720),
        (1, 1721),
        (1, 1722),
@@ -547,4 +593,123 @@ VALUES (1, 2, 1, 'article', 'Spring Boot 4 + JWT 认证实践', '/article/1', '1
 
 COMMIT;
 
+-- ============================================
+-- 以下为 07 数据库结构对齐补入菜单
+-- ============================================
 
+START TRANSACTION;
+
+-- 清理本次新增菜单（幂等）
+DELETE FROM `sys_role_menu` WHERE `menu_id` BETWEEN 1800 AND 1929;
+DELETE FROM `sys_menu` WHERE `id` BETWEEN 1800 AND 1929;
+
+-- 系列文章管理（内容管理 1700 下）
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1800, 1700, '0,1700', '系列文章', 'M', 'ContentSeries', 'series', 'content/series/index', NULL, 0, 1, 1, 11,
+        'list', NULL, NOW(), NOW(), NULL),
+       (1801, 1800, '0,1700,1800', '系列查询', 'B', NULL, NULL, NULL, 'content:series:query', 0, 0, 1, 1, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1802, 1800, '0,1700,1800', '系列新增', 'B', NULL, NULL, NULL, 'content:series:create', 0, 0, 1, 2, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1803, 1800, '0,1700,1800', '系列修改', 'B', NULL, NULL, NULL, 'content:series:update', 0, 0, 1, 3, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1804, 1800, '0,1700,1800', '系列删除', 'B', NULL, NULL, NULL, 'content:series:delete', 0, 0, 1, 4, NULL, NULL, NOW(),
+        NOW(), NULL);
+
+-- 频道申请审核（内容管理 1700 下）
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1810, 1700, '0,1700', '频道申请', 'M', 'ContentChannelApplication', 'channel-applications',
+        'content/channel-application/index', NULL, 0, 1, 1, 12, 'phone', NULL, NOW(), NOW(), NULL),
+       (1811, 1810, '0,1700,1810', '频道申请查询', 'B', NULL, NULL, NULL, 'content:channel-application:query', 0, 0, 1, 1,
+        NULL, NULL, NOW(), NOW(), NULL),
+       (1812, 1810, '0,1700,1810', '频道申请审核', 'B', NULL, NULL, NULL, 'content:channel-application:review', 0, 0, 1, 2,
+        NULL, NULL, NOW(), NOW(), NULL);
+
+-- 群入群申请管理（内容管理 1700 下）
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1820, 1700, '0,1700', '入群申请', 'M', 'ContentGroupJoin', 'group-join-applications',
+        'content/group-join/index', NULL, 0, 1, 1, 13, 'user-filled', NULL, NOW(), NOW(), NULL),
+       (1821, 1820, '0,1700,1820', '入群申请查询', 'B', NULL, NULL, NULL, 'content:group-join:query', 0, 0, 1, 1, NULL,
+        NULL, NOW(), NOW(), NULL),
+       (1822, 1820, '0,1700,1820', '入群申请审核', 'B', NULL, NULL, NULL, 'content:group-join:review', 0, 0, 1, 2, NULL,
+        NULL, NOW(), NOW(), NULL);
+
+-- AI 管理目录
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1850, 0, '0', 'AI 管理', 'C', 'Ai', '/ai', 'Layout', NULL, 1, 0, 1, 3, 'robot', '/ai/channel-config',
+        NOW(), NOW(), NULL);
+
+-- AI 渠道配置
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1860, 1850, '0,1850', '渠道配置', 'M', 'AiChannelConfig', 'channel-config', 'ai/channel-config/index', NULL, 0, 1,
+        1, 1, 'setting', NULL, NOW(), NOW(), NULL),
+       (1861, 1860, '0,1850,1860', '渠道查询', 'B', NULL, NULL, NULL, 'ai:channel-config:query', 0, 0, 1, 1, NULL, NULL,
+        NOW(), NOW(), NULL),
+       (1862, 1860, '0,1850,1860', '渠道新增', 'B', NULL, NULL, NULL, 'ai:channel-config:create', 0, 0, 1, 2, NULL, NULL,
+        NOW(), NOW(), NULL),
+       (1863, 1860, '0,1850,1860', '渠道修改', 'B', NULL, NULL, NULL, 'ai:channel-config:update', 0, 0, 1, 3, NULL, NULL,
+        NOW(), NOW(), NULL),
+       (1864, 1860, '0,1850,1860', '渠道删除', 'B', NULL, NULL, NULL, 'ai:channel-config:delete', 0, 0, 1, 4, NULL, NULL,
+        NOW(), NOW(), NULL);
+
+-- AI 调用统计
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1870, 1850, '0,1850', '调用统计', 'M', 'AiUsageStats', 'usage-stats', 'ai/usage-stats/index', NULL, 0, 1, 1, 2,
+        'data-analysis', NULL, NOW(), NOW(), NULL),
+       (1871, 1870, '0,1850,1870', '统计查询', 'B', NULL, NULL, NULL, 'ai:usage-stats:query', 0, 0, 1, 1, NULL, NULL, NOW(),
+        NOW(), NULL);
+
+-- 举报管理（系统管理 1000 下）
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1900, 1000, '0,1000', '举报管理', 'M', 'SysReport', 'reports', 'system/report/index', NULL, 0, 1, 1, 7,
+        'warning', NULL, NOW(), NOW(), NULL),
+       (1901, 1900, '0,1000,1900', '举报查询', 'B', NULL, NULL, NULL, 'sys:report:query', 0, 0, 1, 1, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1902, 1900, '0,1000,1900', '举报处理', 'B', NULL, NULL, NULL, 'sys:report:handle', 0, 0, 1, 2, NULL, NULL, NOW(),
+        NOW(), NULL);
+
+-- 数据看板（系统管理 1000 下）
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1910, 1000, '0,1000', '数据看板', 'M', 'SysDashboard', 'dashboard', 'system/dashboard/index', NULL, 0, 1, 1, 8,
+        'dashboard', NULL, NOW(), NOW(), NULL),
+       (1911, 1910, '0,1000,1910', '看板查询', 'B', NULL, NULL, NULL, 'sys:dashboard:query', 0, 0, 1, 1, NULL, NULL, NOW(),
+        NOW(), NULL);
+
+-- 高风险审计查询（系统管理 1000 下）
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1920, 1000, '0,1000', '高风险审计', 'M', 'SysAudit', 'audit', 'system/audit/index', NULL, 0, 1, 1, 9, 'lock',
+        NULL, NOW(), NOW(), NULL),
+       (1921, 1920, '0,1000,1920', '审计查询', 'B', NULL, NULL, NULL, 'sys:audit:query', 0, 0, 1, 1, NULL, NULL, NOW(),
+        NOW(), NULL);
+
+-- 超级管理员授权新增菜单
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+VALUES (1, 1800), (1, 1801), (1, 1802), (1, 1803), (1, 1804),
+       (1, 1810), (1, 1811), (1, 1812),
+       (1, 1820), (1, 1821), (1, 1822),
+       (1, 1850),
+       (1, 1860), (1, 1861), (1, 1862), (1, 1863), (1, 1864),
+       (1, 1870), (1, 1871),
+       (1, 1900), (1, 1901), (1, 1902),
+       (1, 1910), (1, 1911),
+       (1, 1920), (1, 1921);
+
+COMMIT;
