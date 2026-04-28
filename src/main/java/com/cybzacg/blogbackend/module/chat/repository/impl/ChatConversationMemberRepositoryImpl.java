@@ -100,6 +100,16 @@ public class ChatConversationMemberRepositoryImpl extends ServiceImpl<ChatConver
     }
 
     /**
+     * 统计指定会话中状态为正常的成员数量。
+     */
+    @Override
+    public long countActiveByConversationId(Long conversationId) {
+        return count(new LambdaQueryWrapper<ChatConversationMember>()
+                .eq(ChatConversationMember::getConversationId, conversationId)
+                .eq(ChatConversationMember::getStatus, ChatConstants.MEMBER_STATUS_NORMAL));
+    }
+
+    /**
      * CAS 式推进已投递游标，仅在当前值为空或小于目标值时更新，避免并发回退。
      */
     @Override

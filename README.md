@@ -1,27 +1,30 @@
 # blog-backend
 
-`blog-backend` 是一个基于 Spring Boot 4、Spring Security、MyBatis-Plus、MySQL、Redis 的博客后端项目，当前仓库重点已经落地认证鉴权、RBAC
-后台管理、通知中心、内容域接口以及文件上传管理能力。
+`blog-backend` 是一个基于 Spring Boot 4、Spring Security、MyBatis-Plus、MySQL、Redis 的博客后端项目，当前仓库已落地认证鉴权、RBAC 后台管理、通知中心、内容域接口、文件上传管理、聊天社区和超级管理员安全能力。
 
 文档入口优先看 [docs/README.md](docs/README.md)。
 项目结构与代码落位约束见 [docs/项目结构规范.md](docs/项目结构规范.md)。
 
 ## 项目情况
 
-- 技术栈：Java 17、Spring Boot 4.0.3、Spring Security、MyBatis-Plus、Druid、Redis、Knife4j/OpenAPI、MapStruct、Lombok。
+- 技术栈：Java 17、Spring Boot 4.0.3、Spring Security、MyBatis-Plus、Druid、Redis、Caffeine、Knife4j/OpenAPI、MapStruct、Lombok。
 - 当前默认环境：`dev`，启动端口 `8000`。
 - 当前已落地的业务主线：
-    - 认证与会话：账号登录、注册、邮箱验证码登录、刷新令牌、退出登录。
+    - 认证与会话：账号登录、注册、邮箱验证码登录、刷新令牌、退出登录、超级管理员 2FA 验证、账号接管。
     - RBAC 管理：用户、角色、菜单、系统配置、通知、日志后台接口。
+    - 作者申请与审核：用户提交申请、管理员审核、差异化发文配额。
+    - 用户等级与经验：1-10 级等级体系、每日经验上限、等级门槛联动（大厅发言、建群、AI 额度）。
     - 内容域：文章、分类、标签、评论、收藏、互动、足迹接口。
     - 文件域：用户上传、秒传/分片上传、文件后台管理。
+    - 聊天社区：单聊/群聊/全站群聊/大厅频道/主题频道、WebSocket 实时推送、邀请链接、入群申请、群治理。
 - 当前阶段重点：
-    - 继续整理公共能力、测试支撑和文档入口。
-    - 聊天 / WebSocket 当前仅保留数据库与单机握手骨架，待主线能力继续稳定后再进入正式业务实现。
+    - 继续完善大厅频道增强和主题频道规则。
+    - AI 模块和举报治理模块待启动。
+    - 源码结构重型类拆分与子域化。
 
 ## 架构概览
 
-项目目前是单模块单体后端，按“配置层 -> Web 层 -> 业务层 -> 数据访问层 -> 数据库/缓存”组织：
+项目目前是单模块单体后端，按"配置层 -> Web 层 -> 业务层 -> 数据访问层 -> 数据库/缓存"组织：
 
 ```text
 src/main/java/com/cybzacg/blogbackend
@@ -32,7 +35,7 @@ src/main/java/com/cybzacg/blogbackend
 ├─ domain           数据库实体
 ├─ mapper           MyBatis-Plus Mapper 接口
 ├─ module
-│  ├─ auth          认证、RBAC、通知中心
+│  ├─ auth          认证、RBAC、作者申请、通知中心、经验体系、超级管理员
 │  ├─ article       文章内容域
 │  ├─ content       分类/标签/评论/收藏/互动/足迹
 │  ├─ file          文件上传与后台管理
@@ -58,10 +61,11 @@ src/main/java/com/cybzacg/blogbackend
 - `src/main/resources/mysql/02_article.sql`：文章内容域表结构。
 - `src/main/resources/mysql/03_permission_init.sql`：权限与菜单初始化脚本。
 - `src/main/resources/mysql/04_file.sql`：文件域表结构。
-- `src/main/resources/mysql/05_chat.sql`：聊天域表结构（单聊 / 群聊 / 全站群、消息、接收状态、已读游标）。
-- src/main/resources/mysql/06_follow.sql：粉丝关注关系表结构（关注、取关、粉丝列表、关注列表、互关判断）。
+- `src/main/resources/mysql/05_chat.sql`：聊天域表结构（单聊 / 群聊 / 全站群 / 大厅 / 主题频道、消息、接收状态、已读游标、申请与邀请链接）。
+- `src/main/resources/mysql/06_follow.sql`：粉丝关注关系表结构（关注、取关、粉丝列表、关注列表、互关判断）。
+- `src/main/resources/mysql/07_user_experience.sql`：用户等级经验表结构。
 - `src/main/java/com/cybzacg/blogbackend/config/WebSocketConfig.java`：WebSocket 入口配置，当前默认端点为 `/ws/chat`。
-- `docs/chat-implementation.md`：聊天模块实现说明。
+- `docs/tasks/chat-implementation.md`：聊天模块实现说明。
 - `docs/api文档/chat-api.md`：聊天 HTTP 接口与 WebSocket 协议文档。
 
 ## 本地依赖
@@ -83,7 +87,7 @@ src/main/java/com/cybzacg/blogbackend
 首次启动前，至少要完成：
 
 1. 创建数据库 `blog_backend`。
-2. 空库按顺序执行 `1.sys.sql`、`02_article.sql`、`04_file.sql`、`05_chat.sql`、`06_follow.sql`、`03_permission_init.sql`。
+2. 空库按顺序执行 `1.sys.sql`、`02_article.sql`、`04_file.sql`、`05_chat.sql`、`06_follow.sql`、`07_user_experience.sql`、`03_permission_init.sql`。
 3. 根据本机环境修改 `application-dev.yml` 中的数据库、Redis、邮件配置。
 
 ## 怎么样编译
@@ -156,8 +160,10 @@ mvn test
 - 认证与系统管理接口说明：`docs/api文档/auth-api.md`
 - 内容域接口说明：`docs/api文档/content-api.md`
 - 文件模块接口说明：`docs/api文档/file-api.md`
-- 聊天 / WebSocket 预留说明：`docs/api文档/chat-api.md`
+- 聊天 / WebSocket 接口说明：`docs/api文档/chat-api.md`
+- WebSocket 实时通信协议：`docs/api文档/websocket-api.md`
 - 关注关系接口说明：`docs/api文档/follow-api.md`
+- 前端联调文档：`docs/前端/`
 - 任务执行清单：`docs/tasks/README.md`
 - Swagger / Knife4j：
     - `http://localhost:8000/doc.html`
@@ -168,5 +174,3 @@ mvn test
 - 优先复用 `docs/README.md` 中的正式入口文档，不再在 README 外散落平行说明。
 - 继续把更多真正依赖 Spring 上下文的测试接入 `test` profile，并优先抽公共测试支撑，减少重复样板代码。
 - 具体需求和开发任务统一按 `docs/tasks/README.md` 拆分推进。
-
-

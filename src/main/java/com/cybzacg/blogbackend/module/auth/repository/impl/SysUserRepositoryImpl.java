@@ -151,6 +151,21 @@ public class SysUserRepositoryImpl extends ServiceImpl<SysUserMapper, SysUser>
                 .ne(excludeId != null, SysUser::getId, excludeId));
     }
 
+    /**
+     * 根据用户ID查询邮箱地址。
+     */
+    @Override
+    public String findEmailById(Long userId) {
+        if (userId == null) {
+            return null;
+        }
+        SysUser user = getOne(new LambdaQueryWrapper<SysUser>()
+                .select(SysUser::getEmail)
+                .eq(SysUser::getId, userId)
+                .eq(SysUser::getDeletedFlag, 0));
+        return user != null ? user.getEmail() : null;
+    }
+
     @Override
     public int incrementExperiencePoints(Long userId, int delta) {
         return baseMapper.incrementExperiencePoints(userId, delta);

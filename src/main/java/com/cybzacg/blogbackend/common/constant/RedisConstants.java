@@ -12,6 +12,9 @@ public final class RedisConstants {
     public static final String XP_DAILY_KEY_PREFIX = "xp:daily";
     public static final String XP_IDEMPOTENT_KEY_PREFIX = "xp:idempotent";
 
+    public static final String AI_QUOTA_USER_DAILY_PREFIX = "ai:quota:user";
+    public static final String AI_QUOTA_PLATFORM_DAILY_PREFIX = "ai:quota:platform";
+
     private RedisConstants() {
     }
 }

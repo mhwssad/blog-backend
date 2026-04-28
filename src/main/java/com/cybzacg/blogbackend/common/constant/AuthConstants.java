@@ -28,6 +28,17 @@ public final class AuthConstants {
     public static final String LOGIN_FAIL_SCOPE_USER = "user";
     public static final String LOGIN_FAIL_SCOPE_ACCOUNT = "account";
 
+    public static final String MFA_EMAIL_CODE_PREFIX = "auth:mfa-email-code";
+    public static final Duration MFA_EMAIL_CODE_TTL = Duration.ofMinutes(5);
+    public static final String MFA_EMAIL_CODE_RATE_PREFIX = "auth:mfa-email-code:rate";
+    public static final Duration MFA_EMAIL_CODE_RATE_TTL = Duration.ofSeconds(60);
+    public static final String MFA_TICKET_PREFIX = "auth:mfa-ticket";
+    public static final Duration MFA_TICKET_TTL = Duration.ofMinutes(30);
+    public static final String MFA_EMAIL_SUBJECT = "高风险操作二次验证码";
+    public static final String TAKEOVER_TOKEN_PREFIX = "auth:takeover-token";
+    public static final Duration TAKEOVER_TOKEN_TTL = Duration.ofMinutes(30);
+    public static final String TOKEN_BLACKLIST_PREFIX = "auth:token-blacklist";
+
     private AuthConstants() {
     }
 }

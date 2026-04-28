@@ -106,6 +106,7 @@ CREATE TABLE chat_message
     revoked_by         BIGINT NULL COMMENT '撤回操作者ID',
     revoked_at         DATETIME NULL COMMENT '撤回时间',
     client_message_id  VARCHAR(64) NULL COMMENT '客户端消息幂等键',
+    pinned_by          BIGINT NULL COMMENT '置顶操作人ID（NULL 表示未置顶）',
     created_at         DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
     updated_at         DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
 

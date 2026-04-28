@@ -40,6 +40,8 @@ public class SysUserAdminVO {
     private String lastLoginIp;
     @Schema(description = "备注")
     private String remark;
+    @Schema(description = "MFA是否启用")
+    private Integer mfaEnabled;
     @Schema(description = "角色ID列表")
     private List<Long> roleIds;
 }

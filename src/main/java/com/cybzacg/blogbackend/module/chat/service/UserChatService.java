@@ -61,4 +61,14 @@ public interface UserChatService {
      * 访客查看大厅频道消息（无需登录）。
      */
     PageResult<ChatLobbyMessageVO> pageLobbyMessages(Long current, Long size, Long beforeMessageId);
+
+    /**
+     * 加入公开频道或公开群（仅 join_rule = free 的会话）。
+     */
+    ChatConversationVO joinConversation(Long conversationId);
+
+    /**
+     * 离开频道或公开群（非群主均可退出）。
+     */
+    void leaveConversation(Long conversationId);
 }

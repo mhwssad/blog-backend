@@ -13,7 +13,9 @@
 | 路由前缀                   | 用途                  | 是否需要登录 |
 |------------------------|---------------------|--------|
 | `/api/auth/**`         | 登录、注册、刷新令牌、获取当前登录用户 | 部分需要   |
+| `/api/auth/takeover/**` | 账号接管认证接口           | 需要     |
 | `/api/users/**`        | 公开用户 / 作者主页摘要接口     | 否      |
+| `/api/admin/**`        | 超级管理员操作接口           | 需要     |
 | `/api/sys/**`          | 后台管理接口              | 需要     |
 | `/api/user/author-applications/**` | 登录用户作者申请接口         | 需要     |
 | `/api/user/notification-settings/**` | 登录用户通知设置接口         | 需要     |
@@ -1195,10 +1197,10 @@ AI 统计响应字段：`aiCallCount`、`aiSuccessCallCount`、`aiFailedCallCoun
 |---------------------------|-----------|
 | `sys:user:query`          | 查询用户      |
 | `sys:user:create`         | 新增用户      |
-| `sys:user:update`         | 修改用户、修改状态 |
+| `sys:user:update`         | 修改用户、修改状态、封禁/解封、调整等级/经验、接管账号 |
 | `sys:user:delete`         | 删除用户      |
 | `sys:user:reset-password` | 重置用户密码    |
-| `sys:user:assign-role`    | 分配用户角色    |
+| `sys:user:assign-role`    | 分配用户角色、带审计的角色分配    |
 | `sys:author-application:query` | 查询作者申请 |
 | `sys:author-application:review` | 审核作者申请 |
 | `sys:author-application:repair` | 修正作者申请状态 |
@@ -1229,7 +1231,159 @@ AI 统计响应字段：`aiCallCount`、`aiSuccessCallCount`、`aiFailedCallCoun
 | `sys:experience:adjust`   | 调整用户等级/经验  |
 | `sys:experience:config`   | 管理经验来源配置  |
 
-## 10. 常见联调问题
+## 10. 超级管理员操作接口
+
+这一组接口是超级管理员专属操作，包含 2FA 二次验证、用户封禁/解封、等级与经验调整、账号接管、带审计的角色分配等。
+
+### 10.1 接口速览
+
+| 场景 | 方法 | 路径 | 权限 |
+| --- | --- | --- | --- |
+| 发送2FA验证码 | POST | `/api/admin/2fa/send-code` | `sys:user:update` |
+| 校验2FA验证码 | POST | `/api/admin/2fa/verify` | `sys:user:update` |
+| 封禁用户 | POST | `/api/admin/users/{id}/ban` | `sys:user:update` |
+| 解封用户 | POST | `/api/admin/users/{id}/unban` | `sys:user:update` |
+| 调整用户等级 | PUT | `/api/admin/users/{id}/level` | `sys:user:update` |
+| 调整用户经验 | PUT | `/api/admin/users/{id}/experience` | `sys:user:update` |
+| 账号接管 | POST | `/api/admin/takeover` | `sys:user:update` |
+| 带审计的角色分配 | PUT | `/api/admin/users/{id}/roles` | `sys:user:assign-role` |
+
+### 10.2 2FA 二次验证
+
+#### 发送2FA验证码
+
+- 请求：`POST /api/admin/2fa/send-code`
+- 鉴权：是
+- 用途：超级管理员操作前先获取2FA验证码
+- 响应：`data = null`
+- 当前行为补充：
+    - 验证码默认 `60` 秒内只能发送一次，超频会返回业务错误。
+    - 验证码默认 `5` 分钟过期。
+
+#### 校验2FA验证码
+
+- 请求：`POST /api/admin/2fa/verify`
+- 鉴权：是
+- 请求体：`MfaVerifyRequest`
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `code` | String | 是 | 6 位验证码 |
+
+- 响应：`MfaVerifyResponse`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `ticket` | String | 2FA 票据，用于后续敏感操作 |
+| `expiresIn` | Long | 票据有效期秒数，默认 30 分钟 |
+
+### 10.3 用户封禁与解封
+
+#### 封禁用户
+
+- 请求：`POST /api/admin/users/{id}/ban`
+- 鉴权：是，需要 `mfaTicket`
+- 请求体：`BanUserRequest`
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `mfaTicket` | String | 是 | 2FA 校验通过的票据 |
+| `banReason` | String | 否 | 封禁原因 |
+
+- 当前行为补充：
+    - 封禁后会强制使目标用户当前会话失效。
+    - 需要有效的 `mfaTicket` 才能执行封禁操作。
+
+#### 解封用户
+
+- 请求：`POST /api/admin/users/{id}/unban`
+- 鉴权：是，需要 `mfaTicket`
+- 请求体：`BanUserRequest`
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `mfaTicket` | String | 是 | 2FA 校验通过的票据 |
+| `unbanReason` | String | 否 | 解封原因 |
+
+### 10.4 用户等级与经验调整
+
+#### 调整用户等级
+
+- 请求：`PUT /api/admin/users/{id}/level`
+- 鉴权：是，需要 `mfaTicket`
+- 请求体：`AdjustLevelRequest`
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `level` | Integer | 是 | 目标等级 |
+| `mfaTicket` | String | 是 | 2FA 校验通过的票据 |
+
+#### 调整用户经验
+
+- 请求：`PUT /api/admin/users/{id}/experience`
+- 鉴权：是，需要 `mfaTicket`
+- 请求体：`AdjustExperienceRequest`
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `experience` | Long | 是 | 目标经验值 |
+| `mfaTicket` | String | 是 | 2FA 校验通过的票据 |
+
+### 10.5 账号接管
+
+- 请求：`POST /api/admin/takeover`
+- 鉴权：是，需要 `mfaTicket`
+- 用途：超级管理员临时接管为目标用户身份进行操作
+- 请求体：`AccountTakeoverRequest`
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `targetUserId` | Long | 是 | 目标用户 ID |
+| `mfaTicket` | String | 是 | 2FA 校验通过的票据 |
+
+- 响应：`AccountTakeoverResponse`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `takeoverToken` | String | 接管令牌 |
+| `expiresIn` | Long | 接管令牌有效期秒数 |
+
+- 当前行为补充：
+    - 接管令牌用于 `/api/auth/takeover/login` 接口登录。
+    - 接管令牌一次性使用，使用后失效。
+    - 所有敏感操作需要先通过 2FA 验证并提供 `mfaTicket`。
+
+### 10.6 带审计的角色分配
+
+- 请求：`PUT /api/admin/users/{id}/roles`
+- 鉴权：是，需要 `mfaTicket`
+- 请求体：`UserRoleAuditAssignRequest`
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `roleIds` | List<Long> | 是 | 角色 ID 列表 |
+| `mfaTicket` | String | 是 | 2FA 校验通过的票据 |
+
+- 当前行为补充：
+    - 该接口在普通角色分配基础上追加审计日志。
+    - 需要有效的 `mfaTicket` 才能执行操作。
+
+## 11. 账号接管认证接口
+
+### 11.1 使用接管令牌登录
+
+- 请求：`POST /api/auth/takeover/login`
+- 鉴权：否
+- 用途：超级管理员使用接管令牌登录为目标用户身份
+- 请求体：`TakeoverLoginRequest`
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `takeoverToken` | String | 是 | 接管令牌 |
+
+- 响应：同 `AuthenticationToken`
+
+## 12. 常见联调问题
 
 | 问题                          | 当前行为             |
 |-----------------------------|------------------|

@@ -1,6 +1,8 @@
 package com.cybzacg.blogbackend.config;
 
 import com.cybzacg.blogbackend.config.property.LangChain4jProperties;
+import com.cybzacg.blogbackend.domain.AiChannelConfig;
+import com.cybzacg.blogbackend.module.ai.constant.AiConstants;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
@@ -11,6 +13,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.time.Duration;
 
 /**
  * LangChain4j 默认模型配置。
@@ -78,5 +82,35 @@ public class LangChain4jConfig {
             throw new IllegalStateException("启用 ai.langchain4j.enabled 时必须配置 ai.langchain4j.api-key");
         }
         return apiKey;
+    }
+
+    /**
+     * 根据渠道配置动态构建 ChatModel。
+     *
+     * <p>用于 AI 模块多渠道场景，每次调用生成独立的模型实例。缺失字段使用 {@link AiConstants} 默认值兜底。
+     *
+     * @param config 渠道配置，需包含 apiBaseUrl、apiKeyEncrypted、modelName
+     * @return OpenAI-compatible ChatModel 实例
+     */
+    public static ChatModel buildModel(AiChannelConfig config) {
+        String baseUrl = StrUtils.trimToNull(config.getApiBaseUrl());
+        String apiKey = StrUtils.trimToNull(config.getApiKeyEncrypted());
+        if (baseUrl == null) {
+            throw new IllegalArgumentException("渠道 [" + config.getChannelCode() + "] apiBaseUrl 不能为空");
+        }
+        if (apiKey == null) {
+            throw new IllegalArgumentException("渠道 [" + config.getChannelCode() + "] apiKeyEncrypted 不能为空");
+        }
+        return OpenAiChatModel.builder()
+                .baseUrl(baseUrl)
+                .apiKey(apiKey)
+                .modelName(StrUtils.trimToDefault(config.getModelName(), "deepseek-chat"))
+                .temperature(AiConstants.DEFAULT_TEMPERATURE)
+                .maxTokens(AiConstants.DEFAULT_MAX_TOKENS)
+                .timeout(Duration.ofSeconds(AiConstants.DEFAULT_TIMEOUT_SECONDS))
+                .maxRetries(1)
+                .logRequests(false)
+                .logResponses(false)
+                .build();
     }
 }

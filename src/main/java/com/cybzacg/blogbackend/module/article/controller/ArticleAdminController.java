@@ -4,8 +4,10 @@ import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.core.web.Result;
 import com.cybzacg.blogbackend.module.article.model.admin.*;
 import com.cybzacg.blogbackend.module.article.service.ArticleAdminService;
+import com.cybzacg.blogbackend.utils.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -74,8 +76,12 @@ public class ArticleAdminController {
     @Operation(summary = "切换文章置顶状态")
     @PreAuthorize("@permission.hasPermission('content:article:update')")
     public Result<Void> toggleTop(@PathVariable Long id,
-                                  @RequestParam boolean enabled) {
-        articleAdminService.toggleTop(id, enabled);
+                                  @RequestParam boolean enabled,
+                                  HttpServletRequest httpRequest) {
+        Long operatorId = SecurityUtils.requireUserId();
+        String ip = httpRequest.getRemoteAddr();
+        String ua = httpRequest.getHeader("User-Agent");
+        articleAdminService.toggleTop(id, enabled, operatorId, ip, ua);
         return Result.success();
     }
 
@@ -83,8 +89,12 @@ public class ArticleAdminController {
     @Operation(summary = "切换文章推荐状态")
     @PreAuthorize("@permission.hasPermission('content:article:update')")
     public Result<Void> toggleRecommend(@PathVariable Long id,
-                                        @RequestParam boolean enabled) {
-        articleAdminService.toggleRecommend(id, enabled);
+                                        @RequestParam boolean enabled,
+                                        HttpServletRequest httpRequest) {
+        Long operatorId = SecurityUtils.requireUserId();
+        String ip = httpRequest.getRemoteAddr();
+        String ua = httpRequest.getHeader("User-Agent");
+        articleAdminService.toggleRecommend(id, enabled, operatorId, ip, ua);
         return Result.success();
     }
 

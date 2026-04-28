@@ -22,6 +22,7 @@ CREATE TABLE `sys_user`
     `updated_at`      datetime   DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `deleted_flag`    tinyint(1) DEFAULT 0                 NOT NULL COMMENT '删除标记：0-未删除，1-已删除',
     `remark`          varchar(500) COMMENT '备注',
+    `mfa_enabled`     tinyint(1) DEFAULT 0 COMMENT 'MFA是否启用：0-否，1-是',
     `active_username` varchar(50) GENERATED ALWAYS AS (IF(deleted_flag = 0, username, NULL)) STORED COMMENT '有效用户名唯一键辅助列',
     `active_email`    varchar(128) GENERATED ALWAYS AS (IF(deleted_flag = 0, NULLIF(TRIM(email), ''), NULL)) STORED COMMENT '有效邮箱唯一键辅助列',
     `active_phone`    varchar(20) GENERATED ALWAYS AS (IF(deleted_flag = 0, NULLIF(TRIM(phone), ''), NULL)) STORED COMMENT '有效手机号唯一键辅助列',
@@ -368,3 +369,24 @@ CREATE TABLE `sys_report_handle_log`
     KEY `idx_sys_report_handle_log_operator_created` (`operator_user_id`, `created_at` DESC) COMMENT '按操作人查看历史'
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='举报处理日志表';
+
+DROP TABLE IF EXISTS `sys_audit_log`;
+CREATE TABLE `sys_audit_log` (
+    `id`               bigint       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `operator_user_id` bigint       NOT NULL COMMENT '操作人ID',
+    `target_user_id`   bigint       COMMENT '目标用户ID',
+    `operation_type`   varchar(64)  NOT NULL COMMENT '操作类型',
+    `target_type_name` varchar(64)  COMMENT '目标对象类型名称',
+    `target_id`        bigint       COMMENT '目标对象ID',
+    `before_state`     json         COMMENT '操作前状态(JSON)',
+    `after_state`      json         COMMENT '操作后状态(JSON)',
+    `mfa_passed`       tinyint(1)   DEFAULT 0 COMMENT '2FA是否通过',
+    `request_ip`       varchar(45)  COMMENT '请求IP',
+    `user_agent`       varchar(512) COMMENT 'User-Agent',
+    `remark`           varchar(512) COMMENT '备注',
+    `created_at`       datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    PRIMARY KEY (`id`),
+    KEY `idx_audit_operator_created` (`operator_user_id`, `created_at` DESC),
+    KEY `idx_audit_target_created` (`target_user_id`, `created_at` DESC),
+    KEY `idx_audit_operation_type` (`operation_type`, `created_at` DESC)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='高风险审计日志表';

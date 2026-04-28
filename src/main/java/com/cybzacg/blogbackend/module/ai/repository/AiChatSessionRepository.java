@@ -1,5 +1,6 @@
 package com.cybzacg.blogbackend.module.ai.repository;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.cybzacg.blogbackend.domain.AiChatSession;
 
@@ -19,4 +20,15 @@ public interface AiChatSessionRepository extends IService<AiChatSession> {
      * 按用户、状态读取最近会话。
      */
     List<AiChatSession> listByUserIdAndStatusOrderByUpdatedAt(Long userId, Integer status, int limit);
+
+    /**
+     * 按用户分页查询会话（按更新时间倒序）。
+     *
+     * @param userId  用户ID
+     * @param status  会话状态（可为 null 表示不限）
+     * @param current 页码
+     * @param size    每页条数
+     * @return 分页结果
+     */
+    Page<AiChatSession> pageByUserIdAndStatus(Long userId, Integer status, long current, long size);
 }

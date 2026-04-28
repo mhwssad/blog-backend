@@ -1,5 +1,6 @@
 package com.cybzacg.blogbackend.module.chat.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.common.constant.ConfigConstants;
 import com.cybzacg.blogbackend.domain.*;
@@ -39,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 用户侧聊天服务实现。
@@ -577,6 +579,61 @@ public class UserChatServiceImpl implements UserChatService {
     }
 
     /**
+     * 加入公开频道或公开群。仅允许 join_rule = free 的会话直接加入；审批/仅邀请频道需走申请或邀请链接流程。
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ChatConversationVO joinConversation(Long conversationId) {
+        Long userId = SecurityUtils.requireUserId();
+        ExceptionThrowerCore.throwBusinessIfNull(conversationId, ResultErrorCode.ILLEGAL_ARGUMENT, "会话ID不能为空");
+        ChatConversation conversation = chatConversationRepository.getById(conversationId);
+        ExceptionThrowerCore.throwBusinessIf(conversation == null
+                        || !Objects.equals(conversation.getStatus(), ChatConstants.CONVERSATION_STATUS_NORMAL),
+                ResultErrorCode.ILLEGAL_ARGUMENT, "会话不存在或不可用");
+        // Only allow joining group-type conversations (topic channels, public groups)
+        ExceptionThrowerCore.throwBusinessIf(
+                !Objects.equals(conversation.getConversationType(), ChatConstants.CONVERSATION_TYPE_GROUP),
+                ResultErrorCode.ILLEGAL_ARGUMENT, "仅支持加入群聊或频道");
+        // Must be free join
+        ExceptionThrowerCore.throwBusinessIf(
+                !Objects.equals(conversation.getJoinRule(), ChatConstants.JOIN_RULE_FREE),
+                ResultErrorCode.FORBIDDEN, "该会话不支持直接加入，请通过申请或邀请链接");
+        // Check member limit
+        if (conversation.getMemberLimit() != null && conversation.getMemberLimit() > 0) {
+            long currentMembers = chatConversationMemberRepository.countActiveByConversationId(conversationId);
+            ExceptionThrowerCore.throwBusinessIf(currentMembers >= conversation.getMemberLimit(),
+                    ResultErrorCode.FORBIDDEN, "该会话成员已满");
+        }
+        // Join
+        upsertConversationMembership(conversation, userId, ChatConstants.MEMBER_ROLE_MEMBER, ChatConstants.JOIN_SOURCE_MANUAL, true);
+        List<ChatConversationMember> activeMembers = listActiveMembers(conversationId);
+        List<ChatMemberVO> memberRecords = buildMemberRecords(activeMembers);
+        chatPushService.pushMembersUpdated(
+                buildMembersUpdatedPayload("member_joined", conversationId, userId, memberRecords),
+                activeMembers.stream().map(ChatConversationMember::getUserId).distinct().toList());
+        return getConversationVO(userId, conversationId);
+    }
+
+    /**
+     * 离开频道或公开群。群主不可直接退出，需先解散或转让群主。
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void leaveConversation(Long conversationId) {
+        Long userId = SecurityUtils.requireUserId();
+        ConversationAccessContext context = requireConversationAccess(userId, conversationId);
+        ExceptionThrowerCore.throwBusinessIf(
+                Objects.equals(context.selfMember().getMemberRole(), ChatConstants.MEMBER_ROLE_OWNER),
+                ResultErrorCode.UNSUPPORTED_OPERATION, "群主不能直接退出，请先解散或转让");
+        List<Long> notifyUserIds = context.activeUserIds();
+        context.selfMember().setStatus(ChatConstants.MEMBER_STATUS_LEFT);
+        chatConversationMemberRepository.updateById(context.selfMember());
+        List<ChatMemberVO> records = buildMemberRecords(listActiveMembers(conversationId));
+        chatPushService.pushMembersUpdated(
+                buildMembersUpdatedPayload("member_left", conversationId, userId, records), notifyUserIds);
+    }
+
+    /**
      * 解散群聊，移除所有活跃成员并将会话标记为已解散（需要群主权限）。
      */
     @Override
@@ -592,7 +649,81 @@ public class UserChatServiceImpl implements UserChatService {
     }
 
     /**
-     * 分页读取消息历史，并在用户拉取到消息时收口“已送达”状态。
+     * 访客查看大厅频道消息（无需登录），查询全站会话中未撤回且已发送的消息。
+     */
+    @Override
+    public PageResult<ChatLobbyMessageVO> pageLobbyMessages(Long current, Long size, Long beforeMessageId) {
+        ChatConversation conversation = chatConversationRepository.findGlobalConversation();
+        if (conversation == null) {
+            conversation = new ChatConversation();
+            conversation.setConversationType(ChatConstants.CONVERSATION_TYPE_GLOBAL);
+            conversation.setName(ChatConstants.GLOBAL_CONVERSATION_NAME);
+            conversation.setIsAllSite(1);
+            conversation.setStatus(ChatConstants.CONVERSATION_STATUS_NORMAL);
+            try {
+                chatConversationRepository.save(conversation);
+            } catch (DuplicateKeyException ex) {
+                conversation = chatConversationRepository.findGlobalConversation();
+            }
+        }
+
+        long currentVal = PaginationUtils.normalizeCurrent(current);
+        long sizeVal = PaginationUtils.normalizeSize(size, 20L, 100L);
+
+        LambdaQueryWrapper<ChatMessage> countWrapper = new LambdaQueryWrapper<ChatMessage>()
+                .eq(ChatMessage::getConversationId, conversation.getId())
+                .eq(ChatMessage::getRevokeStatus, ChatConstants.REVOKE_STATUS_NORMAL)
+                .eq(ChatMessage::getSendStatus, ChatConstants.SEND_STATUS_SENT);
+        if (beforeMessageId != null) {
+            countWrapper.lt(ChatMessage::getId, beforeMessageId);
+        }
+        long total = chatMessageRepository.count(countWrapper);
+
+        if (total == 0L) {
+            return PageResult.<ChatLobbyMessageVO>builder()
+                    .total(0L)
+                    .current(currentVal)
+                    .size(sizeVal)
+                    .records(List.of())
+                    .build();
+        }
+
+        LambdaQueryWrapper<ChatMessage> queryWrapper = new LambdaQueryWrapper<ChatMessage>()
+                .eq(ChatMessage::getConversationId, conversation.getId())
+                .eq(ChatMessage::getRevokeStatus, ChatConstants.REVOKE_STATUS_NORMAL)
+                .eq(ChatMessage::getSendStatus, ChatConstants.SEND_STATUS_SENT)
+                .orderByDesc(ChatMessage::getId)
+                .last("LIMIT " + sizeVal + " OFFSET " + (currentVal - 1) * sizeVal);
+        if (beforeMessageId != null) {
+            queryWrapper.lt(ChatMessage::getId, beforeMessageId);
+        }
+        List<ChatMessage> messages = chatMessageRepository.list(queryWrapper);
+
+        Collections.reverse(messages);
+        Set<Long> senderIds = messages.stream().map(ChatMessage::getSenderId).collect(Collectors.toCollection(LinkedHashSet::new));
+        Map<Long, SysUser> userMap = loadUsers(senderIds);
+        List<ChatLobbyMessageVO> records = messages.stream().map(msg -> {
+            ChatLobbyMessageVO vo = new ChatLobbyMessageVO();
+            vo.setId(msg.getId());
+            vo.setSenderId(msg.getSenderId());
+            SysUser sender = userMap.get(msg.getSenderId());
+            vo.setSenderName(UserDisplayNameUtils.resolveDisplayName(sender, msg.getSenderId()));
+            vo.setSenderAvatar(sender != null ? sender.getAvatar() : null);
+            vo.setMessageType(msg.getMessageType());
+            vo.setContent(msg.getContent());
+            vo.setCreatedAt(msg.getCreatedAt());
+            return vo;
+        }).toList();
+        return PageResult.<ChatLobbyMessageVO>builder()
+                .total(total)
+                .current(currentVal)
+                .size(sizeVal)
+                .records(records)
+                .build();
+    }
+
+    /**
+     * 分页读取消息历史，并在用户拉取到消息时收口"已送达"状态。
      */
     private PageResult<ChatMessageVO> pageMessages(Long userId, Long conversationId, ChatMessagePageQuery query) {
         requireConversationAccess(userId, conversationId);

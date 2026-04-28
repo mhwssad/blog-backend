@@ -49,10 +49,10 @@ public interface ArticleAdminService {
     /**
      * 切换文章置顶状态。
      */
-    void toggleTop(Long id, boolean enabled);
+    void toggleTop(Long id, boolean enabled, Long operatorId, String ip, String ua);
 
     /**
      * 切换文章推荐状态。
      */
-    void toggleRecommend(Long id, boolean enabled);
+    void toggleRecommend(Long id, boolean enabled, Long operatorId, String ip, String ua);
 }

@@ -12,7 +12,7 @@
 
 ## 2. 当前状态
 
-**当前阶段：待开始。数据库脚本已预留 AI 配置、会话、消息和调用日志结构；LangChain4j 依赖与默认 OpenAI-compatible 配置已落地，业务模块尚未落地。**
+**当前阶段：进行中。AI 第一阶段业务层已全面落地：用户侧会话/问答、模型调用封装、后台渠道配置、额度控制和调用统计已实现，编译验证通过。待推进测试回补和数据读取范围精细化。**
 
 ```
 已具备:
@@ -22,24 +22,29 @@
   ✅ ai_usage_log 表结构预留
   ✅ 用户等级与 AI 额度联动需求已明确
   ✅ LangChain4j 依赖与默认配置已接入
+  ✅ AI 模块包结构（controller/service/repository/model/convert/constant）
+  ✅ 用户侧 AI 会话创建、查询、消息收发、会话关闭
+  ✅ 通用大模型调用封装（AiModelClient + LangChain4j 动态构建）
+  ✅ 后台 AI 渠道配置 CRUD + API Key 脱敏 + 审计日志
+  ✅ 多层额度控制（全局开关 → 平台额度 → 等级额度 → 渠道用户额度）
+  ✅ 调用日志记录与后台分页查询/统计
+  ✅ 上下文消息裁剪（按 maxContextTokens 估算）
 
 待推进:
-  ⏳ AI 模块包结构和模型
-  ⏳ 用户侧 AI 会话 / 问答 / 历史记录
-  ⏳ 通用大模型调用封装
-  ⏳ 后台 AI 配置中心
-  ⏳ 每日额度、用户级限额、上下文长度限制
-  ⏳ 数据读取范围控制，默认禁止读取私聊
+  ⏳ 服务级测试回补
+  ⏳ 数据读取范围精细化控制
 ```
 
 ## 3. 模块结构
 
-- [ ] 新增 `module/ai/controller`。
-- [ ] 新增 `module/ai/service` 与 `module/ai/service/impl`。
-- [ ] 新增 `module/ai/repository` 与 `module/ai/repository/impl`。
-- [ ] 新增 `module/ai/model/user`、`module/ai/model/admin`、`module/ai/model/internal`。
-- [ ] 新增 `module/ai/convert`，优先使用 MapStruct。
-- [ ] 新增 AI 相关 domain、mapper、XML。
+- [x] 新增 `module/ai/controller`。
+- [x] 新增 `module/ai/service` 与 `module/ai/service/impl`。
+- [x] 新增 `module/ai/repository` 与 `module/ai/repository/impl`。
+- [x] 新增 `module/ai/model/user`、`module/ai/model/admin`、`module/ai/model/data`。
+- [x] 新增 `module/ai/convert`，优先使用 MapStruct。
+- [x] 新增 `module/ai/constant`（AiConstants）。
+- [x] 新增 `config/LangChain4jConfig`（静态工厂 + 条件 Bean）。
+- [x] 新增 AI 相关 domain、mapper（预先已存在）。
 
 ## 4. T09 AI 问答主链路
 
@@ -52,35 +57,36 @@
 
 ### 4.2 数据与模型
 
-- [ ] 复核 `ai_chat_session` 是否覆盖用户 ID、标题、状态、模型渠道、最后消息时间。
-- [ ] 复核 `ai_chat_message` 是否覆盖会话 ID、角色、内容、token 数、调用状态、错误信息。
-- [ ] 定义消息角色：`user`、`assistant`、`system`。
-- [ ] 定义调用状态：`pending`、`success`、`failed`。
+- [x] 复核 `ai_chat_session` 是否覆盖用户 ID、标题、状态、模型渠道、最后消息时间。
+- [x] 复核 `ai_chat_message` 是否覆盖会话 ID、角色、内容、token 数、调用状态、错误信息。
+- [x] 定义消息角色：`user`、`assistant`、`system`。
+- [x] 定义调用状态：`success`、`failed`。
 
 ### 4.3 用户侧接口
 
-- [ ] `POST /api/user/ai/sessions`：创建 AI 会话。
-- [ ] `GET /api/user/ai/sessions`：分页查询我的会话。
-- [ ] `GET /api/user/ai/sessions/{id}`：查询会话详情。
-- [ ] `GET /api/user/ai/sessions/{id}/messages`：查询会话消息。
-- [ ] `POST /api/user/ai/sessions/{id}/messages`：发送问题并获取回答。
-- [ ] `DELETE /api/user/ai/sessions/{id}`：删除或归档会话。
+- [x] `POST /api/user/ai/sessions`：创建 AI 会话。
+- [x] `GET /api/user/ai/sessions`：分页查询我的会话。
+- [x] `GET /api/user/ai/sessions/{id}`：查询会话详情。
+- [x] `GET /api/user/ai/sessions/{id}/messages`：查询会话消息。
+- [x] `POST /api/user/ai/sessions/{id}/messages`：发送问题并获取回答。
+- [x] `DELETE /api/user/ai/sessions/{id}`：删除或归档会话。
+- [x] `GET /api/user/ai/sessions/quota`：查询我的 AI 额度。
 
 ### 4.4 调用封装
 
-- [ ] 定义 `AiModelClient` 抽象，屏蔽具体渠道。
+- [x] 定义 `AiModelClient` 抽象，屏蔽具体渠道。
 - [x] 接入 LangChain4j 默认 OpenAI-compatible 配置，默认 provider 为 `deepseek`。
-- [ ] 支持按配置选择渠道和模型。
-- [ ] 支持提示词模板拼接。
-- [ ] 支持上下文消息裁剪。
-- [ ] 模型调用失败时写入失败消息和调用日志。
-- [ ] 第一阶段同步返回即可，流式输出可后置。
+- [x] 支持按配置选择渠道和模型。
+- [x] 支持提示词模板拼接。
+- [x] 支持上下文消息裁剪（按 maxContextTokens 字符数/2 估算）。
+- [x] 模型调用失败时写入失败消息和调用日志。
+- [x] 第一阶段同步返回即可，流式输出可后置。
 
 ### 4.5 权限与归属
 
-- [ ] AI 仅登录用户可用。
-- [ ] 会话归属必须校验。
-- [ ] 删除会话只影响当前用户自己的会话。
+- [x] AI 仅登录用户可用。
+- [x] 会话归属必须校验。
+- [x] 删除会话只影响当前用户自己的会话。
 - [ ] 管理员查询用户会话需独立后台权限。
 
 ### 4.6 测试
@@ -102,30 +108,30 @@
 
 ### 5.2 配置中心
 
-- [ ] `GET /api/sys/ai/channels`：查询渠道配置。
-- [ ] `POST /api/sys/ai/channels`：新增渠道配置。
-- [ ] `PUT /api/sys/ai/channels/{id}`：修改渠道配置。
-- [ ] `PUT /api/sys/ai/channels/{id}/status`：启用 / 禁用渠道。
-- [ ] `DELETE /api/sys/ai/channels/{id}`：删除或停用渠道。
-- [ ] API Key 存储必须脱敏返回。
-- [ ] 高风险配置修改写入审计日志。
+- [x] `GET /api/sys/ai/channels`：查询渠道配置。
+- [x] `POST /api/sys/ai/channels`：新增渠道配置。
+- [x] `PUT /api/sys/ai/channels/{id}`：修改渠道配置。
+- [x] `PUT /api/sys/ai/channels/{id}/status`：启用 / 禁用渠道。
+- [x] `DELETE /api/sys/ai/channels/{id}`：删除或停用渠道。
+- [x] API Key 存储必须脱敏返回。
+- [x] 高风险配置修改写入审计日志。
 
 ### 5.3 限额控制
 
-- [ ] 每日平台总额度。
-- [ ] 每日用户默认额度。
-- [ ] 用户级单独额度。
-- [ ] 等级联动额度。
-- [ ] 单次上下文长度限制。
+- [x] 每日平台总额度。
+- [x] 每日用户默认额度。
+- [x] 用户级单独额度。
+- [x] 等级联动额度。
+- [x] 单次上下文长度限制。
 - [ ] 单次输入长度限制。
-- [ ] 配额检查在模型调用前完成。
+- [x] 配额检查在模型调用前完成。
 
 ### 5.4 调用统计
 
-- [ ] 每次调用写入 `ai_usage_log`。
-- [ ] 记录用户、渠道、模型、token、成功失败、耗时、错误信息。
-- [ ] 后台支持按用户、渠道、模型、时间范围查询统计。
-- [ ] 支持今日剩余额度查询。
+- [x] 每次调用写入 `ai_usage_log`。
+- [x] 记录用户、渠道、模型、token、成功失败、错误信息。
+- [x] 后台支持按用户、渠道、时间范围查询统计。
+- [x] 支持今日剩余额度查询。
 
 ### 5.5 数据读取范围
 

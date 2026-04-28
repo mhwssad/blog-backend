@@ -3,18 +3,25 @@ package com.cybzacg.blogbackend.module.auth.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.SysUser;
+import com.cybzacg.blogbackend.enums.SysAuditOperationType;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.auth.convert.RbacAdminModelMapper;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysUserAdminVO;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysUserPageQuery;
 import com.cybzacg.blogbackend.module.auth.model.admin.SysUserSaveRequest;
+import com.cybzacg.blogbackend.module.auth.model.common.SysAuditLogCreateRequest;
 import com.cybzacg.blogbackend.module.auth.repository.SysRoleRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRoleRepository;
 import com.cybzacg.blogbackend.module.auth.service.UserNotificationPreferenceService;
+import com.cybzacg.blogbackend.module.auth.service.SuperAdminVerifier;
+import com.cybzacg.blogbackend.module.auth.service.SysAuditLogService;
 import com.cybzacg.blogbackend.module.auth.service.SysUserAdminService;
+import com.cybzacg.blogbackend.module.auth.service.TwoFactorService;
+import com.cybzacg.blogbackend.module.auth.token.TokenManager;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.IdCollectionUtils;
+import com.cybzacg.blogbackend.utils.JsonUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 用户后台管理服务实现。
@@ -39,6 +47,10 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
     private final RbacAdminModelMapper rbacAdminModelMapper;
     private final RbacAssociationFactory rbacAssociationFactory;
     private final UserNotificationPreferenceService userNotificationPreferenceService;
+    private final SuperAdminVerifier superAdminVerifier;
+    private final TwoFactorService twoFactorService;
+    private final SysAuditLogService sysAuditLogService;
+    private final TokenManager tokenManager;
 
     /**
      * 分页查询用户列表，附带每个用户的角色 ID。
@@ -152,6 +164,95 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
         sysUserRoleRepository.saveBatch(distinctRoleIds.stream()
                 .map(roleId -> rbacAssociationFactory.createUserRole(userId, roleId))
                 .toList());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void banUser(Long operatorId, Long targetId, String mfaTicket, String ip, String ua) {
+        validateHighRiskOperation(operatorId, targetId, mfaTicket);
+        SysUser user = getAvailableUser(targetId);
+        String beforeState = JsonUtils.toJson(user);
+        user.setStatus(0);
+        sysUserRepository.updateById(user);
+        tokenManager.invalidateUserSessions(targetId);
+        recordAudit(operatorId, targetId, SysAuditOperationType.BAN_USER.getCode(), beforeState,
+                JsonUtils.toJson(user), ip, ua);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void unbanUser(Long operatorId, Long targetId, String mfaTicket, String ip, String ua) {
+        validateHighRiskOperation(operatorId, targetId, mfaTicket);
+        SysUser user = getAvailableUser(targetId);
+        String beforeState = JsonUtils.toJson(user);
+        user.setStatus(1);
+        sysUserRepository.updateById(user);
+        recordAudit(operatorId, targetId, SysAuditOperationType.UNBAN_USER.getCode(), beforeState,
+                JsonUtils.toJson(user), ip, ua);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void adjustLevel(Long operatorId, Long targetId, Integer newLevel, String mfaTicket, String ip, String ua) {
+        validateHighRiskOperation(operatorId, targetId, mfaTicket);
+        SysUser user = getAvailableUser(targetId);
+        String beforeState = JsonUtils.toJson(user);
+        user.setUserLevel(newLevel);
+        sysUserRepository.updateById(user);
+        recordAudit(operatorId, targetId, SysAuditOperationType.ADJUST_LEVEL.getCode(), beforeState,
+                JsonUtils.toJson(user), ip, ua);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void adjustExperience(Long operatorId, Long targetId, Integer newExperience, String mfaTicket, String ip, String ua) {
+        validateHighRiskOperation(operatorId, targetId, mfaTicket);
+        SysUser user = getAvailableUser(targetId);
+        String beforeState = JsonUtils.toJson(user);
+        user.setExperiencePoints(newExperience);
+        sysUserRepository.updateById(user);
+        recordAudit(operatorId, targetId, SysAuditOperationType.ADJUST_EXPERIENCE.getCode(), beforeState,
+                JsonUtils.toJson(user), ip, ua);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void assignRolesWithAudit(Long operatorId, Long targetId, List<Long> roleIds, String mfaTicket, String ip, String ua) {
+        validateHighRiskOperation(operatorId, targetId, mfaTicket);
+        SysUser user = getAvailableUser(targetId);
+        List<Long> oldRoleIds = sysUserRoleRepository.findRoleIdsByUserId(targetId);
+        String beforeState = JsonUtils.toJson(Map.of("roleIds", oldRoleIds));
+        List<Long> distinctRoleIds = validateRolesExist(roleIds);
+        sysUserRoleRepository.deleteByUserId(targetId);
+        if (!distinctRoleIds.isEmpty()) {
+            sysUserRoleRepository.saveBatch(distinctRoleIds.stream()
+                    .map(roleId -> rbacAssociationFactory.createUserRole(targetId, roleId))
+                    .toList());
+        }
+        String afterState = JsonUtils.toJson(Map.of("roleIds", distinctRoleIds));
+        recordAudit(operatorId, targetId, SysAuditOperationType.ASSIGN_ADMIN_ROLE.getCode(), beforeState,
+                afterState, ip, ua);
+    }
+
+    private void validateHighRiskOperation(Long operatorId, Long targetId, String mfaTicket) {
+        ExceptionThrowerCore.throwBusinessIfNot(twoFactorService.validateTicket(mfaTicket, operatorId),
+                ResultErrorCode.MFA_TICKET_INVALID);
+        superAdminVerifier.requireSuperAdmin(operatorId);
+        ExceptionThrowerCore.throwBusinessIf(operatorId.equals(targetId), ResultErrorCode.CANNOT_MODIFY_SELF);
+    }
+
+    private void recordAudit(Long operatorId, Long targetId, String operationType,
+                             String beforeState, String afterState, String ip, String ua) {
+        SysAuditLogCreateRequest request = new SysAuditLogCreateRequest();
+        request.setOperatorUserId(operatorId);
+        request.setTargetUserId(targetId);
+        request.setOperationType(operationType);
+        request.setBeforeState(beforeState);
+        request.setAfterState(afterState);
+        request.setMfaPassed(1);
+        request.setRequestIp(ip);
+        request.setUserAgent(ua);
+        sysAuditLogService.record(request);
     }
 
     private void applyUserFields(SysUser user, SysUserSaveRequest request, boolean includePassword) {

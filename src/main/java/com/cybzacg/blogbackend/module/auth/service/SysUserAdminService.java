@@ -30,4 +30,14 @@ public interface SysUserAdminService {
     List<Long> listRoleIds(Long userId);
 
     void assignRoles(Long userId, List<Long> roleIds);
+
+    void banUser(Long operatorId, Long targetId, String mfaTicket, String ip, String ua);
+
+    void unbanUser(Long operatorId, Long targetId, String mfaTicket, String ip, String ua);
+
+    void adjustLevel(Long operatorId, Long targetId, Integer newLevel, String mfaTicket, String ip, String ua);
+
+    void adjustExperience(Long operatorId, Long targetId, Integer newExperience, String mfaTicket, String ip, String ua);
+
+    void assignRolesWithAudit(Long operatorId, Long targetId, List<Long> roleIds, String mfaTicket, String ip, String ua);
 }

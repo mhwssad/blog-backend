@@ -6,6 +6,8 @@ import com.cybzacg.blogbackend.domain.*;
 import com.cybzacg.blogbackend.common.constant.ConfigConstants;
 import com.cybzacg.blogbackend.enums.article.ArticleVisibilityScopeEnum;
 import com.cybzacg.blogbackend.enums.experience.ExperienceSourceTypeEnum;
+import com.cybzacg.blogbackend.enums.SysAuditOperationType;
+import com.cybzacg.blogbackend.module.auth.model.common.SysAuditLogCreateRequest;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.convert.ArticleModelMapper;
 import com.cybzacg.blogbackend.module.article.model.admin.*;
@@ -72,6 +74,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
     private final ArticleSeriesService articleSeriesService;
     private final ArticleStatusMachine articleStatusMachine;
     private final ApplicationEventPublisher eventPublisher;
+    private final com.cybzacg.blogbackend.module.auth.service.SysAuditLogService sysAuditLogService;
 
     /**
      * 按作者、状态、授权级别及分类标签等条件分页查询后台文章。
@@ -215,17 +218,23 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
     }
 
     @Override
-    public void toggleTop(Long id, boolean enabled) {
+    public void toggleTop(Long id, boolean enabled, Long operatorId, String ip, String ua) {
         BlogArticle article = getArticleOrThrow(id);
+        String beforeState = "{\"isTop\":" + article.getIsTop() + ",\"isRecommend\":" + article.getIsRecommend() + "}";
         article.setIsTop(enabled ? 1 : 0);
         blogArticleRepository.updateById(article);
+        recordArticleAudit(operatorId, article.getAuthorId(), SysAuditOperationType.TOGGLE_ARTICLE_PIN.getCode(),
+                id, beforeState, ip, ua);
     }
 
     @Override
-    public void toggleRecommend(Long id, boolean enabled) {
+    public void toggleRecommend(Long id, boolean enabled, Long operatorId, String ip, String ua) {
         BlogArticle article = getArticleOrThrow(id);
+        String beforeState = "{\"isTop\":" + article.getIsTop() + ",\"isRecommend\":" + article.getIsRecommend() + "}";
         article.setIsRecommend(enabled ? 1 : 0);
         blogArticleRepository.updateById(article);
+        recordArticleAudit(operatorId, article.getAuthorId(), SysAuditOperationType.TOGGLE_ARTICLE_RECOMMEND.getCode(),
+                id, beforeState, ip, ua);
     }
 
     /**
@@ -659,5 +668,23 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
             return null;
         }
         return StringUtils.hasText(user.getNickname()) ? user.getNickname() : user.getUsername();
+    }
+
+    /**
+     * 记录文章置顶/推荐切换操作的审计日志，保存操作前后的状态快照。
+     */
+    private void recordArticleAudit(Long operatorId, Long targetUserId, String operationType,
+                                    Long articleId, String beforeState, String ip, String ua) {
+        SysAuditLogCreateRequest request = new SysAuditLogCreateRequest();
+        request.setOperatorUserId(operatorId);
+        request.setTargetUserId(targetUserId);
+        request.setOperationType(operationType);
+        request.setTargetTypeName(TARGET_TYPE_ARTICLE);
+        request.setTargetId(articleId);
+        request.setBeforeState(beforeState);
+        request.setMfaPassed(0);
+        request.setRequestIp(ip);
+        request.setUserAgent(ua);
+        sysAuditLogService.record(request);
     }
 }

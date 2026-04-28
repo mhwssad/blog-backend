@@ -67,6 +67,14 @@ public final class ConfigConstants {
     public static final String XP_DAILY_COMMENT_CREATE_CAP_KEY = "xp.daily.comment_create.cap";
     public static final int DEFAULT_XP_DAILY_COMMENT_CREATE_CAP = 50;
 
+    // ========== AI 配置 ==========
+
+    public static final String AI_GLOBAL_ENABLED_KEY = "ai.global.enabled";
+    public static final String AI_GLOBAL_ENABLED_NAME = "AI全局开关";
+    public static final String DEFAULT_AI_GLOBAL_ENABLED = "false";
+    public static final String AI_PLATFORM_DAILY_QUOTA_KEY = "ai.platform.daily-quota";
+    public static final int DEFAULT_AI_PLATFORM_DAILY_QUOTA = 1000;
+
     private ConfigConstants() {
     }
 }

@@ -42,6 +42,19 @@ public class UserChatController {
         return Result.success(userChatService.openSingleConversation(request));
     }
 
+    @PostMapping("/conversations/{conversationId}/join")
+    @Operation(summary = "加入公开频道或公开群")
+    public Result<ChatConversationVO> joinConversation(@PathVariable Long conversationId) {
+        return Result.success(userChatService.joinConversation(conversationId));
+    }
+
+    @PostMapping("/conversations/{conversationId}/leave")
+    @Operation(summary = "离开频道或公开群")
+    public Result<Void> leaveConversation(@PathVariable Long conversationId) {
+        userChatService.leaveConversation(conversationId);
+        return Result.success();
+    }
+
     @GetMapping("/conversations/{conversationId}/messages")
     @Operation(summary = "分页查询会话消息")
     public Result<PageResult<ChatMessageVO>> pageMessages(@PathVariable Long conversationId,

@@ -71,6 +71,10 @@ public class ChatMessage {
      */
     private String clientMessageId;
     /**
+     * 置顶操作人ID（NULL 表示未置顶）
+     */
+    private Long pinnedBy;
+    /**
      * 创建时间
      */
     private LocalDateTime createdAt;

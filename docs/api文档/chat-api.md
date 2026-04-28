@@ -33,14 +33,20 @@
 Authorization: Bearer <accessToken>
 ```
 
-### 2.2 后台聊天管理 HTTP
+### 2.2 公开访客接口
+
+访客无需登录即可访问的全站大厅消息查看接口：
+
+- `GET /api/public/chat/lobby/messages` - 访客查看大厅消息
+
+### 2.3 后台聊天管理 HTTP
 
 后台统一走 `/api/sys/chats/**`，除登录外还要求对应权限：
 
 - `content:chat:query`
 - `content:chat:update`
 
-### 2.3 WebSocket
+### 2.4 WebSocket
 
 - 地址：`/ws/chat`
 - 令牌来源：
@@ -55,9 +61,41 @@ const socket = new WebSocket(
 );
 ```
 
-## 3. 用户侧 HTTP 接口
+## 3. 公开访客接口
 
-### 3.1 接口总览
+### 3.1 访客查看大厅消息
+
+- 请求：`GET /api/public/chat/lobby/messages`
+- 鉴权：否
+- 用途：访客无需登录即可查看全站大厅消息
+- 查询参数：
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `current` | Long | 否 | 页码，默认 `1` |
+| `size` | Long | 否 | 每页条数，默认 `20` |
+| `beforeMessageId` | Long | 否 | 只查询该消息 ID 之前的历史消息 |
+
+- 响应字段：`ChatLobbyMessageVO`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | Long | 消息 ID |
+| `senderId` | Long | 发送人 ID |
+| `senderUsername` | String | 发送人用户名 |
+| `senderNickname` | String | 发送人昵称 |
+| `senderAvatar` | String | 发送人头像 |
+| `content` | String | 消息内容 |
+| `messageType` | String | `text/file/image/voice` |
+| `createdAt` | DateTime | 发送时间 |
+
+- 说明：
+    - 访客只能查看大厅消息，不能发送。
+    - 消息列表按时间倒序返回。
+
+## 4. 用户侧 HTTP 接口
+
+### 4.1 接口总览
 
 | 接口       | 方法       | 路径                                                                   |
 |----------|----------|----------------------------------------------------------------------|
@@ -96,7 +134,7 @@ const socket = new WebSocket(
 | 停用群邀请链接 | `PUT`    | `/api/user/chat/groups/{conversationId}/invite-links/{inviteLinkId}/disable` |
 | 通过邀请链接入群 | `POST`   | `/api/user/chat/group-invite-links/{inviteToken}/join`              |
 
-### 3.2 会话查询
+### 4.2 会话查询
 
 `GET /api/user/chat/conversations`
 
@@ -134,7 +172,7 @@ const socket = new WebSocket(
 - 首次访问时，如果全站群不存在成员关系，服务端会自动补建。
 - 单聊详情会额外返回 `targetUserId / targetUsername / targetNickname`。
 
-### 3.3 消息查询
+### 4.3 消息查询
 
 `GET /api/user/chat/conversations/{conversationId}/messages`
 
@@ -213,7 +251,7 @@ const socket = new WebSocket(
 - 若旧消息的原始被回复消息已经不可见，`reply.deleted = true`，`reply.state = unavailable`，`reply.content` 会回退为“引用消息已不可见”。
 - 当前不会返回多层 `reply.reply...` 结构；如需展示“被引用消息本身也是回复”，前端可结合 `reply.replyToMessageId` 做弱提示或跳转入口。
 
-### 3.4 发送文本消息
+### 4.4 发送文本消息
 
 `POST /api/user/chat/messages/text`
 
@@ -253,7 +291,7 @@ const socket = new WebSocket(
 - 单聊文本消息发送成功后，会按接收方 `private_message` 通知偏好投递站内通知。
 - 群聊 / 全站群 / 频道文本中包含 `@用户ID` 时，会按被 @ 用户的 `group_mention` 通知偏好投递站内通知；第一阶段仅解析当前会话活跃成员的用户 ID。
 
-### 3.5 发送文件消息
+### 4.5 发送文件消息
 
 `POST /api/user/chat/messages/file`
 
@@ -302,7 +340,7 @@ const socket = new WebSocket(
 - `clientMessageId` 的并发重复提交同样会回查并返回已存在消息，不重复生成新的聊天记录。
 - 附件消息与文本消息共享同一套等级发言门槛校验。
 
-### 3.6 编辑 / 撤回 / 删除
+### 4.6 编辑 / 撤回 / 删除
 
 编辑：
 
@@ -344,7 +382,7 @@ const socket = new WebSocket(
 - 删除后会重新计算当前会话未读数
 - 删除成功后，服务端会只向当前用户在线会话推送 `message_deleted`，用于多标签页同步本人视图
 
-### 3.7 推进会话已读
+### 4.7 推进会话已读
 
 `POST /api/user/chat/conversations/{conversationId}/read`
 
@@ -364,7 +402,7 @@ const socket = new WebSocket(
 - `deliveredAt`
 - `unreadCount`
 
-### 3.8 群治理接口
+### 4.8 群治理接口
 
 创建群聊：
 
@@ -472,7 +510,7 @@ DELETE /api/user/chat/groups/{conversationId}/members/{memberUserId}
 - 群解散后，用户侧会话详情和历史消息接口都会视为“会话不可用”；如需审计历史消息，请走后台聊天管理接口
 - 全站群会在访问消息时自动补建/恢复当前用户成员资格，但邀请、退群、移除成员、管理员任免、群公告等普通群治理接口不适用于全站群
 
-### 3.9 频道创建申请
+### 4.9 频道创建申请
 
 提交申请：
 
@@ -505,7 +543,7 @@ GET /api/user/chat/channel-applications/latest
 GET /api/user/chat/channel-applications?current=1&size=10
 ```
 
-### 3.10 入群申请
+### 4.10 入群申请
 
 提交入群申请：
 
@@ -548,7 +586,7 @@ PUT /api/user/chat/groups/{conversationId}/join-applications/{applicationId}/rev
 - `reviewStatus` 支持 `1-通过`、`2-拒绝`。
 - 审核通过后会创建或恢复群成员关系，成员加入来源记录为 `application`。
 
-### 3.11 群邀请链接
+### 4.11 群邀请链接
 
 创建邀请链接：
 
@@ -587,9 +625,9 @@ POST /api/user/chat/group-invite-links/{inviteToken}/join
 - 群人数达到 `memberLimit` 时，通过邀请链接入群会被拒绝。
 - 通过邀请链接入群会创建或恢复成员关系，成员加入来源记录为 `invite_link`。
 
-## 4. 后台聊天管理接口
+## 5. 后台聊天管理接口
 
-### 4.1 接口总览
+### 5.1 接口总览
 
 | 接口       | 方法     | 路径                                                                            | 权限                    |
 |----------|--------|-------------------------------------------------------------------------------|-----------------------|
@@ -610,7 +648,7 @@ POST /api/user/chat/group-invite-links/{inviteToken}/join
 | 查询频道申请详情 | `GET`  | `/api/sys/chats/channel-applications/{id}`                                    | `content:channel-application:query` |
 | 审核频道申请   | `PUT`  | `/api/sys/chats/channel-applications/{id}/review`                             | `content:channel-application:review` |
 
-### 4.2 会话与消息分页
+### 5.2 会话与消息分页
 
 会话分页：
 
@@ -639,13 +677,13 @@ POST /api/user/chat/group-invite-links/{inviteToken}/join
 | `edited`                  | 是否编辑过                   |
 | `updatedAt`               | 更新时间                    |
 
-### 4.3 消息详情
+### 5.3 消息详情
 
 `GET /api/sys/chats/conversations/{conversationId}/messages/{messageId}`
 
 返回内容在消息分页基础上，额外强调单条消息完整视角，适合后台详情抽屉或审计页。
 
-### 4.4 消息回执明细
+### 5.4 消息回执明细
 
 `GET /api/sys/chats/conversations/{conversationId}/messages/{messageId}/receipts`
 
@@ -670,7 +708,7 @@ POST /api/user/chat/group-invite-links/{inviteToken}/join
 - `readAt`
 - `visibleStatus`
 
-### 4.5 后台成员管理
+### 5.5 后台成员管理
 
 更新角色：
 
@@ -715,7 +753,7 @@ PUT /api/sys/chats/conversations/{conversationId}/members/{memberUserId}/mute
 - 角色/状态/禁言更新成功后，服务端会推送 `members_updated`
 - 群主转移类角色变更还会补推 `conversation_updated`
 
-### 4.6 后台撤回消息
+### 5.6 后台撤回消息
 
 `POST /api/sys/chats/conversations/{conversationId}/messages/{messageId}/revoke`
 
@@ -724,7 +762,7 @@ PUT /api/sys/chats/conversations/{conversationId}/members/{memberUserId}/mute
 - 已撤回消息再次调用会直接返回成功，不重复报错
 - 文件消息撤回时同样会释放聊天文件引用
 
-### 4.7 更新会话状态
+### 5.7 更新会话状态
 
 `PUT /api/sys/chats/conversations/{conversationId}/status`
 
@@ -739,7 +777,7 @@ PUT /api/sys/chats/conversations/{conversationId}/members/{memberUserId}/mute
 - `0` 禁用
 - `1` 正常
 
-### 4.8 后台主题频道管理
+### 5.8 后台主题频道管理
 
 创建主题频道：
 
@@ -789,7 +827,7 @@ PUT /api/sys/chats/topic-channels/{conversationId}
 - 启用 / 禁用主题频道复用 `PUT /api/sys/chats/conversations/{conversationId}/status`。
 - 查看频道成员和消息复用后台会话成员与消息接口。
 
-### 4.9 后台频道创建申请
+### 5.9 后台频道创建申请
 
 分页查询：
 
@@ -813,7 +851,7 @@ PUT /api/sys/chats/channel-applications/{id}/review
 - 只有待审核申请可以审核。
 - 审核通过后会自动创建 `topic_channel` 会话，默认成员可见、加入后发言、加入规则为 `approval`，申请人会成为频道 `owner`。
 
-## 5. WebSocket 协议
+## 6. WebSocket 协议
 
 ### 5.1 当前支持的客户端请求
 
@@ -884,7 +922,7 @@ PUT /api/sys/chats/channel-applications/{id}/review
 - 当前多节点下，服务端会先推送本机在线连接，再通过 Redis pub/sub 广播到其他节点
 - 媒体任务完成后会继续复用 `message_updated` 通知前端刷新同一条消息，无需额外轮询 HTTP
 
-## 6. 联调建议
+## 7. 联调建议
 
 - 文件消息先走 `file` 模块上传，拿到 `businessId` 后再调用 chat 发送文件消息。
 - 会话列表、会话详情、后台会话详情当前都会返回 `notice`，该字段已直接对应 `chat_conversation.announcement`。

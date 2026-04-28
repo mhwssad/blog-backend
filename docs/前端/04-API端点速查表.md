@@ -1,6 +1,6 @@
 # API 端点速查表
 
-> 全部 151 个 API 端点，按模块分组。认证列中"公开"表示无需登录，"登录"表示需要登录但无特定权限，权限标识表示需要对应权限。
+> 全部 161 个 API 端点，按模块分组。认证列中"公开"表示无需登录，"登录"表示需要登录但无特定权限，权限标识表示需要对应权限。
 
 ## 4.1 认证模块 (auth)
 
@@ -298,6 +298,31 @@
 | 1 | GET | `/api/users/{userId}/follows` | 指定用户关注 | 公开 |
 | 2 | GET | `/api/users/{userId}/fans`    | 指定用户粉丝 | 公开 |
 
+## 4.28 超级管理员操作
+
+| # | 方法   | 路径                                     | 说明       | 权限 |
+|---|------|----------------------------------------|----------|-----|
+| 1 | POST | `/api/admin/2fa/send-code`             | 发送2FA验证码 | superadmin:2fa |
+| 2 | POST | `/api/admin/2fa/verify`                 | 校验2FA验证码 | superadmin:2fa |
+| 3 | POST | `/api/admin/users/{id}/ban`            | 封禁用户     | superadmin:ban |
+| 4 | POST | `/api/admin/users/{id}/unban`          | 解封用户     | superadmin:ban |
+| 5 | PUT  | `/api/admin/users/{id}/level`          | 调整用户等级   | superadmin:level |
+| 6 | PUT  | `/api/admin/users/{id}/experience`     | 调整用户经验   | superadmin:experience |
+| 7 | POST | `/api/admin/takeover`                  | 账号接管     | superadmin:takeover |
+| 8 | PUT  | `/api/admin/users/{id}/roles`          | 带审计的角色分配 | superadmin:assign-role |
+
+## 4.29 账号接管认证
+
+| # | 方法   | 路径                           | 说明       | 认证 |
+|---|------|------------------------------|----------|-----|
+| 1 | POST | `/api/auth/takeover/login`   | 使用接管令牌登录 | 公开 |
+
+## 4.30 公开大厅消息
+
+| # | 方法  | 路径                              | 说明       | 认证 |
+|---|-----|---------------------------------|----------|-----|
+| 1 | GET | `/api/public/chat/lobby/messages` | 访客查看大厅消息 | 公开 |
+
 ## 统计
 
 | 分类      | 端点数     |
@@ -328,5 +353,8 @@
 | 用户聊天    | 22      |
 | 后台关注管理  | 2       |
 | 用户关注    | 8       |
-| 公开关注    | 2       |
-| **合计**  | **151** |
+| 公开关注       | 2       |
+| 超级管理员操作   | 8       |
+| 账号接管认证    | 1       |
+| 公开大厅消息    | 1       |
+| **合计**     | **161** |

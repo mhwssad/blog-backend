@@ -49,6 +49,11 @@ public interface ChatConversationMemberRepository extends IService<ChatConversat
     boolean removeAllActiveMembers(Long conversationId);
 
     /**
+     * 统计指定会话中状态为正常的成员数量。
+     */
+    long countActiveByConversationId(Long conversationId);
+
+    /**
      * 单调递增更新成员的已投递游标（CAS 语义）。
      * 仅当当前 lastDeliveredMessageId 为空或小于目标值时才更新。
      *

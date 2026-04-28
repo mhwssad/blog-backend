@@ -86,7 +86,33 @@ public enum ResultErrorCode implements ResultCode {
     DB_MAPPING_ERROR(60017, "数据库映射异常"),
     DB_INVALID_RESOURCE_USAGE(60018, "无效的数据访问资源使用"),
     DB_NON_TRANSIENT_ERROR(60019, "非暂时性数据访问异常"),
-    DB_TRANSIENT_ERROR(60020, "暂时性数据访问异常");
+    DB_TRANSIENT_ERROR(60020, "暂时性数据访问异常"),
+
+    MFA_REQUIRED(40120, "需要二次验证"),
+    MFA_TICKET_EXPIRED(40121, "操作票据已过期，请重新验证"),
+    MFA_TICKET_INVALID(40122, "操作票据无效"),
+    MFA_EMAIL_CODE_INVALID(40123, "2FA邮箱验证码错误"),
+    MFA_EMAIL_CODE_SEND_FAILED(40124, "2FA验证码发送失败"),
+    MFA_EMAIL_CODE_RATE_LIMITED(40125, "2FA验证码发送过于频繁，请稍后再试"),
+    SUPER_ADMIN_EMAIL_REQUIRED(40126, "超级管理员必须绑定邮箱"),
+    NOT_SUPER_ADMIN(40304, "仅超级管理员可执行此操作"),
+    CANNOT_MODIFY_SELF(40305, "不能修改自己的角色/状态"),
+    AUDIT_LOG_NOT_FOUND(40402, "审计日志不存在"),
+
+    // ========== AI 模块 ==========
+
+    AI_GLOBAL_DISABLED(70001, "AI 功能暂未开放"),
+    AI_CHANNEL_NOT_FOUND(70002, "渠道配置不存在"),
+    AI_CHANNEL_DISABLED(70003, "渠道已停用"),
+    AI_SESSION_NOT_FOUND(70004, "会话不存在"),
+    AI_SESSION_CLOSED(70005, "会话已关闭"),
+    AI_SESSION_NOT_OWNER(70006, "无权操作此会话"),
+    AI_QUOTA_EXCEEDED(70007, "今日 AI 额度已用尽"),
+    AI_QUOTA_PLATFORM_EXCEEDED(70008, "平台今日 AI 额度已用尽"),
+    AI_MODEL_CALL_FAILED(70009, "AI 模型调用失败"),
+    AI_CONTEXT_TOO_LONG(70010, "上下文长度超限"),
+    AI_MESSAGE_CONTENT_BLANK(70011, "消息内容不能为空"),
+    AI_CHANNEL_CODE_DUPLICATE(70012, "渠道编码已存在");
 
     private final Integer code;
     private final String message;

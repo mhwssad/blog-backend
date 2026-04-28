@@ -58,6 +58,11 @@ public interface SysUserRepository extends IService<SysUser> {
     long countActiveByIds(Collection<Long> ids);
 
     /**
+     * 根据用户ID查询邮箱地址。
+     */
+    String findEmailById(Long userId);
+
+    /**
      * 根据管理端查询条件对未删除用户进行分页。
      */
     Page<SysUser> pageByAdminConditions(SysUserPageQuery query);

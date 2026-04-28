@@ -112,4 +112,9 @@ public class SysUser {
      */
     private String remark;
 
+    /**
+     * MFA是否启用：0-否，1-是
+     */
+    private Integer mfaEnabled;
+
 }

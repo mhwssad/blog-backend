@@ -1,6 +1,8 @@
 package com.cybzacg.blogbackend.module.auth.token;
 
 import com.cybzacg.blogbackend.common.constant.AuthConstants;
+import com.cybzacg.blogbackend.common.redis.RedisKeyUtils;
+import com.cybzacg.blogbackend.common.redis.RedisOperator;
 import com.cybzacg.blogbackend.config.property.SecurityProperties;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
@@ -25,6 +27,7 @@ import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Date;
@@ -39,6 +42,7 @@ import java.util.List;
 @ConditionalOnProperty(prefix = "security.session", name = "type", havingValue = "jwt")
 public class JwtTokenManager implements TokenManager {
     private final SecurityProperties securityProperties;
+    private final RedisOperator redisOperator;
     private SecretKey secretKey;
 
     @PostConstruct
@@ -88,7 +92,10 @@ public class JwtTokenManager implements TokenManager {
 
     @Override
     public boolean validateToken(String token) {
-        return validate(token, AuthConstants.TOKEN_TYPE_ACCESS);
+        if (!validate(token, AuthConstants.TOKEN_TYPE_ACCESS)) {
+            return false;
+        }
+        return !isTokenBlacklisted(token);
     }
 
     @Override
@@ -103,6 +110,40 @@ public class JwtTokenManager implements TokenManager {
 
         Authentication authentication = buildAuthentication(claims);
         return generateToken(authentication);
+    }
+
+    @Override
+    public void invalidateUserSessions(Long userId) {
+        if (userId == null) {
+            return;
+        }
+        String blacklistKey = RedisKeyUtils.build(AuthConstants.TOKEN_BLACKLIST_PREFIX, userId);
+        long now = Instant.now().getEpochSecond();
+        redisOperator.set(blacklistKey, String.valueOf(now),
+                Duration.ofSeconds(getSessionConfig().getAccessTokenTimeToLive()));
+    }
+
+    /**
+     * 检查 token 是否属于已被加入黑名单的用户，且 token 签发时间早于黑名单加入时间。
+     */
+    private boolean isTokenBlacklisted(String token) {
+        try {
+            Claims claims = parseClaims(token);
+            Long userId = parseUserId(claims);
+            if (userId == null) {
+                return false;
+            }
+            String blacklistKey = RedisKeyUtils.build(AuthConstants.TOKEN_BLACKLIST_PREFIX, userId);
+            String blacklistedAt = redisOperator.get(blacklistKey, String.class);
+            if (!StringUtils.hasText(blacklistedAt)) {
+                return false;
+            }
+            long blacklistTime = Long.parseLong(blacklistedAt);
+            Date issuedAt = claims.getIssuedAt();
+            return issuedAt != null && issuedAt.getTime() / 1000 < blacklistTime;
+        } catch (Exception ex) {
+            return false;
+        }
     }
 
     private boolean validate(String token, String expectedTokenType) {
