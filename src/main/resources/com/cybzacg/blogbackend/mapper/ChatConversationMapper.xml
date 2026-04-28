@@ -7,14 +7,25 @@
     <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.ChatConversation">
         <id property="id" column="id" jdbcType="BIGINT"/>
         <result property="conversationType" column="conversation_type" jdbcType="VARCHAR"/>
+        <result property="sceneType" column="scene_type" jdbcType="VARCHAR"/>
         <result property="name" column="name" jdbcType="VARCHAR"/>
         <result property="avatar" column="avatar" jdbcType="VARCHAR"/>
         <result property="ownerId" column="owner_id" jdbcType="BIGINT"/>
         <result property="singlePairKey" column="single_pair_key" jdbcType="VARCHAR"/>
+        <result property="visibilityScope" column="visibility_scope" jdbcType="VARCHAR"/>
+        <result property="allowGuestView" column="allow_guest_view" jdbcType="TINYINT"/>
+        <result property="requireJoinToSpeak" column="require_join_to_speak" jdbcType="TINYINT"/>
+        <result property="joinRule" column="join_rule" jdbcType="VARCHAR"/>
+        <result property="speakLevelLimit" column="speak_level_limit" jdbcType="TINYINT"/>
+        <result property="memberLimit" column="member_limit" jdbcType="INTEGER"/>
         <result property="isAllSite" column="is_all_site" jdbcType="TINYINT"/>
         <result property="allSiteKey" column="all_site_key" jdbcType="VARCHAR"/>
         <result property="status" column="status" jdbcType="TINYINT"/>
         <result property="remark" column="remark" jdbcType="VARCHAR"/>
+        <result property="announcement" column="announcement" jdbcType="VARCHAR"/>
+        <result property="slowModeSeconds" column="slow_mode_seconds" jdbcType="INTEGER"/>
+        <result property="displaySort" column="display_sort" jdbcType="INTEGER"/>
+        <result property="channelCategoryCode" column="channel_category_code" jdbcType="VARCHAR"/>
         <result property="lastMessageId" column="last_message_id" jdbcType="BIGINT"/>
         <result property="lastMessageTime" column="last_message_time" jdbcType="TIMESTAMP"/>
         <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
@@ -23,9 +34,12 @@
 
     <sql id="Base_Column_List">
         id
-        , conversation_type, name, avatar, owner_id, single_pair_key,
-        is_all_site, all_site_key, status, remark, last_message_id,
-        last_message_time, created_at, updated_at
+        , conversation_type, scene_type, name, avatar, owner_id, single_pair_key,
+        visibility_scope, allow_guest_view, require_join_to_speak, join_rule,
+        speak_level_limit, member_limit,
+        is_all_site, all_site_key, status, remark,
+        announcement, slow_mode_seconds, display_sort, channel_category_code,
+        last_message_id, last_message_time, created_at, updated_at
     </sql>
 
     <sql id="Conversation_List_From">

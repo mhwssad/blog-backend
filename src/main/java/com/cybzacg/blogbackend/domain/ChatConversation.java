@@ -39,6 +39,34 @@ public class ChatConversation {
      */
     private String singlePairKey;
     /**
+     * 业务场景：single_chat/user_group/hall_channel/topic_channel/global_channel
+     */
+    private String sceneType;
+    /**
+     * 可见范围：public/member/private
+     */
+    private String visibilityScope;
+    /**
+     * 访客是否可见：0-否，1-是
+     */
+    private Integer allowGuestView;
+    /**
+     * 是否需要加入后发言：0-否，1-是
+     */
+    private Integer requireJoinToSpeak;
+    /**
+     * 加入规则：free/approval/invite_only
+     */
+    private String joinRule;
+    /**
+     * 发言最低等级限制
+     */
+    private Integer speakLevelLimit;
+    /**
+     * 成员上限：0-不限制
+     */
+    private Integer memberLimit;
+    /**
      * 是否全站会话：0-否，1-是
      */
     private Integer isAllSite;
@@ -54,6 +82,22 @@ public class ChatConversation {
      * 备注
      */
     private String remark;
+    /**
+     * 频道/群公告
+     */
+    private String announcement;
+    /**
+     * 慢速模式秒数：0-关闭
+     */
+    private Integer slowModeSeconds;
+    /**
+     * 展示排序
+     */
+    private Integer displaySort;
+    /**
+     * 频道分类编码/群分类编码
+     */
+    private String channelCategoryCode;
     /**
      * 最新消息ID
      */
