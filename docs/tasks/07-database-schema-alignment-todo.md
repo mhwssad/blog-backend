@@ -11,7 +11,7 @@
 
 ## 2. 当前状态
 
-**当前阶段：待开始。表结构已经预留，后续需要逐项确认实体、Mapper、Repository、业务服务和测试是否跟上。**
+**当前阶段：进行中。已完成 `sys_author_application`、`sys_user` 等级字段、`sys_user_notification_setting`、博客内容侧结构承接、聊天侧结构对齐、AI 侧结构对齐、举报治理侧结构对齐及权限菜单补全，其余结构继续按任务分批推进。**
 
 ```
 已具备:
@@ -19,12 +19,15 @@
   ✅ 02_article.sql 已补文章审核、可见范围、定时发布、系列结构
   ✅ 05_chat.sql 已补频道 / 群治理、申请、入群、论坛挂接结构
   ✅ 开发阶段直接修改原始建表脚本的规范已明确
+  ✅ 系列文章 Repository 已补齐
+  ✅ ChatConversation 11 个频道治理字段已补齐
+  ✅ 频道创建申请 / 入群申请 / 论坛关联 domain/mapper/repository 已建
+  ✅ AI 渠道配置 / 对话会话 / 消息 / 使用日志 domain/mapper/repository 已建
+  ✅ 举报记录 / 处理日志 domain/mapper/repository 已建
+  ✅ 系列文章 / 频道申请 / 入群申请 / AI / 举报 / 看板 / 审计菜单已补
 
 待推进:
-  ⏳ 新表 / 新字段对应 domain 对齐
-  ⏳ Mapper / XML / Repository 对齐
   ⏳ 枚举和状态常量对齐
-  ⏳ 初始化数据和权限菜单对齐
   ⏳ 清理重复、废弃、同义结构
 ```
 
@@ -32,62 +35,62 @@
 
 ### 3.1 `sys_user` 等级字段
 
-- [ ] domain 补齐 `userLevel`、`experiencePoints`、`levelUpdatedAt`。
-- [ ] 用户查询 VO 返回等级信息。
-- [ ] 后台用户详情返回等级与经验。
-- [ ] 更新用户时避免误覆盖经验字段。
-- [ ] 补齐等级字段默认值测试。
+- [x] domain 补齐 `userLevel`、`experiencePoints`、`levelUpdatedAt`。
+- [x] 用户查询 VO 返回等级信息。
+- [x] 后台用户详情返回等级与经验。
+- [x] 更新用户时避免误覆盖经验字段。
+- [x] 补齐等级字段默认值测试。
 
 ### 3.2 `sys_author_application`
 
-- [ ] 新增 domain。
-- [ ] 新增 Mapper / XML。
-- [ ] 新增 Repository。
-- [ ] 新增用户侧和后台侧 DTO / VO。
-- [ ] 新增申请状态枚举。
-- [ ] 补齐唯一性和状态索引使用场景。
+- [x] 新增 domain。
+- [x] 新增 Mapper / XML。
+- [x] 新增 Repository。
+- [x] 新增用户侧和后台侧 DTO / VO。
+- [x] 新增申请状态枚举。
+- [x] 补齐唯一性和状态索引使用场景。
 
 ### 3.3 `sys_user_notification_setting`
 
-- [ ] 新增 domain。
-- [ ] 新增 Mapper / XML。
-- [ ] 新增 Repository。
-- [ ] 新增通知类型枚举。
-- [ ] 新用户默认配置生成逻辑。
-- [ ] 投递前偏好查询方法。
+- [x] 新增 domain。
+- [x] 新增 Mapper / XML。
+- [x] 新增 Repository。
+- [x] 新增通知类型枚举。
+- [x] 新用户默认配置生成逻辑。
+- [x] 投递前偏好查询方法。
 
 ## 4. 博客内容侧结构
 
 ### 4.1 `blog_article` 新字段
 
-- [ ] domain 补齐 `reviewStatus`。
-- [ ] domain 补齐 `visibilityScope`。
-- [ ] domain 补齐 `scheduledPublishTime`。
-- [ ] 保存和更新文章时显式处理新字段。
-- [ ] 公开查询 SQL 加入审核状态和可见范围过滤。
-- [ ] 文章详情访问控制使用新字段。
+- [x] domain 补齐 `reviewStatus`。
+- [x] domain 补齐 `visibilityScope`。
+- [x] domain 补齐 `scheduledPublishTime`。
+- [x] 保存和更新文章时显式处理新字段。
+- [x] 公开查询 SQL 加入审核状态和可见范围过滤。
+- [x] 文章详情访问控制使用新字段。
 
 ### 4.2 `blog_article_review_log`
 
-- [ ] 新增 domain。
-- [ ] 新增 Mapper / XML。
-- [ ] 新增 Repository。
-- [ ] 审核动作统一写日志。
-- [ ] 后台查询审核日志接口。
+- [x] 新增 domain。
+- [x] 新增 Mapper / XML。
+- [x] 新增 Repository。
+- [x] 审核动作统一写日志。
+- [x] 后台查询审核日志接口。
 
 ### 4.3 `blog_article_series`
 
-- [ ] 新增 domain。
-- [ ] 新增 Mapper / XML。
-- [ ] 新增 Repository。
+- [x] 新增 domain。
+- [x] 新增 Mapper / XML。
+- [x] 新增 Repository。
 - [ ] 系列创建、编辑、删除业务服务。
 - [ ] 公开系列查询 SQL。
 
 ### 4.4 `blog_article_series_item`
 
-- [ ] 新增 domain。
-- [ ] 新增 Mapper / XML。
-- [ ] 新增 Repository。
+- [x] 新增 domain。
+- [x] 新增 Mapper / XML。
+- [x] 新增 Repository。
 - [ ] 系列文章排序方法。
 - [ ] 同一系列文章唯一约束校验。
 
@@ -95,40 +98,40 @@
 
 ### 5.1 `chat_conversation` 新字段
 
-- [ ] domain 补齐 `sceneType`。
-- [ ] domain 补齐 `visibilityScope`。
-- [ ] domain 补齐 `allowGuestView`。
-- [ ] domain 补齐 `requireJoinToSpeak`。
-- [ ] domain 补齐 `joinRule`。
-- [ ] domain 补齐 `speakLevelLimit`。
-- [ ] domain 补齐 `memberLimit`。
-- [ ] domain 补齐 `announcement`。
-- [ ] domain 补齐 `slowModeSeconds`。
-- [ ] domain 补齐 `displaySort`。
-- [ ] domain 补齐 `channelCategoryCode`。
+- [x] domain 补齐 `sceneType`。
+- [x] domain 补齐 `visibilityScope`。
+- [x] domain 补齐 `allowGuestView`。
+- [x] domain 补齐 `requireJoinToSpeak`。
+- [x] domain 补齐 `joinRule`。
+- [x] domain 补齐 `speakLevelLimit`。
+- [x] domain 补齐 `memberLimit`。
+- [x] domain 补齐 `announcement`。
+- [x] domain 补齐 `slowModeSeconds`。
+- [x] domain 补齐 `displaySort`。
+- [x] domain 补齐 `channelCategoryCode`。
 - [ ] 会话列表和详情 VO 按需返回新增字段。
 
 ### 5.2 `chat_channel_create_application`
 
-- [ ] 新增 domain。
-- [ ] 新增 Mapper / XML。
-- [ ] 新增 Repository。
+- [x] 新增 domain。
+- [x] 新增 Mapper / XML。
+- [x] 新增 Repository。
 - [ ] 新增申请状态枚举。
 - [ ] 新增用户申请和后台审批服务。
 
 ### 5.3 `chat_group_join_application`
 
-- [ ] 新增 domain。
-- [ ] 新增 Mapper / XML。
-- [ ] 新增 Repository。
+- [x] 新增 domain。
+- [x] 新增 Mapper / XML。
+- [x] 新增 Repository。
 - [ ] 新增入群申请状态枚举。
 - [ ] 新增主动申请、邀请审批、审批通过入群服务。
 
 ### 5.4 `forum_post_channel_link`
 
-- [ ] 新增 domain。
-- [ ] 新增 Mapper / XML。
-- [ ] 新增 Repository。
+- [x] 新增 domain。
+- [x] 新增 Mapper / XML。
+- [x] 新增 Repository。
 - [ ] 第一阶段只提供手动挂接能力。
 - [ ] 不引入论坛正式模块时，可先保留轻量接口或等待论坛立项。
 
@@ -136,32 +139,32 @@
 
 ### 6.1 `ai_channel_config`
 
-- [ ] 新增 domain。
-- [ ] 新增 Mapper / XML。
-- [ ] 新增 Repository。
+- [x] 新增 domain。
+- [x] 新增 Mapper / XML。
+- [x] 新增 Repository。
 - [ ] API Key 脱敏和加密 / 解密策略。
 - [ ] 高风险配置审计字段对齐。
 
 ### 6.2 `ai_chat_session`
 
-- [ ] 新增 domain。
-- [ ] 新增 Mapper / XML。
-- [ ] 新增 Repository。
+- [x] 新增 domain。
+- [x] 新增 Mapper / XML。
+- [x] 新增 Repository。
 - [ ] 会话归属和状态查询方法。
 
 ### 6.3 `ai_chat_message`
 
-- [ ] 新增 domain。
-- [ ] 新增 Mapper / XML。
-- [ ] 新增 Repository。
+- [x] 新增 domain。
+- [x] 新增 Mapper / XML。
+- [x] 新增 Repository。
 - [ ] 按会话分页查询消息。
 - [ ] 支持调用失败消息落库。
 
 ### 6.4 `ai_usage_log`
 
-- [ ] 新增 domain。
-- [ ] 新增 Mapper / XML。
-- [ ] 新增 Repository。
+- [x] 新增 domain。
+- [x] 新增 Mapper / XML。
+- [x] 新增 Repository。
 - [ ] 支持按用户、日期、渠道统计调用次数。
 - [ ] 支持后台调用统计查询。
 
@@ -169,34 +172,34 @@
 
 ### 7.1 `sys_report_record`
 
-- [ ] 新增 domain。
-- [ ] 新增 Mapper / XML。
-- [ ] 新增 Repository。
+- [x] 新增 domain。
+- [x] 新增 Mapper / XML。
+- [x] 新增 Repository。
 - [ ] 支持按状态、对象类型、举报人、时间分页。
 - [ ] 支持状态流转更新。
 
 ### 7.2 `sys_report_handle_log`
 
-- [ ] 新增 domain。
-- [ ] 新增 Mapper / XML。
-- [ ] 新增 Repository。
+- [x] 新增 domain。
+- [x] 新增 Mapper / XML。
+- [x] 新增 Repository。
 - [ ] 支持按举报单查询日志。
 - [ ] 每次处理动作追加日志。
 
 ## 8. 权限菜单与初始化数据
 
-- [ ] 作者申请后台菜单。
-- [ ] 用户等级后台菜单。
-- [ ] 文章审核后台菜单。
-- [ ] 系列文章管理菜单。
-- [ ] 频道管理菜单。
-- [ ] 频道申请审核菜单。
-- [ ] 群入群申请管理菜单。
-- [ ] AI 配置菜单。
-- [ ] AI 调用统计菜单。
-- [ ] 举报处理菜单。
-- [ ] 数据看板菜单。
-- [ ] 高风险审计查询菜单。
+- [x] 作者申请后台菜单。
+- [x] 用户等级后台菜单。
+- [x] 文章审核后台菜单。
+- [x] 系列文章管理菜单。
+- [x] 频道管理菜单。
+- [x] 频道申请审核菜单。
+- [x] 群入群申请管理菜单。
+- [x] AI 配置菜单。
+- [x] AI 调用统计菜单。
+- [x] 举报处理菜单。
+- [x] 数据看板菜单。
+- [x] 高风险审计查询菜单。
 
 ## 9. 清爽性检查
 
@@ -208,7 +211,7 @@
 
 ## 10. 验证方式
 
-- [ ] 执行 `mvn -q -DskipTests compile`。
+- [x] 执行 `mvn -q -DskipTests compile`。
 - [ ] 新增表对应 Repository 基础测试或服务级测试。
 - [ ] 对新增字段涉及的查询补服务级回归。
 - [ ] 对权限菜单初始化脚本做人工核对或脚本级校验。
@@ -219,4 +222,3 @@
 - 新增业务不绕过 Repository 直接拼装数据访问。
 - 枚举、状态流转、接口文档和数据库脚本一致。
 - 初始化脚本、权限菜单和项目文档保持清爽。
-
