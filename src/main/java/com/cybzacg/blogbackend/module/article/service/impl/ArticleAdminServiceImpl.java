@@ -23,6 +23,7 @@ import com.cybzacg.blogbackend.module.auth.service.AuthorPermissionService;
 import com.cybzacg.blogbackend.module.auth.service.SysConfigService;
 import com.cybzacg.blogbackend.module.content.repository.*;
 import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
+import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.IdCollectionUtils;
@@ -60,6 +61,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
     private final SysInteractionRepository sysInteractionRepository;
     private final SysUserFootprintRepository sysUserFootprintRepository;
     private final FileBusinessInfoRepository fileBusinessInfoRepository;
+    private final FileInfoRepository fileInfoRepository;
     private final FileLifecycleService fileLifecycleService;
     private final SysUserRepository sysUserRepository;
     private final SysConfigService sysConfigService;
@@ -123,6 +125,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         syncCategoryBindings(article.getId(), request.getCategoryIds());
         syncTagBindings(article.getId(), request.getTagIds());
         syncAccessBindings(article.getId(), article.getAccessLevel(), request.getAccessList());
+        syncArticleAttachments(article.getId(), article.getContent(), article.getCoverImage());
         eventPublisher.publishEvent(new XpAwardEvent(
                 article.getAuthorId(), ExperienceSourceTypeEnum.ARTICLE_PUBLISH.getValue(),
                 String.valueOf(article.getId()),
@@ -145,6 +148,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         syncCategoryBindings(id, request.getCategoryIds());
         syncTagBindings(id, request.getTagIds());
         syncAccessBindings(id, article.getAccessLevel(), request.getAccessList());
+        syncArticleAttachments(id, article.getContent(), article.getCoverImage());
         if (!Objects.equals(previousAuthorId, article.getAuthorId())) {
             articleSeriesService.cleanupArticleSeriesRelations(id);
         }
@@ -545,6 +549,78 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         }
     }
 
+
+    /**
+     * 同步文章附件引用：解析内容中的图片 URL，与已有引用做差异比对，新增绑定、移除废弃引用。
+     */
+    private void syncArticleAttachments(Long articleId, String content, String coverImage) {
+        Set<String> imageUrls = extractImageUrls(content);
+        if (StringUtils.hasText(coverImage)) {
+            imageUrls.add(coverImage.trim());
+        }
+        Set<Long> newFileIds = imageUrls.isEmpty()
+                ? Set.of()
+                : fileInfoRepository.listByFileUrls(imageUrls).stream()
+                        .map(FileInfo::getId)
+                        .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        List<FileBusinessInfo> existingRefs = fileBusinessInfoRepository
+                .listByReferenceTypeAndReferenceId("article_attachment", articleId);
+        Set<Long> existingFileIds = existingRefs.stream()
+                .map(FileBusinessInfo::getFileId)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        Set<Long> toAdd = new LinkedHashSet<>(newFileIds);
+        toAdd.removeAll(existingFileIds);
+        Set<Long> toRemove = new LinkedHashSet<>(existingFileIds);
+        toRemove.removeAll(newFileIds);
+
+        if (!toAdd.isEmpty()) {
+            Long userId = SecurityUtils.getUserId();
+            List<FileBusinessInfo> addRefs = toAdd.stream()
+                    .map(fileId -> {
+                        FileBusinessInfo ref = new FileBusinessInfo();
+                        ref.setFileId(fileId);
+                        ref.setUserId(userId);
+                        ref.setReferenceType("article_attachment");
+                        ref.setReferenceId(articleId);
+                        return ref;
+                    })
+                    .toList();
+            fileBusinessInfoRepository.saveBatch(addRefs);
+        }
+
+        if (!toRemove.isEmpty()) {
+            List<FileBusinessInfo> removeRefs = existingRefs.stream()
+                    .filter(ref -> toRemove.contains(ref.getFileId()))
+                    .toList();
+            fileBusinessInfoRepository.removeByIds(removeRefs.stream().map(FileBusinessInfo::getId).toList());
+            for (Long fileId : toRemove) {
+                fileLifecycleService.syncFileAfterReferenceRemoval(fileId);
+            }
+        }
+    }
+
+    /**
+     * 从 Markdown 内容中提取所有图片 URL，兼容 Markdown 图片语法和 HTML img 标签。
+     */
+    private Set<String> extractImageUrls(String content) {
+        if (!StringUtils.hasText(content)) {
+            return Set.of();
+        }
+        Set<String> urls = new LinkedHashSet<>();
+        var mdPattern = java.util.regex.Pattern.compile("!\\[.*?\\]\\(([^)]+)\\)");
+        var mdMatcher = mdPattern.matcher(content);
+        while (mdMatcher.find()) {
+            urls.add(mdMatcher.group(1).trim());
+        }
+        var htmlPattern = java.util.regex.Pattern.compile("<img[^>]+src=[\"']([^\"']+)[\"']");
+        var htmlMatcher = htmlPattern.matcher(content);
+        while (htmlMatcher.find()) {
+            urls.add(htmlMatcher.group(1).trim());
+        }
+        return urls;
+    }
 
     /**
      * 读取文章，不存在时统一抛出业务异常。

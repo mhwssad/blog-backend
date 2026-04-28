@@ -14,7 +14,9 @@ import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -108,5 +110,14 @@ public class FileInfoRepositoryImpl extends ServiceImpl<FileInfoMapper, FileInfo
                 .apply("not exists (select 1 from file_business_info where file_id = {0})", fileId)
                 .set(FileInfo::getReferenceCount, 0)
                 .set(FileInfo::getStatus, FileStatusEnum.DELETED.getValue()));
+    }
+
+    @Override
+    public List<FileInfo> listByFileUrls(Collection<String> fileUrls) {
+        if (fileUrls == null || fileUrls.isEmpty()) {
+            return List.of();
+        }
+        return list(new LambdaQueryWrapper<FileInfo>()
+                .in(FileInfo::getFileUrl, fileUrls));
     }
 }

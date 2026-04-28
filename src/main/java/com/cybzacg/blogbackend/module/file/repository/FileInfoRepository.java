@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.cybzacg.blogbackend.domain.FileInfo;
 import com.cybzacg.blogbackend.module.file.model.admin.FileAdminPageQuery;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -61,4 +63,9 @@ public interface FileInfoRepository extends IService<FileInfo> {
      * @return 是否更新成功
      */
     boolean markDeletedIfNoReferences(Long fileId);
+
+    /**
+     * 按 fileUrl 批量查询文件信息。
+     */
+    List<FileInfo> listByFileUrls(Collection<String> fileUrls);
 }
