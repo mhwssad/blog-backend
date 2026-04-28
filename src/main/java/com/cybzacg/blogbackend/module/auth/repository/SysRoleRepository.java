@@ -29,6 +29,11 @@ public interface SysRoleRepository extends IService<SysRole> {
     boolean existsActiveByCode(String code, Long excludeId);
 
     /**
+     * 根据角色编码查询未删除角色。
+     */
+    SysRole findByCode(String code);
+
+    /**
      * 统计给定 ID 集合中未删除角色的数量。
      */
     long countActiveByIds(Collection<Long> ids);

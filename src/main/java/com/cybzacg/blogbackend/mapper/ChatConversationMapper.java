@@ -23,6 +23,16 @@ public interface ChatConversationMapper extends BaseMapper<ChatConversation> {
     ChatConversationListItem selectConversationDetail(@Param("conversationId") Long conversationId,
                                                       @Param("userId") Long userId);
 
+    Long countSearchableGroupPage(@Param("userId") Long userId,
+                                  @Param("keyword") String keyword,
+                                  @Param("categoryCode") String categoryCode);
+
+    List<ChatConversationListItem> selectSearchableGroupPage(@Param("userId") Long userId,
+                                                             @Param("keyword") String keyword,
+                                                             @Param("categoryCode") String categoryCode,
+                                                             @Param("offset") Long offset,
+                                                             @Param("size") Long size);
+
     Long countAdminConversationPage(@Param("query") ChatAdminConversationPageQuery query);
 
     List<ChatAdminConversationListItem> selectAdminConversationPage(@Param("query") ChatAdminConversationPageQuery query,

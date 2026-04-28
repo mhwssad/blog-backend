@@ -1,11 +1,10 @@
 package com.cybzacg.blogbackend.module.auth.service.impl;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.common.constant.ConfigConstants;
 import com.cybzacg.blogbackend.common.redis.RedisKeyUtils;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
 import com.cybzacg.blogbackend.domain.SysConfig;
-import com.cybzacg.blogbackend.mapper.SysConfigMapper;
+import com.cybzacg.blogbackend.module.auth.repository.SysConfigRepository;
 import com.cybzacg.blogbackend.module.auth.service.SysConfigService;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +18,8 @@ import org.springframework.util.StringUtils;
  */
 @Service
 @RequiredArgsConstructor
-public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig>
-        implements SysConfigService {
+public class SysConfigServiceImpl implements SysConfigService {
+    private final SysConfigRepository sysConfigRepository;
     private final RedisOperator redisOperator;
 
     /**
@@ -29,7 +28,7 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
     @Override
     public SysConfig getByConfigKey(String configKey) {
         String normalizedKey = StrUtils.normalize(configKey);
-        return StringUtils.hasText(normalizedKey) ? baseMapper.selectByConfigKey(normalizedKey) : null;
+        return StringUtils.hasText(normalizedKey) ? sysConfigRepository.findByConfigKey(normalizedKey) : null;
     }
 
     /**
@@ -64,6 +63,27 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
     }
 
     /**
+     * 更新配置实体，并在成功后清理新旧键对应的缓存。
+     */
+    @Override
+    public boolean updateConfig(SysConfig config) {
+        if (config == null || config.getId() == null) {
+            return false;
+        }
+        SysConfig existing = sysConfigRepository.getById(config.getId());
+        boolean updated = sysConfigRepository.updateById(config);
+        if (updated) {
+            if (existing != null && StringUtils.hasText(existing.getConfigKey())) {
+                evictConfigCache(existing.getConfigKey());
+            }
+            if (StringUtils.hasText(config.getConfigKey())) {
+                evictConfigCache(config.getConfigKey());
+            }
+        }
+        return updated;
+    }
+
+    /**
      * 清除指定配置键的 Redis 缓存。
      */
     @Override
@@ -80,4 +100,3 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
     }
 
 }
-

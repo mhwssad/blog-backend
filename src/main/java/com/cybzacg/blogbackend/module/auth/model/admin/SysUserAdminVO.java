@@ -28,6 +28,12 @@ public class SysUserAdminVO {
     private LocalDate birthday;
     @Schema(description = "状态")
     private Integer status;
+    @Schema(description = "用户等级")
+    private Integer userLevel;
+    @Schema(description = "经验值")
+    private Integer experiencePoints;
+    @Schema(description = "最近一次等级变更时间")
+    private LocalDateTime levelUpdatedAt;
     @Schema(description = "最后登录时间")
     private LocalDateTime lastLoginTime;
     @Schema(description = "最后登录IP")

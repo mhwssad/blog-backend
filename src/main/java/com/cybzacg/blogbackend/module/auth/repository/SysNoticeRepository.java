@@ -25,7 +25,8 @@ public interface SysNoticeRepository extends IService<SysNotice> {
     Page<SysNotice> pageInboxNotices(UserNoticePageQuery query,
                                      Collection<Long> targetNoticeIds,
                                      Collection<Long> readNoticeIds,
-                                     Collection<Long> unreadTargetNoticeIds);
+                                     Collection<Long> unreadTargetNoticeIds,
+                                     boolean includeGlobalNotices);
 
     /**
      * 统计全局通知中用户未读的数量。

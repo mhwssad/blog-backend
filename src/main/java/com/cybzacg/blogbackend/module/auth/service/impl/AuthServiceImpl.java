@@ -17,6 +17,7 @@ import com.cybzacg.blogbackend.module.auth.repository.SysMenuRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysRoleRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.service.AuthService;
+import com.cybzacg.blogbackend.module.auth.service.UserNotificationPreferenceService;
 import com.cybzacg.blogbackend.module.auth.token.TokenManager;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
@@ -32,7 +33,11 @@ import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.context.ApplicationEventPublisher;
+import com.cybzacg.blogbackend.module.auth.experience.event.XpAwardEvent;
+import com.cybzacg.blogbackend.enums.experience.ExperienceSourceTypeEnum;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -67,6 +72,8 @@ public class AuthServiceImpl implements AuthService {
     private final JavaMailSender javaMailSender;
     private final MailProperties mailProperties;
     private final PasswordEncoder passwordEncoder;
+    private final UserNotificationPreferenceService userNotificationPreferenceService;
+    private final ApplicationEventPublisher eventPublisher;
     private final SecureRandom secureRandom = new SecureRandom();
 
     /**
@@ -97,7 +104,13 @@ public class AuthServiceImpl implements AuthService {
         if (userId != null) {
             sysUserRepository.updateLoginInfo(userId, loginIp);
         }
-        return tokenManager.generateToken(authentication);
+        AuthenticationToken token = tokenManager.generateToken(authentication);
+        if (userId != null) {
+            eventPublisher.publishEvent(new XpAwardEvent(
+                    userId, ExperienceSourceTypeEnum.DAILY_LOGIN.getValue(),
+                    null, "daily_login:" + userId + ":" + java.time.LocalDate.now()));
+        }
+        return token;
     }
 
     /**
@@ -124,12 +137,16 @@ public class AuthServiceImpl implements AuthService {
         user.setEmail(email);
         user.setPhone(phone);
         user.setStatus(1);
+        user.setUserLevel(1);
+        user.setExperiencePoints(0);
+        user.setLevelUpdatedAt(null);
         user.setDeletedFlag(0);
         try {
             sysUserRepository.save(user);
         } catch (DuplicateKeyException ex) {
             throwRegisterDuplicateException(username, email, phone, ex);
         }
+        userNotificationPreferenceService.initializeDefaultSettings(user.getId());
 
         Authentication authentication = authenticationManager.authenticate(
                 UsernamePasswordAuthenticationToken.unauthenticated(username, request.getPassword())
@@ -191,7 +208,13 @@ public class AuthServiceImpl implements AuthService {
         if (userId != null) {
             sysUserRepository.updateLoginInfo(userId, loginIp);
         }
-        return tokenManager.generateToken(authentication);
+        AuthenticationToken token = tokenManager.generateToken(authentication);
+        if (userId != null) {
+            eventPublisher.publishEvent(new XpAwardEvent(
+                    userId, ExperienceSourceTypeEnum.DAILY_LOGIN.getValue(),
+                    null, "daily_login:" + userId + ":" + java.time.LocalDate.now()));
+        }
+        return token;
     }
 
     /**

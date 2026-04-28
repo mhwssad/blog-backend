@@ -17,6 +17,10 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
     SysUser selectByEmail(@Param("email") String email);
 
     int updateLoginInfo(@Param("userId") Long userId, @Param("ip") String ip);
+
+    int incrementExperiencePoints(@Param("userId") Long userId, @Param("delta") int delta);
+
+    int updateLevel(@Param("userId") Long userId, @Param("level") int level);
 }
 
 

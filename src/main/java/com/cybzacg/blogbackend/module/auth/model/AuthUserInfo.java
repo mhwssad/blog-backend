@@ -31,6 +31,12 @@ public class AuthUserInfo {
     @Schema(description = "状态")
     private Integer status;
 
+    @Schema(description = "用户等级")
+    private Integer userLevel;
+
+    @Schema(description = "经验值")
+    private Integer experiencePoints;
+
     @Schema(description = "角色编码")
     private List<String> roles;
 

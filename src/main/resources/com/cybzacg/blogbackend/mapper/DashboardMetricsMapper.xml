@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cybzacg.blogbackend.mapper.DashboardMetricsMapper">
+
+    <select id="countRegisteredUsers" resultType="long">
+        SELECT COUNT(1)
+        FROM sys_user
+        WHERE deleted_flag = 0
+        <if test="startTime != null">AND created_at <![CDATA[>=]]> #{startTime}</if>
+        <if test="endTime != null">AND created_at <![CDATA[<]]> #{endTime}</if>
+    </select>
+
+    <select id="countActiveUsers" resultType="long">
+        SELECT COUNT(DISTINCT active_user_id)
+        FROM (
+            SELECT id AS active_user_id
+            FROM sys_user
+            WHERE deleted_flag = 0
+              AND last_login_time IS NOT NULL
+              <if test="startTime != null">AND last_login_time <![CDATA[>=]]> #{startTime}</if>
+              <if test="endTime != null">AND last_login_time <![CDATA[<]]> #{endTime}</if>
+            UNION
+            SELECT author_id AS active_user_id
+            FROM blog_article
+            WHERE author_id IS NOT NULL
+              <if test="startTime != null">AND created_at <![CDATA[>=]]> #{startTime}</if>
+              <if test="endTime != null">AND created_at <![CDATA[<]]> #{endTime}</if>
+            UNION
+            SELECT user_id AS active_user_id
+            FROM sys_comment
+            WHERE user_id IS NOT NULL
+              <if test="startTime != null">AND created_at <![CDATA[>=]]> #{startTime}</if>
+              <if test="endTime != null">AND created_at <![CDATA[<]]> #{endTime}</if>
+            UNION
+            SELECT sender_id AS active_user_id
+            FROM chat_message
+            WHERE sender_id IS NOT NULL
+              <if test="startTime != null">AND created_at <![CDATA[>=]]> #{startTime}</if>
+              <if test="endTime != null">AND created_at <![CDATA[<]]> #{endTime}</if>
+            UNION
+            SELECT user_id AS active_user_id
+            FROM ai_usage_log
+            WHERE user_id IS NOT NULL
+              <if test="startTime != null">AND created_at <![CDATA[>=]]> #{startTime}</if>
+              <if test="endTime != null">AND created_at <![CDATA[<]]> #{endTime}</if>
+        ) active_users
+        WHERE active_user_id IS NOT NULL
+    </select>
+
+    <select id="countAuthors" resultType="long">
+        SELECT COUNT(DISTINCT ur.user_id)
+        FROM sys_user_role ur
+        INNER JOIN sys_role r ON r.id = ur.role_id
+        INNER JOIN sys_user u ON u.id = ur.user_id
+        WHERE r.code = 'author'
+          AND r.deleted_flag = 0
+          AND r.status = 1
+          AND u.deleted_flag = 0
+          AND u.status = 1
+    </select>
+
+    <select id="countArticles" resultType="long">
+        SELECT COUNT(1)
+        FROM blog_article
+        WHERE 1 = 1
+        <if test="startTime != null">AND created_at <![CDATA[>=]]> #{startTime}</if>
+        <if test="endTime != null">AND created_at <![CDATA[<]]> #{endTime}</if>
+    </select>
+
+    <select id="countPendingArticleReviews" resultType="long">
+        SELECT COUNT(1)
+        FROM blog_article
+        WHERE review_status = 1
+    </select>
+
+    <select id="countComments" resultType="long">
+        SELECT COUNT(1)
+        FROM sys_comment
+        WHERE 1 = 1
+        <if test="startTime != null">AND created_at <![CDATA[>=]]> #{startTime}</if>
+        <if test="endTime != null">AND created_at <![CDATA[<]]> #{endTime}</if>
+    </select>
+
+    <select id="countLikes" resultType="long">
+        SELECT COUNT(1)
+        FROM sys_interaction
+        WHERE action_type = 'like'
+        <if test="startTime != null">AND created_at <![CDATA[>=]]> #{startTime}</if>
+        <if test="endTime != null">AND created_at <![CDATA[<]]> #{endTime}</if>
+    </select>
+
+    <select id="countCollections" resultType="long">
+        SELECT COUNT(1)
+        FROM sys_collection
+        WHERE 1 = 1
+        <if test="startTime != null">AND created_at <![CDATA[>=]]> #{startTime}</if>
+        <if test="endTime != null">AND created_at <![CDATA[<]]> #{endTime}</if>
+    </select>
+
+    <select id="countChatMessages" resultType="long">
+        SELECT COUNT(1)
+        FROM chat_message
+        WHERE 1 = 1
+        <if test="startTime != null">AND created_at <![CDATA[>=]]> #{startTime}</if>
+        <if test="endTime != null">AND created_at <![CDATA[<]]> #{endTime}</if>
+    </select>
+
+    <select id="countLobbyMessages" resultType="long">
+        SELECT COUNT(1)
+        FROM chat_message m
+        INNER JOIN chat_conversation c ON c.id = m.conversation_id
+        WHERE (c.is_all_site = 1 OR c.scene_type IN ('global_channel', 'hall_channel'))
+        <if test="startTime != null">AND m.created_at <![CDATA[>=]]> #{startTime}</if>
+        <if test="endTime != null">AND m.created_at <![CDATA[<]]> #{endTime}</if>
+    </select>
+
+    <select id="countGroups" resultType="long">
+        SELECT COUNT(1)
+        FROM chat_conversation
+        WHERE conversation_type = 'group'
+          AND scene_type = 'user_group'
+          AND status = 1
+        <if test="startTime != null">AND created_at <![CDATA[>=]]> #{startTime}</if>
+        <if test="endTime != null">AND created_at <![CDATA[<]]> #{endTime}</if>
+    </select>
+
+    <select id="countAiCalls" resultType="long">
+        SELECT COUNT(1)
+        FROM ai_usage_log
+        WHERE 1 = 1
+        <if test="successStatus != null">AND success_status = #{successStatus}</if>
+        <if test="startTime != null">AND created_at <![CDATA[>=]]> #{startTime}</if>
+        <if test="endTime != null">AND created_at <![CDATA[<]]> #{endTime}</if>
+    </select>
+
+    <select id="countReports" resultType="long">
+        SELECT COUNT(1)
+        FROM sys_report_record
+        WHERE 1 = 1
+        <if test="status != null">AND status = #{status}</if>
+        <if test="startTime != null">AND reported_at <![CDATA[>=]]> #{startTime}</if>
+        <if test="endTime != null">AND reported_at <![CDATA[<]]> #{endTime}</if>
+    </select>
+</mapper>

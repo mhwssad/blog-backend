@@ -56,4 +56,9 @@ public interface UserChatService {
     void leaveGroup(Long conversationId);
 
     void dissolveGroup(Long conversationId);
+
+    /**
+     * 访客查看大厅频道消息（无需登录）。
+     */
+    PageResult<ChatLobbyMessageVO> pageLobbyMessages(Long current, Long size, Long beforeMessageId);
 }

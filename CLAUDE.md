@@ -98,10 +98,11 @@ module/<domain>
 - scope 取模块名：`auth`、`article`、`content`、`file`、`chat`、`follow`、`docs`、`api`。
 - 一次提交只解决一类问题，禁止混合功能开发、重构、文档更新。
 - 代码必须可编译后再提交，非平凡改动至少执行一次 `mvn -q -DskipTests compile`。
+- **分步提交**：每完成一个逻辑步骤（如基础设施层、数据访问层、服务层、接口层）后立即提交，保持提交粒度小且可追溯。不要等整个功能全部完成后才一次性提交。
 
 ## Documentation
 
-新增/修改接口时必须同步更新 `docs/api文档` 中对应文档。影响项目进度或计划时同步更新 `docs/项目进度文档.md` 与
-`docs/后续更新计划.md`。
+新增/修改接口时必须同步更新 `docs/api文档` 中对应文档。影响项目进度或计划时同步更新 `docs/tasks/README.md`
+或 `docs/tasks` 下对应任务清单。
 
 完整规范详见 [AGENTS.md](AGENTS.md)、[docs/项目代码编写规范.md](docs/项目代码编写规范.md)、[docs/项目结构规范.md](docs/项目结构规范.md)。

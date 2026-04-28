@@ -68,6 +68,21 @@ public class SysUser {
     private Integer status;
 
     /**
+     * 用户等级：1-10
+     */
+    private Integer userLevel;
+
+    /**
+     * 经验值
+     */
+    private Integer experiencePoints;
+
+    /**
+     * 最近一次等级变更时间
+     */
+    private LocalDateTime levelUpdatedAt;
+
+    /**
      * 最后登录时间
      */
     private LocalDateTime lastLoginTime;

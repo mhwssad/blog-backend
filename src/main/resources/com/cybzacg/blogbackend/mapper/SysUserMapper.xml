@@ -15,6 +15,9 @@
         <result property="gender" column="gender" jdbcType="TINYINT"/>
         <result property="birthday" column="birthday" jdbcType="DATE"/>
         <result property="status" column="status" jdbcType="TINYINT"/>
+        <result property="userLevel" column="user_level" jdbcType="TINYINT"/>
+        <result property="experiencePoints" column="experience_points" jdbcType="INTEGER"/>
+        <result property="levelUpdatedAt" column="level_updated_at" jdbcType="TIMESTAMP"/>
         <result property="lastLoginTime" column="last_login_time" jdbcType="TIMESTAMP"/>
         <result property="lastLoginIp" column="last_login_ip" jdbcType="VARCHAR"/>
         <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
@@ -28,7 +31,7 @@
         ,username,password,
         nickname,email,phone,
         avatar,gender,birthday,
-        status,last_login_time,last_login_ip,
+        status,user_level,experience_points,level_updated_at,last_login_time,last_login_ip,
         created_at,updated_at,deleted_flag,
         remark
     </sql>
@@ -58,6 +61,23 @@
         set last_login_time = now(),
             last_login_ip   = #{ip},
             updated_at      = now()
+        where id = #{userId}
+          and deleted_flag = 0
+    </update>
+
+    <update id="incrementExperiencePoints">
+        update sys_user
+        set experience_points = experience_points + #{delta},
+            updated_at        = now()
+        where id = #{userId}
+          and deleted_flag = 0
+    </update>
+
+    <update id="updateLevel">
+        update sys_user
+        set user_level     = #{level},
+            level_updated_at = now(),
+            updated_at       = now()
         where id = #{userId}
           and deleted_flag = 0
     </update>

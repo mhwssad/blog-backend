@@ -3,9 +3,10 @@ package com.cybzacg.blogbackend.module.content.service.impl;
 import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.SysComment;
 import com.cybzacg.blogbackend.domain.SysInteraction;
+import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
-import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
+import com.cybzacg.blogbackend.module.article.service.ArticleContentFacadeService;
+import com.cybzacg.blogbackend.module.auth.service.NotificationDeliveryService;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.user.CommentSaveRequest;
 import com.cybzacg.blogbackend.module.content.repository.SysCommentRepository;
@@ -13,8 +14,12 @@ import com.cybzacg.blogbackend.module.content.repository.SysInteractionRepositor
 import com.cybzacg.blogbackend.module.content.service.UserCommentService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import com.cybzacg.blogbackend.utils.TreeTraversalUtils;
+import com.cybzacg.blogbackend.module.auth.experience.event.XpAwardEvent;
+import com.cybzacg.blogbackend.enums.experience.ExperienceSourceTypeEnum;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,9 +35,10 @@ import java.util.List;
 public class UserCommentServiceImpl implements UserCommentService {
     private final SysCommentRepository sysCommentRepository;
     private final SysInteractionRepository sysInteractionRepository;
-    private final BlogArticleRepository blogArticleService;
-    private final ArticleAccessControlService articleAccessControlService;
+    private final ArticleContentFacadeService articleContentFacadeService;
     private final ContentModelMapper contentModelMapper;
+    private final ApplicationEventPublisher eventPublisher;
+    private final NotificationDeliveryService notificationDeliveryService;
 
     /**
      * 为评论新增点赞关系，并同步递增评论点赞数。
@@ -85,9 +91,7 @@ public class UserCommentServiceImpl implements UserCommentService {
     public void createComment(CommentSaveRequest request) {
         Long userId = SecurityUtils.requireUserId();
         ExceptionThrowerCore.throwBusinessIf(!"article".equals(request.getTargetType()), ResultErrorCode.ILLEGAL_ARGUMENT, "当前仅支持文章评论");
-        BlogArticle article = blogArticleService.getById(request.getTargetId());
-        ExceptionThrowerCore.throwBusinessIf(article == null || !Integer.valueOf(1).equals(article.getStatus()), ResultErrorCode.ILLEGAL_ARGUMENT, "文章不存在");
-        articleAccessControlService.validateArticleAccess(article, userId);
+        BlogArticle article = articleContentFacadeService.requireInteractableArticle(request.getTargetId(), userId, "评论");
 
         SysComment comment = contentModelMapper.toComment(request);
         comment.setTargetType("article");
@@ -112,8 +116,19 @@ public class UserCommentServiceImpl implements UserCommentService {
         }
 
         sysCommentRepository.save(comment);
-        article.setCommentCount((article.getCommentCount() == null ? 0 : article.getCommentCount()) + 1);
-        blogArticleService.updateById(article);
+        articleContentFacadeService.adjustCommentCount(article.getId(), 1);
+        eventPublisher.publishEvent(new XpAwardEvent(
+                userId, ExperienceSourceTypeEnum.COMMENT_CREATE.getValue(),
+                String.valueOf(comment.getId()),
+                "comment_create:" + userId + ":" + comment.getId()));
+        if (article.getAuthorId() != null && !article.getAuthorId().equals(userId)) {
+            notificationDeliveryService.deliverAfterCommit(
+                    article.getAuthorId(),
+                    NotificationTypeEnum.COMMENT_ME,
+                    "你的文章收到了评论",
+                    "《" + article.getTitle() + "》收到了新评论：" + abbreviate(comment.getContent(), 80),
+                    userId);
+        }
     }
 
     /**
@@ -131,11 +146,7 @@ public class UserCommentServiceImpl implements UserCommentService {
         sysCommentRepository.removeByIds(subtreeIds);
         sysInteractionRepository.removeByTargetTypeAndTargetIds("comment", subtreeIds);
 
-        BlogArticle article = blogArticleService.getById(comment.getTargetId());
-        if (article != null) {
-            article.setCommentCount(Math.max(0, (article.getCommentCount() == null ? 0 : article.getCommentCount()) - subtree.size()));
-            blogArticleService.updateById(article);
-        }
+        articleContentFacadeService.adjustCommentCount(comment.getTargetId(), -subtree.size());
         if (comment.getParentId() != null && comment.getParentId() > 0) {
             SysComment parent = sysCommentRepository.getById(comment.getParentId());
             if (parent != null) {
@@ -153,11 +164,15 @@ public class UserCommentServiceImpl implements UserCommentService {
         ExceptionThrowerCore.throwBusinessIfNull(comment, ResultErrorCode.ILLEGAL_ARGUMENT, "评论不存在");
         return comment;
     }
+
+    private String abbreviate(String value, int maxLength) {
+        String text = StrUtils.trimToNull(value);
+        if (text == null || text.length() <= maxLength) {
+            return text == null ? "" : text;
+        }
+        return text.substring(0, maxLength) + "...";
+    }
 }
-
-
-
-
 
 
 

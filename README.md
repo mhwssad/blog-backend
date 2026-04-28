@@ -158,7 +158,6 @@ mvn test
 - 文件模块接口说明：`docs/api文档/file-api.md`
 - 聊天 / WebSocket 预留说明：`docs/api文档/chat-api.md`
 - 关注关系接口说明：`docs/api文档/follow-api.md`
-- 项目进度文档：`docs/项目进度文档.md`
 - 任务执行清单：`docs/tasks/README.md`
 - Swagger / Knife4j：
     - `http://localhost:8000/doc.html`
@@ -169,6 +168,5 @@ mvn test
 - 优先复用 `docs/README.md` 中的正式入口文档，不再在 README 外散落平行说明。
 - 继续把更多真正依赖 Spring 上下文的测试接入 `test` profile，并优先抽公共测试支撑，减少重复样板代码。
 - 具体需求和开发任务统一按 `docs/tasks/README.md` 拆分推进。
-
 
 

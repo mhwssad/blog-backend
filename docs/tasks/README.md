@@ -6,13 +6,14 @@
 
 | 文件 | 对应需求 | 当前状态 | 优先级 |
 | --- | --- | --- | --- |
-| [01-author-level-permission-todo.md](01-author-level-permission-todo.md) | 作者申请、用户等级、超级管理员安全 | 待开始 | P0 |
-| [02-blog-content-lifecycle-todo.md](02-blog-content-lifecycle-todo.md) | 文章状态、可见范围、审核、系列文章 | 待开始 | P0 |
-| [03-chat-community-todo.md](03-chat-community-todo.md) | 大厅频道、主题频道、群聊增强、论坛挂接 | 待开始 | P0 |
+| [01-author-level-permission-todo.md](01-author-level-permission-todo.md) | 作者申请、用户等级、超级管理员安全 | 进行中 | P0 |
+| [02-blog-content-lifecycle-todo.md](02-blog-content-lifecycle-todo.md) | 文章状态、可见范围、审核、系列文章 | 进行中 | P0 |
+| [03-chat-community-todo.md](03-chat-community-todo.md) | 大厅频道、主题频道、群聊增强、论坛挂接 | 进行中 | P0 |
 | [04-ai-module-todo.md](04-ai-module-todo.md) | AI 问答、配置中心、额度、数据范围 | 待开始 | P0 |
 | [05-governance-report-audit-todo.md](05-governance-report-audit-todo.md) | 举报处理、治理动作、审计增强 | 待开始 | P0 |
-| [06-notification-dashboard-todo.md](06-notification-dashboard-todo.md) | 通知设置、通知投递过滤、数据看板 | 待开始 | P1 |
-| [07-database-schema-alignment-todo.md](07-database-schema-alignment-todo.md) | 已补表结构与业务实现对齐 | 待开始 | P0 |
+| [06-notification-dashboard-todo.md](06-notification-dashboard-todo.md) | 通知设置、通知投递过滤、数据看板 | 进行中 | P1 |
+| [07-database-schema-alignment-todo.md](07-database-schema-alignment-todo.md) | 已补表结构与业务实现对齐 | 进行中 | P0 |
+| [08-source-structure-optimization-todo.md](08-source-structure-optimization-todo.md) | 源码结构治理、边界收口、重型类拆分与子域化 | 进行中 | P1 |
 
 ## 2. 参考文档
 
@@ -28,12 +29,12 @@
 3. 接着执行 `03-chat-community-todo.md`，把大厅、主题频道和群聊规则补齐。
 4. 然后执行 `04-ai-module-todo.md` 和 `05-governance-report-audit-todo.md`，形成 AI 基础问答和平台治理闭环。
 5. 最后执行 `06-notification-dashboard-todo.md`，补齐通知偏好和后台统计看板。
+6. 结构治理任务按 `08-source-structure-optimization-todo.md` 穿插执行，优先配合当前正在改动的模块做增量收口，不做一次性大搬迁。
 
 ## 4. 通用完成标准
 
 - 表结构、枚举和状态定义已与原始建表脚本一致。
 - Controller、Service、Repository / Mapper 已按项目结构规范落位。
-- 核心正常路径、边界条件和异常分支有服务级测试。
-- 涉及权限的接口有必要的 WebMvc / 权限测试。
+- 当前开发阶段允许先不补测试；接口和状态稳定后，再统一补服务级测试与权限测试。
 - 前端可见接口已同步更新 `docs/api文档`。
-- 影响项目阶段判断的变更已同步更新 `docs/项目进度文档.md`。
+- 影响项目阶段判断的变更已同步更新 `docs/tasks/README.md` 或对应任务清单。

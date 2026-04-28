@@ -42,8 +42,23 @@
         <caffeine.version>2.9.3</caffeine.version>
 
         <jwt.version>0.12.6</jwt.version>
+        <langchain4j.version>1.12.2</langchain4j.version>
 
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- LangChain4j 统一管理 AI 模块版本，便于后续扩展 RAG / Agent / 多供应商适配 -->
+            <dependency>
+                <groupId>dev.langchain4j</groupId>
+                <artifactId>langchain4j-bom</artifactId>
+                <version>${langchain4j.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <!-- OkHttp HTTP客户端 -->
         <dependency>
@@ -71,6 +86,18 @@
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
             <version>${jwt.version}</version>
+        </dependency>
+
+        <!-- LangChain4j: AI 编排核心抽象，支撑后续 RAG / Agent / 多供应商适配 -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j</artifactId>
+        </dependency>
+
+        <!-- LangChain4j OpenAI-compatible 接入，DeepSeek 等兼容 Chat Completions 的供应商可复用 -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-open-ai</artifactId>
         </dependency>
 
 
@@ -277,5 +304,3 @@
     </build>
 
 </project>
-
-

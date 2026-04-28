@@ -5,9 +5,10 @@ import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.SysCollection;
 import com.cybzacg.blogbackend.domain.SysCollectionFolder;
+import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
-import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
+import com.cybzacg.blogbackend.module.article.service.ArticleContentFacadeService;
+import com.cybzacg.blogbackend.module.auth.service.NotificationDeliveryService;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.user.CollectionFolderSaveRequest;
 import com.cybzacg.blogbackend.module.content.model.user.CollectionFolderVO;
@@ -37,9 +38,9 @@ public class UserCollectionServiceImpl implements UserCollectionService {
 
     private final SysCollectionFolderRepository sysCollectionFolderRepository;
     private final SysCollectionRepository sysCollectionRepository;
-    private final BlogArticleRepository blogArticleService;
-    private final ArticleAccessControlService articleAccessControlService;
+    private final ArticleContentFacadeService articleContentFacadeService;
     private final ContentModelMapper contentModelMapper;
+    private final NotificationDeliveryService notificationDeliveryService;
 
     /**
      * 分页查询当前用户的收藏夹列表，按默认夹与排序字段排列。
@@ -131,9 +132,7 @@ public class UserCollectionServiceImpl implements UserCollectionService {
     public void createCollection(CollectionSaveRequest request) {
         Long userId = SecurityUtils.requireUserId();
         ExceptionThrowerCore.throwBusinessIf(!ARTICLE_TYPE.equals(request.getTargetType()), ResultErrorCode.ILLEGAL_ARGUMENT, "当前仅支持文章收藏");
-        BlogArticle article = blogArticleService.getById(request.getTargetId());
-        ExceptionThrowerCore.throwBusinessIf(article == null || !Integer.valueOf(1).equals(article.getStatus()), ResultErrorCode.ILLEGAL_ARGUMENT, "文章不存在");
-        articleAccessControlService.validateArticleAccess(article, userId);
+        BlogArticle article = articleContentFacadeService.requireInteractableArticle(request.getTargetId(), userId, "收藏");
         Long folderId = request.getFolderId();
         SysCollectionFolder folder = folderId == null ? getOrCreateDefaultFolder(userId, ARTICLE_TYPE) : getFolderOrThrow(folderId, userId);
         boolean exists = sysCollectionRepository.existsByUserIdAndFolderIdAndTargetIdAndTargetType(
@@ -148,8 +147,15 @@ public class UserCollectionServiceImpl implements UserCollectionService {
         sysCollectionRepository.save(collection);
         folder.setCollectionCount((folder.getCollectionCount() == null ? 0 : folder.getCollectionCount()) + 1);
         sysCollectionFolderRepository.updateById(folder);
-        article.setCollectCount((article.getCollectCount() == null ? 0 : article.getCollectCount()) + 1);
-        blogArticleService.updateById(article);
+        articleContentFacadeService.adjustCollectCount(article.getId(), 1);
+        if (article.getAuthorId() != null && !article.getAuthorId().equals(userId)) {
+            notificationDeliveryService.deliverAfterCommit(
+                    article.getAuthorId(),
+                    NotificationTypeEnum.COLLECT_ARTICLE,
+                    "你的文章被收藏了",
+                    "《" + article.getTitle() + "》被新的用户收藏",
+                    userId);
+        }
     }
 
     /**
@@ -211,11 +217,7 @@ public class UserCollectionServiceImpl implements UserCollectionService {
         if (!ARTICLE_TYPE.equals(collection.getTargetType())) {
             return;
         }
-        BlogArticle article = blogArticleService.getById(collection.getTargetId());
-        if (article != null) {
-            article.setCollectCount(Math.max(0, (article.getCollectCount() == null ? 0 : article.getCollectCount()) - 1));
-            blogArticleService.updateById(article);
-        }
+        articleContentFacadeService.adjustCollectCount(collection.getTargetId(), -1);
     }
 
     private String resolveFolderType(String folderType) {
@@ -227,9 +229,6 @@ public class UserCollectionServiceImpl implements UserCollectionService {
     }
 
 }
-
-
-
 
 
 

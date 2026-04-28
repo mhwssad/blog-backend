@@ -2,9 +2,13 @@ package com.cybzacg.blogbackend.module.chat.convert;
 
 import com.cybzacg.blogbackend.domain.ChatConversation;
 import com.cybzacg.blogbackend.domain.ChatConversationMember;
+import com.cybzacg.blogbackend.domain.ChatChannelCreateApplication;
+import com.cybzacg.blogbackend.domain.ChatGroupJoinApplication;
+import com.cybzacg.blogbackend.domain.ChatGroupInviteLink;
 import com.cybzacg.blogbackend.domain.ChatMessage;
 import com.cybzacg.blogbackend.domain.ChatMessageReadCursor;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminConversationVO;
+import com.cybzacg.blogbackend.module.chat.model.admin.ChatChannelApplicationAdminVO;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageVO;
 import com.cybzacg.blogbackend.module.chat.model.common.ChatFilePayloadVO;
 import com.cybzacg.blogbackend.module.chat.model.common.ChatMessagePayloadVO;
@@ -41,6 +45,9 @@ public interface ChatModelMapper {
     @Mapping(target = "lastMessage", ignore = true)
     ChatAdminConversationVO toAdminConversationVO(ChatAdminConversationListItem item);
 
+    @Mapping(target = "joined", expression = "java(item.getSelfRole() != null)")
+    ChatGroupSearchVO toGroupSearchVO(ChatConversationListItem item);
+
     @Mapping(target = "senderNickname", ignore = true)
     @Mapping(target = "messageType", ignore = true)
     @Mapping(target = "content", ignore = true)
@@ -55,17 +62,67 @@ public interface ChatModelMapper {
     @Mapping(target = "conversationType", constant = "group")
     @Mapping(target = "name", expression = "java(StrUtils.trim(request.getName()))")
     @Mapping(target = "avatar", expression = "java(StrUtils.trimToNull(request.getAvatar()))")
+    @Mapping(target = "sceneType", constant = "user_group")
+    @Mapping(target = "visibilityScope", expression = "java(StrUtils.trimToNull(request.getVisibilityScope()))")
+    @Mapping(target = "allowGuestView", constant = "0")
+    @Mapping(target = "requireJoinToSpeak", constant = "1")
+    @Mapping(target = "joinRule", expression = "java(StrUtils.trimToNull(request.getJoinRule()))")
+    @Mapping(target = "speakLevelLimit", source = "speakLevelLimit")
+    @Mapping(target = "memberLimit", source = "memberLimit")
+    @Mapping(target = "remark", expression = "java(StrUtils.trimToNull(request.getDescription()))")
+    @Mapping(target = "announcement", expression = "java(StrUtils.trimToNull(request.getAnnouncement()))")
+    @Mapping(target = "slowModeSeconds", constant = "0")
+    @Mapping(target = "displaySort", constant = "0")
+    @Mapping(target = "channelCategoryCode", expression = "java(StrUtils.trimToNull(request.getCategoryCode()))")
     @Mapping(target = "ownerId", ignore = true)
     @Mapping(target = "singlePairKey", ignore = true)
     @Mapping(target = "isAllSite", constant = "0")
     @Mapping(target = "allSiteKey", ignore = true)
     @Mapping(target = "status", constant = "1")
-    @Mapping(target = "remark", ignore = true)
     @Mapping(target = "lastMessageId", ignore = true)
     @Mapping(target = "lastMessageTime", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     ChatConversation toGroupConversation(ChatCreateGroupRequest request);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "applicantUserId", ignore = true)
+    @Mapping(target = "desiredName", expression = "java(StrUtils.trim(request.getDesiredName()))")
+    @Mapping(target = "desiredSceneType", expression = "java(StrUtils.trimToNull(request.getDesiredSceneType()))")
+    @Mapping(target = "desiredCategoryCode", expression = "java(StrUtils.trimToNull(request.getDesiredCategoryCode()))")
+    @Mapping(target = "description", expression = "java(StrUtils.trimToNull(request.getDescription()))")
+    @Mapping(target = "applyStatus", ignore = true)
+    @Mapping(target = "conversationId", ignore = true)
+    @Mapping(target = "reviewerId", ignore = true)
+    @Mapping(target = "reviewComment", ignore = true)
+    @Mapping(target = "submittedAt", ignore = true)
+    @Mapping(target = "reviewedAt", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    ChatChannelCreateApplication toChannelApplication(ChatChannelApplicationSubmitRequest request);
+
+    @Mapping(target = "applyStatusLabel", ignore = true)
+    ChatChannelApplicationVO toChannelApplicationVO(ChatChannelCreateApplication application);
+
+    @Mapping(target = "applicantUsername", ignore = true)
+    @Mapping(target = "applicantNickname", ignore = true)
+    @Mapping(target = "applicantAvatar", ignore = true)
+    @Mapping(target = "reviewerUsername", ignore = true)
+    @Mapping(target = "reviewerNickname", ignore = true)
+    @Mapping(target = "applyStatusLabel", ignore = true)
+    ChatChannelApplicationAdminVO toChannelApplicationAdminVO(ChatChannelCreateApplication application);
+
+    @Mapping(target = "applicantUsername", ignore = true)
+    @Mapping(target = "applicantNickname", ignore = true)
+    @Mapping(target = "applicantAvatar", ignore = true)
+    @Mapping(target = "reviewerUsername", ignore = true)
+    @Mapping(target = "reviewerNickname", ignore = true)
+    @Mapping(target = "applyStatusLabel", ignore = true)
+    ChatGroupJoinApplicationVO toGroupJoinApplicationVO(ChatGroupJoinApplication application);
+
+    @Mapping(target = "expired", ignore = true)
+    @Mapping(target = "usageExhausted", ignore = true)
+    ChatGroupInviteLinkVO toGroupInviteLinkVO(ChatGroupInviteLink inviteLink);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "conversationId", ignore = true)

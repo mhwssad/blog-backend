@@ -46,4 +46,14 @@ public class SysUserRoleRepositoryImpl extends ServiceImpl<SysUserRoleMapper, Sy
         remove(new LambdaQueryWrapper<SysUserRole>()
                 .eq(SysUserRole::getRoleId, roleId));
     }
+
+    /**
+     * 删除指定用户与角色的关联关系。
+     */
+    @Override
+    public void deleteByUserIdAndRoleId(Long userId, Long roleId) {
+        remove(new LambdaQueryWrapper<SysUserRole>()
+                .eq(SysUserRole::getUserId, userId)
+                .eq(SysUserRole::getRoleId, roleId));
+    }
 }

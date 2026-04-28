@@ -72,12 +72,22 @@
         select
         c.id,
         c.conversation_type as conversationType,
+        c.scene_type as sceneType,
         c.name,
         c.avatar,
         c.owner_id as ownerId,
-        c.remark as notice,
+        c.announcement as notice,
         c.is_all_site as isAllSite,
         c.status,
+        c.visibility_scope as visibilityScope,
+        c.allow_guest_view as allowGuestView,
+        c.require_join_to_speak as requireJoinToSpeak,
+        c.join_rule as joinRule,
+        c.speak_level_limit as speakLevelLimit,
+        c.member_limit as memberLimit,
+        c.slow_mode_seconds as slowModeSeconds,
+        c.display_sort as displaySort,
+        c.channel_category_code as channelCategoryCode,
         cm.member_role as selfRole,
         cursor.read_message_id as lastReadMessageId,
         cursor.read_at as lastReadAt,
@@ -101,12 +111,22 @@
         select
         c.id,
         c.conversation_type as conversationType,
+        c.scene_type as sceneType,
         c.name,
         c.avatar,
         c.owner_id as ownerId,
-        c.remark as notice,
+        c.announcement as notice,
         c.is_all_site as isAllSite,
         c.status,
+        c.visibility_scope as visibilityScope,
+        c.allow_guest_view as allowGuestView,
+        c.require_join_to_speak as requireJoinToSpeak,
+        c.join_rule as joinRule,
+        c.speak_level_limit as speakLevelLimit,
+        c.member_limit as memberLimit,
+        c.slow_mode_seconds as slowModeSeconds,
+        c.display_sort as displaySort,
+        c.channel_category_code as channelCategoryCode,
         cm.member_role as selfRole,
         cursor.read_message_id as lastReadMessageId,
         cursor.read_at as lastReadAt,
@@ -123,6 +143,70 @@
         <include refid="Conversation_List_From"/>
         and c.id = #{conversationId}
         limit 1
+    </select>
+
+    <sql id="Searchable_Group_From">
+        from chat_conversation c
+        left join (
+        select conversation_id, count(1) as member_count
+        from chat_conversation_member
+        where status = 1
+        group by conversation_id
+        ) member_stats
+        on member_stats.conversation_id = c.id
+        left join chat_conversation_member cm_self
+        on cm_self.conversation_id = c.id
+        and cm_self.user_id = #{userId}
+        and cm_self.status = 1
+        where c.conversation_type = 'group'
+        and c.is_all_site = 0
+        and c.status = 1
+        and c.visibility_scope = 'public'
+        <if test="keyword != null and keyword != ''">
+            and (
+            c.name like concat('%', #{keyword}, '%')
+            or c.remark like concat('%', #{keyword}, '%')
+            )
+        </if>
+        <if test="categoryCode != null and categoryCode != ''">
+            and c.channel_category_code = #{categoryCode}
+        </if>
+    </sql>
+
+    <select id="countSearchableGroupPage" resultType="java.lang.Long">
+        select count(1)
+        <include refid="Searchable_Group_From"/>
+    </select>
+
+    <select id="selectSearchableGroupPage"
+            resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatConversationListItem">
+        select
+        c.id,
+        c.conversation_type as conversationType,
+        c.scene_type as sceneType,
+        c.name,
+        c.avatar,
+        c.owner_id as ownerId,
+        c.remark as description,
+        c.announcement as notice,
+        c.is_all_site as isAllSite,
+        c.status,
+        c.visibility_scope as visibilityScope,
+        c.allow_guest_view as allowGuestView,
+        c.require_join_to_speak as requireJoinToSpeak,
+        c.join_rule as joinRule,
+        c.speak_level_limit as speakLevelLimit,
+        c.member_limit as memberLimit,
+        c.slow_mode_seconds as slowModeSeconds,
+        c.display_sort as displaySort,
+        c.channel_category_code as channelCategoryCode,
+        cm_self.member_role as selfRole,
+        coalesce(member_stats.member_count, 0) as memberCount,
+        c.created_at as createdAt,
+        c.updated_at as updatedAt
+        <include refid="Searchable_Group_From"/>
+        order by c.display_sort desc, c.updated_at desc, c.id desc
+        limit #{offset}, #{size}
     </select>
 
     <sql id="Admin_Conversation_From">
@@ -175,12 +259,22 @@
         select
         c.id,
         c.conversation_type as conversationType,
+        c.scene_type as sceneType,
         c.name,
         c.avatar,
         c.owner_id as ownerId,
-        c.remark as notice,
+        c.announcement as notice,
         c.is_all_site as isAllSite,
         c.status,
+        c.visibility_scope as visibilityScope,
+        c.allow_guest_view as allowGuestView,
+        c.require_join_to_speak as requireJoinToSpeak,
+        c.join_rule as joinRule,
+        c.speak_level_limit as speakLevelLimit,
+        c.member_limit as memberLimit,
+        c.slow_mode_seconds as slowModeSeconds,
+        c.display_sort as displaySort,
+        c.channel_category_code as channelCategoryCode,
         coalesce(member_stats.member_count, 0) as memberCount,
         c.last_message_id as lastMessageId,
         lm.message_type as lastMessageType,
@@ -198,12 +292,22 @@
             resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatAdminConversationListItem">
         select c.id,
                c.conversation_type   as conversationType,
+               c.scene_type          as sceneType,
                c.name,
                c.avatar,
                c.owner_id            as ownerId,
-               c.remark              as notice,
+               c.announcement        as notice,
                c.is_all_site         as isAllSite,
                c.status,
+               c.visibility_scope    as visibilityScope,
+               c.allow_guest_view    as allowGuestView,
+               c.require_join_to_speak as requireJoinToSpeak,
+               c.join_rule           as joinRule,
+               c.speak_level_limit   as speakLevelLimit,
+               c.member_limit        as memberLimit,
+               c.slow_mode_seconds   as slowModeSeconds,
+               c.display_sort        as displaySort,
+               c.channel_category_code as channelCategoryCode,
                (select count(1)
                 from chat_conversation_member cm
                 where cm.conversation_id = c.id

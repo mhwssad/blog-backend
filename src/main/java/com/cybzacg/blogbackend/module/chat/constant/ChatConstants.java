@@ -8,12 +8,26 @@ public final class ChatConstants {
     public static final String CONVERSATION_TYPE_GROUP = "group";
     public static final String CONVERSATION_TYPE_GLOBAL = "global";
 
+    public static final String SCENE_TYPE_SINGLE_CHAT = "single_chat";
+    public static final String SCENE_TYPE_USER_GROUP = "user_group";
+    public static final String SCENE_TYPE_HALL_CHANNEL = "hall_channel";
+    public static final String SCENE_TYPE_TOPIC_CHANNEL = "topic_channel";
+    public static final String SCENE_TYPE_GLOBAL_CHANNEL = "global_channel";
+    public static final String VISIBILITY_SCOPE_PUBLIC = "public";
+    public static final String VISIBILITY_SCOPE_MEMBER = "member";
+    public static final String VISIBILITY_SCOPE_PRIVATE = "private";
+    public static final String JOIN_RULE_FREE = "free";
+    public static final String JOIN_RULE_APPROVAL = "approval";
+    public static final String JOIN_RULE_INVITE_ONLY = "invite_only";
+
     public static final String MEMBER_ROLE_OWNER = "owner";
     public static final String MEMBER_ROLE_ADMIN = "admin";
     public static final String MEMBER_ROLE_MEMBER = "member";
 
     public static final String JOIN_SOURCE_MANUAL = "manual";
     public static final String JOIN_SOURCE_SYSTEM = "system";
+    public static final String JOIN_SOURCE_APPLICATION = "application";
+    public static final String JOIN_SOURCE_INVITE_LINK = "invite_link";
 
     public static final String MESSAGE_TYPE_TEXT = "text";
     public static final String MESSAGE_TYPE_FILE = "file";

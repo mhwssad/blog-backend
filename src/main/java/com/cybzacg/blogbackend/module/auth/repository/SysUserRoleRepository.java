@@ -24,4 +24,9 @@ public interface SysUserRoleRepository extends IService<SysUserRole> {
      * 根据角色 ID 删除所有关联的用户关系。
      */
     void deleteByRoleId(Long roleId);
+
+    /**
+     * 删除指定用户与角色的关联关系。
+     */
+    void deleteByUserIdAndRoleId(Long userId, Long roleId);
 }

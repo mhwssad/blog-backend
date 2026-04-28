@@ -75,7 +75,7 @@ public class ChatConversation {
      */
     private String allSiteKey;
     /**
-     * 会话状态：0-正常，1-已解散
+     * 会话状态：0-禁用，1-正常，2-已解散
      */
     private Integer status;
     /**

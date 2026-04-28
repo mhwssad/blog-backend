@@ -18,7 +18,7 @@ import com.cybzacg.blogbackend.module.chat.service.ChatAttachmentAsyncProcessing
 import com.cybzacg.blogbackend.module.chat.service.ChatAttachmentMetadataResolver;
 import com.cybzacg.blogbackend.module.chat.service.ChatMetricsService;
 import com.cybzacg.blogbackend.module.chat.service.ChatPushService;
-import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
+import com.cybzacg.blogbackend.module.file.service.FileChatFacadeService;
 import com.cybzacg.blogbackend.utils.JsonUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -61,7 +61,7 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
     private final ChatAttachmentProcessTaskRepository chatAttachmentProcessTaskRepository;
     private final ChatAttachmentProcessingProperties chatAttachmentProcessingProperties;
     private final ChatMessageRepository chatMessageRepository;
-    private final FileInfoRepository fileInfoRepository;
+    private final FileChatFacadeService fileChatFacadeService;
     private final StorageManager storageManager;
     private final ChatAttachmentMetadataResolver chatAttachmentMetadataResolver;
     private final ChatPushService chatPushService;
@@ -73,7 +73,7 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
             ChatAttachmentProcessTaskRepository chatAttachmentProcessTaskRepository,
             ChatAttachmentProcessingProperties chatAttachmentProcessingProperties,
             ChatMessageRepository chatMessageRepository,
-            FileInfoRepository fileInfoRepository,
+            FileChatFacadeService fileChatFacadeService,
             StorageManager storageManager,
             ChatAttachmentMetadataResolver chatAttachmentMetadataResolver,
             ChatPushService chatPushService,
@@ -82,7 +82,7 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
         this.chatAttachmentProcessTaskRepository = chatAttachmentProcessTaskRepository;
         this.chatAttachmentProcessingProperties = chatAttachmentProcessingProperties;
         this.chatMessageRepository = chatMessageRepository;
-        this.fileInfoRepository = fileInfoRepository;
+        this.fileChatFacadeService = fileChatFacadeService;
         this.storageManager = storageManager;
         this.chatAttachmentMetadataResolver = chatAttachmentMetadataResolver;
         this.chatPushService = chatPushService;
@@ -196,7 +196,7 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
                 markTaskSuccess(task.getId());
                 return;
             }
-            FileInfo fileInfo = fileInfoRepository.getById(payload.getFile().getFileId());
+            FileInfo fileInfo = fileChatFacadeService.getFileInfo(payload.getFile().getFileId());
             if (fileInfo == null) {
                 markTaskSuccess(task.getId());
                 return;

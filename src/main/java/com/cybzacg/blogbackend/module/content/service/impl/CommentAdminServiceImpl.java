@@ -2,11 +2,10 @@ package com.cybzacg.blogbackend.module.content.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.SysComment;
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
+import com.cybzacg.blogbackend.module.article.service.ArticleContentFacadeService;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.admin.CommentPageQuery;
@@ -31,7 +30,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CommentAdminServiceImpl implements CommentAdminService {
     private final SysCommentRepository sysCommentRepository;
-    private final BlogArticleRepository blogArticleService;
+    private final ArticleContentFacadeService articleContentFacadeService;
     private final SysUserRepository sysUserRepository;
     private final ContentModelMapper contentModelMapper;
 
@@ -87,12 +86,7 @@ public class CommentAdminServiceImpl implements CommentAdminService {
         sysCommentRepository.removeByIds(deleteIds);
 
         if ("article".equals(comment.getTargetType())) {
-            BlogArticle article = blogArticleService.getById(comment.getTargetId());
-            if (article != null) {
-                int nextCount = Math.max(0, (article.getCommentCount() == null ? 0 : article.getCommentCount()) - subtree.size());
-                article.setCommentCount(nextCount);
-                blogArticleService.updateById(article);
-            }
+            articleContentFacadeService.adjustCommentCount(comment.getTargetId(), -subtree.size());
         }
 
         if (comment.getParentId() != null && comment.getParentId() > 0) {
@@ -138,4 +132,3 @@ public class CommentAdminServiceImpl implements CommentAdminService {
         return comment;
     }
 }
-

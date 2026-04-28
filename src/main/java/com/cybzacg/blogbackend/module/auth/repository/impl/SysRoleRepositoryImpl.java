@@ -47,6 +47,20 @@ public class SysRoleRepositoryImpl extends ServiceImpl<SysRoleMapper, SysRole>
     }
 
     /**
+     * 根据角色编码查询未删除角色。
+     */
+    @Override
+    public SysRole findByCode(String code) {
+        if (!StringUtils.hasText(code)) {
+            return null;
+        }
+        return getOne(new LambdaQueryWrapper<SysRole>()
+                .eq(SysRole::getCode, code)
+                .eq(SysRole::getIsDeleted, 0)
+                .last("limit 1"), false);
+    }
+
+    /**
      * 统计给定 ID 集合中未删除角色的数量。
      */
     @Override

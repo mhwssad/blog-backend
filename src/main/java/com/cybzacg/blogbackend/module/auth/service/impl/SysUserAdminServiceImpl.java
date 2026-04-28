@@ -11,6 +11,7 @@ import com.cybzacg.blogbackend.module.auth.model.admin.SysUserSaveRequest;
 import com.cybzacg.blogbackend.module.auth.repository.SysRoleRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRoleRepository;
+import com.cybzacg.blogbackend.module.auth.service.UserNotificationPreferenceService;
 import com.cybzacg.blogbackend.module.auth.service.SysUserAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.IdCollectionUtils;
@@ -37,6 +38,7 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
     private final PasswordEncoder passwordEncoder;
     private final RbacAdminModelMapper rbacAdminModelMapper;
     private final RbacAssociationFactory rbacAssociationFactory;
+    private final UserNotificationPreferenceService userNotificationPreferenceService;
 
     /**
      * 分页查询用户列表，附带每个用户的角色 ID。
@@ -71,6 +73,7 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
         SysUser user = rbacAdminModelMapper.toUser(request);
         applyUserFields(user, request, true);
         sysUserRepository.save(user);
+        userNotificationPreferenceService.initializeDefaultSettings(user.getId());
         return rbacAdminModelMapper.toUserVO(user, List.of());
     }
 
@@ -155,6 +158,9 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
         rbacAdminModelMapper.updateUser(request, user);
         if (includePassword) {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
+            user.setUserLevel(1);
+            user.setExperiencePoints(0);
+            user.setLevelUpdatedAt(null);
         }
     }
 

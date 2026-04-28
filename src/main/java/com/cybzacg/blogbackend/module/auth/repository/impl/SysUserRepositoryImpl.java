@@ -150,4 +150,14 @@ public class SysUserRepositoryImpl extends ServiceImpl<SysUserMapper, SysUser>
                 .eq(field, value)
                 .ne(excludeId != null, SysUser::getId, excludeId));
     }
+
+    @Override
+    public int incrementExperiencePoints(Long userId, int delta) {
+        return baseMapper.incrementExperiencePoints(userId, delta);
+    }
+
+    @Override
+    public int updateLevel(Long userId, int level) {
+        return baseMapper.updateLevel(userId, level);
+    }
 }

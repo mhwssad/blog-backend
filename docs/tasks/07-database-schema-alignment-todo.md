@@ -27,8 +27,8 @@
   ✅ 系列文章 / 频道申请 / 入群申请 / AI / 举报 / 看板 / 审计菜单已补
 
 待推进:
-  ⏳ 枚举和状态常量对齐
   ⏳ 清理重复、废弃、同义结构
+  ⏳ AI 额度等业务配置继续补齐
 ```
 
 ## 3. 系统与权限侧结构
@@ -83,16 +83,16 @@
 - [x] 新增 domain。
 - [x] 新增 Mapper / XML。
 - [x] 新增 Repository。
-- [ ] 系列创建、编辑、删除业务服务。
-- [ ] 公开系列查询 SQL。
+- [x] 系列创建、编辑、删除业务服务。
+- [x] 公开系列查询 SQL。
 
 ### 4.4 `blog_article_series_item`
 
 - [x] 新增 domain。
 - [x] 新增 Mapper / XML。
 - [x] 新增 Repository。
-- [ ] 系列文章排序方法。
-- [ ] 同一系列文章唯一约束校验。
+- [x] 系列文章排序方法。
+- [x] 同一系列文章唯一约束校验。
 
 ## 5. 聊天与频道侧结构
 
@@ -109,25 +109,33 @@
 - [x] domain 补齐 `slowModeSeconds`。
 - [x] domain 补齐 `displaySort`。
 - [x] domain 补齐 `channelCategoryCode`。
-- [ ] 会话列表和详情 VO 按需返回新增字段。
+- [x] 会话列表和详情 VO 按需返回新增字段。
 
 ### 5.2 `chat_channel_create_application`
 
 - [x] 新增 domain。
 - [x] 新增 Mapper / XML。
 - [x] 新增 Repository。
-- [ ] 新增申请状态枚举。
-- [ ] 新增用户申请和后台审批服务。
+- [x] 新增申请状态枚举。
+- [x] 新增用户申请和后台审批服务。
 
 ### 5.3 `chat_group_join_application`
 
 - [x] 新增 domain。
 - [x] 新增 Mapper / XML。
 - [x] 新增 Repository。
-- [ ] 新增入群申请状态枚举。
-- [ ] 新增主动申请、邀请审批、审批通过入群服务。
+- [x] 新增入群申请状态枚举。
+- [x] 新增主动申请、邀请审批、审批通过入群服务。
 
-### 5.4 `forum_post_channel_link`
+### 5.4 `chat_group_invite_link`
+
+- [x] 原始建表脚本新增邀请链接表。
+- [x] 新增 domain。
+- [x] 新增 Mapper / XML。
+- [x] 新增 Repository。
+- [x] 新增邀请链接创建、停用、过期和次数限制入群服务。
+
+### 5.5 `forum_post_channel_link`
 
 - [x] 新增 domain。
 - [x] 新增 Mapper / XML。
@@ -150,14 +158,14 @@
 - [x] 新增 domain。
 - [x] 新增 Mapper / XML。
 - [x] 新增 Repository。
-- [ ] 会话归属和状态查询方法。
+- [x] 会话归属和状态查询方法。
 
 ### 6.3 `ai_chat_message`
 
 - [x] 新增 domain。
 - [x] 新增 Mapper / XML。
 - [x] 新增 Repository。
-- [ ] 按会话分页查询消息。
+- [x] 按会话分页查询消息。
 - [ ] 支持调用失败消息落库。
 
 ### 6.4 `ai_usage_log`
@@ -165,7 +173,7 @@
 - [x] 新增 domain。
 - [x] 新增 Mapper / XML。
 - [x] 新增 Repository。
-- [ ] 支持按用户、日期、渠道统计调用次数。
+- [x] 支持按用户、日期、渠道统计调用次数。
 - [ ] 支持后台调用统计查询。
 
 ## 7. 举报治理侧结构
@@ -175,7 +183,7 @@
 - [x] 新增 domain。
 - [x] 新增 Mapper / XML。
 - [x] 新增 Repository。
-- [ ] 支持按状态、对象类型、举报人、时间分页。
+- [x] 支持按状态、对象类型、举报人、时间分页。
 - [ ] 支持状态流转更新。
 
 ### 7.2 `sys_report_handle_log`
@@ -183,7 +191,7 @@
 - [x] 新增 domain。
 - [x] 新增 Mapper / XML。
 - [x] 新增 Repository。
-- [ ] 支持按举报单查询日志。
+- [x] 支持按举报单查询日志。
 - [ ] 每次处理动作追加日志。
 
 ## 8. 权限菜单与初始化数据

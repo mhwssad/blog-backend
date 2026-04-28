@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cybzacg.blogbackend.mapper.BlogArticleSeriesItemMapper">
+
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.BlogArticleSeriesItem">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="seriesId" column="series_id" jdbcType="BIGINT"/>
+        <result property="articleId" column="article_id" jdbcType="BIGINT"/>
+        <result property="seqNo" column="seq_no" jdbcType="INTEGER"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,
+        series_id, article_id, seq_no, created_at
+    </sql>
+</mapper>

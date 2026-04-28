@@ -1,9 +1,12 @@
 package com.cybzacg.blogbackend.module.content.service.impl;
 
+import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.SysCategory;
 import com.cybzacg.blogbackend.domain.SysComment;
 import com.cybzacg.blogbackend.domain.SysInteraction;
 import com.cybzacg.blogbackend.domain.SysUser;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.module.article.service.ArticleContentFacadeService;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicCategoryTreeVO;
@@ -15,6 +18,7 @@ import com.cybzacg.blogbackend.module.content.repository.SysCommentRepository;
 import com.cybzacg.blogbackend.module.content.repository.SysInteractionRepository;
 import com.cybzacg.blogbackend.module.content.repository.SysTagRepository;
 import com.cybzacg.blogbackend.module.content.service.PublicContentQueryService;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +44,7 @@ public class PublicContentQueryServiceImpl implements PublicContentQueryService 
     private final SysCommentRepository sysCommentRepository;
     private final SysInteractionRepository sysInteractionRepository;
     private final SysUserRepository sysUserRepository;
+    private final ArticleContentFacadeService articleContentFacadeService;
     private final ContentModelMapper contentModelMapper;
 
     /**
@@ -86,18 +91,28 @@ public class PublicContentQueryServiceImpl implements PublicContentQueryService 
      */
     @Override
     public List<PublicCommentVO> listComments(PublicCommentQuery query) {
+        ExceptionThrowerCore.throwBusinessIf(!ARTICLE_TYPE.equals(query.getTargetType()),
+                ResultErrorCode.ILLEGAL_ARGUMENT, "当前仅支持文章评论查询");
+        Long currentUserId = SecurityUtils.getUserId();
+        articleContentFacadeService.requireAccessibleArticle(
+                query.getTargetId(),
+                currentUserId,
+                ResultErrorCode.NO_HANDLER_FOUND,
+                "文章不存在");
+
         List<SysComment> roots = sysCommentRepository.selectRootCommentsByTarget(query.getTargetId(), query.getTargetType());
         if (roots.isEmpty()) {
             return List.of();
         }
 
         List<Long> rootIds = roots.stream().map(SysComment::getId).toList();
-        List<SysComment> replies = sysCommentRepository.selectRepliesByRootIds(rootIds);
+        List<SysComment> replies = currentUserId == null
+                ? List.of()
+                : sysCommentRepository.selectRepliesByRootIds(rootIds);
         List<SysComment> comments = new ArrayList<>(roots.size() + replies.size());
         comments.addAll(roots);
         comments.addAll(replies);
 
-        Long currentUserId = SecurityUtils.getUserId();
         Set<Long> userIds = comments.stream().map(SysComment::getUserId).filter(Objects::nonNull).collect(Collectors.toSet());
         Map<Long, SysUser> userMap = loadUserMap(userIds);
         Set<Long> likedCommentIds = loadLikedCommentIds(currentUserId, comments.stream().map(SysComment::getId).collect(Collectors.toSet()));

@@ -10,6 +10,8 @@ import com.cybzacg.blogbackend.module.article.model.publics.PublicArticlePageQue
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleCategoryRepository;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
+import com.cybzacg.blogbackend.module.article.service.ArticleSeriesService;
+import com.cybzacg.blogbackend.module.article.service.ArticleStatusMachine;
 import com.cybzacg.blogbackend.module.article.service.PublicArticleService;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
@@ -17,10 +19,8 @@ import com.cybzacg.blogbackend.module.content.model.publics.PublicCategoryTreeVO
 import com.cybzacg.blogbackend.module.content.model.publics.PublicTagVO;
 import com.cybzacg.blogbackend.module.content.repository.*;
 import com.cybzacg.blogbackend.module.content.service.UserFootprintService;
-import com.cybzacg.blogbackend.utils.CollectionUtils;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
-import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -47,6 +47,8 @@ public class PublicArticleServiceImpl implements PublicArticleService {
     private final SysInteractionRepository sysInteractionRepository;
     private final SysCollectionRepository sysCollectionRepository;
     private final ArticleAccessControlService articleAccessControlService;
+    private final ArticleSeriesService articleSeriesService;
+    private final ArticleStatusMachine articleStatusMachine;
     private final ArticleModelMapper articleModelMapper;
     private final ContentModelMapper contentModelMapper;
     private final UserFootprintService userFootprintService;
@@ -56,36 +58,27 @@ public class PublicArticleServiceImpl implements PublicArticleService {
      */
     @Override
     public PageResult<PublicArticleCardVO> pageArticles(PublicArticlePageQuery query) {
-        Long currentUserId = SecurityUtils.getUserId();
         Set<Long> filteredIds = resolveArticleIdsByRelations(query);
-        List<BlogArticle> publishedArticles = blogArticleRepository.listAllPublished();
+        if (filteredIds != null && filteredIds.isEmpty()) {
+            return PageResult.<PublicArticleCardVO>builder()
+                    .total(0L)
+                    .current(query.getCurrent())
+                    .size(query.getSize())
+                    .records(List.of())
+                    .build();
+        }
 
-        List<BlogArticle> matched = publishedArticles.stream()
-                .filter(article -> filteredIds == null || filteredIds.contains(article.getId()))
-                .filter(article -> !StringUtils.hasText(query.getKeyword())
-                        || StrUtils.contains(article.getTitle(), query.getKeyword())
-                        || StrUtils.contains(article.getSummary(), query.getKeyword()))
-                .filter(article -> articleAccessControlService.canAccessArticle(article, currentUserId))
-                .sorted(resolveComparator(query.getSort()))
-                .toList();
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<BlogArticle> page =
+                blogArticleRepository.pagePublishedArticles(query, filteredIds);
+        Map<Long, String> authorNameMap = loadAuthorNames(page.getRecords().stream()
+                .map(BlogArticle::getAuthorId)
+                .collect(Collectors.toSet()));
 
-        long current = query.getCurrent() == null ? 1L : query.getCurrent();
-        long size = query.getSize() == null ? 10L : query.getSize();
-        int fromIndex = (int) Math.min(Math.max((current - 1) * size, 0), matched.size());
-        int toIndex = (int) Math.min(fromIndex + size, matched.size());
-        Map<Long, String> authorNameMap = loadAuthorNames(matched.stream().map(BlogArticle::getAuthorId).collect(Collectors.toSet()));
-
-        List<PublicArticleCardVO> records = matched.subList(fromIndex, toIndex).stream()
+        List<PublicArticleCardVO> records = page.getRecords().stream()
                 .map(articleModelMapper::toPublicCardVO)
                 .peek(vo -> vo.setAuthorName(authorNameMap.get(vo.getAuthorId())))
                 .toList();
-
-        return PageResult.<PublicArticleCardVO>builder()
-                .total((long) matched.size())
-                .current(current)
-                .size(size)
-                .records(records)
-                .build();
+        return PageResult.of(page, records);
     }
 
     /**
@@ -94,12 +87,9 @@ public class PublicArticleServiceImpl implements PublicArticleService {
     @Override
     public PublicArticleDetailVO getArticle(Long id) {
         BlogArticle article = blogArticleRepository.getById(id);
-        ExceptionThrowerCore.throwBusinessIf(article == null || !Integer.valueOf(1).equals(article.getStatus()), ResultErrorCode.NO_HANDLER_FOUND, "文章不存在");
+        ExceptionThrowerCore.throwBusinessIf(article == null, ResultErrorCode.NO_HANDLER_FOUND, "文章不存在");
 
         Long userId = SecurityUtils.getUserId();
-        Integer accessLevel = article.getAccessLevel() == null ? 0 : article.getAccessLevel();
-        ExceptionThrowerCore.throwBusinessIf(Integer.valueOf(1).equals(accessLevel) && userId == null, ResultErrorCode.LOGIN_REQUIRED);
-        ExceptionThrowerCore.throwBusinessIf(Integer.valueOf(2).equals(accessLevel) || Integer.valueOf(3).equals(accessLevel), ResultErrorCode.FORBIDDEN, "当前版本未开放该访问级别");
         articleAccessControlService.validateArticleAccess(article, userId);
 
         PublicArticleDetailVO detailVO = articleModelMapper.toPublicDetailVO(article);
@@ -108,7 +98,8 @@ public class PublicArticleServiceImpl implements PublicArticleService {
         detailVO.setTags(loadArticleTags(article.getId()));
         detailVO.setLiked(isArticleLiked(article.getId(), userId));
         detailVO.setCollected(isArticleCollected(article.getId(), userId));
-        detailVO.setCanComment(userId != null);
+        detailVO.setCanComment(userId != null && articleStatusMachine.canInteract(article));
+        detailVO.setSeriesList(articleSeriesService.listVisibleSeriesSummariesByArticleId(article.getId(), userId));
         userFootprintService.recordArticleFootprint(article.getId());
         return detailVO;
     }
@@ -133,24 +124,6 @@ public class PublicArticleServiceImpl implements PublicArticleService {
             }
         }
         return ids;
-    }
-
-    /**
-     * 根据排序参数选择对应比较器，统一处理最新、置顶和热门排序逻辑。
-     */
-    private Comparator<BlogArticle> resolveComparator(String sort) {
-        if ("hot".equalsIgnoreCase(sort)) {
-            return Comparator.comparingInt((BlogArticle article) -> CollectionUtils.defaultInt(article.getViewCount()) + CollectionUtils.defaultInt(article.getLikeCount()) + CollectionUtils.defaultInt(article.getCommentCount()))
-                    .reversed()
-                    .thenComparing(BlogArticle::getId, Comparator.reverseOrder());
-        }
-        if ("top".equalsIgnoreCase(sort)) {
-            return Comparator.comparing((BlogArticle article) -> CollectionUtils.defaultInt(article.getIsTop()), Comparator.reverseOrder())
-                    .thenComparing(BlogArticle::getPublishTime, Comparator.nullsLast(Comparator.reverseOrder()))
-                    .thenComparing(BlogArticle::getId, Comparator.reverseOrder());
-        }
-        return Comparator.comparing(BlogArticle::getPublishTime, Comparator.nullsLast(Comparator.reverseOrder()))
-                .thenComparing(BlogArticle::getId, Comparator.reverseOrder());
     }
 
     /**

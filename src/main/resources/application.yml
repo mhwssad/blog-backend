@@ -15,8 +15,12 @@ security:
     - /ws/**
     - /api/articles
     - /api/articles/**
+    - /api/public/authors/*
+    - /api/public/authors/*/series
+    - /api/public/article-series/*
     - /api/users/*/follows
     - /api/users/*/fans
+    - /api/users/*/author-profile
     - /api/categories/tree
     - /api/tags
     - /api/comments
@@ -47,6 +51,22 @@ chat:
     retry-delay-seconds: 30
     lease-seconds: 300
     dispatch-fixed-delay-ms: 15000
+
+ai:
+  langchain4j:
+    enabled: ${AI_LANGCHAIN4J_ENABLED:false}
+    provider: ${AI_PROVIDER:deepseek}
+    base-url: ${AI_BASE_URL:https://api.deepseek.com/v1}
+    api-key: ${AI_API_KEY:}
+    model-name: ${AI_MODEL_NAME:deepseek-chat}
+    chat:
+      temperature: ${AI_TEMPERATURE:0.7}
+      top-p: ${AI_TOP_P:}
+      max-tokens: ${AI_MAX_TOKENS:2048}
+      timeout: ${AI_TIMEOUT:60s}
+      max-retries: ${AI_MAX_RETRIES:1}
+      log-requests: ${AI_LOG_REQUESTS:false}
+      log-responses: ${AI_LOG_RESPONSES:false}
 
 thread-pool:
   async:

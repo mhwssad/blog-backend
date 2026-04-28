@@ -13,7 +13,10 @@
 | 路由前缀                   | 用途                  | 是否需要登录 |
 |------------------------|---------------------|--------|
 | `/api/auth/**`         | 登录、注册、刷新令牌、获取当前登录用户 | 部分需要   |
+| `/api/users/**`        | 公开用户 / 作者主页摘要接口     | 否      |
 | `/api/sys/**`          | 后台管理接口              | 需要     |
+| `/api/user/author-applications/**` | 登录用户作者申请接口         | 需要     |
+| `/api/user/notification-settings/**` | 登录用户通知设置接口         | 需要     |
 | `/api/user/notices/**` | 登录用户通知中心            | 需要     |
 
 ### 1.2 匿名可访问接口
@@ -23,6 +26,7 @@
 - `POST /api/auth/email-code`
 - `POST /api/auth/email-login`
 - `POST /api/auth/refresh`
+- `GET /api/users/{userId}/author-profile`
 
 其余接口默认都要带：
 
@@ -232,6 +236,8 @@ Authorization: Bearer <accessToken>
 | `email`       | String       | 邮箱            |
 | `phone`       | String       | 手机号           |
 | `status`      | Integer      | `0` 禁用，`1` 正常 |
+| `userLevel`   | Integer      | 用户等级，当前默认 `1` |
+| `experiencePoints` | Integer | 当前经验值，当前默认 `0` |
 | `roles`       | List<String> | 角色编码列表        |
 | `permissions` | List<String> | 权限标识列表        |
 
@@ -277,9 +283,209 @@ Authorization: Bearer <accessToken>
 - `keepAlive=1` 可映射前端页面缓存开关。
 - `params` 可直接作为扩展路由元数据使用。
 
-## 5. 登录用户通知中心
+## 5. 公开作者主页
+
+### 6.1 页面会用到哪些接口
+
+| 场景 | 接口 |
+| --- | --- |
+| 公开作者主页摘要 | `GET /api/users/{userId}/author-profile` |
+
+### 5.2 查询公开作者主页摘要
+
+- 请求：`GET /api/users/{userId}/author-profile`
+- 鉴权：否
+- 路径参数：`userId`
+- 响应：`PublicAuthorProfileVO`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `userId` | Long | 用户 ID |
+| `username` | String | 用户名 |
+| `nickname` | String | 昵称 |
+| `avatar` | String | 头像 |
+| `userLevel` | Integer | 用户等级 |
+| `author` | Boolean | 是否具备作者身份 |
+| `authorBadge` | String | 作者标识，当前作者固定返回 `author`，普通用户返回 `null` |
+| `publicArticleCount` | Long | 当前可公开展示的文章数 |
+| `publicSeriesCount` | Long | 当前可公开展示的系列数 |
+| `showcaseArticleIds` | List<Long> | 作品展示位文章 ID 列表，当前阶段预留为空 |
+| `representativeArticleIds` | List<Long> | 代表内容文章 ID 列表，当前阶段预留为空 |
+| `featuredSeriesIds` | List<Long> | 系列展示位系列 ID 列表，当前阶段预留为空 |
+| `featuredColumnIds` | List<Long> | 专栏展示位 ID 列表，当前阶段预留为空 |
+
+- 当前行为补充：
+    - 仅允许查询未删除、已启用用户。
+    - 公开文章数只统计真正可匿名访问的文章：已发布、审核通过或未送审、公开可见、非访问受限、且定时发布时间已到。
+    - 公开系列数只统计启用且公开可见的系列。
+    - 当前阶段先返回身份与计数摘要，不在该接口内直接编排关注关系、作品卡片详情和专栏详情。
+
+## 6. 登录用户作者申请
 
 ### 5.1 页面会用到哪些接口
+
+| 场景 | 接口 |
+| --- | --- |
+| 提交作者申请 | `POST /api/user/author-applications` |
+| 查看最近一次申请 | `GET /api/user/author-applications/latest` |
+| 查看申请记录 | `GET /api/user/author-applications` |
+
+### 6.2 提交作者申请
+
+- 请求：`POST /api/user/author-applications`
+- 鉴权：是
+- 请求体：`UserAuthorApplicationSubmitRequest`
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `applyReason` | String | 是 | 申请说明，最长 `512` 字符 |
+| `contentDirection` | String | 是 | 擅长内容方向，最长 `128` 字符 |
+| `introduction` | String | 否 | 个人简介，最长 `1024` 字符 |
+| `sampleLinks` | List<String> | 否 | 示例链接，最多 `10` 条，需为 `http/https` |
+
+- 当前行为补充：
+    - 最近一次申请为 `待审核` 时禁止重复提交。
+    - 最近一次申请为 `待补充` 时，重新提交会复用原申请并重置为 `待审核`。
+    - 当前用户已有作者角色或最近一次申请已通过时，不允许重复申请。
+
+### 6.3 查看最近一次申请
+
+- 请求：`GET /api/user/author-applications/latest`
+- 鉴权：是
+- 响应：`UserAuthorApplicationVO`，无记录时 `data = null`
+
+### 6.4 查看我的申请记录
+
+- 请求：`GET /api/user/author-applications`
+- 鉴权：是
+- 查询参数：`UserAuthorApplicationPageQuery`
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `current` | Long | 页码，默认 `1` |
+| `size` | Long | 每页条数，默认 `10`，最大 `100` |
+
+- 响应项：`UserAuthorApplicationVO`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | Long | 申请 ID |
+| `applyStatus` | Integer | `0` 待审核，`1` 已通过，`2` 已拒绝，`3` 待补充 |
+| `applyStatusLabel` | String | 状态文案 |
+| `applyReason` | String | 申请说明 |
+| `contentDirection` | String | 擅长内容方向 |
+| `introduction` | String | 个人简介 |
+| `sampleLinks` | List<String> | 示例链接列表 |
+| `reviewerId` | Long | 审核人 ID |
+| `reviewComment` | String | 审核备注 |
+| `submittedAt` | DateTime | 提交时间 |
+| `reviewedAt` | DateTime | 审核时间 |
+
+## 7. 登录用户通知中心
+
+### 7.1 通知设置接口
+
+| 场景 | 接口 |
+| --- | --- |
+| 查询我的通知设置 | `GET /api/user/notification-settings` |
+| 批量更新通知设置 | `PUT /api/user/notification-settings` |
+| 更新单类通知设置 | `PUT /api/user/notification-settings/{type}` |
+
+#### 查询我的通知设置
+
+- 请求：`GET /api/user/notification-settings`
+- 鉴权：是
+- 响应：`List<UserNotificationSettingItemVO>`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `type` | String | 通知类型编码 |
+| `label` | String | 通知类型名称 |
+| `enabled` | Boolean | 是否启用 |
+
+当前已支持的通知类型：
+
+- `comment_me`
+- `like_me`
+- `collect_article`
+- `follow_me`
+- `private_message`
+- `group_mention`
+- `channel_announcement`
+- `system_announcement`
+- `ai_task_done`
+
+#### 批量更新通知设置
+
+- 请求：`PUT /api/user/notification-settings`
+- 鉴权：是
+- 请求体：`UserNotificationSettingBatchUpdateRequest`
+
+```json
+{
+  "settings": [
+    {
+      "type": "follow_me",
+      "enabled": false
+    },
+    {
+      "type": "private_message",
+      "enabled": true
+    }
+  ]
+}
+```
+
+#### 更新单类通知设置
+
+- 请求：`PUT /api/user/notification-settings/{type}`
+- 鉴权：是
+- 路径参数：`type`
+- 请求体：`UserNotificationSettingStatusUpdateRequest`
+
+```json
+{
+  "enabled": false
+}
+```
+
+- 当前行为补充：
+    - 用户首次访问或首次更新时，如配置不存在，后端会自动生成一份默认开启的通知偏好。
+    - 非法通知类型会被拦截并返回业务错误。
+    - 当前已接入偏好过滤的链路：`follow_me`、`comment_me`、`like_me`、`collect_article`、`private_message`、`group_mention`、`channel_announcement`。
+    - 评论、点赞、收藏、私聊、群 @、频道公告通知会在业务事务提交后投递，通知失败不会回滚主业务链路。
+    - 群 @ 第一阶段按文本中的 `@用户ID` 解析，仅对当前会话内活跃成员投递。
+    - 频道公告通知在主题频道公告内容变更且新公告非空时投递给频道活跃成员。
+    - 用户关闭 `system_announcement` 后，全局系统公告不进入“我的通知”列表和未读数，也不能打开详情；定向业务通知仍按各自类型的投递开关处理。
+
+### 7.2 用户等级与经验值
+
+| 场景 | 接口 |
+| --- | --- |
+| 查看当前等级信息 | `GET /api/user/experience/level` |
+
+#### 查看当前等级信息
+
+- 请求：`GET /api/user/experience/level`
+- 鉴权：是
+- 响应：`UserLevelInfoVO`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `level` | Integer | 当前等级 |
+| `currentExperience` | Long | 当前经验值 |
+| `nextLevelExperience` | Long | 下一级所需经验值 |
+| `levelTitle` | String | 等级称号 |
+| `progress` | Double | 升级进度，0.0 ~ 1.0 |
+| `dailyExperienceLimit` | Long | 今日经验获取上限 |
+| `dailyExperienceUsed` | Long | 今日已获取经验 |
+| `dailyExperienceRemaining` | Long | 今日剩余可获取经验 |
+
+- 当前行为补充：
+    - 每日经验有上限配置，超出上限后当日不再累计。
+    - 进度按当前经验占下一级所需经验的百分比计算。
+
+### 7.3 页面会用到哪些接口
 
 | 场景           | 接口                                   |
 |--------------|--------------------------------------|
@@ -289,7 +495,7 @@ Authorization: Bearer <accessToken>
 | 单条标记已读       | `POST /api/user/notices/{id}/read`   |
 | 全部标记已读       | `POST /api/user/notices/read-all`    |
 
-### 5.2 我的通知列表
+### 7.4 我的通知列表
 
 - 请求：`GET /api/user/notices`
 - 鉴权：是
@@ -315,36 +521,36 @@ Authorization: Bearer <accessToken>
 | `isRead`      | Integer  | 是否已读  |
 | `readTime`    | DateTime | 阅读时间  |
 
-### 5.3 我的通知详情
+### 7.5 我的通知详情
 
 - 请求：`GET /api/user/notices/{id}`
 - 鉴权：是
 - 路径参数：`id`
 - 前端注意：按当前实现，读取详情会顺带更新阅读状态。
 
-### 5.4 未读数量
+### 7.6 未读数量
 
 - 请求：`GET /api/user/notices/unread-count`
 - 鉴权：是
 - 响应：`Long`
 
-### 5.5 单条已读
+### 7.7 单条已读
 
 - 请求：`POST /api/user/notices/{id}/read`
 - 鉴权：是
 - 响应：`data = null`
 
-### 5.6 全部已读
+### 7.8 全部已读
 
 - 请求：`POST /api/user/notices/read-all`
 - 鉴权：是
 - 响应：`data = null`
 
-## 6. 后台系统管理接口
+## 8. 后台系统管理接口
 
 这一组接口主要对应后台管理台的系统模块。所有接口都要求登录，并且需要对应权限码。
 
-### 6.1 用户管理
+### 8.1 用户管理
 
 #### 接口速览
 
@@ -388,6 +594,9 @@ Authorization: Bearer <accessToken>
 | `gender`        | Integer    | 性别       |
 | `birthday`      | DateTime   | 生日       |
 | `status`        | Integer    | 状态       |
+| `userLevel`     | Integer    | 用户等级     |
+| `experiencePoints` | Integer | 经验值      |
+| `levelUpdatedAt` | DateTime  | 最近一次等级变更时间 |
 | `lastLoginTime` | DateTime   | 最后登录时间   |
 | `lastLoginIp`   | String     | 最后登录 IP  |
 | `remark`        | String     | 备注       |
@@ -439,7 +648,7 @@ Authorization: Bearer <accessToken>
 }
 ```
 
-### 6.2 角色管理
+### 8.2 角色管理
 
 #### 接口速览
 
@@ -512,7 +721,7 @@ Authorization: Bearer <accessToken>
 }
 ```
 
-### 6.3 菜单管理
+### 8.3 菜单管理
 
 #### 接口速览
 
@@ -573,7 +782,7 @@ Authorization: Bearer <accessToken>
 | `redirect`   | String  | 否  | 跳转地址            |
 | `params`     | Object  | 否  | 路由参数            |
 
-### 6.4 系统配置管理
+### 8.4 系统配置管理
 
 #### 接口速览
 
@@ -633,7 +842,7 @@ Authorization: Bearer <accessToken>
 - 配置值 `<= 0` 时表示关闭登录失败锁定能力。
 - `auth.login-fail.lock-minutes`：登录失败达到阈值后的锁定时长（分钟），默认 `15`。
 
-### 6.5 后台通知管理
+### 8.5 后台通知管理
 
 #### 接口速览
 
@@ -691,7 +900,62 @@ Authorization: Bearer <accessToken>
 | `targetType`    | Integer    | 是  | `1` 全体，`2` 指定 |
 | `targetUserIds` | List<Long> | 否  | 指定用户时使用       |
 
-### 6.6 系统日志管理
+### 8.6 后台数据看板
+
+#### 接口速览
+
+| 场景 | 方法 | 路径 | 权限 |
+| --- | --- | --- | --- |
+| 核心概览 | GET | `/api/sys/dashboard/overview` | `sys:dashboard:query` |
+| 内容统计 | GET | `/api/sys/dashboard/content` | `sys:dashboard:query` |
+| 社区统计 | GET | `/api/sys/dashboard/community` | `sys:dashboard:query` |
+| AI 调用统计 | GET | `/api/sys/dashboard/ai` | `sys:dashboard:query` |
+| 治理统计 | GET | `/api/sys/dashboard/governance` | `sys:dashboard:query` |
+
+通用查询参数：
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `rangeType` | String | `today/week/month/all/custom`，默认 `today` |
+| `startTime` | DateTime | 自定义开始时间，`rangeType=custom` 时必填 |
+| `endTime` | DateTime | 自定义结束时间，`rangeType=custom` 时必填 |
+
+指标口径：
+
+- 范围统计使用左闭右开区间：`[startTime, endTime)`。
+- `today/week/month` 分别按服务器本地日期的今日、本周一、本月一开始统计。
+- `custom` 最大跨度 366 天，`all` 不限制时间范围。
+- 活跃用户定义：在范围内登录、发文、评论、发送聊天消息或产生 AI 调用任一行为的去重用户。
+- 发文数按文章创建时间统计；待审核文章数为当前 `review_status = 1` 的存量。
+- 聊天消息数包含已撤回消息；大厅消息数统计全站会话或 `global_channel/hall_channel` 场景消息。
+- AI 调用数按 `ai_usage_log` 请求记录统计，并按 `success_status` 区分成功 / 失败。
+- 举报单数按 `reported_at` 统计；待处理 / 处理中为当前存量，已处理 / 已驳回按范围统计。
+
+核心概览响应字段：
+
+| 字段 | 说明 |
+| --- | --- |
+| `range` | 实际统计范围 |
+| `registeredUserCount` | 范围内注册用户数 |
+| `activeUserCount` | 范围内活跃用户数 |
+| `authorCount` | 当前作者数量 |
+| `articleCount` | 范围内发文数 |
+| `pendingArticleReviewCount` | 当前待审核文章数 |
+| `commentCount` | 范围内评论数 |
+| `chatMessageCount` | 范围内聊天消息数 |
+| `aiCallCount` | 范围内 AI 调用数 |
+| `reportCount` | 范围内举报单数 |
+| `pendingReportCount` | 当前待处理举报数 |
+
+内容统计响应字段：`articleCount`、`pendingArticleReviewCount`、`commentCount`、`likeCount`、`collectCount`。
+
+社区统计响应字段：`chatMessageCount`、`lobbyMessageCount`、`groupCount`。
+
+AI 统计响应字段：`aiCallCount`、`aiSuccessCallCount`、`aiFailedCallCount`。
+
+治理统计响应字段：`reportCount`、`pendingReportCount`、`processingReportCount`、`handledReportCount`、`rejectedReportCount`。
+
+### 8.7 系统日志管理
 
 #### 接口速览
 
@@ -758,7 +1022,174 @@ Authorization: Bearer <accessToken>
 
 - 响应：`Long`，表示清理数量
 
-## 7. 权限标识速查
+### 8.7 作者申请后台管理
+
+#### 接口速览
+
+| 场景 | 方法 | 路径 | 权限 |
+| --- | --- | --- | --- |
+| 分页查询作者申请 | GET | `/api/sys/author-applications` | `sys:author-application:query` |
+| 查询作者申请详情 | GET | `/api/sys/author-applications/{id}` | `sys:author-application:query` |
+| 审核作者申请 | PUT | `/api/sys/author-applications/{id}/review` | `sys:author-application:review` |
+| 修正作者申请状态 | PUT | `/api/sys/author-applications/{id}/repair` | `sys:author-application:repair` |
+
+#### 分页查询作者申请
+
+- 请求：`GET /api/sys/author-applications`
+- 查询参数：`SysAuthorApplicationAdminPageQuery`
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `current` | Long | 页码，默认 `1` |
+| `size` | Long | 每页条数，默认 `10`，最大 `100` |
+| `userId` | Long | 申请用户 ID |
+| `applyStatus` | Integer | 申请状态 |
+| `keyword` | String | 关键词，匹配申请说明、内容方向和个人简介 |
+
+#### 作者申请详情 / 分页项
+
+- 响应项：`SysAuthorApplicationAdminVO`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | Long | 申请 ID |
+| `userId` | Long | 申请用户 ID |
+| `username` | String | 申请用户名 |
+| `nickname` | String | 申请用户昵称 |
+| `applyStatus` | Integer | `0` 待审核，`1` 已通过，`2` 已拒绝，`3` 待补充 |
+| `applyStatusLabel` | String | 状态文案 |
+| `applyReason` | String | 申请说明 |
+| `contentDirection` | String | 擅长内容方向 |
+| `introduction` | String | 个人简介 |
+| `sampleLinks` | List<String> | 示例链接 |
+| `reviewerId` | Long | 审核人 ID |
+| `reviewerUsername` | String | 审核人用户名 |
+| `reviewerNickname` | String | 审核人昵称 |
+| `reviewComment` | String | 审核备注 |
+| `submittedAt` | DateTime | 提交时间 |
+| `reviewedAt` | DateTime | 审核时间 |
+
+#### 审核作者申请
+
+- 请求：`PUT /api/sys/author-applications/{id}/review`
+- 请求体：`SysAuthorApplicationAdminReviewRequest`
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `reviewStatus` | Integer | 是 | `1` 通过，`2` 拒绝，`3` 待补充 |
+| `reviewComment` | String | 否 | 审核备注，最长 `512` 字符 |
+
+- 当前行为补充：
+    - 仅 `待审核` 状态允许审核，其他状态会被拦截。
+    - 审核通过后自动授予用户 `author` 角色。
+    - 审核动作会记录审核人、审核时间和审核备注。
+
+#### 修正作者申请状态
+
+- 请求：`PUT /api/sys/author-applications/{id}/repair`
+- 请求体：`SysAuthorApplicationRepairRequest`
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `targetStatus` | Integer | 是 | `0` 待审核，`1` 已通过，`2` 已拒绝，`3` 待补充 |
+| `reviewComment` | String | 是 | 修正备注，最长 `512` 字符 |
+
+- 当前行为补充：
+    - 该接口只允许具备 `sys:author-application:repair` 权限的超级管理员使用。
+    - 可对任意当前状态执行修正，但目标状态不能与当前状态一致。
+    - 修正为 `已通过` 时会补授 `author` 角色；修正为其他状态时会撤销 `author` 角色。
+    - 修正动作会覆盖申请单的审核人、审核时间和审核备注，用于收口异常数据。
+
+#### 作者差异化发文配额说明
+
+- 当前实现已通过系统配置区分普通用户和作者的文章总量上限。
+- 默认配置：
+    - `article.max-count.normal-user=20`
+    - `article.max-count.author=200`
+- 当文章数量达到上限时，统一在现有文章创建链路中拦截。
+- 若配置值为 `0`，表示该身份类型不限制文章总量。
+
+### 8.8 经验体系管理
+
+#### 接口速览
+
+| 场景 | 方法 | 路径 | 权限 |
+| --- | --- | --- | --- |
+| 查看用户经验来源汇总 | GET | `/api/sys/experience/users/{userId}/summary` | `sys:experience:query` |
+| 经验流水分页查询 | GET | `/api/sys/experience/logs` | `sys:experience:query` |
+| 手动调整等级或经验 | POST | `/api/sys/experience/users/{userId}/adjust` | `sys:experience:adjust` |
+| 查看经验来源配置 | GET | `/api/sys/experience/config` | `sys:experience:config` |
+| 更新经验来源配置 | PUT | `/api/sys/experience/config` | `sys:experience:config` |
+
+#### 查看用户经验来源汇总
+
+- 请求：`GET /api/sys/experience/users/{userId}/summary`
+- 路径参数：`userId`
+- 响应字段：`UserExperienceSummaryVO`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `userId` | Long | 用户 ID |
+| `username` | String | 用户名 |
+| `nickname` | String | 昵称 |
+| `level` | Integer | 当前等级 |
+| `currentExperience` | Long | 当前经验值 |
+| `nextLevelExperience` | Long | 下一级所需经验值 |
+| `dailySummary` | Map<String, Object> | 今日各来源经验汇总 |
+
+#### 经验流水分页查询
+
+- 请求：`GET /api/sys/experience/logs`
+- 查询参数：`ExperienceLogPageQuery`
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `current` | Long | 页码，默认 `1` |
+| `size` | Long | 每页条数，默认 `10` |
+| `userId` | Long | 用户 ID |
+| `sourceType` | String | 经验来源类型 |
+
+- 响应字段：`ExperienceLogVO`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | Long | 日志 ID |
+| `userId` | Long | 用户 ID |
+| `sourceType` | String | 来源类型 |
+| `sourceTypeLabel` | String | 来源类型标签 |
+| `experienceChange` | Long | 经验变化量 |
+| `experienceBefore` | Long | 变化前经验值 |
+| `experienceAfter` | Long | 变化后经验值 |
+| `levelBefore` | Integer | 变化前等级 |
+| `levelAfter` | Integer | 变化后等级 |
+| `description` | String | 描述 |
+| `createdAt` | DateTime | 创建时间 |
+
+#### 手动调整等级或经验
+
+- 请求：`POST /api/sys/experience/users/{userId}/adjust`
+- 请求体：`UserLevelAdjustRequest`
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `adjustType` | String | 是 | `level` 或 `experience` |
+| `newValue` | Long | 是 | 新的等级值或经验值 |
+| `reason` | String | 否 | 调整原因 |
+
+#### 经验来源配置
+
+- 查看配置：`GET /api/sys/experience/config`
+- 更新配置：`PUT /api/sys/experience/config`
+
+请求体：
+```json
+{
+  "configKey": "experience.source.article.publish",
+  "configValue": "10"
+}
+```
+
+## 9. 权限标识速查
 
 | 权限标识                      | 说明        |
 |---------------------------|-----------|
@@ -768,6 +1199,9 @@ Authorization: Bearer <accessToken>
 | `sys:user:delete`         | 删除用户      |
 | `sys:user:reset-password` | 重置用户密码    |
 | `sys:user:assign-role`    | 分配用户角色    |
+| `sys:author-application:query` | 查询作者申请 |
+| `sys:author-application:review` | 审核作者申请 |
+| `sys:author-application:repair` | 修正作者申请状态 |
 | `sys:role:query`          | 查询角色      |
 | `sys:role:create`         | 新增角色      |
 | `sys:role:update`         | 修改角色、修改状态 |
@@ -787,11 +1221,15 @@ Authorization: Bearer <accessToken>
 | `sys:notice:publish`      | 发布通知      |
 | `sys:notice:revoke`       | 撤回通知      |
 | `sys:notice:delete`       | 删除通知      |
+| `sys:dashboard:query`     | 查询数据看板    |
 | `sys:log:query`           | 查询日志      |
 | `sys:log:delete`          | 删除日志      |
 | `sys:log:clean`           | 清理日志      |
+| `sys:experience:query`    | 查询经验相关      |
+| `sys:experience:adjust`   | 调整用户等级/经验  |
+| `sys:experience:config`   | 管理经验来源配置  |
 
-## 8. 常见联调问题
+## 10. 常见联调问题
 
 | 问题                          | 当前行为             |
 |-----------------------------|------------------|

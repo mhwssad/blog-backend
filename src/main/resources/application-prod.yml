@@ -91,6 +91,17 @@ security:
     - /api/auth/email-code
     - /api/auth/email-login
     - /api/auth/refresh
+    - /api/articles
+    - /api/articles/**
+    - /api/public/authors/*
+    - /api/public/authors/*/series
+    - /api/public/article-series/*
+    - /api/users/*/follows
+    - /api/users/*/fans
+    - /api/users/*/author-profile
+    - /api/categories/tree
+    - /api/tags
+    - /api/comments
     - ${springdoc.swagger-ui.path}
     - /doc.html
     - /swagger-ui/**

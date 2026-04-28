@@ -30,6 +30,16 @@ public interface ChatConversationRepository extends IService<ChatConversation> {
     ChatConversationListItem selectConversationDetail(Long conversationId, Long userId);
 
     /**
+     * 统计可搜索公开群聊数量。
+     */
+    Long countSearchableGroupPage(Long userId, String keyword, String categoryCode);
+
+    /**
+     * 分页查询可搜索公开群聊。
+     */
+    List<ChatConversationListItem> selectSearchableGroupPage(Long userId, String keyword, String categoryCode, Long offset, Long size);
+
+    /**
      * 统计管理后台会话分页总数。
      */
     Long countAdminConversationPage(ChatAdminConversationPageQuery query);
@@ -53,4 +63,9 @@ public interface ChatConversationRepository extends IService<ChatConversation> {
      * 查找全站广播会话，系统中最多只有一条。
      */
     ChatConversation findGlobalConversation();
+
+    /**
+     * 统计用户创建的正常普通群数量。
+     */
+    long countNormalGroupsByOwner(Long ownerId);
 }

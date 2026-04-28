@@ -5,8 +5,7 @@ import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.SysUserFootprint;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
-import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
+import com.cybzacg.blogbackend.module.article.service.ArticleContentFacadeService;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.user.UserFootprintPageQuery;
 import com.cybzacg.blogbackend.module.content.model.user.UserFootprintVO;
@@ -31,8 +30,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserFootprintServiceImpl implements UserFootprintService {
     private final SysUserFootprintRepository sysUserFootprintRepository;
-    private final BlogArticleRepository blogArticleService;
-    private final ArticleAccessControlService articleAccessControlService;
+    private final ArticleContentFacadeService articleContentFacadeService;
     private final ContentModelMapper contentModelMapper;
 
     /**
@@ -82,11 +80,10 @@ public class UserFootprintServiceImpl implements UserFootprintService {
         if (userId == null) {
             return;
         }
-        BlogArticle article = blogArticleService.getById(articleId);
-        if (article == null || !Integer.valueOf(1).equals(article.getStatus())) {
+        BlogArticle article = articleContentFacadeService.findAccessiblePublishedArticle(articleId, userId);
+        if (article == null) {
             return;
         }
-        articleAccessControlService.validateArticleAccess(article, userId);
 
         SysUserFootprint footprint = contentModelMapper.toArticleFootprint(
                 userId,

@@ -2,9 +2,11 @@ package com.cybzacg.blogbackend.module.article.service.impl;
 
 import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.BlogArticleAccess;
+import com.cybzacg.blogbackend.enums.article.ArticleVisibilityScopeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleAccessRepository;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
+import com.cybzacg.blogbackend.module.article.service.ArticleStatusMachine;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ArticleAccessControlServiceImpl implements ArticleAccessControlService {
     private final BlogArticleAccessRepository blogArticleAccessRepository;
+    private final ArticleStatusMachine articleStatusMachine;
 
     /**
      * 综合判断用户是否可访问指定文章。
@@ -44,38 +47,22 @@ public class ArticleAccessControlServiceImpl implements ArticleAccessControlServ
         if (SecurityUtils.hasAuthority("content:article:query")) {
             return true;
         }
-        Integer accessLevel = article.getAccessLevel();
-        if (accessLevel == null || accessLevel == 0) {
-            return true;
-        }
-        if (accessLevel == 1) {
-            return userId != null;
-        }
-        if (accessLevel == 2 || accessLevel == 3) {
-            return false;
-        }
-        if (accessLevel != 4 || userId == null) {
+        if (!articleStatusMachine.isPublishedForNormalUsers(article, LocalDateTime.now())) {
             return false;
         }
 
-        List<BlogArticleAccess> accessList = listArticleAccesses(article.getId());
-        LocalDateTime now = LocalDateTime.now();
-        boolean hitWhitelist = false;
-        for (BlogArticleAccess access : accessList) {
-            if (!userId.equals(access.getUserId())) {
-                continue;
-            }
-            if (access.getExpireTime() != null && access.getExpireTime().isBefore(now)) {
-                continue;
-            }
-            if (Integer.valueOf(2).equals(access.getAccessType())) {
-                return false;
-            }
-            if (Integer.valueOf(1).equals(access.getAccessType())) {
-                hitWhitelist = true;
-            }
+        Integer visibilityScope = articleStatusMachine.normalizeVisibilityScope(article.getVisibilityScope());
+        if (ArticleVisibilityScopeEnum.SELF_ONLY.getValue().equals(visibilityScope)) {
+            return false;
         }
-        return hitWhitelist;
+        if (ArticleVisibilityScopeEnum.LOGIN_REQUIRED.getValue().equals(visibilityScope) && userId == null) {
+            return false;
+        }
+        if (ArticleVisibilityScopeEnum.WHITELIST.getValue().equals(visibilityScope)
+                && !hasWhitelistAccess(article.getId(), userId)) {
+            return false;
+        }
+        return canPassLegacyAccessLevel(article, userId);
     }
 
     /**
@@ -100,18 +87,7 @@ public class ArticleAccessControlServiceImpl implements ArticleAccessControlServ
      */
     @Override
     public boolean hasArticleAccess(Long articleId, Long userId) {
-        if (articleId == null || userId == null) {
-            return false;
-        }
-        LocalDateTime now = LocalDateTime.now();
-        return listArticleAccesses(articleId).stream()
-                .filter(access -> userId.equals(access.getUserId()))
-                .filter(access -> access.getExpireTime() == null || !access.getExpireTime().isBefore(now))
-                .noneMatch(access -> Integer.valueOf(2).equals(access.getAccessType()))
-                && listArticleAccesses(articleId).stream()
-                .filter(access -> userId.equals(access.getUserId()))
-                .filter(access -> access.getExpireTime() == null || !access.getExpireTime().isBefore(now))
-                .anyMatch(access -> Integer.valueOf(1).equals(access.getAccessType()));
+        return hasWhitelistAccess(articleId, userId);
     }
 
     /**
@@ -121,6 +97,38 @@ public class ArticleAccessControlServiceImpl implements ArticleAccessControlServ
     public List<BlogArticleAccess> listArticleAccesses(Long articleId) {
         return blogArticleAccessRepository.listByArticleIdOrdered(articleId);
     }
-}
 
+    private boolean canPassLegacyAccessLevel(BlogArticle article, Long userId) {
+        Integer accessLevel = article.getAccessLevel();
+        if (accessLevel == null || accessLevel == 0) {
+            return true;
+        }
+        if (accessLevel == 1) {
+            return userId != null;
+        }
+        if (accessLevel == 2 || accessLevel == 3) {
+            return false;
+        }
+        return hasWhitelistAccess(article.getId(), userId);
+    }
+
+    private boolean hasWhitelistAccess(Long articleId, Long userId) {
+        if (articleId == null || userId == null) {
+            return false;
+        }
+        List<BlogArticleAccess> accessList = listArticleAccesses(articleId);
+        LocalDateTime now = LocalDateTime.now();
+        boolean hitBlacklist = accessList.stream()
+                .filter(access -> userId.equals(access.getUserId()))
+                .filter(access -> access.getExpireTime() == null || !access.getExpireTime().isBefore(now))
+                .anyMatch(access -> Integer.valueOf(2).equals(access.getAccessType()));
+        if (hitBlacklist) {
+            return false;
+        }
+        return accessList.stream()
+                .filter(access -> userId.equals(access.getUserId()))
+                .filter(access -> access.getExpireTime() == null || !access.getExpireTime().isBefore(now))
+                .anyMatch(access -> Integer.valueOf(1).equals(access.getAccessType()));
+    }
+}
 

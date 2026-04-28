@@ -4,9 +4,11 @@ import com.cybzacg.blogbackend.common.constant.NoticeConstants;
 import com.cybzacg.blogbackend.domain.SysNotice;
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.domain.SysUserNotice;
+import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
 import com.cybzacg.blogbackend.module.auth.repository.SysNoticeRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserNoticeRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
+import com.cybzacg.blogbackend.module.auth.service.UserNotificationPreferenceService;
 import com.cybzacg.blogbackend.module.follow.service.FollowNoticeService;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,7 @@ public class FollowNoticeServiceImpl implements FollowNoticeService {
     private final SysNoticeRepository sysNoticeRepository;
     private final SysUserNoticeRepository sysUserNoticeRepository;
     private final SysUserRepository sysUserRepository;
+    private final UserNotificationPreferenceService userNotificationPreferenceService;
 
     /**
      * 关注主事务提交成功后再投递通知，避免通知失败反向影响关注主链路。
@@ -55,6 +58,9 @@ public class FollowNoticeServiceImpl implements FollowNoticeService {
     }
 
     private void createNewFollowerNotice(Long targetUserId, Long followerUserId) {
+        if (!userNotificationPreferenceService.isNotificationEnabled(targetUserId, NotificationTypeEnum.FOLLOW_ME)) {
+            return;
+        }
         SysUser follower = sysUserRepository.getById(followerUserId);
         if (follower == null || !Objects.equals(follower.getDeletedFlag(), 0)) {
             return;

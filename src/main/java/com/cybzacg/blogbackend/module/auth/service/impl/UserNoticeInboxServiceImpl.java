@@ -4,12 +4,14 @@ import com.cybzacg.blogbackend.common.constant.NoticeConstants;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.SysNotice;
 import com.cybzacg.blogbackend.domain.SysUserNotice;
+import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.auth.convert.SysNoticeModelMapper;
 import com.cybzacg.blogbackend.module.auth.model.admin.UserNoticePageQuery;
 import com.cybzacg.blogbackend.module.auth.model.admin.UserNoticeVO;
 import com.cybzacg.blogbackend.module.auth.repository.SysNoticeRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserNoticeRepository;
+import com.cybzacg.blogbackend.module.auth.service.UserNotificationPreferenceService;
 import com.cybzacg.blogbackend.module.auth.service.UserNoticeInboxService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
@@ -34,6 +36,7 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
     private final SysUserNoticeRepository sysUserNoticeRepository;
     private final SysNoticeModelMapper sysNoticeModelMapper;
     private final SysNoticeFactory sysNoticeFactory;
+    private final UserNotificationPreferenceService userNotificationPreferenceService;
 
     /**
      * 分页查询当前用户的收件箱通知，区分已读和未读状态。
@@ -54,8 +57,9 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
                 .map(SysUserNotice::getNoticeId)
                 .distinct()
                 .toList();
+        boolean includeGlobalNotices = isSystemAnnouncementEnabled(userId);
 
-        var page = sysNoticeRepository.pageInboxNotices(query, targetNoticeIds, readNoticeIds, unreadTargetNoticeIds);
+        var page = sysNoticeRepository.pageInboxNotices(query, targetNoticeIds, readNoticeIds, unreadTargetNoticeIds, includeGlobalNotices);
         List<UserNoticeVO> records = page.getRecords().stream()
                 .map(notice -> {
                     SysUserNotice relation = relationMap.get(notice.getId());
@@ -97,7 +101,7 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
                 .distinct()
                 .toList();
 
-        long globalUnread = sysNoticeRepository.countGlobalUnread(readNoticeIds);
+        long globalUnread = isSystemAnnouncementEnabled(userId) ? sysNoticeRepository.countGlobalUnread(readNoticeIds) : 0L;
         long targetedUnread = sysNoticeRepository.countTargetedUnread(unreadTargetNoticeIds);
         return globalUnread + targetedUnread;
     }
@@ -135,9 +139,11 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
                 .map(SysUserNotice::getNoticeId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
-        List<SysNotice> unreadGlobalNotices = sysNoticeRepository.findGlobalUnread(existingNoticeIds);
-        for (SysNotice notice : unreadGlobalNotices) {
-            markReadInternal(userId, notice);
+        if (isSystemAnnouncementEnabled(userId)) {
+            List<SysNotice> unreadGlobalNotices = sysNoticeRepository.findGlobalUnread(existingNoticeIds);
+            for (SysNotice notice : unreadGlobalNotices) {
+                markReadInternal(userId, notice);
+            }
         }
     }
 
@@ -161,6 +167,7 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
                 ResultErrorCode.ILLEGAL_ARGUMENT,
                 "通知不存在");
         if (Objects.equals(NoticeConstants.TARGET_ALL, notice.getTargetType())) {
+            ExceptionThrowerCore.throwBusinessIfNot(isSystemAnnouncementEnabled(userId), ResultErrorCode.FORBIDDEN);
             return notice;
         }
         boolean exists = sysUserNoticeRepository.existsByNoticeIdAndUserId(noticeId, userId);
@@ -192,5 +199,9 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
 
     private SysUserNotice findActiveRelation(Long userId, Long noticeId) {
         return sysUserNoticeRepository.findLatestByNoticeIdAndUserId(noticeId, userId).orElse(null);
+    }
+
+    private boolean isSystemAnnouncementEnabled(Long userId) {
+        return userNotificationPreferenceService.isNotificationEnabled(userId, NotificationTypeEnum.SYSTEM_ANNOUNCEMENT);
     }
 }

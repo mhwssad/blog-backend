@@ -2,11 +2,10 @@ package com.cybzacg.blogbackend.module.content.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.SysCollection;
 import com.cybzacg.blogbackend.domain.SysCollectionFolder;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
+import com.cybzacg.blogbackend.module.article.service.ArticleContentFacadeService;
 import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.model.admin.CollectionPageQuery;
 import com.cybzacg.blogbackend.module.content.model.admin.CollectionVO;
@@ -31,7 +30,7 @@ import java.util.List;
 public class CollectionAdminServiceImpl implements CollectionAdminService {
     private final SysCollectionFolderRepository sysCollectionFolderRepository;
     private final SysCollectionRepository sysCollectionRepository;
-    private final BlogArticleRepository blogArticleService;
+    private final ArticleContentFacadeService articleContentFacadeService;
     private final ContentModelMapper contentModelMapper;
 
     /**
@@ -72,11 +71,7 @@ public class CollectionAdminServiceImpl implements CollectionAdminService {
             sysCollectionFolderRepository.updateById(folder);
         }
         if ("article".equals(collection.getTargetType())) {
-            BlogArticle article = blogArticleService.getById(collection.getTargetId());
-            if (article != null) {
-                article.setCollectCount(Math.max(0, (article.getCollectCount() == null ? 0 : article.getCollectCount()) - 1));
-                blogArticleService.updateById(article);
-            }
+            articleContentFacadeService.adjustCollectCount(collection.getTargetId(), -1);
         }
         sysCollectionRepository.removeById(id);
     }

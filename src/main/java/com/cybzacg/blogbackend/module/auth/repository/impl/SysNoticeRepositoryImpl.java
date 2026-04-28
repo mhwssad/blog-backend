@@ -50,7 +50,8 @@ public class SysNoticeRepositoryImpl extends ServiceImpl<SysNoticeMapper, SysNot
     public Page<SysNotice> pageInboxNotices(UserNoticePageQuery query,
                                             Collection<Long> targetNoticeIds,
                                             Collection<Long> readNoticeIds,
-                                            Collection<Long> unreadTargetNoticeIds) {
+                                            Collection<Long> unreadTargetNoticeIds,
+                                            boolean includeGlobalNotices) {
         LambdaQueryWrapper<SysNotice> wrapper = new LambdaQueryWrapper<SysNotice>()
                 .eq(SysNotice::getIsDeleted, 0)
                 .eq(SysNotice::getPublishStatus, NoticeConstants.PUBLISH_STATUS_PUBLISHED)
@@ -59,7 +60,12 @@ public class SysNoticeRepositoryImpl extends ServiceImpl<SysNoticeMapper, SysNot
         if (query.getIsRead() == null) {
             // 不区分已读/未读：全局通知 + 用户定向通知
             if (targetNoticeIds == null || targetNoticeIds.isEmpty()) {
+                if (!includeGlobalNotices) {
+                    return new Page<>(query.getCurrent(), query.getSize());
+                }
                 wrapper.eq(SysNotice::getTargetType, NoticeConstants.TARGET_ALL);
+            } else if (!includeGlobalNotices) {
+                wrapper.in(SysNotice::getId, targetNoticeIds);
             } else {
                 wrapper.and(w -> w.eq(SysNotice::getTargetType, NoticeConstants.TARGET_ALL)
                         .or()
@@ -75,6 +81,15 @@ public class SysNoticeRepositoryImpl extends ServiceImpl<SysNoticeMapper, SysNot
             // 未读：排除已读后取全局未读 + 定向未读
             boolean hasRead = readNoticeIds != null && !readNoticeIds.isEmpty();
             boolean hasUnreadTarget = unreadTargetNoticeIds != null && !unreadTargetNoticeIds.isEmpty();
+            if (!includeGlobalNotices) {
+                if (!hasUnreadTarget) {
+                    return new Page<>(query.getCurrent(), query.getSize());
+                }
+                wrapper.in(SysNotice::getId, unreadTargetNoticeIds);
+                return page(new Page<>(query.getCurrent(), query.getSize()), wrapper
+                        .orderByDesc(SysNotice::getPublishTime)
+                        .orderByDesc(SysNotice::getId));
+            }
             if (!hasRead) {
                 if (!hasUnreadTarget) {
                     wrapper.eq(SysNotice::getTargetType, NoticeConstants.TARGET_ALL);

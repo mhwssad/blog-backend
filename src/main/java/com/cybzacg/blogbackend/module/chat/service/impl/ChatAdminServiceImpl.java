@@ -24,8 +24,7 @@ import com.cybzacg.blogbackend.module.chat.repository.ChatMessageRecipientReposi
 import com.cybzacg.blogbackend.module.chat.repository.ChatMessageRepository;
 import com.cybzacg.blogbackend.module.chat.service.ChatAdminService;
 import com.cybzacg.blogbackend.module.chat.service.ChatPushService;
-import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
-import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
+import com.cybzacg.blogbackend.module.file.service.FileChatFacadeService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.JsonUtils;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
@@ -52,8 +51,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
     private final SysUserRepository sysUserRepository;
     private final ChatModelMapper chatModelMapper;
     private final ChatPushService chatPushService;
-    private final FileBusinessInfoRepository fileBusinessInfoRepository;
-    private final FileLifecycleService fileLifecycleService;
+    private final FileChatFacadeService fileChatFacadeService;
 
     /**
      * 分页查询后台会话列表。
@@ -561,21 +559,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         if (message == null || !isAttachmentMessageType(message.getMessageType())) {
             return;
         }
-        List<FileBusinessInfo> references = fileBusinessInfoRepository.listByReferenceTypeAndReferenceId(
-                ChatConstants.FILE_MESSAGE_REFERENCE_TYPE,
-                message.getId()
-        );
-        if (references.isEmpty()) {
-            return;
-        }
-        Map<Long, Long> fileIds = new LinkedHashMap<>();
-        for (FileBusinessInfo reference : references) {
-            if (reference.getFileId() != null) {
-                fileIds.put(reference.getFileId(), reference.getFileId());
-            }
-        }
-        fileBusinessInfoRepository.removeByIds(references.stream().map(FileBusinessInfo::getId).toList());
-        fileIds.values().forEach(fileLifecycleService::syncFileAfterReferenceRemoval);
+        fileChatFacadeService.releaseReferences(ChatConstants.FILE_MESSAGE_REFERENCE_TYPE, message.getId());
     }
 
     private ChatMessagePayloadVO parseMessagePayload(String payloadJson) {
@@ -647,7 +631,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
                 .name(conversation.getName())
                 .avatar(conversation.getAvatar())
                 .ownerId(conversation.getOwnerId())
-                .notice(conversation.getRemark())
+                .notice(conversation.getAnnouncement())
                 .status(conversation.getStatus())
                 .memberCount((long) (activeMembers == null ? 0 : activeMembers.size()))
                 .build();
@@ -816,4 +800,3 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         return 2;
     }
 }
-

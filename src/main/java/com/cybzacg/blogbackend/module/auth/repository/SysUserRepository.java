@@ -61,4 +61,18 @@ public interface SysUserRepository extends IService<SysUser> {
      * 根据管理端查询条件对未删除用户进行分页。
      */
     Page<SysUser> pageByAdminConditions(SysUserPageQuery query);
+
+    /**
+     * 原子递增用户经验值。
+     *
+     * @return 影响行数
+     */
+    int incrementExperiencePoints(Long userId, int delta);
+
+    /**
+     * 更新用户等级和等级变更时间。
+     *
+     * @return 影响行数
+     */
+    int updateLevel(Long userId, int level);
 }

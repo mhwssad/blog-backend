@@ -12,6 +12,7 @@
 - 消息编辑、撤回、仅当前用户视角删除
 - 会话列表 / 会话详情 / 历史消息 / 已读推进
 - 群管理员、转让群主、禁言、群公告
+- 频道创建申请、后台审核，审核通过后生成主题频道
 - 后台会话管理、消息详情、回执明细、成员角色/状态/禁言管理、后台撤回
 - WebSocket 新消息、编辑、撤回、删除、会话更新、成员更新、已读推进推送
 - WebSocket 多节点广播，当前基于 Redis pub/sub 分发到各节点本地会话
@@ -71,6 +72,7 @@ const socket = new WebSocket(
 | 删除我的消息视图 | `DELETE` | `/api/user/chat/messages/{messageId}`                                |
 | 推进会话已读   | `POST`   | `/api/user/chat/conversations/{conversationId}/read`                 |
 | 创建群聊     | `POST`   | `/api/user/chat/groups`                                              |
+| 搜索公开群聊   | `GET`    | `/api/user/chat/groups/search`                                       |
 | 查询群详情    | `GET`    | `/api/user/chat/groups/{conversationId}`                             |
 | 查询群成员    | `GET`    | `/api/user/chat/groups/{conversationId}/members`                     |
 | 邀请群成员    | `POST`   | `/api/user/chat/groups/{conversationId}/members`                     |
@@ -82,6 +84,17 @@ const socket = new WebSocket(
 | 移除群成员    | `DELETE` | `/api/user/chat/groups/{conversationId}/members/{memberUserId}`      |
 | 退出群聊     | `POST`   | `/api/user/chat/groups/{conversationId}/leave`                       |
 | 解散群聊     | `DELETE` | `/api/user/chat/groups/{conversationId}`                             |
+| 提交频道申请   | `POST`   | `/api/user/chat/channel-applications`                                |
+| 查询最近频道申请 | `GET`    | `/api/user/chat/channel-applications/latest`                         |
+| 分页查询频道申请 | `GET`    | `/api/user/chat/channel-applications`                                |
+| 提交入群申请   | `POST`   | `/api/user/chat/groups/{conversationId}/join-applications`           |
+| 分页查询我的入群申请 | `GET`    | `/api/user/chat/group-join-applications`                             |
+| 分页查询群入群申请 | `GET`    | `/api/user/chat/groups/{conversationId}/join-applications`           |
+| 审核入群申请   | `PUT`    | `/api/user/chat/groups/{conversationId}/join-applications/{applicationId}/review` |
+| 创建群邀请链接 | `POST`   | `/api/user/chat/groups/{conversationId}/invite-links`              |
+| 分页查询群邀请链接 | `GET`    | `/api/user/chat/groups/{conversationId}/invite-links`               |
+| 停用群邀请链接 | `PUT`    | `/api/user/chat/groups/{conversationId}/invite-links/{inviteLinkId}/disable` |
+| 通过邀请链接入群 | `POST`   | `/api/user/chat/group-invite-links/{inviteToken}/join`              |
 
 ### 3.2 会话查询
 
@@ -100,7 +113,17 @@ const socket = new WebSocket(
 | 字段                 | 说明                                  |
 |--------------------|-------------------------------------|
 | `conversationType` | `single/group/global`               |
-| `notice`           | 群公告；当前复用 `chat_conversation.remark` |
+| `sceneType`        | 业务场景：`single_chat/user_group/hall_channel/topic_channel/global_channel` |
+| `notice`           | 群公告，对应 `chat_conversation.announcement` |
+| `visibilityScope`  | 可见范围：`public/member/private` |
+| `allowGuestView`   | 访客是否可见：`0/1` |
+| `requireJoinToSpeak` | 是否需要加入后发言：`0/1` |
+| `joinRule`         | 加入规则：`free/approval/invite_only` |
+| `speakLevelLimit`  | 发言最低等级限制 |
+| `memberLimit`      | 成员上限，`0` 表示不限制 |
+| `slowModeSeconds`  | 慢速模式秒数，`0` 表示关闭 |
+| `displaySort`      | 展示排序 |
+| `channelCategoryCode` | 频道或群分类编码 |
 | `selfRole`         | 当前用户角色：`owner/admin/member`         |
 | `memberCount`      | 当前活跃成员数                             |
 | `unreadCount`      | 当前用户未读数                             |
@@ -224,8 +247,11 @@ const socket = new WebSocket(
 - `clientMessageId` 作为同一发送人的幂等键；并发重复发送命中唯一键冲突时，服务端会回查并返回已落库消息。
 - `replyMessageId` 非空时，必须是当前用户在同一会话内可见的消息。
 - 当前成员被禁言时会拒绝发送。
+- 当前会话如配置了 `speakLevelLimit`，或全站大厅命中了系统配置 `chat.hall.speak.min-level`，未达到等级门槛的用户会被拒绝发送。
 - 聊天域当前还会按用户维度做分钟级发送频控，并按系统配置 `chat.sensitive-words` 做基础敏感词拦截。
 - 发送成功后，服务端会把被回复消息的摘要快照一并写入消息 payload，避免后续前端必须二次查原消息。
+- 单聊文本消息发送成功后，会按接收方 `private_message` 通知偏好投递站内通知。
+- 群聊 / 全站群 / 频道文本中包含 `@用户ID` 时，会按被 @ 用户的 `group_mention` 通知偏好投递站内通知；第一阶段仅解析当前会话活跃成员的用户 ID。
 
 ### 3.5 发送文件消息
 
@@ -253,6 +279,10 @@ const socket = new WebSocket(
 
 说明：
 
+- 单聊附件消息发送成功后，会按接收方 `private_message` 通知偏好投递站内通知。
+
+说明：
+
 - `businessId` 来自 `file` 模块上传完成后的业务引用 ID。
 - 当前只接受：
     - 上传阶段的临时引用 `temp`
@@ -270,6 +300,7 @@ const socket = new WebSocket(
 - `replyMessageId` 非空时，同样要求当前用户在该会话内可见。
 - 发送成功后，服务端会把文件业务引用重绑到 `chat_message`，并清理临时引用。
 - `clientMessageId` 的并发重复提交同样会回查并返回已存在消息，不重复生成新的聊天记录。
+- 附件消息与文本消息共享同一套等级发言门槛校验。
 
 ### 3.6 编辑 / 撤回 / 删除
 
@@ -342,15 +373,50 @@ POST /api/user/chat/groups
 {
   "name": "项目群",
   "avatar": "https://example.com/group.png",
+  "description": "项目协作与后端技术交流",
+  "announcement": "入群后请先看置顶说明",
+  "categoryCode": "backend",
+  "visibilityScope": "public",
+  "joinRule": "approval",
+  "speakLevelLimit": 1,
+  "memberLimit": 200,
   "memberUserIds": [2, 3, 4]
 }
 ```
 
 群治理规则：
 
+- 创建普通群聊前会校验系统配置 `chat.group.create.min-level`，默认要求达到 `Lv.2`。
+- 创建普通群聊前会校验系统配置 `chat.group.create.max-count`，默认单用户最多创建 20 个正常普通群，`0` 表示不限制。
+- 创建群聊时可设置群简介、公告、分类、可见范围、加入规则、发言等级和成员上限。
+- `visibilityScope` 支持 `public/private`，未传默认 `private`；群搜索只展示 `public` 正常普通群。
+- `joinRule` 支持 `free/approval/invite_only`，未传默认 `free`。
+- `memberLimit = 0` 表示不限制；创建、邀请成员和审批入群时都会校验人数上限。
 - 群主可设置/取消管理员、转让群主、禁言管理员和普通成员、更新公告、移除管理员和普通成员
 - 管理员可邀请成员、禁言普通成员、更新公告、移除普通成员
 - 管理员不能操作群主，也不能操作其他管理员
+- 主题频道公告变更且新公告非空时，会按频道成员的 `channel_announcement` 通知偏好投递站内通知。
+
+搜索公开群聊：
+
+```http
+GET /api/user/chat/groups/search?current=1&size=20&keyword=后端&categoryCode=backend
+```
+
+响应记录重点字段：
+
+| 字段 | 说明 |
+| --- | --- |
+| `id` | 群聊会话 ID |
+| `name` | 群名称 |
+| `description` | 群简介 |
+| `notice` | 群公告 |
+| `visibilityScope` | 可见范围，当前搜索只返回 `public` |
+| `joinRule` | 加入规则 |
+| `memberLimit` | 成员上限 |
+| `memberCount` | 当前活跃成员数 |
+| `joined` | 当前登录用户是否已加入 |
+| `selfRole` | 当前登录用户在群内角色，未加入为空 |
 
 设置群管理员：
 
@@ -406,6 +472,121 @@ DELETE /api/user/chat/groups/{conversationId}/members/{memberUserId}
 - 群解散后，用户侧会话详情和历史消息接口都会视为“会话不可用”；如需审计历史消息，请走后台聊天管理接口
 - 全站群会在访问消息时自动补建/恢复当前用户成员资格，但邀请、退群、移除成员、管理员任免、群公告等普通群治理接口不适用于全站群
 
+### 3.9 频道创建申请
+
+提交申请：
+
+```json
+POST /api/user/chat/channel-applications
+{
+  "desiredName": "Java 后端讨论",
+  "desiredSceneType": "topic_channel",
+  "desiredCategoryCode": "backend",
+  "description": "用于沉淀后端学习和项目实践讨论"
+}
+```
+
+说明：
+
+- 当前仅支持申请 `topic_channel`。
+- 申请前会校验系统配置 `chat.channel-create-application.min-level`，默认要求达到 `Lv.2`。
+- 已存在待审核申请时会拒绝重复提交；待补充状态再次提交会复用原申请并回到待审核。
+- 审核通过后，后台会创建一个主题频道会话，并把申请人加入为 `owner`。
+
+查询最近一次申请：
+
+```http
+GET /api/user/chat/channel-applications/latest
+```
+
+分页查询我的申请：
+
+```http
+GET /api/user/chat/channel-applications?current=1&size=10
+```
+
+### 3.10 入群申请
+
+提交入群申请：
+
+```json
+POST /api/user/chat/groups/{conversationId}/join-applications
+{
+  "applyMessage": "我正在学习这个方向，希望加入一起交流"
+}
+```
+
+分页查询我的入群申请：
+
+```http
+GET /api/user/chat/group-join-applications?current=1&size=10&applyStatus=0
+```
+
+群主或管理员分页查询指定群的入群申请：
+
+```http
+GET /api/user/chat/groups/{conversationId}/join-applications?current=1&size=10&applyStatus=0
+```
+
+审核入群申请：
+
+```json
+PUT /api/user/chat/groups/{conversationId}/join-applications/{applicationId}/review
+{
+  "reviewStatus": 1,
+  "reviewComment": "欢迎加入"
+}
+```
+
+说明：
+
+- 仅普通群聊支持入群申请，单聊、全站群和不可用群聊会被拒绝。
+- 已是正常群成员时不能重复申请。
+- 已存在待审核申请时会拒绝重复提交。
+- 群人数达到 `memberLimit` 时，提交申请或审核通过都会被拒绝。
+- `joinRule = invite_only` 的群聊不接受主动申请。
+- `reviewStatus` 支持 `1-通过`、`2-拒绝`。
+- 审核通过后会创建或恢复群成员关系，成员加入来源记录为 `application`。
+
+### 3.11 群邀请链接
+
+创建邀请链接：
+
+```json
+POST /api/user/chat/groups/{conversationId}/invite-links
+{
+  "expireAt": "2026-05-01 12:00:00",
+  "maxUseCount": 10
+}
+```
+
+分页查询群邀请链接：
+
+```http
+GET /api/user/chat/groups/{conversationId}/invite-links?current=1&size=10&status=1
+```
+
+停用邀请链接：
+
+```http
+PUT /api/user/chat/groups/{conversationId}/invite-links/{inviteLinkId}/disable
+```
+
+通过邀请链接入群：
+
+```http
+POST /api/user/chat/group-invite-links/{inviteToken}/join
+```
+
+说明：
+
+- 只有群主或管理员可以创建、查询和停用群邀请链接。
+- `expireAt` 为空表示不过期，`maxUseCount = 0` 表示不限使用次数。
+- 链接停用、过期或达到使用次数上限后不可继续入群。
+- 已在群内的用户重复使用链接会直接返回成功，不重复增加使用次数。
+- 群人数达到 `memberLimit` 时，通过邀请链接入群会被拒绝。
+- 通过邀请链接入群会创建或恢复成员关系，成员加入来源记录为 `invite_link`。
+
 ## 4. 后台聊天管理接口
 
 ### 4.1 接口总览
@@ -423,6 +604,11 @@ DELETE /api/user/chat/groups/{conversationId}/members/{memberUserId}
 | 更新成员禁言   | `PUT`  | `/api/sys/chats/conversations/{conversationId}/members/{memberUserId}/mute`   | `content:chat:update` |
 | 后台撤回消息   | `POST` | `/api/sys/chats/conversations/{conversationId}/messages/{messageId}/revoke`   | `content:chat:update` |
 | 更新会话状态   | `PUT`  | `/api/sys/chats/conversations/{conversationId}/status`                        | `content:chat:update` |
+| 创建主题频道   | `POST` | `/api/sys/chats/topic-channels`                                               | `content:chat:update` |
+| 编辑主题频道   | `PUT`  | `/api/sys/chats/topic-channels/{conversationId}`                              | `content:chat:update` |
+| 分页查询频道申请 | `GET`  | `/api/sys/chats/channel-applications`                                         | `content:channel-application:query` |
+| 查询频道申请详情 | `GET`  | `/api/sys/chats/channel-applications/{id}`                                    | `content:channel-application:query` |
+| 审核频道申请   | `PUT`  | `/api/sys/chats/channel-applications/{id}/review`                             | `content:channel-application:review` |
 
 ### 4.2 会话与消息分页
 
@@ -553,6 +739,80 @@ PUT /api/sys/chats/conversations/{conversationId}/members/{memberUserId}/mute
 - `0` 禁用
 - `1` 正常
 
+### 4.8 后台主题频道管理
+
+创建主题频道：
+
+```json
+POST /api/sys/chats/topic-channels
+{
+  "name": "Java 后端讨论",
+  "avatar": "https://example.com/channel.png",
+  "description": "后端学习和项目实践讨论区",
+  "announcement": "请围绕 Java 后端主题讨论",
+  "categoryCode": "backend",
+  "visibilityScope": "member",
+  "joinRule": "approval",
+  "speakLevelLimit": 1,
+  "memberLimit": 0,
+  "slowModeSeconds": 0,
+  "displaySort": 100,
+  "ownerId": 1
+}
+```
+
+编辑主题频道：
+
+```json
+PUT /api/sys/chats/topic-channels/{conversationId}
+{
+  "name": "Java 后端讨论",
+  "description": "更新后的频道简介",
+  "announcement": "更新后的频道公告",
+  "categoryCode": "backend",
+  "visibilityScope": "member",
+  "joinRule": "approval",
+  "speakLevelLimit": 2,
+  "memberLimit": 500,
+  "slowModeSeconds": 10,
+  "displaySort": 100,
+  "ownerId": 1
+}
+```
+
+说明：
+
+- 主题频道底层仍使用 `chat_conversation`，`conversationType = group`，`sceneType = topic_channel`。
+- `ownerId` 不传时，创建接口默认使用当前管理员作为频道负责人。
+- `visibilityScope` 支持 `public/member/private`，未传默认 `member`；主题频道始终 `allowGuestView = 0`。
+- `joinRule` 支持 `free/approval/invite_only`，未传默认 `approval`。
+- 启用 / 禁用主题频道复用 `PUT /api/sys/chats/conversations/{conversationId}/status`。
+- 查看频道成员和消息复用后台会话成员与消息接口。
+
+### 4.9 后台频道创建申请
+
+分页查询：
+
+```http
+GET /api/sys/chats/channel-applications?current=1&size=10&applyStatus=0&keyword=Java
+```
+
+审核申请：
+
+```json
+PUT /api/sys/chats/channel-applications/{id}/review
+{
+  "reviewStatus": 1,
+  "reviewComment": "通过，先作为后端主题频道试运行"
+}
+```
+
+说明：
+
+- `reviewStatus` 支持 `1-通过`、`2-拒绝`、`3-待补充`。
+- 只有待审核申请可以审核。
+- 审核通过后会自动创建 `topic_channel` 会话，默认成员可见、加入后发言、加入规则为 `approval`，申请人会成为频道 `owner`。
+
 ## 5. WebSocket 协议
 
 ### 5.1 当前支持的客户端请求
@@ -627,7 +887,7 @@ PUT /api/sys/chats/conversations/{conversationId}/members/{memberUserId}/mute
 ## 6. 联调建议
 
 - 文件消息先走 `file` 模块上传，拿到 `businessId` 后再调用 chat 发送文件消息。
-- 会话列表、会话详情、后台会话详情当前都会返回 `notice`，前端不要再额外拼群公告来源。
+- 会话列表、会话详情、后台会话详情当前都会返回 `notice`，该字段已直接对应 `chat_conversation.announcement`。
 - 若前端需要区分“撤回”和“删除”：
     - 撤回看消息对象的 `revoked`
     - 删除当前仅是本人视角隐藏，其他成员不会看到变化事件

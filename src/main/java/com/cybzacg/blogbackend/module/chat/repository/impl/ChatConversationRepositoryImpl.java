@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.domain.ChatConversation;
 import com.cybzacg.blogbackend.mapper.ChatConversationMapper;
+import com.cybzacg.blogbackend.module.chat.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminConversationPageQuery;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatAdminConversationListItem;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatConversationListItem;
@@ -41,6 +42,22 @@ public class ChatConversationRepositoryImpl extends ServiceImpl<ChatConversation
     @Override
     public ChatConversationListItem selectConversationDetail(Long conversationId, Long userId) {
         return baseMapper.selectConversationDetail(conversationId, userId);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Long countSearchableGroupPage(Long userId, String keyword, String categoryCode) {
+        return baseMapper.countSearchableGroupPage(userId, keyword, categoryCode);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<ChatConversationListItem> selectSearchableGroupPage(Long userId, String keyword, String categoryCode, Long offset, Long size) {
+        return baseMapper.selectSearchableGroupPage(userId, keyword, categoryCode, offset, size);
     }
 
     /**
@@ -87,5 +104,20 @@ public class ChatConversationRepositoryImpl extends ServiceImpl<ChatConversation
                 .eq(ChatConversation::getIsAllSite, 1)
                 .orderByDesc(ChatConversation::getId)
                 .last("limit 1"), false);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long countNormalGroupsByOwner(Long ownerId) {
+        if (ownerId == null) {
+            return 0L;
+        }
+        return count(new LambdaQueryWrapper<ChatConversation>()
+                .eq(ChatConversation::getOwnerId, ownerId)
+                .eq(ChatConversation::getConversationType, ChatConstants.CONVERSATION_TYPE_GROUP)
+                .eq(ChatConversation::getIsAllSite, 0)
+                .eq(ChatConversation::getStatus, ChatConstants.CONVERSATION_STATUS_NORMAL));
     }
 }

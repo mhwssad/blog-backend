@@ -11,6 +11,7 @@ blog_backend;
 -- 聊天会话主表
 -- ----------------------------
 DROP TABLE IF EXISTS forum_post_channel_link;
+DROP TABLE IF EXISTS chat_group_invite_link;
 DROP TABLE IF EXISTS chat_group_join_application;
 DROP TABLE IF EXISTS chat_channel_create_application;
 DROP TABLE IF EXISTS chat_message_read_cursor;
@@ -236,6 +237,26 @@ CREATE TABLE chat_group_join_application
     INDEX idx_conversation_status (conversation_id, apply_status, submitted_at DESC) COMMENT '按群查看申请',
     INDEX idx_applicant_status (applicant_user_id, apply_status, submitted_at DESC) COMMENT '按用户查看申请'
 ) COMMENT '群聊入群申请表'
+    ENGINE = InnoDB
+    DEFAULT CHARSET = utf8mb4
+    COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE chat_group_invite_link
+(
+    id             BIGINT AUTO_INCREMENT COMMENT '邀请链接ID' PRIMARY KEY,
+    conversation_id BIGINT                              NOT NULL COMMENT '群聊会话ID',
+    invite_token   VARCHAR(64)                          NOT NULL COMMENT '邀请链接令牌',
+    created_by     BIGINT                               NOT NULL COMMENT '创建人ID',
+    expire_at      DATETIME                             NULL COMMENT '过期时间，空表示不过期',
+    max_use_count  INT        DEFAULT 0                 NOT NULL COMMENT '最大使用次数，0表示不限制',
+    used_count     INT        DEFAULT 0                 NOT NULL COMMENT '已使用次数',
+    status         TINYINT    DEFAULT 1                 NOT NULL COMMENT '状态：0-停用，1-启用',
+    created_at     DATETIME   DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    updated_at     DATETIME   DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+    UNIQUE KEY uk_invite_token (invite_token) COMMENT '邀请链接令牌唯一',
+    INDEX idx_conversation_status (conversation_id, status, created_at DESC) COMMENT '按群查看邀请链接'
+) COMMENT '群聊邀请链接表'
     ENGINE = InnoDB
     DEFAULT CHARSET = utf8mb4
     COLLATE = utf8mb4_unicode_ci;
