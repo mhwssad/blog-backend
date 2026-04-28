@@ -1,11 +1,14 @@
 package com.cybzacg.blogbackend.module.chat.service.impl;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
+import com.cybzacg.blogbackend.common.constant.ConfigConstants;
 import com.cybzacg.blogbackend.domain.*;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.enums.file.FileStatusEnum;
 import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.module.auth.experience.service.UserExperienceService;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
+import com.cybzacg.blogbackend.module.auth.experience.event.XpAwardEvent;
+import com.cybzacg.blogbackend.module.auth.service.SysConfigService;
 import com.cybzacg.blogbackend.module.chat.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.convert.ChatModelMapper;
 import com.cybzacg.blogbackend.module.chat.model.common.ChatFilePayloadVO;
@@ -19,9 +22,8 @@ import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsMembersUpdatedP
 import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsMessageDeletedPayload;
 import com.cybzacg.blogbackend.module.chat.repository.*;
 import com.cybzacg.blogbackend.module.chat.service.*;
-import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
-import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
-import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
+import com.cybzacg.blogbackend.module.file.service.FileChatFacadeService;
+import com.cybzacg.blogbackend.enums.experience.ExperienceSourceTypeEnum;
 import com.cybzacg.blogbackend.utils.CollectionUtils;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.JsonUtils;
@@ -30,6 +32,7 @@ import com.cybzacg.blogbackend.utils.SecurityUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import com.cybzacg.blogbackend.utils.UserDisplayNameUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,12 +57,14 @@ public class UserChatServiceImpl implements UserChatService {
     private final ChatModelMapper chatModelMapper;
     private final ChatPushService chatPushService;
     private final ChatWebSocketSessionRegistry chatWebSocketSessionRegistry;
-    private final FileBusinessInfoRepository fileBusinessInfoRepository;
-    private final FileInfoRepository fileInfoRepository;
-    private final FileLifecycleService fileLifecycleService;
+    private final FileChatFacadeService fileChatFacadeService;
+    private final UserExperienceService userExperienceService;
+    private final SysConfigService sysConfigService;
     private final ChatAttachmentAsyncProcessingService chatAttachmentAsyncProcessingService;
     private final ChatMessageGovernanceService chatMessageGovernanceService;
     private final ChatMetricsService chatMetricsService;
+    private final ChatNotificationService chatNotificationService;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 分页查询当前用户的会话列表。
@@ -148,6 +153,8 @@ public class UserChatServiceImpl implements UserChatService {
             ChatConversation conversation = resolveSendConversation(userId, request);
             ConversationAccessContext context = requireConversationAccess(userId, conversation.getId());
             validateMemberCanSend(context.selfMember());
+            validateConversationSpeakPermission(userId, context.conversation());
+            validateSlowMode(userId, context.conversation());
             List<ChatConversationMember> activeMembers = context.activeMembers();
             ChatMessageHistoryItem existing = findExistingMessage(userId, request.getClientMessageId(), conversation.getId());
             if (existing != null) {
@@ -184,7 +191,12 @@ public class UserChatServiceImpl implements UserChatService {
             ChatMessageHistoryItem item = requireVisibleMessage(userId, conversation.getId(), message.getId());
             ChatMessageVO messageVO = buildMessageVO(userId, item, loadUsers(Set.of(userId)));
             chatPushService.pushMessageCreated(messageVO, activeUserIds);
+            chatNotificationService.deliverMessageNotifications(conversation, message, userId, activeMembers, request.getContent());
             chatMetricsService.recordSend(ChatConstants.MESSAGE_TYPE_TEXT, "success");
+            eventPublisher.publishEvent(new XpAwardEvent(
+                    userId, ExperienceSourceTypeEnum.CHAT_MESSAGE.getValue(),
+                    String.valueOf(message.getId()),
+                    "chat_message:" + userId + ":" + message.getId()));
             return messageVO;
         } catch (RuntimeException ex) {
             chatMetricsService.recordSend(ChatConstants.MESSAGE_TYPE_TEXT, metricResultOf(ex));
@@ -209,6 +221,8 @@ public class UserChatServiceImpl implements UserChatService {
             ChatConversation conversation = resolveSendConversation(userId, request.getConversationId(), request.getTargetUserId());
             ConversationAccessContext context = requireConversationAccess(userId, conversation.getId());
             validateMemberCanSend(context.selfMember());
+            validateConversationSpeakPermission(userId, context.conversation());
+            validateSlowMode(userId, context.conversation());
             List<ChatConversationMember> activeMembers = context.activeMembers();
             ChatMessageHistoryItem existing = findExistingMessage(userId, request.getClientMessageId(), conversation.getId());
             if (existing != null) {
@@ -248,6 +262,7 @@ public class UserChatServiceImpl implements UserChatService {
             ChatMessageVO messageVO = buildMessageVO(userId, item, loadUsers(Set.of(userId)));
             chatPushService.pushMessageCreated(messageVO, activeUserIds);
             chatAttachmentAsyncProcessingService.scheduleAfterCommit(message.getId(), messageVO, activeUserIds);
+            chatNotificationService.deliverMessageNotifications(conversation, message, userId, activeMembers, null);
             chatMetricsService.recordSend(metricMessageType, "success");
             return messageVO;
         } catch (RuntimeException ex) {
@@ -362,10 +377,15 @@ public class UserChatServiceImpl implements UserChatService {
     @Transactional(rollbackFor = Exception.class)
     public ChatConversationVO createGroup(ChatCreateGroupRequest request) {
         Long userId = SecurityUtils.requireUserId();
+        validateCreateGroupPermission(userId);
+        validateCreateGroupCountLimit(userId);
+        validateCreateGroupOptions(request);
         List<Long> memberUserIds = normalizeMemberIds(request.getMemberUserIds(), userId);
         ExceptionThrowerCore.throwBusinessIf(memberUserIds.isEmpty(), ResultErrorCode.ILLEGAL_ARGUMENT, "群成员不能为空");
         requireActiveUsers(memberUserIds, true);
+        ensureMemberLimitAllows(request.getMemberLimit(), memberUserIds.size() + 1, "初始群成员数量超过群人数上限");
         ChatConversation conversation = chatModelMapper.toGroupConversation(request);
+        normalizeGroupConversationOptions(conversation);
         conversation.setOwnerId(userId);
         chatConversationRepository.save(conversation);
         upsertConversationMembership(conversation, userId, ChatConstants.MEMBER_ROLE_OWNER, ChatConstants.JOIN_SOURCE_MANUAL, true);
@@ -406,6 +426,7 @@ public class UserChatServiceImpl implements UserChatService {
         List<Long> memberUserIds = normalizeMemberIds(request.getMemberUserIds(), userId);
         ExceptionThrowerCore.throwBusinessIf(memberUserIds.isEmpty(), ResultErrorCode.ILLEGAL_ARGUMENT, "成员用户ID不能为空");
         requireActiveUsers(memberUserIds, true);
+        ensureConversationMemberLimitAllows(context.conversation(), countAdditionalMembers(conversationId, memberUserIds));
         for (Long memberUserId : memberUserIds) {
             upsertConversationMembership(context.conversation(), memberUserId, ChatConstants.MEMBER_ROLE_MEMBER, ChatConstants.JOIN_SOURCE_MANUAL, true);
         }
@@ -509,9 +530,15 @@ public class UserChatServiceImpl implements UserChatService {
     public ChatConversationVO updateGroupNotice(Long conversationId, ChatGroupNoticeUpdateRequest request) {
         Long userId = SecurityUtils.requireUserId();
         ConversationAccessContext context = requireGroupManager(userId, conversationId);
-        context.conversation().setRemark(request == null ? null : StrUtils.trimToNull(request.getNotice()));
+        String oldAnnouncement = StrUtils.trimToNull(context.conversation().getAnnouncement());
+        context.conversation().setAnnouncement(request == null ? null : StrUtils.trimToNull(request.getNotice()));
         chatConversationRepository.updateById(context.conversation());
         chatPushService.pushConversationUpdated(buildConversationUpdatedPayload("notice_updated", context.conversation(), listActiveMembers(conversationId)), context.activeUserIds());
+        if (Objects.equals(context.conversation().getSceneType(), ChatConstants.SCENE_TYPE_TOPIC_CHANNEL)
+                && !Objects.equals(oldAnnouncement, context.conversation().getAnnouncement())
+                && StrUtils.hasText(context.conversation().getAnnouncement())) {
+            chatNotificationService.deliverChannelAnnouncementNotifications(context.conversation(), context.activeMembers(), userId);
+        }
         return getConversationVO(userId, conversationId);
     }
 
@@ -662,6 +689,164 @@ public class UserChatServiceImpl implements UserChatService {
         ExceptionThrowerCore.throwBusinessIf(muteUntil != null && muteUntil.isAfter(LocalDateTime.now()),
                 ResultErrorCode.FORBIDDEN,
                 "当前用户已被禁言，暂时不能发送消息");
+    }
+
+    /**
+     * 慢速模式校验：同一用户在指定会话内连续两次发言间隔不足 slowModeSeconds 时拦截。
+     */
+    private void validateSlowMode(Long userId, ChatConversation conversation) {
+        Integer slowModeSeconds = conversation.getSlowModeSeconds();
+        if (slowModeSeconds == null || slowModeSeconds <= 0) {
+            return;
+        }
+        ChatMessage lastMessage = chatMessageRepository.findLatestBySenderAndConversation(userId, conversation.getId());
+        if (lastMessage == null || lastMessage.getCreatedAt() == null) {
+            return;
+        }
+        LocalDateTime earliestNext = lastMessage.getCreatedAt().plusSeconds(slowModeSeconds);
+        ExceptionThrowerCore.throwBusinessIf(
+                earliestNext.isAfter(LocalDateTime.now()),
+                ResultErrorCode.FORBIDDEN,
+                "当前会话处于慢速模式，请等待 " + slowModeSeconds + " 秒后再发言"
+        );
+    }
+
+    /**
+     * 会话发言权限统一由等级门槛收口，优先使用会话自身配置；全站大厅未单独配置时回退到系统默认值。
+     */
+    private void validateConversationSpeakPermission(Long userId, ChatConversation conversation) {
+        if (userId == null || conversation == null) {
+            return;
+        }
+        int requiredLevel = resolveConversationSpeakRequiredLevel(conversation);
+        if (requiredLevel <= 1) {
+            return;
+        }
+        ExceptionThrowerCore.throwBusinessIf(
+                !userExperienceService.checkLevelPermission(userId, requiredLevel),
+                ResultErrorCode.FORBIDDEN,
+                "当前等级不足，至少达到 Lv." + requiredLevel + " 才能在该会话发言"
+        );
+    }
+
+    /**
+     * 建群门槛由系统配置统一控制，避免规则散落在控制器或前端。
+     */
+    private void validateCreateGroupPermission(Long userId) {
+        int requiredLevel = getConfigInt(
+                ConfigConstants.CHAT_GROUP_CREATE_MIN_LEVEL_KEY,
+                ConfigConstants.DEFAULT_CHAT_GROUP_CREATE_MIN_LEVEL
+        );
+        if (requiredLevel <= 1) {
+            return;
+        }
+        ExceptionThrowerCore.throwBusinessIf(
+                !userExperienceService.checkLevelPermission(userId, requiredLevel),
+                ResultErrorCode.FORBIDDEN,
+                "当前等级不足，至少达到 Lv." + requiredLevel + " 才能创建群聊"
+        );
+    }
+
+    /**
+     * 校验用户创建普通群聊数量上限。
+     */
+    private void validateCreateGroupCountLimit(Long userId) {
+        int maxCount = getConfigInt(
+                ConfigConstants.CHAT_GROUP_CREATE_MAX_COUNT_KEY,
+                ConfigConstants.DEFAULT_CHAT_GROUP_CREATE_MAX_COUNT
+        );
+        if (maxCount <= 0) {
+            return;
+        }
+        long currentCount = chatConversationRepository.countNormalGroupsByOwner(userId);
+        ExceptionThrowerCore.throwBusinessIf(currentCount >= maxCount,
+                ResultErrorCode.FORBIDDEN,
+                "当前创建群聊数量已达上限");
+    }
+
+    /**
+     * 校验创建群聊时的扩展配置，避免非法状态进入会话主表。
+     */
+    private void validateCreateGroupOptions(ChatCreateGroupRequest request) {
+        ExceptionThrowerCore.throwBusinessIf(request == null, ResultErrorCode.ILLEGAL_ARGUMENT, "创建群聊参数不能为空");
+        String visibilityScope = StrUtils.trimToNull(request.getVisibilityScope());
+        ExceptionThrowerCore.throwBusinessIf(visibilityScope != null
+                        && !Objects.equals(visibilityScope, ChatConstants.VISIBILITY_SCOPE_PUBLIC)
+                        && !Objects.equals(visibilityScope, ChatConstants.VISIBILITY_SCOPE_PRIVATE),
+                ResultErrorCode.ILLEGAL_ARGUMENT,
+                "群可见范围不合法");
+        String joinRule = StrUtils.trimToNull(request.getJoinRule());
+        ExceptionThrowerCore.throwBusinessIf(joinRule != null
+                        && !Objects.equals(joinRule, ChatConstants.JOIN_RULE_FREE)
+                        && !Objects.equals(joinRule, ChatConstants.JOIN_RULE_APPROVAL)
+                        && !Objects.equals(joinRule, ChatConstants.JOIN_RULE_INVITE_ONLY),
+                ResultErrorCode.ILLEGAL_ARGUMENT,
+                "群加入规则不合法");
+    }
+
+    private void normalizeGroupConversationOptions(ChatConversation conversation) {
+        if (!StrUtils.hasText(conversation.getSceneType())) {
+            conversation.setSceneType(ChatConstants.SCENE_TYPE_USER_GROUP);
+        }
+        if (!StrUtils.hasText(conversation.getVisibilityScope())) {
+            conversation.setVisibilityScope(ChatConstants.VISIBILITY_SCOPE_PRIVATE);
+        }
+        if (!StrUtils.hasText(conversation.getJoinRule())) {
+            conversation.setJoinRule(ChatConstants.JOIN_RULE_FREE);
+        }
+        if (conversation.getAllowGuestView() == null) {
+            conversation.setAllowGuestView(0);
+        }
+        if (conversation.getRequireJoinToSpeak() == null) {
+            conversation.setRequireJoinToSpeak(1);
+        }
+        if (conversation.getSpeakLevelLimit() == null || conversation.getSpeakLevelLimit() < 1) {
+            conversation.setSpeakLevelLimit(1);
+        }
+        if (conversation.getMemberLimit() == null || conversation.getMemberLimit() < 0) {
+            conversation.setMemberLimit(0);
+        }
+        if (conversation.getSlowModeSeconds() == null || conversation.getSlowModeSeconds() < 0) {
+            conversation.setSlowModeSeconds(0);
+        }
+        if (conversation.getDisplaySort() == null) {
+            conversation.setDisplaySort(0);
+        }
+    }
+
+    private int countAdditionalMembers(Long conversationId, Collection<Long> memberUserIds) {
+        if (memberUserIds == null || memberUserIds.isEmpty()) {
+            return 0;
+        }
+        int count = 0;
+        for (Long memberUserId : memberUserIds) {
+            ChatConversationMember member = findMember(conversationId, memberUserId);
+            if (member == null || !Objects.equals(member.getStatus(), ChatConstants.MEMBER_STATUS_NORMAL)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private void ensureConversationMemberLimitAllows(ChatConversation conversation, int additionalCount) {
+        if (conversation == null || additionalCount <= 0) {
+            return;
+        }
+        Integer memberLimit = conversation.getMemberLimit();
+        if (memberLimit == null || memberLimit <= 0) {
+            return;
+        }
+        int activeCount = listActiveMembers(conversation.getId()).size();
+        ensureMemberLimitAllows(memberLimit, activeCount + additionalCount, "群人数已达上限");
+    }
+
+    private void ensureMemberLimitAllows(Integer memberLimit, int expectedCount, String message) {
+        if (memberLimit == null || memberLimit <= 0) {
+            return;
+        }
+        ExceptionThrowerCore.throwBusinessIf(expectedCount > memberLimit,
+                ResultErrorCode.ILLEGAL_ARGUMENT,
+                message);
     }
 
     /**
@@ -859,21 +1044,10 @@ public class UserChatServiceImpl implements UserChatService {
      * 校验文件引用是否可被聊天消息消费，并收口到文件模块统一的真实文件实体。
      */
     private PreparedFileMessage prepareFileMessage(Long userId, Long businessId) {
-        FileBusinessInfo sourceReference = fileBusinessInfoRepository.getById(businessId);
-        ExceptionThrowerCore.throwBusinessIfNull(sourceReference, ResultErrorCode.ILLEGAL_ARGUMENT, "文件业务引用不存在");
-        ExceptionThrowerCore.throwBusinessIf(!Objects.equals(sourceReference.getUserId(), userId), ResultErrorCode.FORBIDDEN, "不能发送他人的文件");
-        String referenceType = StrUtils.trimToNull(sourceReference.getReferenceType());
-        boolean tempReference = Objects.equals(referenceType, "temp");
-        boolean chatReference = Objects.equals(referenceType, ChatConstants.FILE_MESSAGE_REFERENCE_TYPE);
-        ExceptionThrowerCore.throwBusinessIf(!tempReference && !chatReference, ResultErrorCode.ILLEGAL_ARGUMENT, "当前文件引用不能直接用于聊天消息");
-        ExceptionThrowerCore.throwBusinessIf(chatReference && sourceReference.getReferenceId() != null && sourceReference.getReferenceId() > 0L,
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "当前文件已经绑定到聊天消息");
-        FileInfo fileInfo = fileInfoRepository.getById(sourceReference.getFileId());
-        ExceptionThrowerCore.throwBusinessIf(fileInfo == null || !Objects.equals(fileInfo.getStatus(), FileStatusEnum.NORMAL.getValue()),
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "文件不存在或不可发送");
-        return new PreparedFileMessage(sourceReference, fileInfo);
+        return new PreparedFileMessage(
+                businessId,
+                fileChatFacadeService.requireSendableChatFile(userId, businessId, ChatConstants.FILE_MESSAGE_REFERENCE_TYPE)
+        );
     }
 
     private ChatMessage buildFileMessage(Long conversationId,
@@ -899,39 +1073,14 @@ public class UserChatServiceImpl implements UserChatService {
      * 把上传阶段的业务引用收口为聊天消息引用，避免聊天模块直接维护文件元数据。
      */
     private ChatFilePayloadVO bindFileReferenceToMessage(PreparedFileMessage preparedFile, Long messageId, String messageType) {
-        FileBusinessInfo sourceReference = preparedFile.sourceReference();
         FileInfo fileInfo = preparedFile.fileInfo();
-        FileBusinessInfo chatReference = fileBusinessInfoRepository.findLatestByFileUserReference(
-                fileInfo.getId(),
-                sourceReference.getUserId(),
+        FileBusinessInfo chatReference = fileChatFacadeService.bindChatMessageReference(
+                SecurityUtils.requireUserId(),
+                preparedFile.sourceBusinessId(),
+                messageId,
                 ChatConstants.FILE_MESSAGE_REFERENCE_TYPE,
-                messageId
+                ChatConstants.FILE_MESSAGE_CATEGORY
         );
-        if (chatReference == null) {
-            chatReference = new FileBusinessInfo();
-            chatReference.setFileId(fileInfo.getId());
-            chatReference.setUserId(sourceReference.getUserId());
-            chatReference.setReferenceType(ChatConstants.FILE_MESSAGE_REFERENCE_TYPE);
-            chatReference.setReferenceId(messageId);
-            chatReference.setSourceIp(sourceReference.getSourceIp());
-            chatReference.setIsPublic(sourceReference.getIsPublic());
-            chatReference.setCategory(ChatConstants.FILE_MESSAGE_CATEGORY);
-            chatReference.setRemark(sourceReference.getRemark());
-            try {
-                fileBusinessInfoRepository.save(chatReference);
-            } catch (DuplicateKeyException ex) {
-                chatReference = fileBusinessInfoRepository.findLatestByFileUserReference(
-                        fileInfo.getId(),
-                        sourceReference.getUserId(),
-                        ChatConstants.FILE_MESSAGE_REFERENCE_TYPE,
-                        messageId
-                );
-            }
-        }
-        if (sourceReference.getId() != null && !Objects.equals(sourceReference.getId(), chatReference.getId())) {
-            fileBusinessInfoRepository.removeById(sourceReference.getId());
-        }
-        fileLifecycleService.refreshReferenceMetadata(fileInfo.getId(), Integer.valueOf(1).equals(chatReference.getIsPublic()));
         return buildFilePayload(chatReference, fileInfo, messageType);
     }
 
@@ -974,19 +1123,7 @@ public class UserChatServiceImpl implements UserChatService {
         if (!isAttachmentMessageType(message.getMessageType())) {
             return;
         }
-        List<FileBusinessInfo> references = fileBusinessInfoRepository.listByReferenceTypeAndReferenceId(
-                ChatConstants.FILE_MESSAGE_REFERENCE_TYPE,
-                message.getId()
-        );
-        if (references.isEmpty()) {
-            return;
-        }
-        Set<Long> fileIds = references.stream()
-                .map(FileBusinessInfo::getFileId)
-                .filter(Objects::nonNull)
-                .collect(LinkedHashSet::new, Set::add, Set::addAll);
-        fileBusinessInfoRepository.removeByIds(references.stream().map(FileBusinessInfo::getId).toList());
-        fileIds.forEach(fileLifecycleService::syncFileAfterReferenceRemoval);
+        fileChatFacadeService.releaseReferences(ChatConstants.FILE_MESSAGE_REFERENCE_TYPE, message.getId());
     }
 
     private ChatMessage requireVisibleMessageEntity(Long userId, Long messageId) {
@@ -1337,6 +1474,31 @@ public class UserChatServiceImpl implements UserChatService {
         return StrUtils.trimToNull(keyword);
     }
 
+    private int resolveConversationSpeakRequiredLevel(ChatConversation conversation) {
+        Integer speakLevelLimit = conversation.getSpeakLevelLimit();
+        if (speakLevelLimit != null && speakLevelLimit > 1) {
+            return speakLevelLimit;
+        }
+        if (Integer.valueOf(1).equals(conversation.getIsAllSite())
+                || Objects.equals(conversation.getConversationType(), ChatConstants.CONVERSATION_TYPE_GLOBAL)
+                || Objects.equals(conversation.getSceneType(), ChatConstants.SCENE_TYPE_HALL_CHANNEL)) {
+            return getConfigInt(
+                    ConfigConstants.CHAT_HALL_SPEAK_MIN_LEVEL_KEY,
+                    ConfigConstants.DEFAULT_CHAT_HALL_SPEAK_MIN_LEVEL
+            );
+        }
+        return 1;
+    }
+
+    private int getConfigInt(String key, int defaultValue) {
+        String value = sysConfigService.getValueOrDefault(key, String.valueOf(defaultValue));
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException ex) {
+            return defaultValue;
+        }
+    }
+
     private int memberRoleOrder(ChatConversationMember member) {
         if (Objects.equals(member.getMemberRole(), ChatConstants.MEMBER_ROLE_OWNER)) {
             return 0;
@@ -1600,7 +1762,7 @@ public class UserChatServiceImpl implements UserChatService {
                 .name(conversation.getName())
                 .avatar(conversation.getAvatar())
                 .ownerId(conversation.getOwnerId())
-                .notice(conversation.getRemark())
+                .notice(conversation.getAnnouncement())
                 .status(conversation.getStatus())
                 .memberCount((long) (activeMembers == null ? 0 : activeMembers.size()))
                 .build();
@@ -1626,12 +1788,9 @@ public class UserChatServiceImpl implements UserChatService {
         }
     }
 
-    private record PreparedFileMessage(FileBusinessInfo sourceReference, FileInfo fileInfo) {
+    private record PreparedFileMessage(Long sourceBusinessId, FileInfo fileInfo) {
     }
 
     private record RevocableMessageContext(ChatMessage message) {
     }
 }
-
-
-

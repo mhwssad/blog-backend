@@ -93,4 +93,13 @@ public class ChatMessageRepositoryImpl extends ServiceImpl<ChatMessageMapper, Ch
                 .orderByDesc(ChatMessage::getId)
                 .last("limit 1"), false);
     }
+
+    @Override
+    public ChatMessage findLatestBySenderAndConversation(Long senderId, Long conversationId) {
+        return getOne(new LambdaQueryWrapper<ChatMessage>()
+                .eq(ChatMessage::getSenderId, senderId)
+                .eq(ChatMessage::getConversationId, conversationId)
+                .orderByDesc(ChatMessage::getId)
+                .last("limit 1"), false);
+    }
 }

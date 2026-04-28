@@ -54,4 +54,9 @@ public interface ChatMessageRepository extends IService<ChatMessage> {
      * 根据发送者 ID 和客户端消息 ID 查找消息，用于消息幂等去重。
      */
     ChatMessage findBySenderAndClientMessageId(Long senderId, String clientMessageId);
+
+    /**
+     * 查询指定用户在指定会话中的最新一条消息，用于慢速模式校验。
+     */
+    ChatMessage findLatestBySenderAndConversation(Long senderId, Long conversationId);
 }
