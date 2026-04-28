@@ -1,5 +1,6 @@
 package com.cybzacg.blogbackend.module.article.model.admin;
 
+import com.cybzacg.blogbackend.module.article.model.common.ArticleSeriesSummaryVO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -25,16 +26,24 @@ public class ArticleDetailVO {
     private String authorName;
     @Schema(description = "是否置顶")
     private Integer isTop;
+    @Schema(description = "是否推荐")
+    private Integer isRecommend;
     @Schema(description = "是否原创")
     private Integer isOriginal;
     @Schema(description = "来源地址")
     private String sourceUrl;
     @Schema(description = "文章状态")
     private Integer status;
+    @Schema(description = "审核状态")
+    private Integer reviewStatus;
     @Schema(description = "发布时间")
     private LocalDateTime publishTime;
+    @Schema(description = "定时发布时间")
+    private LocalDateTime scheduledPublishTime;
     @Schema(description = "访问级别")
     private Integer accessLevel;
+    @Schema(description = "可见范围")
+    private Integer visibilityScope;
     @Schema(description = "浏览数")
     private Integer viewCount;
     @Schema(description = "点赞数")
@@ -57,4 +66,6 @@ public class ArticleDetailVO {
     private List<Long> tagIds;
     @Schema(description = "访问授权列表")
     private List<ArticleAccessItem> accessList;
+    @Schema(description = "所属系列摘要")
+    private List<ArticleSeriesSummaryVO> seriesList;
 }

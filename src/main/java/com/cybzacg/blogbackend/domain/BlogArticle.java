@@ -40,6 +40,10 @@ public class BlogArticle {
      */
     private Integer isTop;
     /**
+     * 是否推荐：0-否，1-是
+     */
+    private Integer isRecommend;
+    /**
      * 是否原创：0-转载，1-原创
      */
     private Integer isOriginal;
@@ -52,13 +56,25 @@ public class BlogArticle {
      */
     private Integer status;
     /**
+     * 审核状态：0-未送审/免审，1-审核中，2-审核通过，3-审核拒绝
+     */
+    private Integer reviewStatus;
+    /**
      * 发布时间
      */
     private LocalDateTime publishTime;
     /**
+     * 定时发布时间
+     */
+    private LocalDateTime scheduledPublishTime;
+    /**
      * 访问级别：0-公开，1-登录可见，2-密码访问，3-指定用户
      */
     private Integer accessLevel;
+    /**
+     * 可见范围：0-公开，1-仅自己可见，2-白名单可见，3-登录可见
+     */
+    private Integer visibilityScope;
     /**
      * 浏览数
      */

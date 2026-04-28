@@ -19,14 +19,20 @@ public class ArticleAdminPageQuery {
     private Long authorId;
     @Schema(description = "文章状态")
     private Integer status;
+    @Schema(description = "审核状态")
+    private Integer reviewStatus;
     @Schema(description = "访问级别")
     private Integer accessLevel;
+    @Schema(description = "可见范围")
+    private Integer visibilityScope;
     @Schema(description = "分类ID")
     private Long categoryId;
     @Schema(description = "标签ID")
     private Long tagId;
     @Schema(description = "是否置顶")
     private Integer isTop;
+    @Schema(description = "是否推荐")
+    private Integer isRecommend;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Schema(description = "发布时间开始")

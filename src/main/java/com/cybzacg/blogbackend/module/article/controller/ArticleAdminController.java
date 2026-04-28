@@ -70,6 +70,24 @@ public class ArticleAdminController {
         return Result.success();
     }
 
+    @PutMapping("/{id}/top")
+    @Operation(summary = "切换文章置顶状态")
+    @PreAuthorize("@permission.hasPermission('content:article:update')")
+    public Result<Void> toggleTop(@PathVariable Long id,
+                                  @RequestParam boolean enabled) {
+        articleAdminService.toggleTop(id, enabled);
+        return Result.success();
+    }
+
+    @PutMapping("/{id}/recommend")
+    @Operation(summary = "切换文章推荐状态")
+    @PreAuthorize("@permission.hasPermission('content:article:update')")
+    public Result<Void> toggleRecommend(@PathVariable Long id,
+                                        @RequestParam boolean enabled) {
+        articleAdminService.toggleRecommend(id, enabled);
+        return Result.success();
+    }
+
     @DeleteMapping("/{id}")
     @Operation(summary = "删除文章")
     @PreAuthorize("@permission.hasPermission('content:article:delete')")

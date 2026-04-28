@@ -1,5 +1,6 @@
 package com.cybzacg.blogbackend.module.article.model.publics;
 
+import com.cybzacg.blogbackend.module.article.model.common.ArticleSeriesSummaryVO;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicCategoryTreeVO;
 import com.cybzacg.blogbackend.module.content.model.publics.PublicTagVO;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -27,12 +28,16 @@ public class PublicArticleDetailVO {
     private String authorName;
     @Schema(description = "是否置顶")
     private Integer isTop;
+    @Schema(description = "是否推荐")
+    private Integer isRecommend;
     @Schema(description = "是否原创")
     private Integer isOriginal;
     @Schema(description = "来源地址")
     private String sourceUrl;
     @Schema(description = "访问级别")
     private Integer accessLevel;
+    @Schema(description = "可见范围")
+    private Integer visibilityScope;
     @Schema(description = "浏览数")
     private Integer viewCount;
     @Schema(description = "点赞数")
@@ -55,4 +60,6 @@ public class PublicArticleDetailVO {
     private Boolean collected;
     @Schema(description = "当前用户是否允许评论")
     private Boolean canComment;
+    @Schema(description = "所属系列摘要")
+    private List<ArticleSeriesSummaryVO> seriesList;
 }

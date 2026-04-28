@@ -1,3 +1,4 @@
+
 package com.cybzacg.blogbackend.module.article.model.admin;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -35,6 +36,8 @@ public class ArticleSaveRequest {
 
     @Schema(description = "是否置顶")
     private Integer isTop;
+    @Schema(description = "是否推荐")
+    private Integer isRecommend;
     @Schema(description = "是否原创")
     private Integer isOriginal;
 
@@ -49,8 +52,15 @@ public class ArticleSaveRequest {
     @Schema(description = "发布时间")
     private LocalDateTime publishTime;
 
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Schema(description = "定时发布时间")
+    private LocalDateTime scheduledPublishTime;
+
     @Schema(description = "访问级别")
     private Integer accessLevel;
+
+    @Schema(description = "可见范围：0-公开，1-仅自己可见，2-白名单可见，3-登录可见")
+    private Integer visibilityScope;
 
     @Size(max = 256, message = "备注长度不能超过256")
     @Schema(description = "备注")

@@ -22,12 +22,18 @@ public class ArticleAdminVO {
     private String authorName;
     @Schema(description = "是否置顶")
     private Integer isTop;
+    @Schema(description = "是否推荐")
+    private Integer isRecommend;
     @Schema(description = "是否原创")
     private Integer isOriginal;
     @Schema(description = "文章状态")
     private Integer status;
+    @Schema(description = "审核状态")
+    private Integer reviewStatus;
     @Schema(description = "访问级别")
     private Integer accessLevel;
+    @Schema(description = "可见范围")
+    private Integer visibilityScope;
     @Schema(description = "浏览数")
     private Integer viewCount;
     @Schema(description = "点赞数")
@@ -40,6 +46,8 @@ public class ArticleAdminVO {
     private Integer shareCount;
     @Schema(description = "发布时间")
     private LocalDateTime publishTime;
+    @Schema(description = "定时发布时间")
+    private LocalDateTime scheduledPublishTime;
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
     @Schema(description = "更新时间")

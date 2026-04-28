@@ -10,6 +10,7 @@ CREATE TABLE blog_article
     cover_image   VARCHAR(512)                       NULL COMMENT '封面图片',
     author_id     BIGINT                             NOT NULL COMMENT '作者ID',
     is_top        TINYINT  DEFAULT 0                 NOT NULL COMMENT '是否置顶：0-否，1-是',
+    is_recommend  TINYINT  DEFAULT 0                 NOT NULL COMMENT '是否推荐：0-否，1-是',
     is_original   TINYINT  DEFAULT 1                 NOT NULL COMMENT '是否原创：0-转载，1-原创',
     source_url    VARCHAR(512)                       NULL COMMENT '原文链接（转载用）',
     status        TINYINT  DEFAULT 0                 NOT NULL COMMENT '状态：0-草稿，1-已发布，2-已下架',
@@ -28,7 +29,7 @@ CREATE TABLE blog_article
     remark        VARCHAR(256)                       NULL COMMENT '备注',
     PRIMARY KEY (id),
     INDEX idx_author_status_publish (author_id, status, publish_time DESC) COMMENT '作者文章列表（含发布时间）',
-    INDEX idx_core_query (status, is_top, publish_time DESC) COMMENT '核心列表查询：状态+置顶+发布时间',
+    INDEX idx_core_query (status, is_top, is_recommend, publish_time DESC) COMMENT '核心列表查询：状态+置顶+推荐+发布时间',
     INDEX idx_access_level_status (access_level, status) COMMENT '按访问级别过滤'
 ) COMMENT '文章表'
     ENGINE = InnoDB
@@ -305,16 +306,18 @@ CREATE TABLE blog_article_series_item
 DROP TABLE IF EXISTS blog_article_review_log;
 CREATE TABLE blog_article_review_log
 (
-    id             BIGINT AUTO_INCREMENT COMMENT '审核记录ID' PRIMARY KEY,
-    article_id     BIGINT                                NOT NULL COMMENT '文章ID',
-    review_status  TINYINT                               NOT NULL COMMENT '审核状态：1-审核中，2-审核通过，3-审核拒绝',
-    reviewer_id    BIGINT                                NULL COMMENT '审核人ID',
-    review_comment VARCHAR(512)                          NULL COMMENT '审核意见',
-    reviewed_at    DATETIME                              NULL COMMENT '审核时间',
-    created_at     DATETIME    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    id                 BIGINT AUTO_INCREMENT COMMENT '审核记录ID' PRIMARY KEY,
+    article_id         BIGINT                                NOT NULL COMMENT '文章ID',
+    action_type        VARCHAR(16)                           NOT NULL COMMENT '审核动作：submit/resubmit/approve/reject',
+    from_review_status TINYINT                               NOT NULL COMMENT '变更前审核状态：0-未送审，1-审核中，2-审核通过，3-审核拒绝',
+    to_review_status   TINYINT                               NOT NULL COMMENT '变更后审核状态：0-未送审，1-审核中，2-审核通过，3-审核拒绝',
+    operator_user_id   BIGINT                                NOT NULL COMMENT '操作人ID',
+    review_comment     VARCHAR(512)                          NULL COMMENT '审核说明/备注',
+    operated_at        DATETIME                              NOT NULL COMMENT '操作时间',
+    created_at         DATETIME    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
 
-    INDEX idx_article_reviewed (article_id, created_at DESC) COMMENT '按文章查看审核历史',
-    INDEX idx_reviewer_reviewed (reviewer_id, created_at DESC) COMMENT '按审核人查看处理历史'
+    INDEX idx_article_operated (article_id, operated_at DESC, id DESC) COMMENT '按文章查看审核历史',
+    INDEX idx_operator_operated (operator_user_id, operated_at DESC, id DESC) COMMENT '按操作人查看处理历史'
 ) COMMENT '文章审核记录表'
     ENGINE = InnoDB
     DEFAULT CHARSET = utf8mb4

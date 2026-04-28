@@ -10,6 +10,8 @@ import com.cybzacg.blogbackend.module.article.model.admin.ArticleDetailVO;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleSaveRequest;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleCardVO;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleDetailVO;
+import com.cybzacg.blogbackend.module.article.model.user.UserArticleDetailVO;
+import com.cybzacg.blogbackend.module.article.model.user.UserArticleVO;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import org.mapstruct.*;
 
@@ -26,12 +28,29 @@ import java.time.LocalDateTime;
         unmappedTargetPolicy = ReportingPolicy.IGNORE
 )
 public interface ArticleModelMapper {
+    @Mapping(target = "reviewStatus", source = "reviewStatus")
+    @Mapping(target = "scheduledPublishTime", source = "scheduledPublishTime")
+    @Mapping(target = "visibilityScope", source = "visibilityScope")
     ArticleAdminVO toAdminVO(BlogArticle article);
 
+    @Mapping(target = "reviewStatus", source = "reviewStatus")
+    @Mapping(target = "scheduledPublishTime", source = "scheduledPublishTime")
+    @Mapping(target = "visibilityScope", source = "visibilityScope")
     ArticleDetailVO toDetailVO(BlogArticle article);
+
+    @Mapping(target = "reviewStatus", source = "reviewStatus")
+    @Mapping(target = "scheduledPublishTime", source = "scheduledPublishTime")
+    @Mapping(target = "visibilityScope", source = "visibilityScope")
+    UserArticleVO toUserVO(BlogArticle article);
+
+    @Mapping(target = "reviewStatus", source = "reviewStatus")
+    @Mapping(target = "scheduledPublishTime", source = "scheduledPublishTime")
+    @Mapping(target = "visibilityScope", source = "visibilityScope")
+    UserArticleDetailVO toUserDetailVO(BlogArticle article);
 
     PublicArticleCardVO toPublicCardVO(BlogArticle article);
 
+    @Mapping(target = "visibilityScope", source = "visibilityScope")
     PublicArticleDetailVO toPublicDetailVO(BlogArticle article);
 
     ArticleAccessItem toAccessItem(BlogArticleAccess access);
@@ -43,11 +62,14 @@ public interface ArticleModelMapper {
     @Mapping(target = "coverImage", expression = "java(StrUtils.normalize(request.getCoverImage()))")
     @Mapping(target = "authorId", source = "authorId")
     @Mapping(target = "isTop", source = "isTop")
+    @Mapping(target = "isRecommend", source = "isRecommend")
     @Mapping(target = "isOriginal", source = "isOriginal")
     @Mapping(target = "sourceUrl", expression = "java(StrUtils.normalize(request.getSourceUrl()))")
     @Mapping(target = "status", source = "status")
     @Mapping(target = "publishTime", source = "publishTime")
+    @Mapping(target = "scheduledPublishTime", source = "scheduledPublishTime")
     @Mapping(target = "accessLevel", source = "accessLevel")
+    @Mapping(target = "visibilityScope", source = "visibilityScope")
     @Mapping(target = "viewCount", ignore = true)
     @Mapping(target = "likeCount", ignore = true)
     @Mapping(target = "commentCount", ignore = true)

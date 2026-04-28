@@ -45,4 +45,14 @@ public interface ArticleAdminService {
      * 删除文章及其全部关联数据。
      */
     void deleteArticle(Long id);
+
+    /**
+     * 切换文章置顶状态。
+     */
+    void toggleTop(Long id, boolean enabled);
+
+    /**
+     * 切换文章推荐状态。
+     */
+    void toggleRecommend(Long id, boolean enabled);
 }

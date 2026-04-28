@@ -3,6 +3,9 @@ package com.cybzacg.blogbackend.module.article.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.*;
+import com.cybzacg.blogbackend.common.constant.ConfigConstants;
+import com.cybzacg.blogbackend.enums.article.ArticleVisibilityScopeEnum;
+import com.cybzacg.blogbackend.enums.experience.ExperienceSourceTypeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.convert.ArticleModelMapper;
 import com.cybzacg.blogbackend.module.article.model.admin.*;
@@ -10,14 +13,22 @@ import com.cybzacg.blogbackend.module.article.repository.BlogArticleAccessReposi
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleCategoryRepository;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
+import com.cybzacg.blogbackend.module.article.service.ArticleAccessManageService;
 import com.cybzacg.blogbackend.module.article.service.ArticleAdminService;
+import com.cybzacg.blogbackend.module.article.service.ArticleSeriesService;
+import com.cybzacg.blogbackend.module.article.service.ArticleStatusMachine;
+import com.cybzacg.blogbackend.module.auth.experience.event.XpAwardEvent;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
+import com.cybzacg.blogbackend.module.auth.service.AuthorPermissionService;
+import com.cybzacg.blogbackend.module.auth.service.SysConfigService;
 import com.cybzacg.blogbackend.module.content.repository.*;
 import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.IdCollectionUtils;
+import com.cybzacg.blogbackend.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -51,8 +62,14 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
     private final FileBusinessInfoRepository fileBusinessInfoRepository;
     private final FileLifecycleService fileLifecycleService;
     private final SysUserRepository sysUserRepository;
+    private final SysConfigService sysConfigService;
+    private final AuthorPermissionService authorPermissionService;
     private final ArticleModelMapper articleModelMapper;
     private final ArticleAccessControlService articleAccessControlService;
+    private final ArticleAccessManageService articleAccessManageService;
+    private final ArticleSeriesService articleSeriesService;
+    private final ArticleStatusMachine articleStatusMachine;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 按作者、状态、授权级别及分类标签等条件分页查询后台文章。
@@ -98,6 +115,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
     @Transactional(rollbackFor = Exception.class)
     public ArticleDetailVO createArticle(ArticleSaveRequest request) {
         validateSaveRequest(request);
+        validateAuthorArticleQuota(request.getAuthorId());
         BlogArticle article = articleModelMapper.toArticle(request);
         applyArticleFields(article, request, true);
         initializeCounters(article);
@@ -105,6 +123,10 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         syncCategoryBindings(article.getId(), request.getCategoryIds());
         syncTagBindings(article.getId(), request.getTagIds());
         syncAccessBindings(article.getId(), article.getAccessLevel(), request.getAccessList());
+        eventPublisher.publishEvent(new XpAwardEvent(
+                article.getAuthorId(), ExperienceSourceTypeEnum.ARTICLE_PUBLISH.getValue(),
+                String.valueOf(article.getId()),
+                "article_publish:" + article.getAuthorId() + ":" + article.getId()));
         return buildArticleDetail(article);
     }
 
@@ -116,11 +138,16 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
     public ArticleDetailVO updateArticle(Long id, ArticleSaveRequest request) {
         validateSaveRequest(request);
         BlogArticle article = getArticleOrThrow(id);
+        validateUpdateAllowed(article);
+        Long previousAuthorId = article.getAuthorId();
         applyArticleFields(article, request, false);
         blogArticleRepository.updateById(article);
         syncCategoryBindings(id, request.getCategoryIds());
         syncTagBindings(id, request.getTagIds());
         syncAccessBindings(id, article.getAccessLevel(), request.getAccessList());
+        if (!Objects.equals(previousAuthorId, article.getAuthorId())) {
+            articleSeriesService.cleanupArticleSeriesRelations(id);
+        }
         return buildArticleDetail(article);
     }
 
@@ -130,10 +157,17 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, Integer status) {
-        validateStatus(status);
         BlogArticle article = getArticleOrThrow(id);
-        article.setStatus(status);
-        if (Integer.valueOf(1).equals(status) && article.getPublishTime() == null) {
+        Integer actualStatus = articleStatusMachine.normalizeStatus(status);
+        articleStatusMachine.validateSaveState(
+                actualStatus,
+                article.getReviewStatus(),
+                article.getVisibilityScope(),
+                article.getAccessLevel(),
+                null);
+        article.setStatus(actualStatus);
+        article.setScheduledPublishTime(null);
+        if (Integer.valueOf(1).equals(actualStatus)) {
             article.setPublishTime(LocalDateTime.now());
         }
         blogArticleRepository.updateById(article);
@@ -146,10 +180,10 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
     @Transactional(rollbackFor = Exception.class)
     public void assignAccess(Long id, List<ArticleAccessItem> accessList) {
         BlogArticle article = getArticleOrThrow(id);
-        ExceptionThrowerCore.throwBusinessIfNot(Integer.valueOf(4).equals(article.getAccessLevel()),
-                ResultErrorCode.ILLEGAL_ARGUMENT, "当前文章访问级别不是指定用户可见");
-        validateAccessItems(accessList);
-        rebuildAccessBindings(id, accessList);
+        ExceptionThrowerCore.throwBusinessIfNot(articleAccessManageService.supportsAccessList(article),
+                ResultErrorCode.ILLEGAL_ARGUMENT, "当前文章不支持访问授权配置");
+        articleAccessManageService.validateAccessItems(accessList);
+        articleAccessManageService.rebuildArticleAccessBindings(id, accessList);
     }
 
     /**
@@ -162,6 +196,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         List<com.cybzacg.blogbackend.domain.SysComment> comments = sysCommentRepository.findByTargetTypeAndTargetId(TARGET_TYPE_ARTICLE, id);
         List<com.cybzacg.blogbackend.domain.SysCollection> collections = sysCollectionRepository.listByTargetTypeAndTargetId(TARGET_TYPE_ARTICLE, id);
 
+        articleSeriesService.cleanupArticleSeriesRelations(id);
         blogArticleAccessRepository.removeByArticleId(id);
         blogArticleCategoryRepository.removeByArticleId(id);
         sysTagRelationRepository.removeByTargetTypeAndTargetId(TARGET_TYPE_ARTICLE, id);
@@ -175,6 +210,20 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         blogArticleRepository.removeById(id);
     }
 
+    @Override
+    public void toggleTop(Long id, boolean enabled) {
+        BlogArticle article = getArticleOrThrow(id);
+        article.setIsTop(enabled ? 1 : 0);
+        blogArticleRepository.updateById(article);
+    }
+
+    @Override
+    public void toggleRecommend(Long id, boolean enabled) {
+        BlogArticle article = getArticleOrThrow(id);
+        article.setIsRecommend(enabled ? 1 : 0);
+        blogArticleRepository.updateById(article);
+    }
+
     /**
      * 将文章实体扩展为详情对象，补齐作者名、分类、标签和授权列表。
      */
@@ -186,6 +235,7 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         detailVO.setAccessList(articleAccessControlService.listArticleAccesses(article.getId()).stream()
                 .map(articleModelMapper::toAccessItem)
                 .toList());
+        detailVO.setSeriesList(articleSeriesService.listVisibleSeriesSummariesByArticleId(article.getId(), article.getAuthorId()));
         return detailVO;
     }
 
@@ -194,25 +244,45 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
      */
     private void applyArticleFields(BlogArticle article, ArticleSaveRequest request, boolean creating) {
         LocalDateTime existingPublishTime = article.getPublishTime();
+        Integer existingReviewStatus = article.getReviewStatus();
         articleModelMapper.updateArticle(request, article);
         article.setIsTop(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(article.getIsTop(), 0));
+        article.setIsRecommend(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(article.getIsRecommend(), 0));
         article.setIsOriginal(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(article.getIsOriginal(), 1));
-        article.setStatus(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(article.getStatus(), 0));
-        article.setPublishTime(resolvePublishTime(article.getStatus(), request.getPublishTime(), existingPublishTime));
         article.setAccessLevel(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(article.getAccessLevel(), 0));
+        article.setReviewStatus(creating
+                ? com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(existingReviewStatus, 0)
+                : com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(existingReviewStatus, 0));
+        article.setVisibilityScope(articleStatusMachine.normalizeVisibilityScope(article.getVisibilityScope()));
+        articleStatusMachine.validateSaveState(
+                article.getStatus(),
+                article.getReviewStatus(),
+                article.getVisibilityScope(),
+                article.getAccessLevel(),
+                article.getScheduledPublishTime());
+        article.setStatus(articleStatusMachine.resolveStatusForSave(article.getStatus(), article.getScheduledPublishTime()));
+        article.setPublishTime(articleStatusMachine.resolvePublishTime(
+                article.getStatus(),
+                request.getPublishTime(),
+                existingPublishTime,
+                article.getScheduledPublishTime()));
         if (creating && article.getPublishTime() == null && Integer.valueOf(1).equals(article.getStatus())) {
             article.setPublishTime(LocalDateTime.now());
         }
     }
 
     /**
-     * 根据目标状态和请求发布时间推导最终发布时间，保证已发布文章始终有稳定的发布时间。
+     * 审核中的文章默认禁止普通编辑，避免送审内容与审核内容产生漂移。
      */
-    private LocalDateTime resolvePublishTime(Integer status, LocalDateTime requestPublishTime, LocalDateTime existingPublishTime) {
-        if (Integer.valueOf(1).equals(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(status, 0))) {
-            return requestPublishTime != null ? requestPublishTime : (existingPublishTime != null ? existingPublishTime : LocalDateTime.now());
+    private void validateUpdateAllowed(BlogArticle article) {
+        if (article == null) {
+            return;
         }
-        return requestPublishTime;
+        ExceptionThrowerCore.throwBusinessIf(
+                Integer.valueOf(1).equals(articleStatusMachine.normalizeReviewStatus(article.getReviewStatus()))
+                        && !SecurityUtils.hasAuthority("content:article-review:review"),
+                ResultErrorCode.FORBIDDEN,
+                "当前文章正在审核中，暂不允许修改");
     }
 
     /**
@@ -230,9 +300,13 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
      * 校验文章保存请求，包括作者、状态、访问级别、分类标签和授权项合法性。
      */
     private void validateSaveRequest(ArticleSaveRequest request) {
-        validateStatus(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(request.getStatus(), 0));
-        validateAccessLevel(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(request.getAccessLevel(), 0));
         validateAuthor(request.getAuthorId());
+        articleStatusMachine.validateSaveState(
+                com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(request.getStatus(), 0),
+                0,
+                request.getVisibilityScope(),
+                com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(request.getAccessLevel(), 0),
+                request.getScheduledPublishTime());
 
         ExceptionThrowerCore.throwBusinessIf(
                 Integer.valueOf(0).equals(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(request.getIsOriginal(), 1))
@@ -254,7 +328,13 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
         request.setTagIds(tagIds);
         validateCategories(categoryIds);
         validateTags(tagIds);
-        validateAccessItems(request.getAccessList());
+        boolean requireAccessList = ArticleVisibilityScopeEnum.WHITELIST.getValue().equals(articleStatusMachine.normalizeVisibilityScope(request.getVisibilityScope()))
+                || Integer.valueOf(4).equals(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(request.getAccessLevel(), 0));
+        ExceptionThrowerCore.throwBusinessIf(
+                requireAccessList && CollectionUtils.isEmpty(request.getAccessList()),
+                ResultErrorCode.ILLEGAL_ARGUMENT,
+                "当前文章必须配置访问授权列表");
+        articleAccessManageService.validateAccessItems(request.getAccessList());
     }
 
     private void validateAuthor(Long authorId) {
@@ -282,41 +362,40 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
     }
 
     /**
-     * 校验指定用户授权项，确保用户存在且授权组合不重复。
+     * 按作者身份校验当前可创建的文章总量上限，普通用户与作者使用不同配置。
      */
-    private void validateAccessItems(List<ArticleAccessItem> accessList) {
-        if (accessList == null || accessList.isEmpty()) {
+    private void validateAuthorArticleQuota(Long authorId) {
+        if (authorId == null) {
             return;
         }
-        Set<String> keys = new LinkedHashSet<>();
-        Set<Long> userIds = new LinkedHashSet<>();
-        for (ArticleAccessItem item : accessList) {
-            ExceptionThrowerCore.throwBusinessIfNull(item.getUserId(), ResultErrorCode.ILLEGAL_ARGUMENT, "授权用户不能为空");
-            Integer accessType = com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(item.getAccessType(), 1);
-            ExceptionThrowerCore.throwBusinessIf(!Integer.valueOf(1).equals(accessType) && !Integer.valueOf(2).equals(accessType),
-                    ResultErrorCode.ILLEGAL_ARGUMENT, "访问类型非法");
-            item.setAccessType(accessType);
-            String key = item.getUserId() + ":" + accessType;
-            ExceptionThrowerCore.throwBusinessIf(!keys.add(key), ResultErrorCode.ILLEGAL_ARGUMENT, "存在重复的访问授权记录");
-            userIds.add(item.getUserId());
+        boolean authorRole = authorPermissionService.hasAuthorRole(authorId);
+        int maxArticleCount = resolveArticleQuota(authorRole);
+        if (maxArticleCount <= 0) {
+            return;
         }
-        List<SysUser> users = sysUserRepository.listByIds(userIds);
-        long availableUsers = users.stream()
-                .filter(user -> !Integer.valueOf(1).equals(user.getDeletedFlag()))
-                .count();
-        ExceptionThrowerCore.throwBusinessIf(availableUsers != userIds.size(), ResultErrorCode.USER_NOT_FOUND, "授权用户不存在");
-    }
-
-    private void validateStatus(Integer status) {
+        long currentArticleCount = blogArticleRepository.countByAuthorId(authorId);
         ExceptionThrowerCore.throwBusinessIf(
-                !Integer.valueOf(0).equals(status) && !Integer.valueOf(1).equals(status) && !Integer.valueOf(2).equals(status),
+                currentArticleCount >= maxArticleCount,
                 ResultErrorCode.ILLEGAL_ARGUMENT,
-                "文章状态非法");
+                authorRole
+                        ? "当前作者文章数量已达上限，请先整理现有内容后再创建"
+                        : "当前用户文章数量已达普通用户上限，申请作者后可获得更高配额"
+        );
     }
 
-    private void validateAccessLevel(Integer accessLevel) {
-        ExceptionThrowerCore.throwBusinessIf(accessLevel < 0 || accessLevel > 4,
-                ResultErrorCode.ILLEGAL_ARGUMENT, "文章访问级别非法");
+    private int resolveArticleQuota(boolean authorRole) {
+        String configKey = authorRole
+                ? ConfigConstants.ARTICLE_MAX_COUNT_AUTHOR_KEY
+                : ConfigConstants.ARTICLE_MAX_COUNT_NORMAL_USER_KEY;
+        int defaultValue = authorRole
+                ? ConfigConstants.DEFAULT_ARTICLE_MAX_COUNT_AUTHOR
+                : ConfigConstants.DEFAULT_ARTICLE_MAX_COUNT_NORMAL_USER;
+        String configuredValue = sysConfigService.getValueOrDefault(configKey, String.valueOf(defaultValue));
+        try {
+            return Integer.parseInt(configuredValue);
+        } catch (NumberFormatException ex) {
+            return defaultValue;
+        }
     }
 
     /**
@@ -353,26 +432,14 @@ public class ArticleAdminServiceImpl implements ArticleAdminService {
      * 根据访问级别决定是否保留指定用户授权数据。
      */
     private void syncAccessBindings(Long articleId, Integer accessLevel, List<ArticleAccessItem> accessList) {
-        if (!Integer.valueOf(4).equals(accessLevel)) {
+        BlogArticle article = blogArticleRepository.getById(articleId);
+        boolean useAccessList = Integer.valueOf(4).equals(accessLevel)
+                || articleAccessManageService.supportsAccessList(article);
+        if (!useAccessList) {
             blogArticleAccessRepository.removeByArticleId(articleId);
             return;
         }
-        rebuildAccessBindings(articleId, accessList);
-    }
-
-    /**
-     * 先清空后重建文章的指定用户授权记录，保持授权结果与请求完全一致。
-     */
-    private void rebuildAccessBindings(Long articleId, List<ArticleAccessItem> accessList) {
-        blogArticleAccessRepository.removeByArticleId(articleId);
-        if (accessList == null || accessList.isEmpty()) {
-            return;
-        }
-        LocalDateTime now = LocalDateTime.now();
-        List<BlogArticleAccess> records = accessList.stream()
-                .map(item -> articleModelMapper.toArticleAccess(articleId, item, now))
-                .toList();
-        blogArticleAccessRepository.saveBatch(records);
+        articleAccessManageService.rebuildArticleAccessBindings(articleId, accessList);
     }
 
     /**
