@@ -74,7 +74,7 @@
 
 - [x] 拆分 `UserChatServiceImpl`
 - [x] 拆分 `ChatAdminServiceImpl`
-- [ ] 拆分 `ChatAttachmentAsyncProcessingServiceImpl`
+- [x] 拆分 `ChatAttachmentAsyncProcessingServiceImpl`
 
 ### 4.2 file
 
@@ -83,7 +83,7 @@
 ### 4.3 article
 
 - [x] 拆分 `ArticleAdminServiceImpl`
-- [ ] 拆分 `ArticleSeriesServiceImpl`
+- [x] 拆分 `ArticleSeriesServiceImpl`
 
 ## 5. 第三阶段：模块内部子域化
 
