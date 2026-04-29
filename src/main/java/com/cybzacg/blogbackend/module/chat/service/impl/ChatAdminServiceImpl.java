@@ -1,675 +1,85 @@
 package com.cybzacg.blogbackend.module.chat.service.impl;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.*;
-import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.chat.constant.ChatConstants;
-import com.cybzacg.blogbackend.module.chat.convert.ChatModelMapper;
 import com.cybzacg.blogbackend.module.chat.model.admin.*;
-import com.cybzacg.blogbackend.module.chat.model.common.ChatReplyMessageVO;
-import com.cybzacg.blogbackend.module.chat.model.data.ChatAdminConversationListItem;
-import com.cybzacg.blogbackend.module.chat.model.data.ChatAdminMessageItem;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatConversationLastMessageVO;
 import com.cybzacg.blogbackend.module.chat.model.user.ChatMemberVO;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatMessageVO;
-import com.cybzacg.blogbackend.module.chat.repository.ChatConversationMemberRepository;
-import com.cybzacg.blogbackend.module.chat.repository.ChatConversationRepository;
-import com.cybzacg.blogbackend.module.chat.repository.ChatMessageRecipientRepository;
-import com.cybzacg.blogbackend.module.chat.repository.ChatMessageRepository;
+import com.cybzacg.blogbackend.module.chat.model.user.ChatMemberVO;
+import com.cybzacg.blogbackend.module.chat.service.ChatAdminGovernanceService;
+import com.cybzacg.blogbackend.module.chat.service.ChatAdminQueryService;
 import com.cybzacg.blogbackend.module.chat.service.ChatAdminService;
-import com.cybzacg.blogbackend.module.chat.service.ChatPushService;
-import com.cybzacg.blogbackend.module.chat.support.ChatMemberHelper;
-import com.cybzacg.blogbackend.module.chat.support.ChatPayloadHelper;
-import com.cybzacg.blogbackend.module.chat.support.ChatPushPayloadBuilder;
-import com.cybzacg.blogbackend.module.file.service.FileChatFacadeService;
-import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
-import com.cybzacg.blogbackend.utils.PaginationUtils;
-import com.cybzacg.blogbackend.utils.StrUtils;
-import com.cybzacg.blogbackend.utils.UserDisplayNameUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
 
 /**
- * 聊天后台管理服务实现。
+ * 后台聊天管理服务门面。
  *
- * <p>负责后台会话查询、成员查看、消息追踪和会话状态维护。
+ * <p>委托调用到两个子 Service：
+ * <ul>
+ *     <li>{@link ChatAdminQueryService} — 后台查询（会话/成员/消息/回执）</li>
+ *     <li>{@link ChatAdminGovernanceService} — 后台治理（角色/状态/禁言/撤回/状态）</li>
+ * </ul>
  */
 @Service
 @RequiredArgsConstructor
 public class ChatAdminServiceImpl implements ChatAdminService {
-    private final ChatConversationRepository chatConversationRepository;
-    private final ChatMessageRepository chatMessageRepository;
-    private final ChatConversationMemberRepository chatConversationMemberRepository;
-    private final ChatMessageRecipientRepository chatMessageRecipientRepository;
-    private final SysUserRepository sysUserRepository;
-    private final ChatModelMapper chatModelMapper;
-    private final ChatPushService chatPushService;
-    private final FileChatFacadeService fileChatFacadeService;
-    private final ChatPayloadHelper chatPayloadHelper;
-    private final ChatPushPayloadBuilder chatPushPayloadBuilder;
-    private final ChatMemberHelper chatMemberHelper;
 
-    /**
-     * 分页查询后台会话列表。
-     */
+    private final ChatAdminQueryService chatAdminQueryService;
+    private final ChatAdminGovernanceService chatAdminGovernanceService;
+
     @Override
     public PageResult<ChatAdminConversationVO> pageConversations(ChatAdminConversationPageQuery query) {
-        long current = PaginationUtils.normalizeCurrent(query.getCurrent());
-        long size = PaginationUtils.normalizeSize(query.getSize(), 10L, 100L);
-        long total = Objects.requireNonNullElse(chatConversationRepository.countAdminConversationPage(query), 0L);
-        if (total == 0L) {
-            return PageResult.<ChatAdminConversationVO>builder()
-                    .total(0L)
-                    .current(current)
-                    .size(size)
-                    .records(List.of())
-                    .build();
-        }
-        long offset = (current - 1) * size;
-        List<ChatAdminConversationListItem> items = chatConversationRepository.selectAdminConversationPage(query, offset, size);
-        return PageResult.<ChatAdminConversationVO>builder()
-                .total(total)
-                .current(current)
-                .size(size)
-                .records(buildConversationRecords(items))
-                .build();
+        return chatAdminQueryService.pageConversations(query);
     }
 
-    /**
-     * 查询后台会话详情。
-     */
     @Override
     public ChatAdminConversationVO getConversation(Long conversationId) {
-        requireConversation(conversationId);
-        ChatAdminConversationListItem item = chatConversationRepository.selectAdminConversationDetail(conversationId);
-        ExceptionThrowerCore.throwBusinessIfNull(item, ResultErrorCode.ILLEGAL_ARGUMENT, "会话不存在");
-        return buildConversationVO(item, listMembersByConversationIds(List.of(conversationId)).getOrDefault(conversationId, List.of()));
+        return chatAdminQueryService.getConversation(conversationId);
     }
 
-    /**
-     * 查询指定会话的全部成员列表。
-     */
     @Override
     public List<ChatMemberVO> listMembers(Long conversationId) {
-        requireConversation(conversationId);
-        return buildMemberRecords(listConversationMembers(conversationId));
+        return chatAdminQueryService.listMembers(conversationId);
     }
 
-    /**
-     * 分页查询指定会话的消息列表。
-     */
     @Override
     public PageResult<ChatAdminMessageVO> pageMessages(Long conversationId, ChatAdminMessagePageQuery query) {
-        requireConversation(conversationId);
-        long current = PaginationUtils.normalizeCurrent(query.getCurrent());
-        long size = PaginationUtils.normalizeSize(query.getSize(), 20L, 100L);
-        long total = Objects.requireNonNullElse(chatMessageRepository.countAdminMessagePage(conversationId, query), 0L);
-        if (total == 0L) {
-            return PageResult.<ChatAdminMessageVO>builder()
-                    .total(0L)
-                    .current(current)
-                    .size(size)
-                    .records(List.of())
-                    .build();
-        }
-        long offset = (current - 1) * size;
-        List<ChatAdminMessageItem> items = chatMessageRepository.selectAdminMessagePage(conversationId, query, offset, size);
-        Map<Long, SysUser> userMap = loadUsers(items.stream().map(ChatAdminMessageItem::getSenderId).collect(LinkedHashSet::new, Set::add, Set::addAll));
-        Map<Long, ChatReplyMessageVO> replySnapshots = loadAdminReplySnapshots(conversationId, collectReplyMessageIds(items));
-        List<ChatAdminMessageVO> records = items.stream().map(item -> buildMessageVO(item, userMap, replySnapshots)).toList();
-        return PageResult.<ChatAdminMessageVO>builder()
-                .total(total)
-                .current(current)
-                .size(size)
-                .records(records)
-                .build();
+        return chatAdminQueryService.pageMessages(conversationId, query);
     }
 
-    /**
-     * 查询指定消息的完整详情，含投递和已读统计。
-     */
     @Override
     public ChatAdminMessageDetailVO getMessageDetail(Long conversationId, Long messageId) {
-        requireConversation(conversationId);
-        ChatMessage message = requireMessage(conversationId, messageId);
-        List<ChatMessageRecipient> recipients = listMessageRecipients(messageId);
-        Map<Long, SysUser> userMap = loadUsers(Set.of(message.getSenderId()));
-        SysUser sender = userMap.get(message.getSenderId());
-        ChatAdminMessageDetailVO vo = new ChatAdminMessageDetailVO();
-        vo.setId(message.getId());
-        vo.setConversationId(message.getConversationId());
-        vo.setSenderId(message.getSenderId());
-        vo.setSenderUsername(sender != null ? sender.getUsername() : null);
-        vo.setSenderNickname(UserDisplayNameUtils.resolveDisplayName(sender, message.getSenderId()));
-        vo.setSenderAvatar(sender != null ? sender.getAvatar() : null);
-        vo.setMessageType(message.getMessageType());
-        vo.setContent(message.getContent());
-        vo.setFile(chatPayloadHelper.extractFilePayload(message.getPayloadJson()));
-        vo.setReplyMessageId(message.getReplyMessageId());
-        vo.setReply(resolveReplySnapshot(message.getReplyMessageId(), chatPayloadHelper.extractReplyPayload(message.getPayloadJson()), loadAdminReplySnapshot(conversationId, message.getReplyMessageId())));
-        vo.setClientMessageId(message.getClientMessageId());
-        vo.setSendStatus(message.getSendStatus());
-        vo.setRevokeStatus(message.getRevokeStatus());
-        vo.setRevokedBy(message.getRevokedBy());
-        vo.setRevokedAt(message.getRevokedAt());
-        vo.setTotalRecipientCount((long) recipients.size());
-        vo.setDeliveredRecipientCount(recipients.stream().filter(this::isDelivered).count());
-        vo.setReadRecipientCount(recipients.stream().filter(this::isRead).count());
-        vo.setEdited(chatPayloadHelper.isEdited(message.getMessageType(), message.getCreatedAt(), message.getUpdatedAt()));
-        vo.setUpdatedAt(message.getUpdatedAt());
-        vo.setCreatedAt(message.getCreatedAt());
-        return vo;
+        return chatAdminQueryService.getMessageDetail(conversationId, messageId);
     }
 
-    /**
-     * 分页查询指定消息的投递回执列表。
-     */
     @Override
     public PageResult<ChatAdminMessageReceiptVO> pageMessageReceipts(Long conversationId, Long messageId, ChatAdminMessageReceiptPageQuery query) {
-        requireConversation(conversationId);
-        requireMessage(conversationId, messageId);
-        ChatAdminMessageReceiptPageQuery safeQuery = query == null ? new ChatAdminMessageReceiptPageQuery() : query;
-        long current = PaginationUtils.normalizeCurrent(safeQuery.getCurrent());
-        long size = PaginationUtils.normalizeSize(safeQuery.getSize(), 20L, 100L);
-        Page<ChatMessageRecipient> page = chatMessageRecipientRepository.pageAdminReceipts(conversationId, messageId, safeQuery);
-        Map<Long, SysUser> userMap = loadUsers(page.getRecords().stream()
-                .map(ChatMessageRecipient::getRecipientUserId)
-                .collect(LinkedHashSet::new, Set::add, Set::addAll));
-        List<ChatAdminMessageReceiptVO> records = page.getRecords().stream()
-                .map(recipient -> buildReceiptVO(recipient, userMap))
-                .toList();
-        return PageResult.<ChatAdminMessageReceiptVO>builder()
-                .total(page.getTotal())
-                .current(current)
-                .size(size)
-                .records(records)
-                .build();
+        return chatAdminQueryService.pageMessageReceipts(conversationId, messageId, query);
     }
 
-    /**
-     * 修改群成员角色，若新角色为群主则自动进行群主转让。
-     *
-     * @param conversationId 目标会话 ID
-     * @param memberUserId   被操作成员的用户 ID
-     * @param request        包含新角色信息
-     * @return 更新后的成员列表
-     */
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public List<ChatMemberVO> updateMemberRole(Long conversationId, Long memberUserId, ChatAdminMemberRoleUpdateRequest request) {
-        ChatConversation conversation = requireManageableGroupConversation(conversationId);
-        ChatConversationMember member = requireMember(conversationId, memberUserId);
-        String role = normalizeRole(request);
-        if (Objects.equals(role, ChatConstants.MEMBER_ROLE_OWNER)) {
-            ChatConversationMember currentOwner = findOwnerMember(conversationId);
-            if (currentOwner != null && !Objects.equals(currentOwner.getUserId(), memberUserId)) {
-                currentOwner.setMemberRole(ChatConstants.MEMBER_ROLE_ADMIN);
-                chatConversationMemberRepository.updateById(currentOwner);
-            }
-            conversation.setOwnerId(memberUserId);
-            chatConversationRepository.updateById(conversation);
-        } else if (Objects.equals(member.getMemberRole(), ChatConstants.MEMBER_ROLE_OWNER) && conversation.getOwnerId() != null
-                && !Objects.equals(conversation.getOwnerId(), memberUserId)) {
-            conversation.setOwnerId(null);
-            chatConversationRepository.updateById(conversation);
-        } else if (!Objects.equals(role, ChatConstants.MEMBER_ROLE_OWNER) && Objects.equals(conversation.getOwnerId(), memberUserId)) {
-            conversation.setOwnerId(null);
-            chatConversationRepository.updateById(conversation);
-        }
-        member.setMemberRole(role);
-        chatConversationMemberRepository.updateById(member);
-        List<ChatConversationMember> activeMembers = listActiveMembers(conversationId);
-        List<ChatMemberVO> records = buildMemberRecords(activeMembers);
-        List<Long> activeUserIds = activeUserIds(activeMembers);
-        chatPushService.pushMembersUpdated(chatPushPayloadBuilder.buildMembersUpdatedPayload("admin_member_role_updated", conversationId, memberUserId, records), activeUserIds);
-        chatPushService.pushConversationUpdated(chatPushPayloadBuilder.buildConversationUpdatedPayload("admin_member_role_updated", conversation, activeMembers), activeUserIds);
-        return records;
+        return chatAdminGovernanceService.updateMemberRole(conversationId, memberUserId, request);
     }
 
-    /**
-     * 修改群成员状态（正常、退出、移除、禁用），状态变更后同步清空禁言时间。
-     *
-     * @param conversationId 目标会话 ID
-     * @param memberUserId   被操作成员的用户 ID
-     * @param request        包含目标状态信息
-     * @return 更新后的成员列表
-     */
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public List<ChatMemberVO> updateMemberStatus(Long conversationId, Long memberUserId, ChatAdminMemberStatusUpdateRequest request) {
-        requireManageableGroupConversation(conversationId);
-        ChatConversationMember member = requireMember(conversationId, memberUserId);
-        List<Long> notifyUserIds = new ArrayList<>(activeUserIds(listActiveMembers(conversationId)));
-        if (member.getUserId() != null && !notifyUserIds.contains(member.getUserId())) {
-            notifyUserIds.add(member.getUserId());
-        }
-        Integer status = request == null ? null : request.getStatus();
-        validateMemberStatus(status);
-        member.setStatus(status);
-        if (!Objects.equals(status, ChatConstants.MEMBER_STATUS_NORMAL)) {
-            member.setMuteUntil(null);
-        }
-        if (Objects.equals(status, ChatConstants.MEMBER_STATUS_NORMAL) && member.getJoinedAt() == null) {
-            member.setJoinedAt(LocalDateTime.now());
-        }
-        chatConversationMemberRepository.updateById(member);
-        List<ChatConversationMember> activeMembers = listActiveMembers(conversationId);
-        List<ChatMemberVO> records = buildMemberRecords(activeMembers);
-        chatPushService.pushMembersUpdated(chatPushPayloadBuilder.buildMembersUpdatedPayload("admin_member_status_updated", conversationId, memberUserId, records), notifyUserIds);
-        return records;
+        return chatAdminGovernanceService.updateMemberStatus(conversationId, memberUserId, request);
     }
 
-    /**
-     * 设置或清除群成员的禁言截止时间。
-     *
-     * @param conversationId 目标会话 ID
-     * @param memberUserId   被操作成员的用户 ID
-     * @param request        包含禁言截止时间，null 或已过去的时间视为解除禁言
-     * @return 更新后的成员列表
-     */
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public List<ChatMemberVO> updateMemberMute(Long conversationId, Long memberUserId, ChatAdminMemberMuteUpdateRequest request) {
-        requireManageableGroupConversation(conversationId);
-        ChatConversationMember member = requireMember(conversationId, memberUserId);
-        LocalDateTime muteUntil = request == null ? null : request.getMuteUntil();
-        member.setMuteUntil(muteUntil != null && muteUntil.isAfter(LocalDateTime.now()) ? muteUntil : null);
-        chatConversationMemberRepository.updateById(member);
-        List<ChatConversationMember> activeMembers = listActiveMembers(conversationId);
-        List<ChatMemberVO> records = buildMemberRecords(activeMembers);
-        chatPushService.pushMembersUpdated(chatPushPayloadBuilder.buildMembersUpdatedPayload("admin_member_mute_updated", conversationId, memberUserId, records), activeUserIds(activeMembers));
-        return records;
+        return chatAdminGovernanceService.updateMemberMute(conversationId, memberUserId, request);
     }
 
-    /**
-     * 后台强制撤回指定消息，同时释放关联的文件业务引用。
-     */
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void revokeMessage(Long conversationId, Long messageId) {
-        requireConversation(conversationId);
-        ChatMessage message = requireMessage(conversationId, messageId);
-        if (Objects.equals(message.getRevokeStatus(), ChatConstants.REVOKE_STATUS_REVOKED)) {
-            return;
-        }
-        LocalDateTime now = LocalDateTime.now();
-        message.setRevokeStatus(ChatConstants.REVOKE_STATUS_REVOKED);
-        message.setRevokedBy(0L);
-        message.setRevokedAt(now);
-        message.setContent(ChatConstants.MESSAGE_REVOKED_PLACEHOLDER);
-        message.setPayloadJson(null);
-        chatMessageRepository.updateById(message);
-        releaseFileReferencesForMessage(message);
-        chatPushService.pushMessageRevoked(buildMessagePushVO(message), activeUserIds(listActiveMembers(conversationId)));
+        chatAdminGovernanceService.revokeMessage(conversationId, messageId);
     }
 
-    /**
-     * 更新会话状态（正常或禁用），状态相同时跳过写入。
-     *
-     * @param conversationId 目标会话 ID
-     * @param status         目标状态，仅支持正常和禁用
-     */
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void updateConversationStatus(Long conversationId, Integer status) {
-        validateConversationStatus(status);
-        ChatConversation conversation = requireConversation(conversationId);
-        if (Objects.equals(conversation.getStatus(), status)) {
-            return;
-        }
-        conversation.setStatus(status);
-        chatConversationRepository.updateById(conversation);
-        chatPushService.pushConversationUpdated(chatPushPayloadBuilder.buildConversationUpdatedPayload("admin_conversation_status_updated", conversation, listActiveMembers(conversationId)),
-                activeUserIds(listActiveMembers(conversationId)));
-    }
-
-    /**
-     * 统一装配后台会话分页记录，补齐单聊名称、群主信息和最后一条消息摘要。
-     */
-    private List<ChatAdminConversationVO> buildConversationRecords(List<ChatAdminConversationListItem> items) {
-        if (items == null || items.isEmpty()) {
-            return List.of();
-        }
-        Map<Long, List<ChatConversationMember>> membersByConversation = listMembersByConversationIds(items.stream().map(ChatAdminConversationListItem::getId).toList());
-        Set<Long> userIds = new LinkedHashSet<>();
-        for (ChatAdminConversationListItem item : items) {
-            if (item.getOwnerId() != null) {
-                userIds.add(item.getOwnerId());
-            }
-            if (item.getLastMessageSenderId() != null) {
-                userIds.add(item.getLastMessageSenderId());
-            }
-            for (ChatConversationMember member : membersByConversation.getOrDefault(item.getId(), List.of())) {
-                userIds.add(member.getUserId());
-            }
-        }
-        Map<Long, SysUser> userMap = loadUsers(userIds);
-        List<ChatAdminConversationVO> records = new ArrayList<>();
-        for (ChatAdminConversationListItem item : items) {
-            records.add(buildConversationVO(item, membersByConversation.getOrDefault(item.getId(), List.of()), userMap));
-        }
-        return records;
-    }
-
-    private ChatAdminConversationVO buildConversationVO(ChatAdminConversationListItem item,
-                                                        List<ChatConversationMember> members) {
-        Set<Long> userIds = new LinkedHashSet<>();
-        if (item.getOwnerId() != null) {
-            userIds.add(item.getOwnerId());
-        }
-        if (item.getLastMessageSenderId() != null) {
-            userIds.add(item.getLastMessageSenderId());
-        }
-        members.forEach(member -> userIds.add(member.getUserId()));
-        return buildConversationVO(item, members, loadUsers(userIds));
-    }
-
-    private ChatAdminConversationVO buildConversationVO(ChatAdminConversationListItem item,
-                                                        List<ChatConversationMember> members,
-                                                        Map<Long, SysUser> userMap) {
-        ChatAdminConversationVO vo = chatModelMapper.toAdminConversationVO(item);
-        vo.setMemberCount(Objects.requireNonNullElse(item.getMemberCount(), 0L));
-        SysUser owner = userMap.get(item.getOwnerId());
-        vo.setOwnerUsername(owner != null ? owner.getUsername() : null);
-        vo.setOwnerNickname(owner != null ? owner.getNickname() : null);
-        if (item.getLastMessageId() != null) {
-            ChatConversationLastMessageVO lastMessage = chatModelMapper.toConversationLastMessageVO(item);
-            SysUser sender = userMap.get(item.getLastMessageSenderId());
-            lastMessage.setSenderNickname(UserDisplayNameUtils.resolveDisplayName(sender, item.getLastMessageSenderId()));
-            vo.setLastMessage(lastMessage);
-        }
-        if (Objects.equals(item.getConversationType(), ChatConstants.CONVERSATION_TYPE_SINGLE) && !StrUtils.hasText(vo.getName())) {
-            vo.setName(buildSingleConversationName(members, userMap));
-        }
-        return vo;
-    }
-
-    private ChatAdminMessageVO buildMessageVO(ChatAdminMessageItem item,
-                                              Map<Long, SysUser> userMap,
-                                              Map<Long, ChatReplyMessageVO> replySnapshots) {
-        ChatAdminMessageVO vo = chatModelMapper.toAdminMessageVO(item);
-        SysUser sender = userMap.get(item.getSenderId());
-        vo.setSenderUsername(sender != null ? sender.getUsername() : null);
-        vo.setSenderNickname(UserDisplayNameUtils.resolveDisplayName(sender, item.getSenderId()));
-        vo.setSenderAvatar(sender != null ? sender.getAvatar() : null);
-        vo.setFile(chatPayloadHelper.extractFilePayload(item.getPayloadJson()));
-        vo.setReplyMessageId(item.getReplyMessageId());
-        vo.setReply(resolveReplySnapshot(item.getReplyMessageId(),
-                chatPayloadHelper.extractReplyPayload(item.getPayloadJson()),
-                item.getReplyMessageId() == null ? null : replySnapshots.get(item.getReplyMessageId())));
-        vo.setEdited(chatPayloadHelper.isEdited(item.getMessageType(), item.getCreatedAt(), item.getUpdatedAt()));
-        return vo;
-    }
-
-    private ChatAdminMessageReceiptVO buildReceiptVO(ChatMessageRecipient recipient, Map<Long, SysUser> userMap) {
-        ChatAdminMessageReceiptVO vo = new ChatAdminMessageReceiptVO();
-        vo.setId(recipient.getId());
-        vo.setMessageId(recipient.getMessageId());
-        vo.setConversationId(recipient.getConversationId());
-        vo.setRecipientUserId(recipient.getRecipientUserId());
-        SysUser recipientUser = userMap.get(recipient.getRecipientUserId());
-        vo.setRecipientUsername(recipientUser != null ? recipientUser.getUsername() : null);
-        vo.setRecipientNickname(UserDisplayNameUtils.resolveDisplayName(recipientUser, recipient.getRecipientUserId()));
-        vo.setRecipientAvatar(recipientUser != null ? recipientUser.getAvatar() : null);
-        vo.setReceiveType(recipient.getReceiveType());
-        vo.setDeliveryStatus(recipient.getDeliveryStatus());
-        vo.setDeliveredAt(recipient.getDeliveredAt());
-        vo.setReadAt(recipient.getReadAt());
-        vo.setVisibleStatus(recipient.getVisibleStatus());
-        vo.setCreatedAt(recipient.getCreatedAt());
-        return vo;
-    }
-
-    private List<ChatMemberVO> buildMemberRecords(List<ChatConversationMember> members) {
-        if (members == null || members.isEmpty()) {
-            return List.of();
-        }
-        Map<Long, SysUser> userMap = loadUsers(members.stream().map(ChatConversationMember::getUserId).collect(LinkedHashSet::new, Set::add, Set::addAll));
-        List<ChatMemberVO> records = new ArrayList<>();
-        members.stream()
-                .sorted(Comparator.comparingInt(chatMemberHelper::memberRoleOrder)
-                        .thenComparing(ChatConversationMember::getStatus)
-                        .thenComparing(ChatConversationMember::getJoinedAt, Comparator.nullsLast(LocalDateTime::compareTo))
-                        .thenComparing(ChatConversationMember::getUserId))
-                .forEach(member -> {
-                    ChatMemberVO vo = chatModelMapper.toMemberVO(member);
-                    SysUser user = userMap.get(member.getUserId());
-                    vo.setUserId(member.getUserId());
-                    vo.setUsername(user != null ? user.getUsername() : null);
-                    vo.setNickname(user != null ? user.getNickname() : null);
-                    vo.setAvatar(user != null ? user.getAvatar() : null);
-                    records.add(vo);
-                });
-        return records;
-    }
-
-    /**
-     * 单聊会话在主表通常没有固定名称，后台列表按成员展示名拼出可读标题。
-     */
-    private String buildSingleConversationName(List<ChatConversationMember> members, Map<Long, SysUser> userMap) {
-        List<String> names = members.stream()
-                .map(ChatConversationMember::getUserId)
-                .distinct()
-                .map(userId -> UserDisplayNameUtils.resolveDisplayName(userMap.get(userId), userId))
-                .filter(StrUtils::hasText)
-                .limit(2)
-                .toList();
-        if (names.isEmpty()) {
-            return null;
-        }
-        return String.join(" / ", names);
-    }
-
-    private Map<Long, List<ChatConversationMember>> listMembersByConversationIds(Collection<Long> conversationIds) {
-        if (conversationIds == null || conversationIds.isEmpty()) {
-            return Map.of();
-        }
-        List<ChatConversationMember> members = chatConversationMemberRepository.listByConversationIds(conversationIds);
-        Map<Long, List<ChatConversationMember>> result = new HashMap<>();
-        for (ChatConversationMember member : members) {
-            result.computeIfAbsent(member.getConversationId(), key -> new ArrayList<>()).add(member);
-        }
-        return result;
-    }
-
-    private List<ChatConversationMember> listConversationMembers(Long conversationId) {
-        return chatConversationMemberRepository.listByConversationId(conversationId);
-    }
-
-    private List<ChatConversationMember> listActiveMembers(Long conversationId) {
-        return chatConversationMemberRepository.listActiveByConversationId(conversationId);
-    }
-
-    private Map<Long, SysUser> loadUsers(Collection<Long> userIds) {
-        if (userIds == null || userIds.isEmpty()) {
-            return Map.of();
-        }
-        Map<Long, SysUser> userMap = new HashMap<>();
-        sysUserRepository.listByIds(userIds).forEach(user -> userMap.put(user.getId(), user));
-        return userMap;
-    }
-
-    private ChatConversation requireConversation(Long conversationId) {
-        ExceptionThrowerCore.throwBusinessIfNull(conversationId, ResultErrorCode.ILLEGAL_ARGUMENT, "会话ID不能为空");
-        ChatConversation conversation = chatConversationRepository.getById(conversationId);
-        ExceptionThrowerCore.throwBusinessIfNull(conversation, ResultErrorCode.ILLEGAL_ARGUMENT, "会话不存在");
-        return conversation;
-    }
-
-    private ChatConversation requireManageableGroupConversation(Long conversationId) {
-        ChatConversation conversation = requireConversation(conversationId);
-        ExceptionThrowerCore.throwBusinessIf(!Objects.equals(conversation.getConversationType(), ChatConstants.CONVERSATION_TYPE_GROUP)
-                        || Objects.equals(conversation.getIsAllSite(), 1),
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "后台成员治理仅支持普通群聊会话");
-        return conversation;
-    }
-
-    private ChatMessage requireMessage(Long conversationId, Long messageId) {
-        ExceptionThrowerCore.throwBusinessIfNull(messageId, ResultErrorCode.ILLEGAL_ARGUMENT, "消息ID不能为空");
-        ChatMessage message = chatMessageRepository.getById(messageId);
-        ExceptionThrowerCore.throwBusinessIf(message == null || !Objects.equals(message.getConversationId(), conversationId), ResultErrorCode.ILLEGAL_ARGUMENT, "消息不存在");
-        return message;
-    }
-
-    private ChatConversationMember requireMember(Long conversationId, Long memberUserId) {
-        ExceptionThrowerCore.throwBusinessIfNull(memberUserId, ResultErrorCode.ILLEGAL_ARGUMENT, "成员用户ID不能为空");
-        ChatConversationMember member = chatConversationMemberRepository.findByConversationAndUser(conversationId, memberUserId);
-        ExceptionThrowerCore.throwBusinessIfNull(member, ResultErrorCode.ILLEGAL_ARGUMENT, "成员不存在");
-        return member;
-    }
-
-    private ChatConversationMember findOwnerMember(Long conversationId) {
-        return chatConversationMemberRepository.findOwnerByConversationId(conversationId);
-    }
-
-    private List<ChatMessageRecipient> listMessageRecipients(Long messageId) {
-        return chatMessageRecipientRepository.listByMessageId(messageId);
-    }
-
-    private String normalizeRole(ChatAdminMemberRoleUpdateRequest request) {
-        String role = request == null ? null : StrUtils.trimToNull(request.getRole());
-        ExceptionThrowerCore.throwBusinessIf(!Objects.equals(role, ChatConstants.MEMBER_ROLE_OWNER)
-                        && !Objects.equals(role, ChatConstants.MEMBER_ROLE_ADMIN)
-                        && !Objects.equals(role, ChatConstants.MEMBER_ROLE_MEMBER),
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "成员角色不合法");
-        return role;
-    }
-
-    private void validateMemberStatus(Integer status) {
-        ExceptionThrowerCore.throwBusinessIf(!Objects.equals(status, ChatConstants.MEMBER_STATUS_LEFT)
-                        && !Objects.equals(status, ChatConstants.MEMBER_STATUS_NORMAL)
-                        && !Objects.equals(status, ChatConstants.MEMBER_STATUS_REMOVED)
-                        && !Objects.equals(status, ChatConstants.MEMBER_STATUS_DISABLED),
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "成员状态不合法");
-    }
-
-    private void validateConversationStatus(Integer status) {
-        ExceptionThrowerCore.throwBusinessIf(!Objects.equals(status, ChatConstants.CONVERSATION_STATUS_DISABLED)
-                && !Objects.equals(status, ChatConstants.CONVERSATION_STATUS_NORMAL), ResultErrorCode.ILLEGAL_ARGUMENT, "后台只支持将会话状态更新为禁用或正常");
-    }
-
-    private void releaseFileReferencesForMessage(ChatMessage message) {
-        if (message == null || !chatPayloadHelper.isAttachmentMessageType(message.getMessageType())) {
-            return;
-        }
-        fileChatFacadeService.releaseReferences(ChatConstants.FILE_MESSAGE_REFERENCE_TYPE, message.getId());
-    }
-
-    private boolean isDelivered(ChatMessageRecipient recipient) {
-        return recipient.getDeliveryStatus() != null && recipient.getDeliveryStatus() >= ChatConstants.DELIVERY_STATUS_DELIVERED;
-    }
-
-    private boolean isRead(ChatMessageRecipient recipient) {
-        return recipient.getDeliveryStatus() != null && recipient.getDeliveryStatus() >= ChatConstants.DELIVERY_STATUS_READ;
-    }
-
-    private List<Long> activeUserIds(List<ChatConversationMember> members) {
-        if (members == null || members.isEmpty()) {
-            return List.of();
-        }
-        return members.stream().map(ChatConversationMember::getUserId).distinct().toList();
-    }
-
-    private ChatMessageVO buildMessagePushVO(ChatMessage message) {
-        ChatMessageVO vo = new ChatMessageVO();
-        vo.setId(message.getId());
-        vo.setConversationId(message.getConversationId());
-        vo.setSenderId(message.getSenderId());
-        vo.setMessageType(message.getMessageType());
-        vo.setContent(message.getContent());
-        vo.setFile(chatPayloadHelper.extractFilePayload(message.getPayloadJson()));
-        vo.setReplyMessageId(message.getReplyMessageId());
-        vo.setReply(resolveReplySnapshot(message.getReplyMessageId(), chatPayloadHelper.extractReplyPayload(message.getPayloadJson()), loadAdminReplySnapshot(message.getConversationId(), message.getReplyMessageId())));
-        SysUser sender = loadUsers(Set.of(message.getSenderId())).get(message.getSenderId());
-        vo.setSenderUsername(sender != null ? sender.getUsername() : null);
-        vo.setSenderNickname(UserDisplayNameUtils.resolveDisplayName(sender, message.getSenderId()));
-        vo.setSenderAvatar(sender != null ? sender.getAvatar() : null);
-        vo.setRevoked(Objects.equals(message.getRevokeStatus(), ChatConstants.REVOKE_STATUS_REVOKED));
-        vo.setEdited(chatPayloadHelper.isEdited(message.getMessageType(), message.getCreatedAt(), message.getUpdatedAt()));
-        vo.setUpdatedAt(message.getUpdatedAt());
-        vo.setCreatedAt(message.getCreatedAt());
-        return vo;
-    }
-
-    private Map<Long, ChatReplyMessageVO> loadAdminReplySnapshots(Long conversationId, Collection<Long> replyMessageIds) {
-        List<Long> ids = replyMessageIds == null ? List.of() : replyMessageIds.stream().filter(Objects::nonNull).distinct().toList();
-        if (ids.isEmpty()) {
-            return Map.of();
-        }
-        List<ChatAdminMessageItem> replyItems = Objects.requireNonNullElse(
-                chatMessageRepository.selectAdminMessagesByIds(conversationId, ids),
-                List.of()
-        );
-        Map<Long, SysUser> userMap = loadUsers(replyItems.stream().map(ChatAdminMessageItem::getSenderId).collect(LinkedHashSet::new, Set::add, Set::addAll));
-        Map<Long, ChatReplyMessageVO> result = new LinkedHashMap<>();
-        for (ChatAdminMessageItem replyItem : replyItems) {
-            result.put(replyItem.getId(), buildReplySnapshot(replyItem, userMap));
-        }
-        for (Long id : ids) {
-            result.putIfAbsent(id, chatPayloadHelper.buildUnavailableReplySnapshot(id));
-        }
-        return result;
-    }
-
-    private ChatReplyMessageVO loadAdminReplySnapshot(Long conversationId, Long replyMessageId) {
-        if (replyMessageId == null) {
-            return null;
-        }
-        return loadAdminReplySnapshots(conversationId, List.of(replyMessageId)).get(replyMessageId);
-    }
-
-    private ChatReplyMessageVO buildReplySnapshot(ChatAdminMessageItem item, Map<Long, SysUser> userMap) {
-        ChatReplyMessageVO reply = new ChatReplyMessageVO();
-        reply.setId(item.getId());
-        reply.setSenderId(item.getSenderId());
-        SysUser sender = userMap.get(item.getSenderId());
-        reply.setSenderUsername(sender != null ? sender.getUsername() : null);
-        reply.setSenderNickname(UserDisplayNameUtils.resolveDisplayName(sender, item.getSenderId()));
-        reply.setSenderAvatar(sender != null ? sender.getAvatar() : null);
-        reply.setMessageType(item.getMessageType());
-        reply.setReplyToMessageId(item.getReplyMessageId());
-        reply.setContent(item.getContent());
-        reply.setFile(chatPayloadHelper.extractFilePayload(item.getPayloadJson()));
-        boolean revoked = Objects.equals(item.getRevokeStatus(), ChatConstants.REVOKE_STATUS_REVOKED);
-        reply.setRevoked(revoked);
-        reply.setDeleted(false);
-        reply.setState(revoked ? ChatConstants.REPLY_STATE_REVOKED : ChatConstants.REPLY_STATE_NORMAL);
-        reply.setCreatedAt(item.getCreatedAt());
-        return reply;
-    }
-
-    private ChatReplyMessageVO resolveReplySnapshot(Long replyMessageId,
-                                                    ChatReplyMessageVO payloadReply,
-                                                    ChatReplyMessageVO fallbackReply) {
-        if (replyMessageId == null) {
-            return null;
-        }
-        if (fallbackReply != null && !Boolean.TRUE.equals(fallbackReply.getDeleted())) {
-            return fallbackReply;
-        }
-        if (payloadReply != null) {
-            return payloadReply;
-        }
-        return fallbackReply != null ? fallbackReply : chatPayloadHelper.buildUnavailableReplySnapshot(replyMessageId);
-    }
-
-    private List<Long> collectReplyMessageIds(Collection<ChatAdminMessageItem> items) {
-        if (items == null || items.isEmpty()) {
-            return List.of();
-        }
-        return items.stream()
-                .map(ChatAdminMessageItem::getReplyMessageId)
-                .filter(Objects::nonNull)
-                .distinct()
-                .toList();
+        chatAdminGovernanceService.updateConversationStatus(conversationId, status);
     }
 }
