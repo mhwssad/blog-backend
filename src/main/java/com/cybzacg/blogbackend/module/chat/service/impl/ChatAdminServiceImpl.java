@@ -8,27 +8,26 @@ import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.chat.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.convert.ChatModelMapper;
 import com.cybzacg.blogbackend.module.chat.model.admin.*;
-import com.cybzacg.blogbackend.module.chat.model.common.ChatFilePayloadVO;
-import com.cybzacg.blogbackend.module.chat.model.common.ChatMessagePayloadVO;
 import com.cybzacg.blogbackend.module.chat.model.common.ChatReplyMessageVO;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatAdminConversationListItem;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatAdminMessageItem;
 import com.cybzacg.blogbackend.module.chat.model.user.ChatConversationLastMessageVO;
 import com.cybzacg.blogbackend.module.chat.model.user.ChatMemberVO;
 import com.cybzacg.blogbackend.module.chat.model.user.ChatMessageVO;
-import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsConversationUpdatedPayload;
-import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsMembersUpdatedPayload;
 import com.cybzacg.blogbackend.module.chat.repository.ChatConversationMemberRepository;
 import com.cybzacg.blogbackend.module.chat.repository.ChatConversationRepository;
 import com.cybzacg.blogbackend.module.chat.repository.ChatMessageRecipientRepository;
 import com.cybzacg.blogbackend.module.chat.repository.ChatMessageRepository;
 import com.cybzacg.blogbackend.module.chat.service.ChatAdminService;
 import com.cybzacg.blogbackend.module.chat.service.ChatPushService;
+import com.cybzacg.blogbackend.module.chat.support.ChatMemberHelper;
+import com.cybzacg.blogbackend.module.chat.support.ChatPayloadHelper;
+import com.cybzacg.blogbackend.module.chat.support.ChatPushPayloadBuilder;
 import com.cybzacg.blogbackend.module.file.service.FileChatFacadeService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
-import com.cybzacg.blogbackend.utils.JsonUtils;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
+import com.cybzacg.blogbackend.utils.UserDisplayNameUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,6 +51,9 @@ public class ChatAdminServiceImpl implements ChatAdminService {
     private final ChatModelMapper chatModelMapper;
     private final ChatPushService chatPushService;
     private final FileChatFacadeService fileChatFacadeService;
+    private final ChatPayloadHelper chatPayloadHelper;
+    private final ChatPushPayloadBuilder chatPushPayloadBuilder;
+    private final ChatMemberHelper chatMemberHelper;
 
     /**
      * 分页查询后台会话列表。
@@ -144,13 +146,13 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         vo.setConversationId(message.getConversationId());
         vo.setSenderId(message.getSenderId());
         vo.setSenderUsername(sender != null ? sender.getUsername() : null);
-        vo.setSenderNickname(displayName(sender, message.getSenderId()));
+        vo.setSenderNickname(UserDisplayNameUtils.resolveDisplayName(sender, message.getSenderId()));
         vo.setSenderAvatar(sender != null ? sender.getAvatar() : null);
         vo.setMessageType(message.getMessageType());
         vo.setContent(message.getContent());
-        vo.setFile(extractFilePayload(message.getPayloadJson()));
+        vo.setFile(chatPayloadHelper.extractFilePayload(message.getPayloadJson()));
         vo.setReplyMessageId(message.getReplyMessageId());
-        vo.setReply(resolveReplySnapshot(message.getReplyMessageId(), extractReplyPayload(message.getPayloadJson()), loadAdminReplySnapshot(conversationId, message.getReplyMessageId())));
+        vo.setReply(resolveReplySnapshot(message.getReplyMessageId(), chatPayloadHelper.extractReplyPayload(message.getPayloadJson()), loadAdminReplySnapshot(conversationId, message.getReplyMessageId())));
         vo.setClientMessageId(message.getClientMessageId());
         vo.setSendStatus(message.getSendStatus());
         vo.setRevokeStatus(message.getRevokeStatus());
@@ -159,7 +161,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         vo.setTotalRecipientCount((long) recipients.size());
         vo.setDeliveredRecipientCount(recipients.stream().filter(this::isDelivered).count());
         vo.setReadRecipientCount(recipients.stream().filter(this::isRead).count());
-        vo.setEdited(isEdited(message.getMessageType(), message.getCreatedAt(), message.getUpdatedAt()));
+        vo.setEdited(chatPayloadHelper.isEdited(message.getMessageType(), message.getCreatedAt(), message.getUpdatedAt()));
         vo.setUpdatedAt(message.getUpdatedAt());
         vo.setCreatedAt(message.getCreatedAt());
         return vo;
@@ -225,8 +227,8 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         List<ChatConversationMember> activeMembers = listActiveMembers(conversationId);
         List<ChatMemberVO> records = buildMemberRecords(activeMembers);
         List<Long> activeUserIds = activeUserIds(activeMembers);
-        chatPushService.pushMembersUpdated(buildMembersUpdatedPayload("admin_member_role_updated", conversationId, memberUserId, records), activeUserIds);
-        chatPushService.pushConversationUpdated(buildConversationUpdatedPayload("admin_member_role_updated", conversation, activeMembers), activeUserIds);
+        chatPushService.pushMembersUpdated(chatPushPayloadBuilder.buildMembersUpdatedPayload("admin_member_role_updated", conversationId, memberUserId, records), activeUserIds);
+        chatPushService.pushConversationUpdated(chatPushPayloadBuilder.buildConversationUpdatedPayload("admin_member_role_updated", conversation, activeMembers), activeUserIds);
         return records;
     }
 
@@ -259,7 +261,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         chatConversationMemberRepository.updateById(member);
         List<ChatConversationMember> activeMembers = listActiveMembers(conversationId);
         List<ChatMemberVO> records = buildMemberRecords(activeMembers);
-        chatPushService.pushMembersUpdated(buildMembersUpdatedPayload("admin_member_status_updated", conversationId, memberUserId, records), notifyUserIds);
+        chatPushService.pushMembersUpdated(chatPushPayloadBuilder.buildMembersUpdatedPayload("admin_member_status_updated", conversationId, memberUserId, records), notifyUserIds);
         return records;
     }
 
@@ -281,7 +283,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         chatConversationMemberRepository.updateById(member);
         List<ChatConversationMember> activeMembers = listActiveMembers(conversationId);
         List<ChatMemberVO> records = buildMemberRecords(activeMembers);
-        chatPushService.pushMembersUpdated(buildMembersUpdatedPayload("admin_member_mute_updated", conversationId, memberUserId, records), activeUserIds(activeMembers));
+        chatPushService.pushMembersUpdated(chatPushPayloadBuilder.buildMembersUpdatedPayload("admin_member_mute_updated", conversationId, memberUserId, records), activeUserIds(activeMembers));
         return records;
     }
 
@@ -323,7 +325,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         }
         conversation.setStatus(status);
         chatConversationRepository.updateById(conversation);
-        chatPushService.pushConversationUpdated(buildConversationUpdatedPayload("admin_conversation_status_updated", conversation, listActiveMembers(conversationId)),
+        chatPushService.pushConversationUpdated(chatPushPayloadBuilder.buildConversationUpdatedPayload("admin_conversation_status_updated", conversation, listActiveMembers(conversationId)),
                 activeUserIds(listActiveMembers(conversationId)));
     }
 
@@ -379,7 +381,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         if (item.getLastMessageId() != null) {
             ChatConversationLastMessageVO lastMessage = chatModelMapper.toConversationLastMessageVO(item);
             SysUser sender = userMap.get(item.getLastMessageSenderId());
-            lastMessage.setSenderNickname(displayName(sender, item.getLastMessageSenderId()));
+            lastMessage.setSenderNickname(UserDisplayNameUtils.resolveDisplayName(sender, item.getLastMessageSenderId()));
             vo.setLastMessage(lastMessage);
         }
         if (Objects.equals(item.getConversationType(), ChatConstants.CONVERSATION_TYPE_SINGLE) && !StrUtils.hasText(vo.getName())) {
@@ -394,14 +396,14 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         ChatAdminMessageVO vo = chatModelMapper.toAdminMessageVO(item);
         SysUser sender = userMap.get(item.getSenderId());
         vo.setSenderUsername(sender != null ? sender.getUsername() : null);
-        vo.setSenderNickname(displayName(sender, item.getSenderId()));
+        vo.setSenderNickname(UserDisplayNameUtils.resolveDisplayName(sender, item.getSenderId()));
         vo.setSenderAvatar(sender != null ? sender.getAvatar() : null);
-        vo.setFile(extractFilePayload(item.getPayloadJson()));
+        vo.setFile(chatPayloadHelper.extractFilePayload(item.getPayloadJson()));
         vo.setReplyMessageId(item.getReplyMessageId());
         vo.setReply(resolveReplySnapshot(item.getReplyMessageId(),
-                extractReplyPayload(item.getPayloadJson()),
+                chatPayloadHelper.extractReplyPayload(item.getPayloadJson()),
                 item.getReplyMessageId() == null ? null : replySnapshots.get(item.getReplyMessageId())));
-        vo.setEdited(isEdited(item.getMessageType(), item.getCreatedAt(), item.getUpdatedAt()));
+        vo.setEdited(chatPayloadHelper.isEdited(item.getMessageType(), item.getCreatedAt(), item.getUpdatedAt()));
         return vo;
     }
 
@@ -413,7 +415,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         vo.setRecipientUserId(recipient.getRecipientUserId());
         SysUser recipientUser = userMap.get(recipient.getRecipientUserId());
         vo.setRecipientUsername(recipientUser != null ? recipientUser.getUsername() : null);
-        vo.setRecipientNickname(displayName(recipientUser, recipient.getRecipientUserId()));
+        vo.setRecipientNickname(UserDisplayNameUtils.resolveDisplayName(recipientUser, recipient.getRecipientUserId()));
         vo.setRecipientAvatar(recipientUser != null ? recipientUser.getAvatar() : null);
         vo.setReceiveType(recipient.getReceiveType());
         vo.setDeliveryStatus(recipient.getDeliveryStatus());
@@ -431,7 +433,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         Map<Long, SysUser> userMap = loadUsers(members.stream().map(ChatConversationMember::getUserId).collect(LinkedHashSet::new, Set::add, Set::addAll));
         List<ChatMemberVO> records = new ArrayList<>();
         members.stream()
-                .sorted(Comparator.comparingInt(this::memberRoleOrder)
+                .sorted(Comparator.comparingInt(chatMemberHelper::memberRoleOrder)
                         .thenComparing(ChatConversationMember::getStatus)
                         .thenComparing(ChatConversationMember::getJoinedAt, Comparator.nullsLast(LocalDateTime::compareTo))
                         .thenComparing(ChatConversationMember::getUserId))
@@ -454,7 +456,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         List<String> names = members.stream()
                 .map(ChatConversationMember::getUserId)
                 .distinct()
-                .map(userId -> displayName(userMap.get(userId), userId))
+                .map(userId -> UserDisplayNameUtils.resolveDisplayName(userMap.get(userId), userId))
                 .filter(StrUtils::hasText)
                 .limit(2)
                 .toList();
@@ -556,41 +558,10 @@ public class ChatAdminServiceImpl implements ChatAdminService {
     }
 
     private void releaseFileReferencesForMessage(ChatMessage message) {
-        if (message == null || !isAttachmentMessageType(message.getMessageType())) {
+        if (message == null || !chatPayloadHelper.isAttachmentMessageType(message.getMessageType())) {
             return;
         }
         fileChatFacadeService.releaseReferences(ChatConstants.FILE_MESSAGE_REFERENCE_TYPE, message.getId());
-    }
-
-    private ChatMessagePayloadVO parseMessagePayload(String payloadJson) {
-        if (!StrUtils.hasText(payloadJson)) {
-            return null;
-        }
-        try {
-            ChatMessagePayloadVO payload = JsonUtils.fromJson(payloadJson, ChatMessagePayloadVO.class);
-            if (payload != null && (payload.getFile() != null || payload.getReply() != null)) {
-                return payload;
-            }
-            ChatFilePayloadVO legacyFilePayload = JsonUtils.fromJson(payloadJson, ChatFilePayloadVO.class);
-            if (hasFilePayloadContent(legacyFilePayload)) {
-                ChatMessagePayloadVO legacyPayload = new ChatMessagePayloadVO();
-                legacyPayload.setFile(legacyFilePayload);
-                return legacyPayload;
-            }
-        } catch (RuntimeException ex) {
-            return null;
-        }
-        return null;
-    }
-
-    private ChatFilePayloadVO extractFilePayload(String payloadJson) {
-        ChatMessagePayloadVO payload = parseMessagePayload(payloadJson);
-        return payload == null ? null : payload.getFile();
-    }
-
-    private ChatReplyMessageVO extractReplyPayload(String payloadJson) {
-        ChatMessagePayloadVO payload = parseMessagePayload(payloadJson);
-        return normalizeReplySnapshot(payload == null ? null : payload.getReply());
     }
 
     private boolean isDelivered(ChatMessageRecipient recipient) {
@@ -601,52 +572,11 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         return recipient.getDeliveryStatus() != null && recipient.getDeliveryStatus() >= ChatConstants.DELIVERY_STATUS_READ;
     }
 
-    private boolean isEdited(String messageType, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        return Objects.equals(messageType, ChatConstants.MESSAGE_TYPE_TEXT)
-                && createdAt != null
-                && updatedAt != null
-                && updatedAt.isAfter(createdAt);
-    }
-
-    private boolean isAttachmentMessageType(String messageType) {
-        return Objects.equals(messageType, ChatConstants.MESSAGE_TYPE_FILE)
-                || Objects.equals(messageType, ChatConstants.MESSAGE_TYPE_IMAGE)
-                || Objects.equals(messageType, ChatConstants.MESSAGE_TYPE_VOICE);
-    }
-
     private List<Long> activeUserIds(List<ChatConversationMember> members) {
         if (members == null || members.isEmpty()) {
             return List.of();
         }
         return members.stream().map(ChatConversationMember::getUserId).distinct().toList();
-    }
-
-    private ChatWsConversationUpdatedPayload buildConversationUpdatedPayload(String action,
-                                                                             ChatConversation conversation,
-                                                                             List<ChatConversationMember> activeMembers) {
-        return ChatWsConversationUpdatedPayload.builder()
-                .action(action)
-                .conversationId(conversation.getId())
-                .conversationType(conversation.getConversationType())
-                .name(conversation.getName())
-                .avatar(conversation.getAvatar())
-                .ownerId(conversation.getOwnerId())
-                .notice(conversation.getAnnouncement())
-                .status(conversation.getStatus())
-                .memberCount((long) (activeMembers == null ? 0 : activeMembers.size()))
-                .build();
-    }
-
-    private ChatWsMembersUpdatedPayload buildMembersUpdatedPayload(String action,
-                                                                   Long conversationId,
-                                                                   Long affectedUserId,
-                                                                   List<ChatMemberVO> members) {
-        return ChatWsMembersUpdatedPayload.builder()
-                .action(action)
-                .conversationId(conversationId)
-                .affectedUserId(affectedUserId)
-                .members(members)
-                .build();
     }
 
     private ChatMessageVO buildMessagePushVO(ChatMessage message) {
@@ -656,15 +586,15 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         vo.setSenderId(message.getSenderId());
         vo.setMessageType(message.getMessageType());
         vo.setContent(message.getContent());
-        vo.setFile(extractFilePayload(message.getPayloadJson()));
+        vo.setFile(chatPayloadHelper.extractFilePayload(message.getPayloadJson()));
         vo.setReplyMessageId(message.getReplyMessageId());
-        vo.setReply(resolveReplySnapshot(message.getReplyMessageId(), extractReplyPayload(message.getPayloadJson()), loadAdminReplySnapshot(message.getConversationId(), message.getReplyMessageId())));
+        vo.setReply(resolveReplySnapshot(message.getReplyMessageId(), chatPayloadHelper.extractReplyPayload(message.getPayloadJson()), loadAdminReplySnapshot(message.getConversationId(), message.getReplyMessageId())));
         SysUser sender = loadUsers(Set.of(message.getSenderId())).get(message.getSenderId());
         vo.setSenderUsername(sender != null ? sender.getUsername() : null);
-        vo.setSenderNickname(displayName(sender, message.getSenderId()));
+        vo.setSenderNickname(UserDisplayNameUtils.resolveDisplayName(sender, message.getSenderId()));
         vo.setSenderAvatar(sender != null ? sender.getAvatar() : null);
         vo.setRevoked(Objects.equals(message.getRevokeStatus(), ChatConstants.REVOKE_STATUS_REVOKED));
-        vo.setEdited(isEdited(message.getMessageType(), message.getCreatedAt(), message.getUpdatedAt()));
+        vo.setEdited(chatPayloadHelper.isEdited(message.getMessageType(), message.getCreatedAt(), message.getUpdatedAt()));
         vo.setUpdatedAt(message.getUpdatedAt());
         vo.setCreatedAt(message.getCreatedAt());
         return vo;
@@ -685,7 +615,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
             result.put(replyItem.getId(), buildReplySnapshot(replyItem, userMap));
         }
         for (Long id : ids) {
-            result.putIfAbsent(id, buildUnavailableReplySnapshot(id));
+            result.putIfAbsent(id, chatPayloadHelper.buildUnavailableReplySnapshot(id));
         }
         return result;
     }
@@ -703,27 +633,17 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         reply.setSenderId(item.getSenderId());
         SysUser sender = userMap.get(item.getSenderId());
         reply.setSenderUsername(sender != null ? sender.getUsername() : null);
-        reply.setSenderNickname(displayName(sender, item.getSenderId()));
+        reply.setSenderNickname(UserDisplayNameUtils.resolveDisplayName(sender, item.getSenderId()));
         reply.setSenderAvatar(sender != null ? sender.getAvatar() : null);
         reply.setMessageType(item.getMessageType());
         reply.setReplyToMessageId(item.getReplyMessageId());
         reply.setContent(item.getContent());
-        reply.setFile(extractFilePayload(item.getPayloadJson()));
+        reply.setFile(chatPayloadHelper.extractFilePayload(item.getPayloadJson()));
         boolean revoked = Objects.equals(item.getRevokeStatus(), ChatConstants.REVOKE_STATUS_REVOKED);
         reply.setRevoked(revoked);
         reply.setDeleted(false);
         reply.setState(revoked ? ChatConstants.REPLY_STATE_REVOKED : ChatConstants.REPLY_STATE_NORMAL);
         reply.setCreatedAt(item.getCreatedAt());
-        return reply;
-    }
-
-    private ChatReplyMessageVO buildUnavailableReplySnapshot(Long replyMessageId) {
-        ChatReplyMessageVO reply = new ChatReplyMessageVO();
-        reply.setId(replyMessageId);
-        reply.setContent(ChatConstants.REPLY_MESSAGE_UNAVAILABLE_PLACEHOLDER);
-        reply.setDeleted(true);
-        reply.setRevoked(false);
-        reply.setState(ChatConstants.REPLY_STATE_UNAVAILABLE);
         return reply;
     }
 
@@ -739,23 +659,7 @@ public class ChatAdminServiceImpl implements ChatAdminService {
         if (payloadReply != null) {
             return payloadReply;
         }
-        return fallbackReply != null ? fallbackReply : buildUnavailableReplySnapshot(replyMessageId);
-    }
-
-    private ChatReplyMessageVO normalizeReplySnapshot(ChatReplyMessageVO reply) {
-        if (reply == null) {
-            return null;
-        }
-        if (!StrUtils.hasText(reply.getState())) {
-            if (Boolean.TRUE.equals(reply.getDeleted())) {
-                reply.setState(ChatConstants.REPLY_STATE_UNAVAILABLE);
-            } else if (Boolean.TRUE.equals(reply.getRevoked())) {
-                reply.setState(ChatConstants.REPLY_STATE_REVOKED);
-            } else {
-                reply.setState(ChatConstants.REPLY_STATE_NORMAL);
-            }
-        }
-        return reply;
+        return fallbackReply != null ? fallbackReply : chatPayloadHelper.buildUnavailableReplySnapshot(replyMessageId);
     }
 
     private List<Long> collectReplyMessageIds(Collection<ChatAdminMessageItem> items) {
@@ -767,36 +671,5 @@ public class ChatAdminServiceImpl implements ChatAdminService {
                 .filter(Objects::nonNull)
                 .distinct()
                 .toList();
-    }
-
-    private boolean hasFilePayloadContent(ChatFilePayloadVO payload) {
-        return payload != null
-                && (payload.getBusinessId() != null
-                || payload.getFileId() != null
-                || StrUtils.hasText(payload.getFileName())
-                || StrUtils.hasText(payload.getFileUrl()));
-    }
-
-    private String displayName(SysUser user, Long fallbackUserId) {
-        if (user == null) {
-            return fallbackUserId == null ? null : "用户" + fallbackUserId;
-        }
-        if (StrUtils.hasText(user.getNickname())) {
-            return user.getNickname().trim();
-        }
-        if (StrUtils.hasText(user.getUsername())) {
-            return user.getUsername().trim();
-        }
-        return user.getId() == null ? null : "用户" + user.getId();
-    }
-
-    private int memberRoleOrder(ChatConversationMember member) {
-        if (Objects.equals(member.getMemberRole(), ChatConstants.MEMBER_ROLE_OWNER)) {
-            return 0;
-        }
-        if (Objects.equals(member.getMemberRole(), ChatConstants.MEMBER_ROLE_ADMIN)) {
-            return 1;
-        }
-        return 2;
     }
 }

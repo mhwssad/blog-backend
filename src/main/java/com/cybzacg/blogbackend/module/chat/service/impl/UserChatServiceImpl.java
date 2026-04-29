@@ -18,11 +18,12 @@ import com.cybzacg.blogbackend.module.chat.model.common.ChatReplyMessageVO;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatConversationListItem;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatMessageHistoryItem;
 import com.cybzacg.blogbackend.module.chat.model.user.*;
-import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsConversationUpdatedPayload;
-import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsMembersUpdatedPayload;
 import com.cybzacg.blogbackend.module.chat.model.websocket.ChatWsMessageDeletedPayload;
 import com.cybzacg.blogbackend.module.chat.repository.*;
 import com.cybzacg.blogbackend.module.chat.service.*;
+import com.cybzacg.blogbackend.module.chat.support.ChatMemberHelper;
+import com.cybzacg.blogbackend.module.chat.support.ChatPayloadHelper;
+import com.cybzacg.blogbackend.module.chat.support.ChatPushPayloadBuilder;
 import com.cybzacg.blogbackend.module.file.service.FileChatFacadeService;
 import com.cybzacg.blogbackend.enums.experience.ExperienceSourceTypeEnum;
 import com.cybzacg.blogbackend.utils.CollectionUtils;
@@ -66,6 +67,9 @@ public class UserChatServiceImpl implements UserChatService {
     private final ChatMessageGovernanceService chatMessageGovernanceService;
     private final ChatMetricsService chatMetricsService;
     private final ChatNotificationService chatNotificationService;
+    private final ChatPayloadHelper chatPayloadHelper;
+    private final ChatPushPayloadBuilder chatPushPayloadBuilder;
+    private final ChatMemberHelper chatMemberHelper;
     private final ApplicationEventPublisher eventPublisher;
 
     /**
@@ -434,7 +438,7 @@ public class UserChatServiceImpl implements UserChatService {
         }
         List<ChatConversationMember> members = listActiveMembers(conversationId);
         List<ChatMemberVO> records = buildMemberRecords(members);
-        chatPushService.pushMembersUpdated(buildMembersUpdatedPayload("members_invited", conversationId, null, records), activeUserIds(members));
+        chatPushService.pushMembersUpdated(chatPushPayloadBuilder.buildMembersUpdatedPayload("members_invited", conversationId, null, records), activeUserIds(members));
         return records;
     }
 
@@ -452,7 +456,7 @@ public class UserChatServiceImpl implements UserChatService {
         chatConversationMemberRepository.updateById(member);
         List<ChatConversationMember> members = listActiveMembers(conversationId);
         List<ChatMemberVO> records = buildMemberRecords(members);
-        chatPushService.pushMembersUpdated(buildMembersUpdatedPayload("admin_appointed", conversationId, memberUserId, records), activeUserIds(members));
+        chatPushService.pushMembersUpdated(chatPushPayloadBuilder.buildMembersUpdatedPayload("admin_appointed", conversationId, memberUserId, records), activeUserIds(members));
         return records;
     }
 
@@ -470,7 +474,7 @@ public class UserChatServiceImpl implements UserChatService {
         chatConversationMemberRepository.updateById(member);
         List<ChatConversationMember> members = listActiveMembers(conversationId);
         List<ChatMemberVO> records = buildMemberRecords(members);
-        chatPushService.pushMembersUpdated(buildMembersUpdatedPayload("admin_removed", conversationId, memberUserId, records), activeUserIds(members));
+        chatPushService.pushMembersUpdated(chatPushPayloadBuilder.buildMembersUpdatedPayload("admin_removed", conversationId, memberUserId, records), activeUserIds(members));
         return records;
     }
 
@@ -494,8 +498,8 @@ public class UserChatServiceImpl implements UserChatService {
         List<ChatConversationMember> members = listActiveMembers(conversationId);
         List<ChatMemberVO> memberRecords = buildMemberRecords(members);
         List<Long> activeUserIds = activeUserIds(members);
-        chatPushService.pushMembersUpdated(buildMembersUpdatedPayload("owner_transferred", conversationId, targetMember.getUserId(), memberRecords), activeUserIds);
-        chatPushService.pushConversationUpdated(buildConversationUpdatedPayload("owner_transferred", context.conversation(), members), activeUserIds);
+        chatPushService.pushMembersUpdated(chatPushPayloadBuilder.buildMembersUpdatedPayload("owner_transferred", conversationId, targetMember.getUserId(), memberRecords), activeUserIds);
+        chatPushService.pushConversationUpdated(chatPushPayloadBuilder.buildConversationUpdatedPayload("owner_transferred", context.conversation(), members), activeUserIds);
         return getConversationVO(userId, conversationId);
     }
 
@@ -520,7 +524,7 @@ public class UserChatServiceImpl implements UserChatService {
         chatConversationMemberRepository.updateById(targetMember);
         List<ChatConversationMember> members = listActiveMembers(conversationId);
         List<ChatMemberVO> records = buildMemberRecords(members);
-        chatPushService.pushMembersUpdated(buildMembersUpdatedPayload("member_mute_updated", conversationId, memberUserId, records), activeUserIds(members));
+        chatPushService.pushMembersUpdated(chatPushPayloadBuilder.buildMembersUpdatedPayload("member_mute_updated", conversationId, memberUserId, records), activeUserIds(members));
         return records;
     }
 
@@ -535,7 +539,7 @@ public class UserChatServiceImpl implements UserChatService {
         String oldAnnouncement = StrUtils.trimToNull(context.conversation().getAnnouncement());
         context.conversation().setAnnouncement(request == null ? null : StrUtils.trimToNull(request.getNotice()));
         chatConversationRepository.updateById(context.conversation());
-        chatPushService.pushConversationUpdated(buildConversationUpdatedPayload("notice_updated", context.conversation(), listActiveMembers(conversationId)), context.activeUserIds());
+        chatPushService.pushConversationUpdated(chatPushPayloadBuilder.buildConversationUpdatedPayload("notice_updated", context.conversation(), listActiveMembers(conversationId)), context.activeUserIds());
         if (Objects.equals(context.conversation().getSceneType(), ChatConstants.SCENE_TYPE_TOPIC_CHANNEL)
                 && !Objects.equals(oldAnnouncement, context.conversation().getAnnouncement())
                 && StrUtils.hasText(context.conversation().getAnnouncement())) {
@@ -559,7 +563,7 @@ public class UserChatServiceImpl implements UserChatService {
         member.setStatus(ChatConstants.MEMBER_STATUS_REMOVED);
         chatConversationMemberRepository.updateById(member);
         List<ChatMemberVO> records = buildMemberRecords(listActiveMembers(conversationId));
-        chatPushService.pushMembersUpdated(buildMembersUpdatedPayload("member_removed", conversationId, memberUserId, records), notifyUserIds);
+        chatPushService.pushMembersUpdated(chatPushPayloadBuilder.buildMembersUpdatedPayload("member_removed", conversationId, memberUserId, records), notifyUserIds);
     }
 
     /**
@@ -575,7 +579,7 @@ public class UserChatServiceImpl implements UserChatService {
         context.selfMember().setStatus(ChatConstants.MEMBER_STATUS_LEFT);
         chatConversationMemberRepository.updateById(context.selfMember());
         List<ChatMemberVO> records = buildMemberRecords(listActiveMembers(conversationId));
-        chatPushService.pushMembersUpdated(buildMembersUpdatedPayload("member_left", conversationId, userId, records), notifyUserIds);
+        chatPushService.pushMembersUpdated(chatPushPayloadBuilder.buildMembersUpdatedPayload("member_left", conversationId, userId, records), notifyUserIds);
     }
 
     /**
@@ -609,7 +613,7 @@ public class UserChatServiceImpl implements UserChatService {
         List<ChatConversationMember> activeMembers = listActiveMembers(conversationId);
         List<ChatMemberVO> memberRecords = buildMemberRecords(activeMembers);
         chatPushService.pushMembersUpdated(
-                buildMembersUpdatedPayload("member_joined", conversationId, userId, memberRecords),
+                chatPushPayloadBuilder.buildMembersUpdatedPayload("member_joined", conversationId, userId, memberRecords),
                 activeMembers.stream().map(ChatConversationMember::getUserId).distinct().toList());
         return getConversationVO(userId, conversationId);
     }
@@ -630,7 +634,7 @@ public class UserChatServiceImpl implements UserChatService {
         chatConversationMemberRepository.updateById(context.selfMember());
         List<ChatMemberVO> records = buildMemberRecords(listActiveMembers(conversationId));
         chatPushService.pushMembersUpdated(
-                buildMembersUpdatedPayload("member_left", conversationId, userId, records), notifyUserIds);
+                chatPushPayloadBuilder.buildMembersUpdatedPayload("member_left", conversationId, userId, records), notifyUserIds);
     }
 
     /**
@@ -645,7 +649,7 @@ public class UserChatServiceImpl implements UserChatService {
         context.conversation().setStatus(ChatConstants.CONVERSATION_STATUS_DISSOLVED);
         chatConversationRepository.updateById(context.conversation());
         chatConversationMemberRepository.removeAllActiveMembers(conversationId);
-        chatPushService.pushConversationUpdated(buildConversationUpdatedPayload("conversation_dissolved", context.conversation(), List.of()), notifyUserIds);
+        chatPushService.pushConversationUpdated(chatPushPayloadBuilder.buildConversationUpdatedPayload("conversation_dissolved", context.conversation(), List.of()), notifyUserIds);
     }
 
     /**
@@ -1251,7 +1255,7 @@ public class UserChatServiceImpl implements UserChatService {
         message.setContent(ChatConstants.MESSAGE_REVOKED_PLACEHOLDER);
         message.setPayloadJson(null);
         chatMessageRepository.updateById(message);
-        if (!isAttachmentMessageType(message.getMessageType())) {
+        if (!chatPayloadHelper.isAttachmentMessageType(message.getMessageType())) {
             return;
         }
         fileChatFacadeService.releaseReferences(ChatConstants.FILE_MESSAGE_REFERENCE_TYPE, message.getId());
@@ -1375,7 +1379,7 @@ public class UserChatServiceImpl implements UserChatService {
         Map<Long, SysUser> userMap = loadUsers(members.stream().map(ChatConversationMember::getUserId).collect(LinkedHashSet::new, Set::add, Set::addAll));
         List<ChatMemberVO> records = new ArrayList<>();
         members.stream()
-                .sorted(Comparator.comparingInt(this::memberRoleOrder)
+                .sorted(Comparator.comparingInt(chatMemberHelper::memberRoleOrder)
                         .thenComparing(ChatConversationMember::getJoinedAt, Comparator.nullsLast(LocalDateTime::compareTo))
                         .thenComparing(ChatConversationMember::getUserId))
                 .forEach(member -> {
@@ -1406,13 +1410,13 @@ public class UserChatServiceImpl implements UserChatService {
         vo.setSenderUsername(sender != null ? sender.getUsername() : null);
         vo.setSenderNickname(UserDisplayNameUtils.resolveDisplayName(sender, item.getSenderId()));
         vo.setSenderAvatar(sender != null ? sender.getAvatar() : null);
-        vo.setFile(extractFilePayload(item.getPayloadJson()));
+        vo.setFile(chatPayloadHelper.extractFilePayload(item.getPayloadJson()));
         vo.setReplyMessageId(item.getReplyMessageId());
         vo.setReply(resolveReplySnapshot(item, item.getPayloadJson(), replySnapshots));
         vo.setSelf(Objects.equals(currentUserId, item.getSenderId()));
         vo.setReadByCurrentUser(item.getDeliveryStatus() != null && item.getDeliveryStatus() >= ChatConstants.DELIVERY_STATUS_READ);
         vo.setRevoked(Objects.equals(item.getRevokeStatus(), ChatConstants.REVOKE_STATUS_REVOKED));
-        vo.setEdited(isEdited(item.getMessageType(), item.getCreatedAt(), item.getUpdatedAt()));
+        vo.setEdited(chatPayloadHelper.isEdited(item.getMessageType(), item.getCreatedAt(), item.getUpdatedAt()));
         return vo;
     }
 
@@ -1630,16 +1634,6 @@ public class UserChatServiceImpl implements UserChatService {
         }
     }
 
-    private int memberRoleOrder(ChatConversationMember member) {
-        if (Objects.equals(member.getMemberRole(), ChatConstants.MEMBER_ROLE_OWNER)) {
-            return 0;
-        }
-        if (Objects.equals(member.getMemberRole(), ChatConstants.MEMBER_ROLE_ADMIN)) {
-            return 1;
-        }
-        return 2;
-    }
-
     private String buildFileMessageSummary(String messageType, FileInfo fileInfo) {
         String fileName = resolveFileDisplayName(fileInfo);
         String prefix = switch (messageType) {
@@ -1663,56 +1657,12 @@ public class UserChatServiceImpl implements UserChatService {
         return null;
     }
 
-    private ChatMessagePayloadVO parseMessagePayload(String payloadJson) {
-        if (!StrUtils.hasText(payloadJson)) {
-            return null;
-        }
-        try {
-            ChatMessagePayloadVO payload = JsonUtils.fromJson(payloadJson, ChatMessagePayloadVO.class);
-            if (payload != null && (payload.getFile() != null || payload.getReply() != null)) {
-                return payload;
-            }
-            ChatFilePayloadVO legacyFilePayload = JsonUtils.fromJson(payloadJson, ChatFilePayloadVO.class);
-            if (hasFilePayloadContent(legacyFilePayload)) {
-                ChatMessagePayloadVO legacyPayload = new ChatMessagePayloadVO();
-                legacyPayload.setFile(legacyFilePayload);
-                return legacyPayload;
-            }
-        } catch (RuntimeException ex) {
-            return null;
-        }
-        return null;
-    }
-
-    private ChatFilePayloadVO extractFilePayload(String payloadJson) {
-        ChatMessagePayloadVO payload = parseMessagePayload(payloadJson);
-        return payload == null ? null : payload.getFile();
-    }
-
-    private ChatReplyMessageVO extractReplyPayload(String payloadJson) {
-        ChatMessagePayloadVO payload = parseMessagePayload(payloadJson);
-        return payload == null ? null : payload.getReply();
-    }
-
     private String buildMessagePayloadJson(ChatFilePayloadVO filePayload, ChatReplyMessageVO replySnapshot) {
         if (filePayload == null && replySnapshot == null) {
             return null;
         }
         ChatMessagePayloadVO payload = chatModelMapper.toMessagePayloadVO(filePayload, replySnapshot);
         return JsonUtils.toJson(payload);
-    }
-
-    private boolean isEdited(String messageType, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        return Objects.equals(messageType, ChatConstants.MESSAGE_TYPE_TEXT)
-                && createdAt != null
-                && updatedAt != null
-                && updatedAt.isAfter(createdAt);
-    }
-
-    private boolean isAttachmentMessageType(String messageType) {
-        return Objects.equals(messageType, ChatConstants.MESSAGE_TYPE_FILE)
-                || Objects.equals(messageType, ChatConstants.MESSAGE_TYPE_IMAGE)
-                || Objects.equals(messageType, ChatConstants.MESSAGE_TYPE_VOICE);
     }
 
     private String resolveAttachmentMessageType(FileInfo fileInfo) {
@@ -1776,7 +1726,7 @@ public class UserChatServiceImpl implements UserChatService {
         reply.setMessageType(item.getMessageType());
         reply.setReplyToMessageId(item.getReplyMessageId());
         reply.setContent(item.getContent());
-        reply.setFile(extractFilePayload(item.getPayloadJson()));
+        reply.setFile(chatPayloadHelper.extractFilePayload(item.getPayloadJson()));
         boolean revoked = Objects.equals(item.getRevokeStatus(), ChatConstants.REVOKE_STATUS_REVOKED);
         reply.setRevoked(revoked);
         reply.setDeleted(false);
@@ -1795,11 +1745,11 @@ public class UserChatServiceImpl implements UserChatService {
         if (liveReply != null && !Boolean.TRUE.equals(liveReply.getDeleted())) {
             return liveReply;
         }
-        ChatReplyMessageVO payloadReply = normalizeReplySnapshot(extractReplyPayload(payloadJson));
+        ChatReplyMessageVO payloadReply = chatPayloadHelper.normalizeReplySnapshot(chatPayloadHelper.extractReplyPayload(payloadJson));
         if (payloadReply != null) {
             return payloadReply;
         }
-        return liveReply != null ? liveReply : buildUnavailableReplySnapshot(item.getReplyMessageId());
+        return liveReply != null ? liveReply : chatPayloadHelper.buildUnavailableReplySnapshot(item.getReplyMessageId());
     }
 
     /**
@@ -1822,7 +1772,7 @@ public class UserChatServiceImpl implements UserChatService {
             result.put(replyItem.getId(), buildReplySnapshot(replyItem, userMap));
         }
         for (Long id : ids) {
-            result.putIfAbsent(id, buildUnavailableReplySnapshot(id));
+            result.putIfAbsent(id, chatPayloadHelper.buildUnavailableReplySnapshot(id));
         }
         return result;
     }
@@ -1838,40 +1788,6 @@ public class UserChatServiceImpl implements UserChatService {
                 .toList();
     }
 
-    private ChatReplyMessageVO buildUnavailableReplySnapshot(Long replyMessageId) {
-        ChatReplyMessageVO reply = new ChatReplyMessageVO();
-        reply.setId(replyMessageId);
-        reply.setContent(ChatConstants.REPLY_MESSAGE_UNAVAILABLE_PLACEHOLDER);
-        reply.setDeleted(true);
-        reply.setRevoked(false);
-        reply.setState(ChatConstants.REPLY_STATE_UNAVAILABLE);
-        return reply;
-    }
-
-    private ChatReplyMessageVO normalizeReplySnapshot(ChatReplyMessageVO reply) {
-        if (reply == null) {
-            return null;
-        }
-        if (!StrUtils.hasText(reply.getState())) {
-            if (Boolean.TRUE.equals(reply.getDeleted())) {
-                reply.setState(ChatConstants.REPLY_STATE_UNAVAILABLE);
-            } else if (Boolean.TRUE.equals(reply.getRevoked())) {
-                reply.setState(ChatConstants.REPLY_STATE_REVOKED);
-            } else {
-                reply.setState(ChatConstants.REPLY_STATE_NORMAL);
-            }
-        }
-        return reply;
-    }
-
-    private boolean hasFilePayloadContent(ChatFilePayloadVO payload) {
-        return payload != null
-                && (payload.getBusinessId() != null
-                || payload.getFileId() != null
-                || StrUtils.hasText(payload.getFileName())
-                || StrUtils.hasText(payload.getFileUrl()));
-    }
-
     private List<Long> listActiveUserIds(Long conversationId) {
         return activeUserIds(listActiveMembers(conversationId));
     }
@@ -1881,34 +1797,6 @@ public class UserChatServiceImpl implements UserChatService {
             return List.of();
         }
         return members.stream().map(ChatConversationMember::getUserId).distinct().toList();
-    }
-
-    private ChatWsConversationUpdatedPayload buildConversationUpdatedPayload(String action,
-                                                                             ChatConversation conversation,
-                                                                             List<ChatConversationMember> activeMembers) {
-        return ChatWsConversationUpdatedPayload.builder()
-                .action(action)
-                .conversationId(conversation.getId())
-                .conversationType(conversation.getConversationType())
-                .name(conversation.getName())
-                .avatar(conversation.getAvatar())
-                .ownerId(conversation.getOwnerId())
-                .notice(conversation.getAnnouncement())
-                .status(conversation.getStatus())
-                .memberCount((long) (activeMembers == null ? 0 : activeMembers.size()))
-                .build();
-    }
-
-    private ChatWsMembersUpdatedPayload buildMembersUpdatedPayload(String action,
-                                                                   Long conversationId,
-                                                                   Long affectedUserId,
-                                                                   List<ChatMemberVO> members) {
-        return ChatWsMembersUpdatedPayload.builder()
-                .action(action)
-                .conversationId(conversationId)
-                .affectedUserId(affectedUserId)
-                .members(members)
-                .build();
     }
 
     private record ConversationAccessContext(ChatConversation conversation,
