@@ -10,18 +10,21 @@
 
 ## 2. 当前状态
 
-**当前阶段：进行中。已完成 `Controller -> Service` 和 `Service -> Repository` 两项首轮边界收口；正在推进 `跨模块 Repository 直连收口`。**
+**当前阶段：第二阶段进行中。重型Service拆分全部完成。**
 
 ```
 已完成:
-  ✅ UserExperienceController 不再直接依赖 Repository
-  ✅ SysConfigServiceImpl 不再继承 ServiceImpl / 使用 baseMapper
-
-进行中:
-  ⏳ 重型 Service 拆分前的职责边界梳理
+  ✅ 第一阶段全部边界收口 (Controller→Service, Service→Repository, 跨模块Repository)
+  ✅ Step 1: 更新07复选框
+  ✅ Step 2: 提取Chat共享Helper (ChatPayloadHelper/ChatMemberHelper/ChatPushPayloadBuilder)
+  ✅ Step 3: 拆分UserChatServiceImpl → 5子Service + 1SupportHelper + 门面
+  ✅ Step 4: 拆分ChatAdminServiceImpl → 2子Service + 门面
+  ✅ Step 5: 拆分UserFileServiceImpl → FileUploadService + UserFileQueryService + 门面
+  ✅ Step 6: 拆分ArticleAdminServiceImpl → ArticleAdminCrudService + ArticleAdminModerationService + 门面
 
 待推进:
-  ⏳ 重型 Service 拆分
+  ⏳ 拆分ChatAttachmentAsyncProcessingServiceImpl (529行/3方法，暂缓)
+  ⏳ 拆分ArticleSeriesServiceImpl (562行/12方法，暂缓)
   ⏳ auth/chat/content 子域化
   ⏳ domain/mapper/resources 分组优化
   ⏳ utils 结构提纯
@@ -69,17 +72,17 @@
 
 ### 4.1 chat
 
-- [ ] 拆分 `UserChatServiceImpl`
-- [ ] 拆分 `ChatAdminServiceImpl`
+- [x] 拆分 `UserChatServiceImpl`
+- [x] 拆分 `ChatAdminServiceImpl`
 - [ ] 拆分 `ChatAttachmentAsyncProcessingServiceImpl`
 
 ### 4.2 file
 
-- [ ] 拆分 `UserFileServiceImpl`
+- [x] 拆分 `UserFileServiceImpl`
 
 ### 4.3 article
 
-- [ ] 拆分 `ArticleAdminServiceImpl`
+- [x] 拆分 `ArticleAdminServiceImpl`
 - [ ] 拆分 `ArticleSeriesServiceImpl`
 
 ## 5. 第三阶段：模块内部子域化
