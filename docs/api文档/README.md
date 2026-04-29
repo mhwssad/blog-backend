@@ -22,6 +22,8 @@
 | 聊天会话、后台聊天管理、消息发送、群管理与 WebSocket 推送 | `chat-api.md`    | `HTTP 接口`、`后台聊天管理接口`、`WebSocket 协议`、`服务端推送事件` |
 | WebSocket 连接、认证、心跳、实时收发与推送事件处理     | `chat-api.md`    | 详见 `websocket-api.md`                         |
 | 后台文件库、上传任务管理                       | `file-api.md`    | `后台文件管理接口`                                    |
+| AI 对话、渠道配置、后台 AI 管理与使用统计           | `ai-api.md`      | `用户侧接口`、`后台管理接口`                              |
+| 举报提交、举报记录查询、后台举报处理与日志             | `report-api.md`  | `用户侧接口`、`后台管理接口`                              |
 
 ## 2. 各份文档分别覆盖什么
 
@@ -33,6 +35,8 @@
 | `chat-api.md`      | 聊天 HTTP 接口、后台聊天管理与 WebSocket 实时协议 | `/api/user/chat/**`、`/api/sys/chats/**`、`/ws/chat`                                                                       |
 | `websocket-api.md` | WebSocket 连接、认证、心跳、收发消息与推送事件      | `/ws/chat`                                                                                                               |
 | `follow-api.md`    | 关注、粉丝、互关状态、公开查看与后台治理              | `/api/user/follows/**`、`/api/users/{userId}/**`、`/api/sys/follows/**`                                                    |
+| `ai-api.md`        | AI 对话、渠道配置、后台 AI 管理与使用统计         | `/api/user/ai/**`、`/api/sys/ai/**`                                                                                      |
+| `report-api.md`    | 举报提交、举报记录查询、后台举报处理与日志            | `/api/user/reports/**`、`/api/sys/reports/**`                                                                            |
 
 ## 3. 联调统一约定
 
@@ -119,6 +123,8 @@ Authorization: Bearer <accessToken>
 | `chat`    | `websocket-api.md` | WebSocket 连接、认证、心跳、收发消息与推送事件         |
 | `follow`  | `follow-api.md`    | 关注、取关、粉丝列表、互关判断、公开查看、后台治理            |
 | `experience` | `auth-api.md`  | 用户等级、经验体系、后台经验配置管理                      |
+| `ai`      | `ai-api.md`        | AI对话、渠道配置、会话管理、使用统计                     |
+| `report`  | `report-api.md`    | 举报提交、举报记录、后台处理与日志                      |
 
 ## 5. 推荐阅读顺序
 
@@ -139,6 +145,8 @@ Authorization: Bearer <accessToken>
     - 关注关系管理：`follow-api.md`
     - 文件管理：`file-api.md`
     - 聊天管理：`chat-api.md`
+    - AI 对话与统计：`ai-api.md`
+    - 举报管理：`report-api.md`
 
 ## 6. 维护规则
 
@@ -146,3 +154,5 @@ Authorization: Bearer <accessToken>
 - 如果只是补字段、改枚举或改边界行为，也不能只改代码不改文档。
 - 当某个接口更适合归入另一个前端场景时，允许调整文档结构，但要保持本页导航可用。
 - 当前 `chat-api.md` 已覆盖 chat v1 的用户侧 HTTP 接口、后台聊天管理接口与 WebSocket 实时协议，联调可直接按文档接入。
+- 当前 `ai-api.md` 已覆盖 AI 模块的用户侧接口与后台管理接口。
+- 当前 `report-api.md` 已覆盖举报模块的用户侧接口与后台管理接口。
