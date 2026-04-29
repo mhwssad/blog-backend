@@ -12,7 +12,7 @@
 | [04-ai-module-todo.md](04-ai-module-todo.md) | AI 问答、配置中心、额度、数据范围 | 业务功能已完成，待测试回补 | P0 |
 | [05-governance-report-audit-todo.md](05-governance-report-audit-todo.md) | 举报处理、治理动作、审计增强 | 业务功能已完成，待测试回补 | P0 |
 | [06-notification-dashboard-todo.md](06-notification-dashboard-todo.md) | 通知设置、通知投递过滤、数据看板 | 业务功能已完成，待测试回补 | P1 |
-| [07-database-schema-alignment-todo.md](07-database-schema-alignment-todo.md) | 已补表结构与业务实现对齐 | 进行中 | P0 |
+| [07-database-schema-alignment-todo.md](07-database-schema-alignment-todo.md) | 已补表结构与业务实现对齐 | 业务功能已完成，待测试回补 | P0 |
 | [08-source-structure-optimization-todo.md](08-source-structure-optimization-todo.md) | 源码结构治理、边界收口、重型类拆分与子域化 | 进行中 | P1 |
 
 ## 2. 参考文档
