@@ -12,6 +12,7 @@ import com.cybzacg.blogbackend.enums.report.ReportRecordStatusEnum;
 import com.cybzacg.blogbackend.enums.report.ReportTargetTypeEnum;
 import com.cybzacg.blogbackend.module.auth.model.common.SysAuditLogCreateRequest;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
+import com.cybzacg.blogbackend.module.auth.service.SuperAdminVerifier;
 import com.cybzacg.blogbackend.module.auth.service.SysAuditLogService;
 import com.cybzacg.blogbackend.module.report.convert.ReportModelMapper;
 import com.cybzacg.blogbackend.module.report.model.admin.ReportAdminPageQuery;
@@ -49,6 +50,7 @@ public class ReportAdminServiceImpl implements ReportAdminService {
     private final SysReportHandleLogRepository sysReportHandleLogRepository;
     private final SysUserRepository sysUserRepository;
     private final SysAuditLogService sysAuditLogService;
+    private final SuperAdminVerifier superAdminVerifier;
     private final ReportModelMapper reportModelMapper;
     private final ArticleAdminService articleAdminService;
     private final CommentAdminService commentAdminService;
@@ -155,6 +157,40 @@ public class ReportAdminServiceImpl implements ReportAdminService {
 
         saveHandleLog(reportId, fromStatus, ReportRecordStatusEnum.REJECTED.getValue(),
                 ReportActionTypeEnum.REJECT.getCode(), null, operatorId, remark);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void overrideClaim(Long reportId, Long operatorId, String ip, String ua) {
+        superAdminVerifier.requireSuperAdmin(operatorId);
+
+        SysReportRecord record = getReport(reportId);
+        ExceptionThrowerCore.throwBusinessIf(
+                ReportRecordStatusEnum.HANDLED.getValue().equals(record.getStatus())
+                        || ReportRecordStatusEnum.REJECTED.getValue().equals(record.getStatus()),
+                ResultErrorCode.REPORT_ALREADY_HANDLED);
+
+        Long previousHandler = record.getHandlerUserId();
+        Integer fromStatus = record.getStatus();
+
+        record.setStatus(ReportRecordStatusEnum.PROCESSING.getValue());
+        record.setHandlerUserId(operatorId);
+        sysReportRecordRepository.updateById(record);
+
+        saveHandleLog(reportId, fromStatus, ReportRecordStatusEnum.PROCESSING.getValue(),
+                ReportActionTypeEnum.REASSIGN.getCode(), null, operatorId,
+                "超管接管，原处理人: " + previousHandler);
+
+        SysAuditLogCreateRequest auditRequest = new SysAuditLogCreateRequest();
+        auditRequest.setOperatorUserId(operatorId);
+        auditRequest.setOperationType(SysAuditOperationType.OVERRIDE_CLAIM_REPORT.getCode());
+        auditRequest.setTargetTypeName("SysReportRecord");
+        auditRequest.setTargetId(reportId);
+        auditRequest.setBeforeState("status=" + fromStatus + ",handler=" + previousHandler);
+        auditRequest.setAfterState("status=PROCESSING,handler=" + operatorId);
+        auditRequest.setRequestIp(ip);
+        auditRequest.setUserAgent(ua);
+        sysAuditLogService.record(auditRequest);
     }
 
     @Override

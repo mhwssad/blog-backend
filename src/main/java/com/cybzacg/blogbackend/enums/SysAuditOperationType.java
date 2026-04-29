@@ -16,7 +16,8 @@ public enum SysAuditOperationType {
     MODIFY_AI_CONFIG("MODIFY_AI_CONFIG", "修改AI配置"),
     MODIFY_ADMIN_PERM("MODIFY_ADMIN_PERM", "修改管理员权限"),
     TOGGLE_ARTICLE_PIN("TOGGLE_ARTICLE_PIN", "切换文章置顶"),
-    TOGGLE_ARTICLE_RECOMMEND("TOGGLE_ARTICLE_RECOMMEND", "切换文章推荐");
+    TOGGLE_ARTICLE_RECOMMEND("TOGGLE_ARTICLE_RECOMMEND", "切换文章推荐"),
+    OVERRIDE_CLAIM_REPORT("OVERRIDE_CLAIM_REPORT", "超管接管举报");
 
     private final String code;
     private final String description;

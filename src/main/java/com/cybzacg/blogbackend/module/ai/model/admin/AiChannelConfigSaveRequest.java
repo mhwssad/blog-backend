@@ -52,4 +52,7 @@ public class AiChannelConfigSaveRequest {
 
     @Schema(description = "是否默认渠道：0-否，1-是")
     private Integer isDefault;
+
+    @Schema(description = "二次验证票据（修改高风险字段时必填）")
+    private String mfaTicket;
 }

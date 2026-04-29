@@ -23,5 +23,7 @@ public interface ReportAdminService {
 
     void rejectReport(Long reportId, Long operatorId, String remark, String ip, String ua);
 
+    void overrideClaim(Long reportId, Long operatorId, String ip, String ua);
+
     List<ReportHandleLogVO> listHandleLogs(Long reportId);
 }

@@ -13,7 +13,9 @@ import com.cybzacg.blogbackend.module.ai.model.admin.AiChannelConfigVO;
 import com.cybzacg.blogbackend.module.ai.repository.AiChannelConfigRepository;
 import com.cybzacg.blogbackend.module.ai.service.AiChannelConfigAdminService;
 import com.cybzacg.blogbackend.module.auth.model.common.SysAuditLogCreateRequest;
+import com.cybzacg.blogbackend.module.auth.service.SuperAdminVerifier;
 import com.cybzacg.blogbackend.module.auth.service.SysAuditLogService;
+import com.cybzacg.blogbackend.module.auth.service.TwoFactorService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,8 @@ public class AiChannelConfigAdminServiceImpl implements AiChannelConfigAdminServ
     private final AiChannelConfigRepository aiChannelConfigRepository;
     private final AiModelMapper aiModelMapper;
     private final SysAuditLogService sysAuditLogService;
+    private final TwoFactorService twoFactorService;
+    private final SuperAdminVerifier superAdminVerifier;
 
     /**
      * {@inheritDoc}
@@ -181,6 +185,11 @@ public class AiChannelConfigAdminServiceImpl implements AiChannelConfigAdminServ
                 && AiDataScopeEnum.isHighRisk(request.getDataScopeJson());
 
         if (apiKeyChanged || statusChanged || dataScopePrivateChat) {
+            superAdminVerifier.requireSuperAdmin(operatorId);
+            ExceptionThrowerCore.throwBusinessIfNot(
+                    twoFactorService.validateTicket(request.getMfaTicket(), operatorId),
+                    ResultErrorCode.MFA_TICKET_INVALID);
+
             SysAuditLogCreateRequest auditRequest = new SysAuditLogCreateRequest();
             auditRequest.setOperatorUserId(operatorId);
             auditRequest.setOperationType(SysAuditOperationType.MODIFY_AI_CONFIG.getCode());

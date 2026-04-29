@@ -83,6 +83,17 @@ public class ReportAdminController {
         return Result.success();
     }
 
+    @PutMapping("/{id}/override")
+    @Operation(summary = "超管接管举报")
+    @PreAuthorize("@permission.hasPermission('sys:report:handle')")
+    public Result<Void> overrideClaim(@PathVariable Long id) {
+        Long operatorId = SecurityUtils.requireUserId();
+        String ip = request.getRemoteAddr();
+        String ua = request.getHeader("User-Agent");
+        reportAdminService.overrideClaim(id, operatorId, ip, ua);
+        return Result.success();
+    }
+
     @GetMapping("/{id}/logs")
     @Operation(summary = "处理日志")
     @PreAuthorize("@permission.hasPermission('sys:report:query')")
