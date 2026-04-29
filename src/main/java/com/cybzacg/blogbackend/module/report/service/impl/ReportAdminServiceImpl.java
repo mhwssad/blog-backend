@@ -9,6 +9,7 @@ import com.cybzacg.blogbackend.enums.SysAuditOperationType;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.enums.report.ReportActionTypeEnum;
 import com.cybzacg.blogbackend.enums.report.ReportRecordStatusEnum;
+import com.cybzacg.blogbackend.enums.report.ReportTargetTypeEnum;
 import com.cybzacg.blogbackend.module.auth.model.common.SysAuditLogCreateRequest;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.service.SysAuditLogService;
@@ -17,6 +18,9 @@ import com.cybzacg.blogbackend.module.report.model.admin.ReportAdminPageQuery;
 import com.cybzacg.blogbackend.module.report.model.admin.ReportAdminVO;
 import com.cybzacg.blogbackend.module.report.model.admin.ReportHandleRequest;
 import com.cybzacg.blogbackend.module.report.model.common.ReportHandleLogVO;
+import com.cybzacg.blogbackend.module.article.service.ArticleAdminService;
+import com.cybzacg.blogbackend.module.chat.service.ChatAdminService;
+import com.cybzacg.blogbackend.module.content.service.CommentAdminService;
 import com.cybzacg.blogbackend.module.report.repository.SysReportHandleLogRepository;
 import com.cybzacg.blogbackend.module.report.repository.SysReportRecordRepository;
 import com.cybzacg.blogbackend.module.report.service.ReportAdminService;
@@ -46,6 +50,9 @@ public class ReportAdminServiceImpl implements ReportAdminService {
     private final SysUserRepository sysUserRepository;
     private final SysAuditLogService sysAuditLogService;
     private final ReportModelMapper reportModelMapper;
+    private final ArticleAdminService articleAdminService;
+    private final CommentAdminService commentAdminService;
+    private final ChatAdminService chatAdminService;
 
     @Override
     public PageResult<ReportAdminVO> pageReports(ReportAdminPageQuery query) {
@@ -124,6 +131,9 @@ public class ReportAdminServiceImpl implements ReportAdminService {
         auditRequest.setRequestIp(ip);
         auditRequest.setUserAgent(ua);
         sysAuditLogService.record(auditRequest);
+
+        // 执行治理动作
+        executeGovernanceAction(record, request);
     }
 
     @Override
@@ -171,6 +181,41 @@ public class ReportAdminServiceImpl implements ReportAdminService {
             }
         }
         return vos;
+    }
+
+    /**
+     * 根据处理结果执行对应治理动作。
+     * 调用各业务模块服务，不直接改表。
+     */
+    private void executeGovernanceAction(SysReportRecord record, ReportHandleRequest request) {
+        String resultType = request.getResultType();
+        if (resultType == null || "record_only".equals(resultType)) {
+            return;
+        }
+        Long targetId = record.getReportTargetId();
+        ReportTargetTypeEnum targetType = ReportTargetTypeEnum.fromCode(record.getReportTargetType());
+
+        switch (resultType) {
+            case "delete_content" -> {
+                if (targetType == ReportTargetTypeEnum.ARTICLE) {
+                    articleAdminService.deleteArticle(targetId);
+                } else if (targetType == ReportTargetTypeEnum.COMMENT) {
+                    commentAdminService.deleteComment(targetId);
+                }
+            }
+            case "revoke_message" -> {
+                if (targetType == ReportTargetTypeEnum.CHAT_MESSAGE && request.getConversationId() != null) {
+                    chatAdminService.revokeMessage(request.getConversationId(), targetId);
+                }
+            }
+            case "mute_user" -> {
+                // 禁言按场景区分待后续实现，当前仅记录处罚类型
+            }
+            case "ban_user" -> {
+                // 封禁需 MFA 票据，举报流程暂通过 updateStatus 禁用账号
+            }
+            default -> { /* record_only 或其他不执行动作 */ }
+        }
     }
 
     private SysReportRecord getReport(Long reportId) {

@@ -12,7 +12,7 @@
 
 ## 2. 当前状态
 
-**当前阶段：进行中。举报提交流程、后台管理、状态流转和处理日志已落地。治理动作联动（删除内容/撤回消息/禁言/封禁）预留调用入口。待推进治理动作与业务模块深度联动和测试回补。**
+**当前阶段：进行中。举报提交流程、后台管理、状态流转、处理日志和治理动作联动（删除内容/撤回消息）已落地。禁言按场景区分和封禁账号联动待后续推进。**
 
 ```
 已具备:
@@ -28,10 +28,11 @@
   ✅ 处理日志留档
   ✅ 重复举报频率限制（24小时内同用户同对象一次）
   ✅ 处理完成写入审计日志（SysAuditLogService）
+  ✅ 治理动作联动：删除文章/评论、撤回聊天消息
 
 待推进:
-  ⏳ 治理动作与业务模块联动（调用删除/撤回/禁言/封禁）
   ⏳ 禁言按场景区分（大厅/频道/群/全站）
+  ⏳ 封禁账号联动（需 MFA 票据机制配合）
   ⏳ 服务级测试回补
 ```text
 
@@ -45,38 +46,38 @@
 
 ### 3.2 数据与模型
 
-- [ ] 复核 `sys_report_record` 字段是否覆盖对象类型、对象 ID、举报人、原因、补充说明、状态、处理人、处理时间。
-- [ ] 复核 `sys_report_handle_log` 字段是否覆盖状态流转、处理结果、处罚类型、备注、操作人。
-- [ ] 定义举报对象类型：`article`、`comment`、`chat_message`。
-- [ ] 定义举报状态：`pending`、`processing`、`processed`、`rejected`。
-- [ ] 定义处理结果：`delete_content`、`revoke_message`、`mute_user`、`ban_user`、`record_only`。
-- [ ] 定义处罚类型：`content_delete`、`message_revoke`、`temporary_mute`、`account_ban`、`none`。
+- [x] 复核 `sys_report_record` 字段是否覆盖对象类型、对象 ID、举报人、原因、补充说明、状态、处理人、处理时间。
+- [x] 复核 `sys_report_handle_log` 字段是否覆盖状态流转、处理结果、处罚类型、备注、操作人。
+- [x] 定义举报对象类型：`article`、`comment`、`chat_message`。
+- [x] 定义举报状态：`pending`、`processing`、`processed`、`rejected`。
+- [x] 定义处理结果：`delete_content`、`revoke_message`、`mute_user`、`ban_user`、`record_only`。
+- [x] 定义处罚类型：`content_delete`、`message_revoke`、`temporary_mute`、`account_ban`、`none`。
 
 ### 3.3 用户侧接口
 
-- [ ] `POST /api/user/reports`：提交举报。
-- [ ] `GET /api/user/reports`：查询我的举报记录。
-- [ ] `GET /api/user/reports/{id}`：查询我的举报详情。
-- [ ] 提交举报时校验对象存在且当前用户可见。
-- [ ] 限制同一用户对同一对象重复举报频率。
+- [x] `POST /api/user/reports`：提交举报。
+- [x] `GET /api/user/reports`：查询我的举报记录。
+- [x] `GET /api/user/reports/{id}`：查询我的举报详情。
+- [x] 提交举报时校验对象存在且当前用户可见。
+- [x] 限制同一用户对同一对象重复举报频率。
 
 ### 3.4 后台接口
 
-- [ ] `GET /api/sys/reports`：分页筛选举报。
-- [ ] `GET /api/sys/reports/{id}`：举报详情。
-- [ ] `PUT /api/sys/reports/{id}/take`：接手举报，转为处理中。
-- [ ] `PUT /api/sys/reports/{id}/handle`：处理举报。
-- [ ] `PUT /api/sys/reports/{id}/reject`：驳回举报。
-- [ ] `GET /api/sys/reports/{id}/logs`：处理日志。
+- [x] `GET /api/sys/reports`：分页筛选举报。
+- [x] `GET /api/sys/reports/{id}`：举报详情。
+- [x] `PUT /api/sys/reports/{id}/take`：接手举报，转为处理中。
+- [x] `PUT /api/sys/reports/{id}/handle`：处理举报。
+- [x] `PUT /api/sys/reports/{id}/reject`：驳回举报。
+- [x] `GET /api/sys/reports/{id}/logs`：处理日志。
 
 ### 3.5 状态流转
 
-- [ ] `pending -> processing`：管理员接手。
-- [ ] `pending -> processed`：管理员直接处理。
-- [ ] `processing -> processed`：处理完成。
-- [ ] `pending -> rejected`：直接驳回。
-- [ ] `processing -> rejected`：核查后驳回。
-- [ ] 终态举报普通管理员不可再次修改。
+- [x] `pending -> processing`：管理员接手。
+- [x] `pending -> processed`：管理员直接处理。
+- [x] `processing -> processed`：处理完成。
+- [x] `pending -> rejected`：直接驳回。
+- [x] `processing -> rejected`：核查后驳回。
+- [x] 终态举报普通管理员不可再次修改。
 - [ ] 超级管理员可接管并终结异常举报。
 
 ### 3.6 测试
@@ -93,16 +94,16 @@
 
 ### 4.1 删除内容
 
-- [ ] 举报文章成立时可删除或下架文章。
-- [ ] 举报评论成立时可删除或隐藏评论。
-- [ ] 删除内容动作必须调用对应业务服务，不直接改表绕过一致性逻辑。
-- [ ] 删除动作写入举报处理日志和系统审计日志。
+- [x] 举报文章成立时可删除或下架文章。
+- [x] 举报评论成立时可删除或隐藏评论。
+- [x] 删除内容动作必须调用对应业务服务，不直接改表绕过一致性逻辑。
+- [x] 删除动作写入举报处理日志和系统审计日志。
 
 ### 4.2 撤回消息
 
-- [ ] 举报聊天消息成立时可调用聊天后台撤回能力。
-- [ ] 已撤回消息重复撤回保持幂等或给出明确业务错误。
-- [ ] 撤回后需要推送消息更新事件。
+- [x] 举报聊天消息成立时可调用聊天后台撤回能力。
+- [x] 已撤回消息重复撤回保持幂等或给出明确业务错误。
+- [x] 撤回后需要推送消息更新事件。
 
 ### 4.3 禁言用户
 
@@ -120,31 +121,31 @@
 
 ### 4.5 仅记录不处罚
 
-- [ ] 支持举报成立但不处罚。
-- [ ] 支持举报不成立并驳回。
-- [ ] 两种情况都需要明确处理说明。
+- [x] 支持举报成立但不处罚。
+- [x] 支持举报不成立并驳回。
+- [x] 两种情况都需要明确处理说明。
 
 ## 5. 审计增强
 
-- [ ] 举报处理动作写入 `sys_report_handle_log`。
-- [ ] 高风险动作同步写入系统操作日志。
-- [ ] 审计记录包含处理前状态和处理后状态。
+- [x] 举报处理动作写入 `sys_report_handle_log`。
+- [x] 高风险动作同步写入系统操作日志。
+- [x] 审计记录包含处理前状态和处理后状态。
 - [ ] 普通管理员不能删除审计记录。
 - [ ] 超级管理员接管行为必须单独记录。
 
 ## 6. 通知预留
 
-- [ ] 举报提交后后台可见。
+- [x] 举报提交后后台可见。
 - [ ] 举报处理结果是否通知举报人先预留字段。
 - [ ] 被举报人是否通知先不强制实现。
 - [ ] 后续如接入通知中心，应遵守用户通知设置。
 
 ## 7. 非目标
 
-- [ ] 第一阶段不做申诉流程。
-- [ ] 第一阶段不做自动审核。
-- [ ] 第一阶段不做复杂风控画像。
-- [ ] 第一阶段不做批量处理，除非后台需求进一步明确。
+- [x] 第一阶段不做申诉流程。
+- [x] 第一阶段不做自动审核。
+- [x] 第一阶段不做复杂风控画像。
+- [x] 第一阶段不做批量处理，除非后台需求进一步明确。
 
 ## 8. 完成标志
 
