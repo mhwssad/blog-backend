@@ -38,4 +38,13 @@ public class SysReportRecordRepositoryImpl extends ServiceImpl<SysReportRecordMa
                 .orderByDesc(SysReportRecord::getId);
         return page(new Page<>(current, size), wrapper);
     }
+
+    @Override
+    public boolean existsByReporterAndTarget(Long reporterUserId, String reportTargetType, Long reportTargetId) {
+        return count(new LambdaQueryWrapper<SysReportRecord>()
+                .eq(SysReportRecord::getReporterUserId, reporterUserId)
+                .eq(SysReportRecord::getReportTargetType, reportTargetType)
+                .eq(SysReportRecord::getReportTargetId, reportTargetId)
+                .ge(SysReportRecord::getReportedAt, LocalDateTime.now().minusHours(24))) > 0;
+    }
 }

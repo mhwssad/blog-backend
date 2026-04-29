@@ -21,4 +21,9 @@ public interface SysReportRecordRepository extends IService<SysReportRecord> {
                                         LocalDateTime reportedEnd,
                                         long current,
                                         long size);
+
+    /**
+     * 检查同一用户对同一对象是否已有举报记录。
+     */
+    boolean existsByReporterAndTarget(Long reporterUserId, String reportTargetType, Long reportTargetId);
 }
