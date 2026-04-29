@@ -21,14 +21,14 @@
   ✅ Step 4: 拆分ChatAdminServiceImpl → 2子Service + 门面
   ✅ Step 5: 拆分UserFileServiceImpl → FileUploadService + UserFileQueryService + 门面
   ✅ Step 6: 拆分ArticleAdminServiceImpl → ArticleAdminCrudService + ArticleAdminModerationService + 门面
+  ✅ 拆分ChatAttachmentAsyncProcessingServiceImpl → ImageProcessor + VoiceProcessor + 门面
+  ✅ 拆分ArticleSeriesServiceImpl → ArticleSeriesItemService + 门面
+  ✅ ai/report 预备模块状态定义
 
 待推进:
-  ⏳ 拆分ChatAttachmentAsyncProcessingServiceImpl (529行/3方法，暂缓)
-  ⏳ 拆分ArticleSeriesServiceImpl (562行/12方法，暂缓)
   ⏳ auth/chat/content 子域化
   ⏳ domain/mapper/resources 分组优化
   ⏳ utils 结构提纯
-  ⏳ ai/report 预备模块状态定义
 ```
 
 ## 3. 第一阶段：先修边界，不搬目录
@@ -118,8 +118,8 @@
 
 ### 6.3 预备模块定义
 
-- [ ] 为 `ai` / `report` 增加“预备模块”状态说明
-- [ ] 在结构规范中补充 pre-module / schema-aligned module 规则
+- [x] 为 `ai` / `report` 增加”预备模块”状态说明
+- [x] 在结构规范中补充 pre-module / schema-aligned module 规则
 
 ## 7. 完成标志
 
