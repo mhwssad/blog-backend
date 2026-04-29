@@ -181,6 +181,29 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    public void banUserByReport(Long operatorId, Long targetId, String reason, String ip, String ua) {
+        superAdminVerifier.requireSuperAdmin(operatorId);
+        ExceptionThrowerCore.throwBusinessIf(operatorId.equals(targetId), ResultErrorCode.CANNOT_MODIFY_SELF);
+        SysUser user = getAvailableUser(targetId);
+        String beforeState = JsonUtils.toJson(user);
+        user.setStatus(0);
+        sysUserRepository.updateById(user);
+        tokenManager.invalidateUserSessions(targetId);
+        SysAuditLogCreateRequest request = new SysAuditLogCreateRequest();
+        request.setOperatorUserId(operatorId);
+        request.setTargetUserId(targetId);
+        request.setOperationType(SysAuditOperationType.BAN_USER.getCode());
+        request.setBeforeState(beforeState);
+        request.setAfterState(JsonUtils.toJson(user));
+        request.setMfaPassed(0);
+        request.setRequestIp(ip);
+        request.setUserAgent(ua);
+        request.setRemark(reason);
+        sysAuditLogService.record(request);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
     public void unbanUser(Long operatorId, Long targetId, String mfaTicket, String ip, String ua) {
         validateHighRiskOperation(operatorId, targetId, mfaTicket);
         SysUser user = getAvailableUser(targetId);

@@ -33,6 +33,8 @@ public interface SysUserAdminService {
 
     void banUser(Long operatorId, Long targetId, String mfaTicket, String ip, String ua);
 
+    void banUserByReport(Long operatorId, Long targetId, String reason, String ip, String ua);
+
     void unbanUser(Long operatorId, Long targetId, String mfaTicket, String ip, String ua);
 
     void adjustLevel(Long operatorId, Long targetId, Integer newLevel, String mfaTicket, String ip, String ua);

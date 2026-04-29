@@ -32,12 +32,13 @@
 待推进:
   ✅ 作者主页增强
   ✅ 用户等级经验入账与每日上限
-  ⏳ 等级与 AI 额度联动
+  ✅ 等级与 AI 额度联动
 ```
 
 补充进展：
 - `sys_user.user_level`、`experience_points`、`level_updated_at` 已完成实体、Mapper、后台用户 VO、当前登录用户信息承接。
-- 经验入账、等级计算、后台经验汇总和配置管理已完成首轮落地，当前待补的是等级与聊天 / 频道 / AI 等业务门槛联动。
+- 经验入账、等级计算、后台经验汇总和配置管理已完成首轮落地。
+- AI 每日额度已通过 `AiQuotaServiceImpl.computeEffectiveLimit()` 联动用户等级：`UserExperienceService.getUserLevel()` → `LevelConfig.getByLevel()` → `getAiDailyQuota()`。
 
 ## 3. T01 作者申请与审核闭环
 
