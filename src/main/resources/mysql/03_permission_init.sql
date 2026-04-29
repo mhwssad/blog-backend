@@ -681,6 +681,15 @@ VALUES (1870, 1850, '0,1850', '调用统计', 'M', 'AiUsageStats', 'usage-stats'
        (1871, 1870, '0,1850,1870', '统计查询', 'B', NULL, NULL, NULL, 'ai:usage-stats:query', 0, 0, 1, 1, NULL, NULL, NOW(),
         NOW(), NULL);
 
+-- AI 会话管理
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1880, 1850, '0,1850', '会话管理', 'M', 'AiSessionManage', 'sessions', 'ai/sessions/index', NULL, 0, 1, 1, 3,
+        'message', NULL, NOW(), NOW(), NULL),
+       (1881, 1880, '0,1850,1880', '会话查询', 'B', NULL, NULL, NULL, 'ai:session:query', 0, 0, 1, 1, NULL, NULL, NOW(),
+        NOW(), NULL);
+
 -- 举报管理（系统管理 1000 下）
 INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
                         `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
@@ -718,6 +727,7 @@ VALUES (1, 1800), (1, 1801), (1, 1802), (1, 1803), (1, 1804),
        (1, 1850),
        (1, 1860), (1, 1861), (1, 1862), (1, 1863), (1, 1864),
        (1, 1870), (1, 1871),
+       (1, 1880), (1, 1881),
        (1, 1900), (1, 1901), (1, 1902),
        (1, 1910), (1, 1911),
        (1, 1920), (1, 1921);

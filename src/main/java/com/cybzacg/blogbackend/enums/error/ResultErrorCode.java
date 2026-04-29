@@ -112,7 +112,14 @@ public enum ResultErrorCode implements ResultCode {
     AI_MODEL_CALL_FAILED(70009, "AI 模型调用失败"),
     AI_CONTEXT_TOO_LONG(70010, "上下文长度超限"),
     AI_MESSAGE_CONTENT_BLANK(70011, "消息内容不能为空"),
-    AI_CHANNEL_CODE_DUPLICATE(70012, "渠道编码已存在");
+    AI_CHANNEL_CODE_DUPLICATE(70012, "渠道编码已存在"),
+
+    REPORT_NOT_FOUND(71001, "举报记录不存在"),
+    REPORT_ALREADY_HANDLED(71002, "举报已处理，不可重复操作"),
+    REPORT_DUPLICATE_RATE_LIMITED(71003, "举报过于频繁，请稍后再试"),
+    REPORT_TARGET_NOT_FOUND(71004, "举报对象不存在"),
+    REPORT_TARGET_TYPE_INVALID(71005, "举报对象类型无效"),
+    REPORT_RESULT_TYPE_INVALID(71006, "处理结果类型无效");
 
     private final Integer code;
     private final String message;

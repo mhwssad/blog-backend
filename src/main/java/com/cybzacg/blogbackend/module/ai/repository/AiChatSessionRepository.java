@@ -3,6 +3,7 @@ package com.cybzacg.blogbackend.module.ai.repository;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.cybzacg.blogbackend.domain.AiChatSession;
+import com.cybzacg.blogbackend.module.ai.model.admin.AiSessionPageQuery;
 
 import java.util.List;
 
@@ -31,4 +32,9 @@ public interface AiChatSessionRepository extends IService<AiChatSession> {
      * @return 分页结果
      */
     Page<AiChatSession> pageByUserIdAndStatus(Long userId, Integer status, long current, long size);
+
+    /**
+     * 后台按条件分页查询会话。
+     */
+    Page<AiChatSession> pageByAdminConditions(AiSessionPageQuery query);
 }

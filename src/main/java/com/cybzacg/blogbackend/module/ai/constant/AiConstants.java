@@ -15,6 +15,9 @@ public final class AiConstants {
 
     public static final String SCENE_TYPE_GENERAL = "general";
 
+    /** 单次用户输入最大字符数 */
+    public static final int MAX_INPUT_LENGTH = 2000;
+
     private AiConstants() {
     }
 }

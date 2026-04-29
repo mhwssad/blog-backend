@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.domain.AiChatSession;
 import com.cybzacg.blogbackend.mapper.AiChatSessionMapper;
+import com.cybzacg.blogbackend.module.ai.model.admin.AiSessionPageQuery;
 import com.cybzacg.blogbackend.module.ai.repository.AiChatSessionRepository;
 import org.springframework.stereotype.Repository;
 
@@ -54,5 +55,21 @@ public class AiChatSessionRepositoryImpl extends ServiceImpl<AiChatSessionMapper
                 .orderByDesc(AiChatSession::getUpdatedAt)
                 .orderByDesc(AiChatSession::getId);
         return page(new Page<>(current, size), wrapper);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Page<AiChatSession> pageByAdminConditions(AiSessionPageQuery query) {
+        LambdaQueryWrapper<AiChatSession> wrapper = new LambdaQueryWrapper<AiChatSession>()
+                .eq(query.getUserId() != null, AiChatSession::getUserId, query.getUserId())
+                .eq(query.getStatus() != null, AiChatSession::getStatus, query.getStatus())
+                .eq(query.getChannelConfigId() != null, AiChatSession::getChannelConfigId, query.getChannelConfigId())
+                .ge(query.getStartTime() != null, AiChatSession::getCreatedAt, query.getStartTime())
+                .le(query.getEndTime() != null, AiChatSession::getCreatedAt, query.getEndTime())
+                .orderByDesc(AiChatSession::getUpdatedAt)
+                .orderByDesc(AiChatSession::getId);
+        return page(new Page<>(query.getCurrent(), query.getSize()), wrapper);
     }
 }

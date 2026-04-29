@@ -29,14 +29,14 @@ public class AiUsageLogAdminController {
 
     @GetMapping
     @Operation(summary = "分页查询使用日志")
-    @PreAuthorize("@permission.hasPermission('ai:log:query')")
+    @PreAuthorize("@permission.hasPermission('ai:usage-stats:query')")
     public Result<PageResult<AiUsageLogVO>> pageUsageLogs(AiUsageLogPageQuery query) {
         return Result.success(aiUsageLogService.pageUsageLogs(query));
     }
 
     @GetMapping("/stats")
     @Operation(summary = "获取使用统计")
-    @PreAuthorize("@permission.hasPermission('ai:log:query')")
+    @PreAuthorize("@permission.hasPermission('ai:usage-stats:query')")
     public Result<AiUsageStatsVO> getUsageStats(AiUsageLogPageQuery query) {
         return Result.success(aiUsageLogService.getUsageStats(query));
     }

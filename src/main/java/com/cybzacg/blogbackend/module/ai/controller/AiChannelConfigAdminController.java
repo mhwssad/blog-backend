@@ -37,7 +37,7 @@ public class AiChannelConfigAdminController {
 
     @GetMapping
     @Operation(summary = "分页查询渠道配置")
-    @PreAuthorize("@permission.hasPermission('ai:channel:query')")
+    @PreAuthorize("@permission.hasPermission('ai:channel-config:query')")
     public Result<PageResult<AiChannelConfigVO>> listChannels(
             @RequestParam(defaultValue = "1") Long current,
             @RequestParam(defaultValue = "10") Long size) {
@@ -46,14 +46,14 @@ public class AiChannelConfigAdminController {
 
     @GetMapping("/{id}")
     @Operation(summary = "查询渠道配置详情")
-    @PreAuthorize("@permission.hasPermission('ai:channel:query')")
+    @PreAuthorize("@permission.hasPermission('ai:channel-config:query')")
     public Result<AiChannelConfigVO> getChannel(@PathVariable Long id) {
         return Result.success(aiChannelConfigAdminService.getChannel(id));
     }
 
     @PostMapping
     @Operation(summary = "创建渠道配置")
-    @PreAuthorize("@permission.hasPermission('ai:channel:create')")
+    @PreAuthorize("@permission.hasPermission('ai:channel-config:create')")
     public Result<AiChannelConfigVO> createChannel(@Valid @RequestBody AiChannelConfigSaveRequest request) {
         Long operatorId = SecurityUtils.requireUserId();
         return Result.success(aiChannelConfigAdminService.createChannel(request, operatorId));
@@ -61,7 +61,7 @@ public class AiChannelConfigAdminController {
 
     @PutMapping("/{id}")
     @Operation(summary = "更新渠道配置")
-    @PreAuthorize("@permission.hasPermission('ai:channel:update')")
+    @PreAuthorize("@permission.hasPermission('ai:channel-config:update')")
     public Result<AiChannelConfigVO> updateChannel(
             @PathVariable Long id,
             @Valid @RequestBody AiChannelConfigSaveRequest request) {
@@ -71,7 +71,7 @@ public class AiChannelConfigAdminController {
 
     @PutMapping("/{id}/status")
     @Operation(summary = "更新渠道状态")
-    @PreAuthorize("@permission.hasPermission('ai:channel:update')")
+    @PreAuthorize("@permission.hasPermission('ai:channel-config:update')")
     public Result<Void> updateStatus(
             @PathVariable Long id,
             @Valid @RequestBody AiChannelStatusRequest request) {
@@ -82,7 +82,7 @@ public class AiChannelConfigAdminController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "删除渠道配置")
-    @PreAuthorize("@permission.hasPermission('ai:channel:delete')")
+    @PreAuthorize("@permission.hasPermission('ai:channel-config:delete')")
     public Result<Void> deleteChannel(@PathVariable Long id) {
         Long operatorId = SecurityUtils.requireUserId();
         aiChannelConfigAdminService.deleteChannel(id, operatorId);

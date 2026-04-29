@@ -9,8 +9,8 @@
 | [01-author-level-permission-todo.md](01-author-level-permission-todo.md) | 作者申请、用户等级、超级管理员安全 | 进行中 | P0 |
 | [02-blog-content-lifecycle-todo.md](02-blog-content-lifecycle-todo.md) | 文章状态、可见范围、审核、系列文章 | 进行中 | P0 |
 | [03-chat-community-todo.md](03-chat-community-todo.md) | 大厅频道、主题频道、群聊增强、论坛挂接 | 进行中 | P0 |
-| [04-ai-module-todo.md](04-ai-module-todo.md) | AI 问答、配置中心、额度、数据范围 | 待开始 | P0 |
-| [05-governance-report-audit-todo.md](05-governance-report-audit-todo.md) | 举报处理、治理动作、审计增强 | 待开始 | P0 |
+| [04-ai-module-todo.md](04-ai-module-todo.md) | AI 问答、配置中心、额度、数据范围 | 进行中 | P0 |
+| [05-governance-report-audit-todo.md](05-governance-report-audit-todo.md) | 举报处理、治理动作、审计增强 | 进行中 | P0 |
 | [06-notification-dashboard-todo.md](06-notification-dashboard-todo.md) | 通知设置、通知投递过滤、数据看板 | 进行中 | P1 |
 | [07-database-schema-alignment-todo.md](07-database-schema-alignment-todo.md) | 已补表结构与业务实现对齐 | 进行中 | P0 |
 | [08-source-structure-optimization-todo.md](08-source-structure-optimization-todo.md) | 源码结构治理、边界收口、重型类拆分与子域化 | 进行中 | P1 |

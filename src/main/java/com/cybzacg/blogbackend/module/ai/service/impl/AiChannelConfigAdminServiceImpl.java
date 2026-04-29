@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.AiChannelConfig;
 import com.cybzacg.blogbackend.enums.SysAuditOperationType;
+import com.cybzacg.blogbackend.enums.ai.AiDataScopeEnum;
 import com.cybzacg.blogbackend.enums.ai.AiChannelStatusEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.ai.convert.AiModelMapper;
@@ -176,15 +177,19 @@ public class AiChannelConfigAdminServiceImpl implements AiChannelConfigAdminServ
                 && !request.getApiKeyEncrypted().equals(existing.getApiKeyEncrypted());
         boolean statusChanged = request.getStatus() != null
                 && !request.getStatus().equals(existing.getStatus());
+        boolean dataScopePrivateChat = request.getDataScopeJson() != null
+                && AiDataScopeEnum.isHighRisk(request.getDataScopeJson());
 
-        if (apiKeyChanged || statusChanged) {
+        if (apiKeyChanged || statusChanged || dataScopePrivateChat) {
             SysAuditLogCreateRequest auditRequest = new SysAuditLogCreateRequest();
             auditRequest.setOperatorUserId(operatorId);
             auditRequest.setOperationType(SysAuditOperationType.MODIFY_AI_CONFIG.getCode());
             auditRequest.setTargetTypeName("AiChannelConfig");
             auditRequest.setTargetId(existing.getId());
             auditRequest.setBeforeState(buildStateSummary(existing));
-            auditRequest.setAfterState("apiKeyChanged=" + apiKeyChanged + ",statusChanged=" + statusChanged);
+            auditRequest.setAfterState("apiKeyChanged=" + apiKeyChanged
+                    + ",statusChanged=" + statusChanged
+                    + ",privateChatEnabled=" + dataScopePrivateChat);
             sysAuditLogService.record(auditRequest);
         }
     }
