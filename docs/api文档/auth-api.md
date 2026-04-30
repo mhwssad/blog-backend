@@ -287,7 +287,7 @@ Authorization: Bearer <accessToken>
 
 ## 5. 公开作者主页
 
-### 6.1 页面会用到哪些接口
+### 5.1 页面会用到哪些接口
 
 | 场景 | 接口 |
 | --- | --- |
@@ -324,7 +324,7 @@ Authorization: Bearer <accessToken>
 
 ## 6. 登录用户作者申请
 
-### 5.1 页面会用到哪些接口
+### 6.1 页面会用到哪些接口
 
 | 场景 | 接口 |
 | --- | --- |
@@ -1024,7 +1024,7 @@ AI 统计响应字段：`aiCallCount`、`aiSuccessCallCount`、`aiFailedCallCoun
 
 - 响应：`Long`，表示清理数量
 
-### 8.7 作者申请后台管理
+### 8.8 作者申请后台管理
 
 #### 接口速览
 
@@ -1111,7 +1111,7 @@ AI 统计响应字段：`aiCallCount`、`aiSuccessCallCount`、`aiFailedCallCoun
 - 当文章数量达到上限时，统一在现有文章创建链路中拦截。
 - 若配置值为 `0`，表示该身份类型不限制文章总量。
 
-### 8.8 经验体系管理
+### 8.9 经验体系管理
 
 #### 接口速览
 
@@ -1191,6 +1191,53 @@ AI 统计响应字段：`aiCallCount`、`aiSuccessCallCount`、`aiFailedCallCoun
 }
 ```
 
+### 8.10 审计日志管理
+
+审计日志记录超级管理员的敏感操作（封禁/解封、等级调整、角色分配等），仅超级管理员可访问。
+
+#### 接口速览
+
+| 场景 | 方法 | 路径 | 权限 |
+| --- | --- | --- | --- |
+| 分页查询审计日志 | GET | `/api/sys/audit-logs` | `sys:audit:query` |
+| 查询审计日志详情 | GET | `/api/sys/audit-logs/{id}` | `sys:audit:query` |
+
+#### 分页查询审计日志
+
+- 请求：`GET /api/sys/audit-logs`
+- 查询参数：`SysAuditLogPageQuery`
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `current` | Long | 页码，默认 `1` |
+| `size` | Long | 每页条数，默认 `10` |
+| `operatorUserId` | Long | 操作人 ID |
+| `targetUserId` | Long | 目标用户 ID |
+| `operationType` | String | 操作类型 |
+
+- 响应：`PageResult<SysAuditLogAdminVO>`
+
+#### 审计日志详情 / 分页项
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | Long | 主键 |
+| `operatorUserId` | Long | 操作人 ID |
+| `operatorUsername` | String | 操作人用户名 |
+| `targetUserId` | Long | 目标用户 ID |
+| `targetUsername` | String | 目标用户名 |
+| `operationType` | String | 操作类型 |
+| `operationTypeDesc` | String | 操作类型描述 |
+| `targetTypeName` | String | 目标对象类型名称 |
+| `targetId` | Long | 目标对象 ID |
+| `beforeState` | String | 操作前状态 |
+| `afterState` | String | 操作后状态 |
+| `mfaPassed` | Integer | 2FA 是否通过 |
+| `requestIp` | String | 请求 IP |
+| `userAgent` | String | User-Agent |
+| `remark` | String | 备注 |
+| `createdAt` | DateTime | 创建时间 |
+
 ## 9. 权限标识速查
 
 | 权限标识                      | 说明        |
@@ -1227,6 +1274,7 @@ AI 统计响应字段：`aiCallCount`、`aiSuccessCallCount`、`aiFailedCallCoun
 | `sys:log:query`           | 查询日志      |
 | `sys:log:delete`          | 删除日志      |
 | `sys:log:clean`           | 清理日志      |
+| `sys:audit:query`         | 查询审计日志    |
 | `sys:experience:query`    | 查询经验相关      |
 | `sys:experience:adjust`   | 调整用户等级/经验  |
 | `sys:experience:config`   | 管理经验来源配置  |

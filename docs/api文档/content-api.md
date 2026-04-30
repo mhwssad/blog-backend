@@ -771,8 +771,8 @@ Authorization: Bearer <accessToken>
 | 新增文章     | POST   | `/api/sys/articles`             | `content:article:create` |
 | 修改文章     | PUT    | `/api/sys/articles/{id}`        | `content:article:update` |
 | 修改文章状态   | PUT    | `/api/sys/articles/{id}/status` | `content:article:update` |
-| 切换文章置顶   | PUT    | `/api/sys/articles/{id}/top`    | `content:article:top`     |
-| 切换文章推荐   | PUT    | `/api/sys/articles/{id}/recommend` | `content:article:recommend` |
+| 切换文章置顶   | PUT    | `/api/sys/articles/{id}/top`    | `content:article:update` |
+| 切换文章推荐   | PUT    | `/api/sys/articles/{id}/recommend` | `content:article:update` |
 | 配置文章访问名单 | PUT    | `/api/sys/articles/{id}/access` | `content:article:access` |
 | 删除文章     | DELETE | `/api/sys/articles/{id}`        | `content:article:delete` |
 
@@ -921,6 +921,24 @@ Authorization: Bearer <accessToken>
   "status": 1
 }
 ```
+
+#### 切换文章置顶
+
+- 请求：`PUT /api/sys/articles/{id}/top?enabled=true`
+- 查询参数：
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `enabled` | Boolean | `true` 置顶，`false` 取消置顶 |
+
+#### 切换文章推荐
+
+- 请求：`PUT /api/sys/articles/{id}/recommend?enabled=true`
+- 查询参数：
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `enabled` | Boolean | `true` 推荐，`false` 取消推荐 |
 
 #### 配置文章访问名单
 
@@ -1131,6 +1149,11 @@ Authorization: Bearer <accessToken>
 #### 查询参数
 
 - `current`、`size`、`targetId`、`targetType`、`userId`、`rootId`、`parentId`、`status`
+
+#### 评论详情
+
+- 请求：`GET /api/sys/comments/{id}`
+- 响应：`Result<CommentVO>`，字段同下方 `CommentVO` 表。
 
 #### 状态请求体
 

@@ -22,6 +22,8 @@
 - `api文档/content-api.md`：文章、分类、标签、评论、收藏、互动、足迹接口。
 - `api文档/file-api.md`：文件上传、我的文件、后台文件管理接口。
 - `api文档/chat-api.md`：聊天用户接口、后台聊天管理与 WebSocket 协议说明。
+- `api文档/ai-api.md`：AI 对话、额度查询与管理员配置接口。
+- `api文档/report-api.md`：举报提交、查询、处理日志与管理员审核接口。
 - `api文档/follow-api.md`：关注、粉丝、互关状态、公开查看与后台治理接口。
 
 ## 3. 研发任务与专项文档
@@ -30,6 +32,8 @@
 - `tasks/08-source-structure-optimization-todo.md`：源码结构治理执行清单，跟踪边界收口、重型类拆分和子域化推进。
 - `tasks/chat-implementation.md`：聊天模块当前实现边界、关键语义和后续维护约束。
 - `tasks/follow-module-todo.md`：关注模块后续评估项。
+- `tasks/04-ai-module-todo.md`：AI 模块当前实现边界、关键语义和后续维护约束。
+- `tasks/05-governance-report-audit-todo.md`：举报治理模块当前实现边界、关键语义和后续维护约束。
 
 ## 4. 使用约定
 
@@ -37,5 +41,5 @@
 - 涉及项目阶段、已完成能力、具体任务、优先级或验收项变化时，更新 `tasks/README.md` 或对应任务清单。
 - 涉及前端可见接口变化时，同时更新对应 `api文档`。
 - `README.md` 保留项目入口与运行说明；更细的阶段判断、规范和专项说明统一沉淀在 `docs/` 下。
-- `chat` 已完成 v1 用户侧读写、单机 WebSocket 与后台管理接口；`follow` 已完成用户侧主链路、公开访客接口、后台治理接口与
-  Repository 收口。
+- `chat` 已完成 v1 用户侧读写、单机 WebSocket 与后台管理接口；`follow` 已完成用户侧主链路、公开访客接口、后台治理接口与 Repository 收口。
+- `ai` 已完成用户对话、额度管理与管理员配置接口；`report` 已完成举报提交、查询、处理日志与管理员审核接口。
