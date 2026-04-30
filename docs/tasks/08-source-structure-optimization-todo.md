@@ -10,7 +10,7 @@
 
 ## 2. 当前状态
 
-**当前阶段：第二阶段进行中。重型Service拆分全部完成。**
+**当前阶段：全部完成。**
 
 ```
 已完成:
@@ -24,11 +24,11 @@
   ✅ 拆分ChatAttachmentAsyncProcessingServiceImpl → ImageProcessor + VoiceProcessor + 门面
   ✅ 拆分ArticleSeriesServiceImpl → ArticleSeriesItemService + 门面
   ✅ ai/report 预备模块状态定义
-
-待推进:
-  ⏳ auth/chat/content 子域化
-  ⏳ domain/mapper/resources 分组优化
-  ⏳ utils 结构提纯
+  ✅ auth 子域化 (account/audit/author/config/experience/notice/rbac)
+  ✅ chat 子域化 (shared/conversation/member/message/attachment/governance/push/websocket)
+  ✅ content 子域化 (collection/comment/footprint/interaction/shared/taxonomy)
+  ✅ domain/mapper/resources 按业务域分组 (ai/article/auth/chat/config/content/dashboard/file/follow/forum/notice/report/system)
+  ✅ utils 结构提纯 (删除死代码, HttpServletResponseUtils迁入core/util)
 ```
 
 ## 3. 第一阶段：先修边界，不搬目录
@@ -89,32 +89,32 @@
 
 ### 5.1 auth
 
-- [ ] 明确 `account / author / rbac / notice / experience / config / audit` 子域结构
-- [ ] 新增代码默认落入对应子域
-- [ ] 历史高频改动类逐步迁移
+- [x] 明确 `account / author / rbac / notice / experience / config / audit` 子域结构
+- [x] 新增代码默认落入对应子域
+- [x] 历史高频改动类逐步迁移
 
 ### 5.2 chat
 
-- [ ] 明确 `conversation / member / message / attachment / governance / push / websocket / shared` 子域结构
-- [ ] 新增代码默认落入对应子域
+- [x] 明确 `conversation / member / message / attachment / governance / push / websocket / shared` 子域结构
+- [x] 新增代码默认落入对应子域
 
 ### 5.3 content
 
-- [ ] 明确 `comment / collection / taxonomy / interaction / footprint / shared` 子域结构
-- [ ] 新增代码默认落入对应子域
+- [x] 明确 `comment / collection / taxonomy / interaction / footprint / shared` 子域结构
+- [x] 新增代码默认落入对应子域
 
 ## 6. 第四阶段：顶层提纯
 
 ### 6.1 domain / mapper / resources 分组
 
-- [ ] `domain` 按业务域分包
-- [ ] `mapper` 按业务域分包
-- [ ] `resources/.../mapper` 按业务域分目录
+- [x] `domain` 按业务域分包
+- [x] `mapper` 按业务域分包
+- [x] `resources/.../mapper` 按业务域分目录
 
 ### 6.2 utils 结构提纯
 
-- [ ] 识别应迁往 `core` / `common` / `module/file/support` 的工具类
-- [ ] 限制新增“伪通用”工具进入 `utils`
+- [x] 识别应迁往 `core` / `common` / `module/file/support` 的工具类
+- [x] 限制新增”伪通用”工具进入 `utils`
 
 ### 6.3 预备模块定义
 
