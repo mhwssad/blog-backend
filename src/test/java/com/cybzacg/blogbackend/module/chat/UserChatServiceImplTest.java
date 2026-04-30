@@ -1,13 +1,14 @@
 package com.cybzacg.blogbackend.module.chat;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.module.chat.model.user.*;
-import com.cybzacg.blogbackend.module.chat.service.ChatConversationQueryService;
-import com.cybzacg.blogbackend.module.chat.service.ChatMessageSendService;
-import com.cybzacg.blogbackend.module.chat.service.ChatMessageLifecycleService;
-import com.cybzacg.blogbackend.module.chat.service.ChatGroupManageService;
-import com.cybzacg.blogbackend.module.chat.service.ChatChannelJoinService;
-import com.cybzacg.blogbackend.module.chat.service.impl.UserChatServiceImpl;
+import com.cybzacg.blogbackend.module.chat.conversation.model.user.*;
+import com.cybzacg.blogbackend.module.chat.message.model.user.*;
+import com.cybzacg.blogbackend.module.chat.conversation.service.ChatConversationQueryService;
+import com.cybzacg.blogbackend.module.chat.message.service.ChatMessageSendService;
+import com.cybzacg.blogbackend.module.chat.message.service.ChatMessageLifecycleService;
+import com.cybzacg.blogbackend.module.chat.member.service.ChatGroupManageService;
+import com.cybzacg.blogbackend.module.chat.member.service.ChatChannelJoinService;
+import com.cybzacg.blogbackend.module.chat.message.service.impl.UserChatServiceImpl;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

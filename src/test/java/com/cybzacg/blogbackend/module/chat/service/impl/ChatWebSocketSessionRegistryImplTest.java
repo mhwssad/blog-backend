@@ -1,6 +1,7 @@
 package com.cybzacg.blogbackend.module.chat.service.impl;
 
 import com.cybzacg.blogbackend.common.constant.WebSocketConstants;
+import com.cybzacg.blogbackend.module.chat.member.service.impl.ChatWebSocketSessionRegistryImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.socket.WebSocketSession;
 

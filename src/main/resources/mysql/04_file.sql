@@ -2,7 +2,8 @@
 -- 文件模块表结构
 -- 包含：文件主表、上传任务表、文件分片表、文件业务属性表
 -- ============================================
-
+CREATE DATABASE IF NOT EXISTS blog_backend CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_unicode_ci;
+use blog_backend;
 -- ----------------------------
 -- 文件主表（已完成上传的文件元数据）
 -- ----------------------------

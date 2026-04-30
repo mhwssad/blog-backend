@@ -3,16 +3,16 @@ package com.cybzacg.blogbackend.module.chat;
 import com.cybzacg.blogbackend.core.security.SecurityPermissionChecker;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.chat.controller.ChatAdminController;
-import com.cybzacg.blogbackend.module.chat.controller.UserChatController;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminConversationVO;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageDetailVO;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageReceiptVO;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageVO;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatConversationVO;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatMessageVO;
-import com.cybzacg.blogbackend.module.chat.service.ChatAdminService;
-import com.cybzacg.blogbackend.module.chat.service.UserChatService;
+import com.cybzacg.blogbackend.module.chat.governance.controller.ChatAdminController;
+import com.cybzacg.blogbackend.module.chat.message.controller.UserChatController;
+import com.cybzacg.blogbackend.module.chat.conversation.model.admin.ChatAdminConversationVO;
+import com.cybzacg.blogbackend.module.chat.message.model.admin.ChatAdminMessageDetailVO;
+import com.cybzacg.blogbackend.module.chat.message.model.admin.ChatAdminMessageReceiptVO;
+import com.cybzacg.blogbackend.module.chat.message.model.admin.ChatAdminMessageVO;
+import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatConversationVO;
+import com.cybzacg.blogbackend.module.chat.message.model.user.ChatMessageVO;
+import com.cybzacg.blogbackend.module.chat.governance.service.ChatAdminService;
+import com.cybzacg.blogbackend.module.chat.message.service.UserChatService;
 import com.cybzacg.blogbackend.utils.HttpServletResponseUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -102,7 +102,7 @@ class ChatControllerSecurityTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value(ResultErrorCode.LOGIN_REQUIRED.getCode()));
 
-        verify(userChatService, never()).sendTextMessage(any(com.cybzacg.blogbackend.module.chat.model.user.ChatSendTextRequest.class));
+        verify(userChatService, never()).sendTextMessage(any(com.cybzacg.blogbackend.module.chat.message.model.user.ChatSendTextRequest.class));
     }
 
     @Test
@@ -111,7 +111,7 @@ class ChatControllerSecurityTest {
         ChatMessageVO messageVO = new ChatMessageVO();
         messageVO.setId(9001L);
         messageVO.setContent("hello");
-        when(userChatService.sendTextMessage(any(com.cybzacg.blogbackend.module.chat.model.user.ChatSendTextRequest.class)))
+        when(userChatService.sendTextMessage(any(com.cybzacg.blogbackend.module.chat.message.model.user.ChatSendTextRequest.class)))
                 .thenReturn(messageVO);
 
         mockMvc.perform(post("/api/user/chat/messages/text")
@@ -121,7 +121,7 @@ class ChatControllerSecurityTest {
                 .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()))
                 .andExpect(jsonPath("$.data.id").value(9001));
 
-        verify(userChatService).sendTextMessage(any(com.cybzacg.blogbackend.module.chat.model.user.ChatSendTextRequest.class));
+        verify(userChatService).sendTextMessage(any(com.cybzacg.blogbackend.module.chat.message.model.user.ChatSendTextRequest.class));
     }
 
     @Test
@@ -132,7 +132,7 @@ class ChatControllerSecurityTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value(ResultErrorCode.LOGIN_REQUIRED.getCode()));
 
-        verify(userChatService, never()).sendFileMessage(any(com.cybzacg.blogbackend.module.chat.model.user.ChatSendFileRequest.class));
+        verify(userChatService, never()).sendFileMessage(any(com.cybzacg.blogbackend.module.chat.message.model.user.ChatSendFileRequest.class));
     }
 
     @Test
@@ -140,7 +140,7 @@ class ChatControllerSecurityTest {
     void sendFileMessageShouldAllowAuthenticatedUser() throws Exception {
         ChatMessageVO messageVO = new ChatMessageVO();
         messageVO.setId(9002L);
-        when(userChatService.sendFileMessage(any(com.cybzacg.blogbackend.module.chat.model.user.ChatSendFileRequest.class)))
+        when(userChatService.sendFileMessage(any(com.cybzacg.blogbackend.module.chat.message.model.user.ChatSendFileRequest.class)))
                 .thenReturn(messageVO);
 
         mockMvc.perform(post("/api/user/chat/messages/file")
@@ -150,7 +150,7 @@ class ChatControllerSecurityTest {
                 .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()))
                 .andExpect(jsonPath("$.data.id").value(9002));
 
-        verify(userChatService).sendFileMessage(any(com.cybzacg.blogbackend.module.chat.model.user.ChatSendFileRequest.class));
+        verify(userChatService).sendFileMessage(any(com.cybzacg.blogbackend.module.chat.message.model.user.ChatSendFileRequest.class));
     }
 
     @Test

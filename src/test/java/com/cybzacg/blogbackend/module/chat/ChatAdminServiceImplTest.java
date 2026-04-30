@@ -1,10 +1,12 @@
 package com.cybzacg.blogbackend.module.chat;
 
-import com.cybzacg.blogbackend.module.chat.model.admin.*;
-import com.cybzacg.blogbackend.module.chat.model.user.ChatMemberVO;
-import com.cybzacg.blogbackend.module.chat.service.ChatAdminGovernanceService;
-import com.cybzacg.blogbackend.module.chat.service.ChatAdminQueryService;
-import com.cybzacg.blogbackend.module.chat.service.impl.ChatAdminServiceImpl;
+import com.cybzacg.blogbackend.module.chat.conversation.model.admin.*;
+import com.cybzacg.blogbackend.module.chat.member.model.admin.*;
+import com.cybzacg.blogbackend.module.chat.message.model.admin.*;
+import com.cybzacg.blogbackend.module.chat.member.model.user.ChatMemberVO;
+import com.cybzacg.blogbackend.module.chat.governance.service.ChatAdminGovernanceService;
+import com.cybzacg.blogbackend.module.chat.governance.service.ChatAdminQueryService;
+import com.cybzacg.blogbackend.module.chat.governance.service.impl.ChatAdminServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

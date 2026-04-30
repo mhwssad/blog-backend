@@ -93,9 +93,9 @@ VALUES (1, '超级管理员', 'admin', 1, 1, 1, 1, NOW(), 1, NOW(), 0),
 INSERT INTO `sys_user`
 (`id`, `username`, `password`, `nickname`, `email`, `phone`, `avatar`, `gender`, `birthday`, `status`,
  `last_login_time`, `last_login_ip`, `created_at`, `updated_at`, `deleted_flag`, `remark`)
-VALUES (1, 'admin', '$2a$10$dXJ3SW6G7P50lGmMkkmweuJ1CwV5G6IwM/7Aic7QvYu2L3U3OBNun', '管理员', 'admin@blog.local',
+VALUES (1, 'admin', '$2a$10$eqluKnKwJ8NY2Bku33Ol.evobljXBXX0nUS2Yy0Z3XukbyqYp8AnK', '管理员', 'admin@blog.local',
         '13800000000', NULL, 3, NULL, 1, NULL, NULL, NOW(), NOW(), 0, '系统初始化超级管理员账号'),
-       (2, 'demo', '$2a$10$dXJ3SW6G7P50lGmMkkmweuJ1CwV5G6IwM/7Aic7QvYu2L3U3OBNun', '演示用户', 'demo@blog.local',
+       (2, 'demo', '$2a$10$eqluKnKwJ8NY2Bku33Ol.evobljXBXX0nUS2Yy0Z3XukbyqYp8AnK', '演示用户', 'demo@blog.local',
         '13900000000', NULL, 3, NULL, 1, NULL, NULL, NOW(), NOW(), 0, '系统初始化演示账号');
 
 -- 初始化系统参数

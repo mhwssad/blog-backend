@@ -68,7 +68,7 @@
     </select>
 
     <select id="selectConversationPage"
-            resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatConversationListItem">
+            resultType="com.cybzacg.blogbackend.module.chat.shared.model.data.ChatConversationListItem">
         select
         c.id,
         c.conversation_type as conversationType,
@@ -107,7 +107,7 @@
     </select>
 
     <select id="selectConversationDetail"
-            resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatConversationListItem">
+            resultType="com.cybzacg.blogbackend.module.chat.shared.model.data.ChatConversationListItem">
         select
         c.id,
         c.conversation_type as conversationType,
@@ -179,7 +179,7 @@
     </select>
 
     <select id="selectSearchableGroupPage"
-            resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatConversationListItem">
+            resultType="com.cybzacg.blogbackend.module.chat.shared.model.data.ChatConversationListItem">
         select
         c.id,
         c.conversation_type as conversationType,
@@ -255,7 +255,7 @@
     </select>
 
     <select id="selectAdminConversationPage"
-            resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatAdminConversationListItem">
+            resultType="com.cybzacg.blogbackend.module.chat.shared.model.data.ChatAdminConversationListItem">
         select
         c.id,
         c.conversation_type as conversationType,
@@ -289,7 +289,7 @@
     </select>
 
     <select id="selectAdminConversationDetail"
-            resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatAdminConversationListItem">
+            resultType="com.cybzacg.blogbackend.module.chat.shared.model.data.ChatAdminConversationListItem">
         select c.id,
                c.conversation_type   as conversationType,
                c.scene_type          as sceneType,

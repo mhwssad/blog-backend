@@ -47,7 +47,7 @@
         <include refid="Visible_Message_From"/>
     </select>
 
-    <select id="selectMessagePage" resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatMessageHistoryItem">
+    <select id="selectMessagePage" resultType="com.cybzacg.blogbackend.module.chat.shared.model.data.ChatMessageHistoryItem">
         select
         m.id,
         m.conversation_id as conversationId,
@@ -68,7 +68,7 @@
     </select>
 
     <select id="selectVisibleMessageById"
-            resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatMessageHistoryItem">
+            resultType="com.cybzacg.blogbackend.module.chat.shared.model.data.ChatMessageHistoryItem">
         select m.id,
                m.conversation_id   as conversationId,
                m.sender_id         as senderId,
@@ -92,7 +92,7 @@
     </select>
 
     <select id="selectVisibleMessagesByIds"
-            resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatMessageHistoryItem">
+            resultType="com.cybzacg.blogbackend.module.chat.shared.model.data.ChatMessageHistoryItem">
         select
         m.id,
         m.conversation_id as conversationId,
@@ -142,7 +142,7 @@
     </select>
 
     <select id="selectAdminMessagePage"
-            resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatAdminMessageItem">
+            resultType="com.cybzacg.blogbackend.module.chat.shared.model.data.ChatAdminMessageItem">
         select
         m.id,
         m.conversation_id as conversationId,
@@ -197,7 +197,7 @@
     </select>
 
     <select id="selectAdminMessagesByIds"
-            resultType="com.cybzacg.blogbackend.module.chat.model.data.ChatAdminMessageItem">
+            resultType="com.cybzacg.blogbackend.module.chat.shared.model.data.ChatAdminMessageItem">
         select
         m.id,
         m.conversation_id as conversationId,
