@@ -1,6 +1,5 @@
 package com.cybzacg.blogbackend.module.article;
 
-import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleDetailVO;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleSaveRequest;
 import com.cybzacg.blogbackend.module.article.service.ArticleAdminCrudService;
@@ -15,7 +14,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ArticleAdminServiceImplTest {

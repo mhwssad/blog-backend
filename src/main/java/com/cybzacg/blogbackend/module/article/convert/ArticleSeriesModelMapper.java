@@ -10,13 +10,7 @@ import com.cybzacg.blogbackend.module.article.model.user.ArticleSeriesSaveReques
 import com.cybzacg.blogbackend.module.article.model.user.UserArticleSeriesDetailVO;
 import com.cybzacg.blogbackend.module.article.model.user.UserArticleSeriesVO;
 import com.cybzacg.blogbackend.utils.StrUtils;
-import org.mapstruct.InheritConfiguration;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValueCheckStrategy;
-import org.mapstruct.NullValuePropertyMappingStrategy;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.*;
 
 /**
  * 文章系列对象转换器。

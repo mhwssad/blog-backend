@@ -2,7 +2,7 @@ USE blog_backend;
 
 -- 权限初始化脚本
 -- 执行顺序建议：
--- 1. 先执行 1.sys.sql 建表
+-- 1. 先执行 01_sys.sql 建表
 -- 2. 再执行 02_article.sql、04_file.sql、05_chat.sql、06_follow.sql 建立业务域表
 -- 3. 最后执行本脚本初始化基础数据、菜单、权限和演示内容
 

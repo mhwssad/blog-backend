@@ -8,11 +8,7 @@ import com.cybzacg.blogbackend.module.auth.author.model.user.UserAuthorApplicati
 import com.cybzacg.blogbackend.module.auth.author.model.user.UserAuthorApplicationVO;
 import com.cybzacg.blogbackend.utils.JsonUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
-import org.mapstruct.InheritConfiguration;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.*;
 
 import java.util.List;
 

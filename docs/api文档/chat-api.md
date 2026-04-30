@@ -102,6 +102,8 @@ const socket = new WebSocket(
 | 分页查询我的会话 | `GET`    | `/api/user/chat/conversations`                                       |
 | 查询会话详情   | `GET`    | `/api/user/chat/conversations/{conversationId}`                      |
 | 打开或创建单聊  | `POST`   | `/api/user/chat/single-conversations`                                |
+| 加入公开频道或公开群 | `POST`   | `/api/user/chat/conversations/{conversationId}/join`            |
+| 离开频道或公开群 | `POST`   | `/api/user/chat/conversations/{conversationId}/leave`            |
 | 分页查询会话消息 | `GET`    | `/api/user/chat/conversations/{conversationId}/messages`             |
 | 发送文本消息   | `POST`   | `/api/user/chat/messages/text`                                       |
 | 发送文件消息   | `POST`   | `/api/user/chat/messages/file`                                       |
@@ -125,6 +127,10 @@ const socket = new WebSocket(
 | 提交频道申请   | `POST`   | `/api/user/chat/channel-applications`                                |
 | 查询最近频道申请 | `GET`    | `/api/user/chat/channel-applications/latest`                         |
 | 分页查询频道申请 | `GET`    | `/api/user/chat/channel-applications`                                |
+| 分享帖子到频道 | `POST`   | `/api/user/chat/forum-links`                                        |
+| 查询帖子关联的频道 | `GET`   | `/api/user/chat/forum-links/posts/{forumPostId}`                    |
+| 分页查询频道关联的帖子 | `GET`   | `/api/user/chat/forum-links/channels/{conversationId}`             |
+| 取消帖子与频道的关联 | `DELETE`   | `/api/user/chat/forum-links/posts/{forumPostId}`                    |
 | 提交入群申请   | `POST`   | `/api/user/chat/groups/{conversationId}/join-applications`           |
 | 分页查询我的入群申请 | `GET`    | `/api/user/chat/group-join-applications`                             |
 | 分页查询群入群申请 | `GET`    | `/api/user/chat/groups/{conversationId}/join-applications`           |
@@ -172,7 +178,31 @@ const socket = new WebSocket(
 - 首次访问时，如果全站群不存在成员关系，服务端会自动补建。
 - 单聊详情会额外返回 `targetUserId / targetUsername / targetNickname`。
 
-### 4.3 消息查询
+### 4.3 加入公开频道或公开群
+
+`POST /api/user/chat/conversations/{conversationId}/join`
+
+路径参数：`conversationId`
+
+说明：
+
+- 用户加入公开频道或公开群后可以收发消息
+- 加入规则为 `free` 时直接加入成功
+- 加入规则为 `approval` 时会创建待审核的入群申请
+- 加入规则为 `invite_only` 时会拒绝加入请求
+
+### 4.4 离开频道或公开群
+
+`POST /api/user/chat/conversations/{conversationId}/leave`
+
+路径参数：`conversationId`
+
+说明：
+
+- 群主不能直接退群，必须先转让群主或解散群聊
+- 离开后不再接收该会话的消息推送
+
+### 4.5 消息查询
 
 `GET /api/user/chat/conversations/{conversationId}/messages`
 
@@ -543,7 +573,47 @@ GET /api/user/chat/channel-applications/latest
 GET /api/user/chat/channel-applications?current=1&size=10
 ```
 
-### 4.10 入群申请
+### 4.10 帖子频道挂接
+
+分享帖子到频道：
+
+```json
+POST /api/user/chat/forum-links
+{
+  "forumPostId": 123,
+  "conversationId": 1001
+}
+```
+
+说明：
+
+- 用户可以将论坛帖子分享到主题频道进行讨论。
+- 同一帖子在同一频道只能关联一次。
+
+查询帖子关联的频道：
+
+```http
+GET /api/user/chat/forum-links/posts/{forumPostId}
+```
+
+分页查询频道关联的帖子：
+
+```http
+GET /api/user/chat/forum-links/channels/{conversationId}?current=1&size=20
+```
+
+取消帖子与频道的关联：
+
+```http
+DELETE /api/user/chat/forum-links/posts/{forumPostId}
+```
+
+说明：
+
+- 只有帖子的分享人或频道管理员可以取消关联。
+- 取消关联不会删除帖子本身。
+
+### 4.11 入群申请
 
 提交入群申请：
 
@@ -586,7 +656,7 @@ PUT /api/user/chat/groups/{conversationId}/join-applications/{applicationId}/rev
 - `reviewStatus` 支持 `1-通过`、`2-拒绝`。
 - 审核通过后会创建或恢复群成员关系，成员加入来源记录为 `application`。
 
-### 4.11 群邀请链接
+### 4.12 群邀请链接
 
 创建邀请链接：
 
@@ -642,6 +712,12 @@ POST /api/user/chat/group-invite-links/{inviteToken}/join
 | 更新成员禁言   | `PUT`  | `/api/sys/chats/conversations/{conversationId}/members/{memberUserId}/mute`   | `content:chat:update` |
 | 后台撤回消息   | `POST` | `/api/sys/chats/conversations/{conversationId}/messages/{messageId}/revoke`   | `content:chat:update` |
 | 更新会话状态   | `PUT`  | `/api/sys/chats/conversations/{conversationId}/status`                        | `content:chat:update` |
+| 更新大厅频道设置 | `PUT`  | `/api/sys/chats/lobby/settings`                                               | `content:chat:update` |
+| 置顶大厅消息   | `POST` | `/api/sys/chats/lobby/messages/{messageId}/pin`                               | `content:chat:update` |
+| 取消置顶大厅消息 | `DELETE` | `/api/sys/chats/lobby/messages/{messageId}/pin`                             | `content:chat:update` |
+| 分页查询大厅置顶消息 | `GET` | `/api/sys/chats/lobby/messages/pinned`                                       | `content:chat:query`  |
+| 禁言大厅用户   | `PUT`  | `/api/sys/chats/lobby/members/{memberUserId}/mute`                            | `content:chat:update` |
+| 踢出大厅用户   | `PUT`  | `/api/sys/chats/lobby/members/{memberUserId}/kick`                            | `content:chat:update` |
 | 创建主题频道   | `POST` | `/api/sys/chats/topic-channels`                                               | `content:chat:update` |
 | 编辑主题频道   | `PUT`  | `/api/sys/chats/topic-channels/{conversationId}`                              | `content:chat:update` |
 | 分页查询频道申请 | `GET`  | `/api/sys/chats/channel-applications`                                         | `content:channel-application:query` |
@@ -777,7 +853,61 @@ PUT /api/sys/chats/conversations/{conversationId}/members/{memberUserId}/mute
 - `0` 禁用
 - `1` 正常
 
-### 5.8 后台主题频道管理
+### 5.8 后台大厅频道管理
+
+更新大厅频道设置：
+
+```json
+PUT /api/sys/chats/lobby/settings
+{
+  "announcement": "大厅公告内容",
+  "speakLevelLimit": 1,
+  "slowModeSeconds": 0,
+  "memberLimit": 0
+}
+```
+
+置顶大厅消息：
+
+```http
+POST /api/sys/chats/lobby/messages/{messageId}/pin
+```
+
+取消置顶大厅消息：
+
+```http
+DELETE /api/sys/chats/lobby/messages/{messageId}/pin
+```
+
+分页查询大厅置顶消息：
+
+```http
+GET /api/sys/chats/lobby/messages/pinned?current=1&size=20
+```
+
+禁言大厅用户：
+
+```json
+PUT /api/sys/chats/lobby/members/{memberUserId}/mute
+{
+  "muteUntil": "2026-03-31 12:00:00"
+}
+```
+
+踢出大厅用户：
+
+```http
+PUT /api/sys/chats/lobby/members/{memberUserId}/kick
+```
+
+说明：
+
+- 大厅频道管理接口仅适用于全站大厅 (`global_channel/hall_channel`) 会话。
+- 置顶消息数没有明确上限，前端可按需展示。
+- 禁言 `muteUntil` 为空表示永久禁言。
+- 踢出用户会将该用户从大厅成员中移除，移除后可重新加入。
+
+### 5.9 后台主题频道管理
 
 创建主题频道：
 
@@ -827,7 +957,7 @@ PUT /api/sys/chats/topic-channels/{conversationId}
 - 启用 / 禁用主题频道复用 `PUT /api/sys/chats/conversations/{conversationId}/status`。
 - 查看频道成员和消息复用后台会话成员与消息接口。
 
-### 5.9 后台频道创建申请
+### 5.10 后台频道创建申请
 
 分页查询：
 
@@ -851,15 +981,70 @@ PUT /api/sys/chats/channel-applications/{id}/review
 - 只有待审核申请可以审核。
 - 审核通过后会自动创建 `topic_channel` 会话，默认成员可见、加入后发言、加入规则为 `approval`，申请人会成为频道 `owner`。
 
-## 6. WebSocket 协议
+## 6. 公开主题频道接口
 
-### 5.1 当前支持的客户端请求
+### 6.1 分页查询公开主题频道列表
+
+- 请求：`GET /api/public/chat/channels`
+- 鉴权：否
+- 用途：访客查看公开的主题频道列表
+- 查询参数：
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `current` | Long | 否 | 页码，默认 `1` |
+| `size` | Long | 否 | 每页条数，默认 `20` |
+| `categoryCode` | String | 否 | 频道分类编码 |
+
+- 响应字段：`PublicChannelVO`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | Long | 会话 ID |
+| `name` | String | 频道名称 |
+| `avatar` | String | 频道头像 |
+| `description` | String | 频道描述 |
+| `memberCount` | Integer | 成员数 |
+| `messageCount` | Long | 消息数 |
+| `categoryCode` | String | 分类编码 |
+| `categoryName` | String | 分类名称 |
+| `visibilityScope` | String | 可见范围 |
+| `createdAt` | DateTime | 创建时间 |
+
+### 6.2 查询主题频道详情
+
+- 请求：`GET /api/public/chat/channels/{conversationId}`
+- 鉴权：否
+- 用途：访客查看主题频道详情
+- 路径参数：`conversationId`
+
+- 响应字段：`PublicChannelDetailVO`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | Long | 会话 ID |
+| `name` | String | 频道名称 |
+| `avatar` | String | 频道头像 |
+| `description` | String | 频道描述 |
+| `announcement` | String | 频道公告 |
+| `memberCount` | Integer | 成员数 |
+| `messageCount` | Long | 消息数 |
+| `categoryCode` | String | 分类编码 |
+| `categoryName` | String | 分类名称 |
+| `visibilityScope` | String | 可见范围 |
+| `joinRule` | String | 加入规则 |
+| `speakLevelLimit` | Integer | 发言等级限制 |
+| `createdAt` | DateTime | 创建时间 |
+
+## 7. WebSocket 协议
+
+### 7.1 当前支持的客户端请求
 
 - `ping`
 - `send_message`
 - `mark_read`
 
-### 5.2 当前支持的服务端推送
+### 7.2 当前支持的服务端推送
 
 - `ready`
 - `pong`
@@ -873,7 +1058,7 @@ PUT /api/sys/chats/channel-applications/{id}/review
 - `read_updated`
 - `error`
 
-### 5.3 `send_message`
+### 7.3 `send_message`
 
 请求：
 
@@ -896,7 +1081,7 @@ PUT /api/sys/chats/channel-applications/{id}/review
 - `replyMessageId` 的校验规则与 HTTP 文本消息发送保持一致
 - 文件消息仍建议走 HTTP
 
-### 5.4 `mark_read`
+### 7.4 `mark_read`
 
 请求：
 
@@ -911,7 +1096,7 @@ PUT /api/sys/chats/channel-applications/{id}/review
 }
 ```
 
-### 5.5 当前限制
+### 7.5 当前限制
 
 - 当前客户端主动请求仍只有 `send_message`、`mark_read` 两类业务请求
 - `message_updated` / `message_revoked` / `message_deleted` / `conversation_updated` / `members_updated`
@@ -922,7 +1107,7 @@ PUT /api/sys/chats/channel-applications/{id}/review
 - 当前多节点下，服务端会先推送本机在线连接，再通过 Redis pub/sub 广播到其他节点
 - 媒体任务完成后会继续复用 `message_updated` 通知前端刷新同一条消息，无需额外轮询 HTTP
 
-## 7. 联调建议
+## 8. 联调建议
 
 - 文件消息先走 `file` 模块上传，拿到 `businessId` 后再调用 chat 发送文件消息。
 - 会话列表、会话详情、后台会话详情当前都会返回 `notice`，该字段已直接对应 `chat_conversation.announcement`。

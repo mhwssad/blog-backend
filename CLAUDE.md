@@ -26,7 +26,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Java 17 + Spring Boot 4.0.3 单体博客后端。技术栈：Spring Security、MyBatis-Plus、MySQL、Redis (Redisson)
+Java 17 + Spring Boot 3.5.3 单体博客后端。技术栈：Spring Security、MyBatis-Plus、MySQL、Redis (Redisson)
 、Druid、Knife4j/OpenAPI、MapStruct、Lombok、WebSocket。
 
 默认 dev 环境：MySQL `localhost:3306/blog_backend`、Redis `localhost:6379` 数据库 12、应用端口 `8000`。

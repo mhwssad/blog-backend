@@ -2,9 +2,9 @@ package com.cybzacg.blogbackend.mapper.chat;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.cybzacg.blogbackend.domain.chat.ChatMessage;
-import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessagePageQuery;
-import com.cybzacg.blogbackend.module.chat.model.data.ChatAdminMessageItem;
-import com.cybzacg.blogbackend.module.chat.model.data.ChatMessageHistoryItem;
+import com.cybzacg.blogbackend.module.chat.message.model.admin.ChatAdminMessagePageQuery;
+import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatAdminMessageItem;
+import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatMessageHistoryItem;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;

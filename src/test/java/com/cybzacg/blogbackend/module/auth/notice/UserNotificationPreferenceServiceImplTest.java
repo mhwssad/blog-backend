@@ -1,12 +1,10 @@
 package com.cybzacg.blogbackend.module.auth.notice;
 
-import com.cybzacg.blogbackend.domain.SysUser;
-import com.cybzacg.blogbackend.domain.SysUserNotificationSetting;
+import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.domain.notice.SysUserNotificationSetting;
 import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
-import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.auth.repository.SysUserNotificationSettingRepository;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
+import com.cybzacg.blogbackend.module.auth.notice.repository.SysUserNotificationSettingRepository;
 import com.cybzacg.blogbackend.module.auth.notice.service.impl.UserNotificationPreferenceServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

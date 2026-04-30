@@ -8,9 +8,7 @@ import lombok.Getter;
 @Getter
 public enum FileStatusEnum {
     DELETED(0, "已删除"),
-    NORMAL(1, "正常"),
-    PENDING_REVIEW(2, "审核中"),
-    BLOCKED(3, "违规下架");
+    NORMAL(1, "正常");
 
     private final Integer value;
     private final String label;

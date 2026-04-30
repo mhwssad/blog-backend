@@ -5,9 +5,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.domain.chat.ChatMessageRecipient;
 import com.cybzacg.blogbackend.mapper.chat.ChatMessageRecipientMapper;
-import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.message.model.admin.ChatAdminMessageReceiptPageQuery;
 import com.cybzacg.blogbackend.module.chat.message.repository.ChatMessageRecipientRepository;
+import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;

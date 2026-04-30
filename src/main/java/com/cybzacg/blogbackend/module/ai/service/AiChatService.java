@@ -1,11 +1,7 @@
 package com.cybzacg.blogbackend.module.ai.service;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.module.ai.model.user.AiMessageSendRequest;
-import com.cybzacg.blogbackend.module.ai.model.user.AiMessageVO;
-import com.cybzacg.blogbackend.module.ai.model.user.AiSessionCreateRequest;
-import com.cybzacg.blogbackend.module.ai.model.user.AiSessionDetailVO;
-import com.cybzacg.blogbackend.module.ai.model.user.AiSessionVO;
+import com.cybzacg.blogbackend.module.ai.model.user.*;
 
 /**
  * AI 对话服务接口。

@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.support;
 
 import com.cybzacg.blogbackend.core.filter.TokenAuthenticationFilter;
-import com.cybzacg.blogbackend.module.auth.token.TokenManager;
+import com.cybzacg.blogbackend.module.auth.account.token.TokenManager;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 

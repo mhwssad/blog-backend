@@ -112,7 +112,7 @@ class StorageManagerImplTest {
     @Test
     void shouldSwitchStorageAndResetStrategyToDefault() {
         StorageManagerImpl storageManager = buildStorageManager();
-        storageManager.setStorageStrategy(StorageStrategyEnum.RANDOM);
+        storageManager.setStorageStrategy(StorageStrategyEnum.FAILOVER);
 
         assertTrue(storageManager.switchStorage("secondary"));
         assertEquals("secondary", storageManager.getCurrentStorageKey());
@@ -148,8 +148,8 @@ class StorageManagerImplTest {
     void shouldSetStrategyWhenProvided() {
         StorageManagerImpl storageManager = buildStorageManager();
 
-        assertTrue(storageManager.setStorageStrategy(StorageStrategyEnum.RANDOM));
-        assertEquals(StorageStrategyEnum.RANDOM, storageManager.getStorageStrategy());
+        assertTrue(storageManager.setStorageStrategy(StorageStrategyEnum.FAILOVER));
+        assertEquals(StorageStrategyEnum.FAILOVER, storageManager.getStorageStrategy());
     }
 
     @Test

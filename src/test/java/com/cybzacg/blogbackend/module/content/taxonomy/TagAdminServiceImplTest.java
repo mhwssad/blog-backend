@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.content.taxonomy;
 
-import com.cybzacg.blogbackend.domain.SysTag;
+import com.cybzacg.blogbackend.domain.content.SysTag;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;

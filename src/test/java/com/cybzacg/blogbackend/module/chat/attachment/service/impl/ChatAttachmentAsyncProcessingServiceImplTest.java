@@ -1,11 +1,6 @@
 package com.cybzacg.blogbackend.module.chat.attachment.service.impl;
 
 import com.cybzacg.blogbackend.config.property.ChatAttachmentProcessingProperties;
-import com.cybzacg.blogbackend.module.chat.attachment.service.ChatAttachmentAsyncProcessingService;
-import com.cybzacg.blogbackend.module.chat.governance.service.ChatMetricsService;
-import com.cybzacg.blogbackend.module.chat.push.service.ChatPushService;
-import com.cybzacg.blogbackend.module.chat.attachment.service.ChatAttachmentMetadataResolver;
-import com.cybzacg.blogbackend.module.chat.attachment.service.impl.ChatAttachmentAsyncProcessingServiceImpl;
 import com.cybzacg.blogbackend.module.file.service.FileChatFacadeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,7 +9,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ChatAttachmentAsyncProcessingServiceImplTest {

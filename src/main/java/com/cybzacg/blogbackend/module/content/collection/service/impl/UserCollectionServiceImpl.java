@@ -9,7 +9,6 @@ import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.service.ArticleContentFacadeService;
 import com.cybzacg.blogbackend.module.auth.notice.service.NotificationDeliveryService;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.collection.model.user.CollectionFolderSaveRequest;
 import com.cybzacg.blogbackend.module.content.collection.model.user.CollectionFolderVO;
 import com.cybzacg.blogbackend.module.content.collection.model.user.CollectionSaveRequest;
@@ -17,6 +16,7 @@ import com.cybzacg.blogbackend.module.content.collection.model.user.CollectionVO
 import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionFolderRepository;
 import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionRepository;
 import com.cybzacg.blogbackend.module.content.collection.service.UserCollectionService;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;

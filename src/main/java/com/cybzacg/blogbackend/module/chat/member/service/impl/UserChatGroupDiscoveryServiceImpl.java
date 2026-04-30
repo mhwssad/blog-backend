@@ -1,12 +1,12 @@
 package com.cybzacg.blogbackend.module.chat.member.service.impl;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelMapper;
-import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatConversationListItem;
 import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatGroupSearchQuery;
 import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatGroupSearchVO;
 import com.cybzacg.blogbackend.module.chat.conversation.repository.ChatConversationRepository;
 import com.cybzacg.blogbackend.module.chat.member.service.UserChatGroupDiscoveryService;
+import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelMapper;
+import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatConversationListItem;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;

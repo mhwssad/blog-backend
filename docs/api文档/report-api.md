@@ -116,12 +116,12 @@ Authorization: Bearer <accessToken>
 | 参数 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `status` | Integer | 否 | 状态：0-待处理/1-处理中/2-已处理/3-已驳回 |
-| `reportTargetType` | String | 否 | 举报对象类型 |
+| `reportTargetType` | String | 否 | 举报对象类型：article/comment/chat_message |
 | `reporterUserId` | Long | 否 | 举报人ID |
-| `startDate` | String | 否 | 开始日期，格式：yyyy-MM-dd |
-| `endDate` | String | 否 | 结束日期，格式：yyyy-MM-dd |
+| `reportedStart` | LocalDateTime | 否 | 举报开始时间 |
+| `reportedEnd` | LocalDateTime | 否 | 举报结束时间 |
 | `current` | Long | 否 | 页码，默认 `1` |
-| `size` | Long | 否 | 每页条数，默认 `10` |
+| `size` | Long | 否 | 每页条数，默认 `20` |
 
 - 响应：`PageResult<ReportAdminVO>`
 
@@ -232,15 +232,14 @@ Authorization: Bearer <accessToken>
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
 | `id` | Long | 日志ID |
-| `reportId` | Long | 举报ID |
-| `operatorId` | Long | 操作人ID |
+| `fromStatus` | Integer | 变更前状态 |
+| `toStatus` | Integer | 变更后状态 |
+| `actionType` | String | 动作类型 |
+| `actionResult` | String | 处理结果 |
+| `operatorUserId` | Long | 操作人ID |
 | `operatorUsername` | String | 操作人用户名 |
-| `actionType` | String | 操作类型 |
-| `actionName` | String | 操作名称 |
-| `remark` | String | 备注 |
-| `ip` | String | IP地址 |
-| `userAgent` | String | User-Agent |
-| `createdAt` | DateTime | 操作时间 |
+| `actionRemark` | String | 操作备注 |
+| `createdAt` | DateTime | 创建时间 |
 
 ## 5. 枚举值说明
 

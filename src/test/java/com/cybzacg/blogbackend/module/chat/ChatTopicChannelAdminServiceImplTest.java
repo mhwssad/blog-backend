@@ -1,23 +1,24 @@
 package com.cybzacg.blogbackend.module.chat;
 
-import com.cybzacg.blogbackend.domain.ChatChannelCreateApplication;
-import com.cybzacg.blogbackend.domain.ChatConversation;
-import com.cybzacg.blogbackend.domain.ChatConversationMember;
-import com.cybzacg.blogbackend.domain.SysUser;
+import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.domain.chat.ChatChannelCreateApplication;
+import com.cybzacg.blogbackend.domain.chat.ChatConversation;
+import com.cybzacg.blogbackend.domain.chat.ChatConversationMember;
 import com.cybzacg.blogbackend.enums.chat.ChatChannelApplicationStatusEnum;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
-import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelMapper;
-import com.cybzacg.blogbackend.module.chat.conversation.model.admin.*;
-import com.cybzacg.blogbackend.module.chat.member.model.admin.*;
-import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatAdminConversationListItem;
+import com.cybzacg.blogbackend.module.chat.conversation.model.admin.ChatAdminConversationVO;
+import com.cybzacg.blogbackend.module.chat.conversation.model.admin.ChatTopicChannelSaveRequest;
+import com.cybzacg.blogbackend.module.chat.conversation.repository.ChatConversationRepository;
+import com.cybzacg.blogbackend.module.chat.conversation.service.impl.ChatTopicChannelAdminServiceImpl;
+import com.cybzacg.blogbackend.module.chat.member.model.admin.ChatChannelApplicationReviewRequest;
 import com.cybzacg.blogbackend.module.chat.member.repository.ChatChannelCreateApplicationRepository;
 import com.cybzacg.blogbackend.module.chat.member.repository.ChatConversationMemberRepository;
-import com.cybzacg.blogbackend.module.chat.conversation.repository.ChatConversationRepository;
-import com.cybzacg.blogbackend.module.chat.push.service.ChatNotificationService;
 import com.cybzacg.blogbackend.module.chat.member.service.impl.ChatChannelApplicationAdminServiceImpl;
-import com.cybzacg.blogbackend.module.chat.conversation.service.impl.ChatTopicChannelAdminServiceImpl;
+import com.cybzacg.blogbackend.module.chat.push.service.ChatNotificationService;
+import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
+import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelMapper;
+import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatAdminConversationListItem;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -29,7 +30,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**

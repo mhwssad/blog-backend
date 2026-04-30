@@ -2,22 +2,25 @@ package com.cybzacg.blogbackend.module.auth;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.SysUser;
-import com.cybzacg.blogbackend.domain.SysUserRole;
+import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.domain.auth.SysUserRole;
 import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
+import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRoleRepository;
+import com.cybzacg.blogbackend.module.auth.account.service.SuperAdminVerifier;
+import com.cybzacg.blogbackend.module.auth.account.service.TwoFactorService;
+import com.cybzacg.blogbackend.module.auth.account.service.impl.SysUserAdminServiceImpl;
+import com.cybzacg.blogbackend.module.auth.account.token.TokenManager;
+import com.cybzacg.blogbackend.module.auth.audit.service.SysAuditLogService;
+import com.cybzacg.blogbackend.module.auth.notice.service.UserNotificationPreferenceService;
 import com.cybzacg.blogbackend.module.auth.rbac.convert.RbacAdminModelMapper;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysUserAdminVO;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysUserPageQuery;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysUserSaveRequest;
 import com.cybzacg.blogbackend.module.auth.rbac.repository.SysRoleRepository;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRoleRepository;
-import com.cybzacg.blogbackend.module.auth.account.service.SuperAdminVerifier;
-import com.cybzacg.blogbackend.module.auth.audit.service.SysAuditLogService;
-import com.cybzacg.blogbackend.module.auth.account.token.TokenManager;
-import com.cybzacg.blogbackend.module.auth.notice.service.UserNotificationPreferenceService;
 import com.cybzacg.blogbackend.module.auth.rbac.service.impl.RbacAssociationFactory;
-import com.cybzacg.blogbackend.module.auth.service.impl.SysUserAdminServiceImpl;
+import com.cybzacg.blogbackend.module.auth.audit.model.common.SysAuditLogCreateRequest;
+import com.cybzacg.blogbackend.enums.SysAuditOperationType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,13 +36,6 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
-import com.cybzacg.blogbackend.module.auth.account.token.TokenManager;
-import com.cybzacg.blogbackend.module.auth.account.service.SuperAdminVerifier;
-import com.cybzacg.blogbackend.module.auth.audit.service.SysAuditLogService;
-import com.cybzacg.blogbackend.module.auth.account.service.TwoFactorService;
-import com.cybzacg.blogbackend.module.auth.notice.service.UserNotificationPreferenceService;
-import com.cybzacg.blogbackend.module.auth.rbac.service.impl.RbacAssociationFactory;
-
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -299,13 +295,13 @@ class SysUserAdminServiceImplTest {
         verify(sysUserRepository).updateById(target);
         verify(tokenManager).invalidateUserSessions(5L);
 
-        ArgumentCaptor<com.cybzacg.blogbackend.module.auth.model.common.SysAuditLogCreateRequest> captor =
-                ArgumentCaptor.forClass(com.cybzacg.blogbackend.module.auth.model.common.SysAuditLogCreateRequest.class);
+        ArgumentCaptor<SysAuditLogCreateRequest> captor =
+                ArgumentCaptor.forClass(SysAuditLogCreateRequest.class);
         verify(sysAuditLogService).record(captor.capture());
         var audit = captor.getValue();
         assertEquals(1L, audit.getOperatorUserId());
         assertEquals(5L, audit.getTargetUserId());
-        assertEquals(com.cybzacg.blogbackend.enums.SysAuditOperationType.BAN_USER.getCode(), audit.getOperationType());
+        assertEquals(SysAuditOperationType.BAN_USER.getCode(), audit.getOperationType());
         assertEquals("举报封禁：违规内容", audit.getRemark());
         assertEquals(0, audit.getMfaPassed());
     }

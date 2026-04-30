@@ -2,7 +2,7 @@ package com.cybzacg.blogbackend.module.auth.config;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.SysConfig;
+import com.cybzacg.blogbackend.domain.config.SysConfig;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.config.convert.SysConfigModelMapper;

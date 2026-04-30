@@ -69,9 +69,6 @@ public class StorageConfig {
                     case OSS:
                         log.info("初始化 OSS 存储服务: key={}, endpoint={}", key, config.getEndpoint());
                         break;
-                    case COS:
-                        log.info("初始化 COS 存储服务: key={}", key);
-                        break;
                     case LOCAL:
                         log.info("初始化本地存储服务: key={}, path={}", key, config.getBucketName());
                         break;
@@ -140,9 +137,8 @@ public class StorageConfig {
             StorageProperties storageProperties,
             StorageHealthCheckService healthCheckService,
             StorageManagerProperties storageManagerProperties) {
-        log.info("初始化存储管理器，默认存储类型: {}, 选择策略: {}, 管理节点数: {}",
+        log.info("初始化存储管理器，默认存储类型: {}, 管理节点数: {}",
                 storageProperties.getStorageType(),
-                storageManagerProperties.getStrategyEnum(),
                 storageServiceMap.size());
         return new StorageManagerImpl(
                 storageServiceMap,

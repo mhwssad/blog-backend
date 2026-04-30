@@ -2,14 +2,14 @@ package com.cybzacg.blogbackend.module.content.footprint;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.SysUserFootprint;
+import com.cybzacg.blogbackend.domain.content.SysUserFootprint;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.footprint.model.admin.FootprintPageQuery;
 import com.cybzacg.blogbackend.module.content.footprint.model.admin.FootprintVO;
 import com.cybzacg.blogbackend.module.content.footprint.repository.SysUserFootprintRepository;
 import com.cybzacg.blogbackend.module.content.footprint.service.impl.FootprintAdminServiceImpl;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

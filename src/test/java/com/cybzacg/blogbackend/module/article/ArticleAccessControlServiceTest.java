@@ -1,12 +1,13 @@
 package com.cybzacg.blogbackend.module.article;
 
-import com.cybzacg.blogbackend.domain.BlogArticle;
-import com.cybzacg.blogbackend.domain.BlogArticleAccess;
+
+import com.cybzacg.blogbackend.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.domain.article.BlogArticleAccess;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleAccessRepository;
-import com.cybzacg.blogbackend.module.article.service.impl.ArticleAccessControlServiceImpl;
 import com.cybzacg.blogbackend.module.article.service.ArticleStatusMachine;
+import com.cybzacg.blogbackend.module.article.service.impl.ArticleAccessControlServiceImpl;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

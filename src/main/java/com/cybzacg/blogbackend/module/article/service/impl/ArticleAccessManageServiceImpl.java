@@ -9,7 +9,7 @@ import com.cybzacg.blogbackend.module.article.convert.ArticleModelMapper;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleAccessItem;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleAccessRepository;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessManageService;
-import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
+import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.utils.CollectionUtils;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import lombok.RequiredArgsConstructor;

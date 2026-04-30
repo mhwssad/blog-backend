@@ -771,6 +771,8 @@ Authorization: Bearer <accessToken>
 | 新增文章     | POST   | `/api/sys/articles`             | `content:article:create` |
 | 修改文章     | PUT    | `/api/sys/articles/{id}`        | `content:article:update` |
 | 修改文章状态   | PUT    | `/api/sys/articles/{id}/status` | `content:article:update` |
+| 切换文章置顶   | PUT    | `/api/sys/articles/{id}/top`    | `content:article:top`     |
+| 切换文章推荐   | PUT    | `/api/sys/articles/{id}/recommend` | `content:article:recommend` |
 | 配置文章访问名单 | PUT    | `/api/sys/articles/{id}/access` | `content:article:access` |
 | 删除文章     | DELETE | `/api/sys/articles/{id}`        | `content:article:delete` |
 

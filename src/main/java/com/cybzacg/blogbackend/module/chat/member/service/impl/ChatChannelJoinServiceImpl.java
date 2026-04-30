@@ -1,15 +1,16 @@
 package com.cybzacg.blogbackend.module.chat.member.service.impl;
 
+import com.cybzacg.blogbackend.domain.auth.SysUser;
 import com.cybzacg.blogbackend.domain.chat.ChatConversation;
 import com.cybzacg.blogbackend.domain.chat.ChatConversationMember;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
-import com.cybzacg.blogbackend.module.chat.shared.support.ChatServiceSupport;
 import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatConversationVO;
 import com.cybzacg.blogbackend.module.chat.member.model.user.ChatMemberVO;
 import com.cybzacg.blogbackend.module.chat.member.service.ChatChannelJoinService;
 import com.cybzacg.blogbackend.module.chat.push.service.ChatPushService;
+import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.shared.support.ChatPushPayloadBuilder;
+import com.cybzacg.blogbackend.module.chat.shared.support.ChatServiceSupport;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
@@ -33,7 +34,7 @@ public class ChatChannelJoinServiceImpl implements ChatChannelJoinService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ChatConversationVO openSingleConversation(Long userId, Long targetUserId) {
-        com.cybzacg.blogbackend.domain.SysUser targetUser = s.requireActiveUser(targetUserId, true);
+        SysUser targetUser = s.requireActiveUser(targetUserId, true);
         ChatConversation conversation = ensureSingleConversation(userId, targetUser.getId());
         return s.getConversationVO(userId, conversation.getId());
     }

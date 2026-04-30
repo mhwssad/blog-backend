@@ -2,14 +2,21 @@ package com.cybzacg.blogbackend.module.chat.shared.support;
 
 import com.cybzacg.blogbackend.common.constant.ConfigConstants;
 import com.cybzacg.blogbackend.domain.auth.SysUser;
-import com.cybzacg.blogbackend.domain.chat.ChatConversation;
-import com.cybzacg.blogbackend.domain.chat.ChatConversationMember;
-import com.cybzacg.blogbackend.domain.chat.ChatMessage;
-import com.cybzacg.blogbackend.domain.chat.ChatMessageReadCursor;
-import com.cybzacg.blogbackend.domain.chat.ChatMessageRecipient;
+import com.cybzacg.blogbackend.domain.chat.*;
 import com.cybzacg.blogbackend.domain.file.FileBusinessInfo;
 import com.cybzacg.blogbackend.domain.file.FileInfo;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
+import com.cybzacg.blogbackend.module.auth.config.service.SysConfigService;
+import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatConversationVO;
+import com.cybzacg.blogbackend.module.chat.conversation.repository.ChatConversationRepository;
+import com.cybzacg.blogbackend.module.chat.member.model.user.ChatMemberVO;
+import com.cybzacg.blogbackend.module.chat.member.model.user.ChatReadStateVO;
+import com.cybzacg.blogbackend.module.chat.member.repository.ChatConversationMemberRepository;
+import com.cybzacg.blogbackend.module.chat.message.model.user.ChatMessageVO;
+import com.cybzacg.blogbackend.module.chat.message.repository.ChatMessageReadCursorRepository;
+import com.cybzacg.blogbackend.module.chat.message.repository.ChatMessageRecipientRepository;
+import com.cybzacg.blogbackend.module.chat.message.repository.ChatMessageRepository;
 import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelMapper;
 import com.cybzacg.blogbackend.module.chat.shared.model.common.ChatFilePayloadVO;
@@ -17,17 +24,6 @@ import com.cybzacg.blogbackend.module.chat.shared.model.common.ChatMessagePayloa
 import com.cybzacg.blogbackend.module.chat.shared.model.common.ChatReplyMessageVO;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatConversationListItem;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatMessageHistoryItem;
-import com.cybzacg.blogbackend.module.chat.conversation.model.user.*;
-import com.cybzacg.blogbackend.module.chat.member.model.user.*;
-import com.cybzacg.blogbackend.module.chat.message.model.user.*;
-import com.cybzacg.blogbackend.module.chat.conversation.repository.*;
-import com.cybzacg.blogbackend.module.chat.member.repository.*;
-import com.cybzacg.blogbackend.module.chat.message.repository.*;
-import com.cybzacg.blogbackend.module.chat.attachment.repository.*;
-import com.cybzacg.blogbackend.module.auth.config.service.SysConfigService;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.chat.shared.support.ChatMemberHelper;
-import com.cybzacg.blogbackend.module.chat.shared.support.ChatPayloadHelper;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.JsonUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
@@ -38,7 +34,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * 聊天子服务共享基础设施：成员查询、游标操作、消息 VO 构造、用户加载等。

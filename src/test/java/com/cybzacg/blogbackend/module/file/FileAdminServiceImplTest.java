@@ -4,9 +4,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.common.storage.StorageManager;
 import com.cybzacg.blogbackend.common.storage.StorageService;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.FileBusinessInfo;
-import com.cybzacg.blogbackend.domain.FileInfo;
-import com.cybzacg.blogbackend.domain.FileUploadTask;
+import com.cybzacg.blogbackend.domain.file.FileBusinessInfo;
+import com.cybzacg.blogbackend.domain.file.FileInfo;
+import com.cybzacg.blogbackend.domain.file.FileUploadTask;
 import com.cybzacg.blogbackend.enums.file.FileResultCode;
 import com.cybzacg.blogbackend.enums.file.FileStatusEnum;
 import com.cybzacg.blogbackend.enums.storage.TaskStatusEnum;
@@ -115,9 +115,9 @@ class FileAdminServiceImplTest {
         when(fileInfoRepository.getById(1L)).thenReturn(file);
         when(fileInfoRepository.updateById(file)).thenReturn(true);
 
-        fileAdminService.updateStatus(1L, FileStatusEnum.BLOCKED.getValue());
+        fileAdminService.updateStatus(1L, FileStatusEnum.NORMAL.getValue());
 
-        assertEquals(FileStatusEnum.BLOCKED.getValue(), file.getStatus());
+        assertEquals(FileStatusEnum.NORMAL.getValue(), file.getStatus());
         verify(fileInfoRepository).updateById(file);
     }
 
@@ -148,7 +148,7 @@ class FileAdminServiceImplTest {
         query.setStatus(FileStatusEnum.NORMAL.getValue());
         query.setIsPublic(1);
         query.setCategory("attachment");
-        query.setReferenceType("article_attachment");
+        query.setReferenceType("avatar");
 
         FileInfo file = buildAdminFile(1L);
         Page<FileInfo> page = new Page<>(2L, 5L);

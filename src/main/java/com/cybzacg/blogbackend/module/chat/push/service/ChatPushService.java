@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.chat.push.service;
 
-import com.cybzacg.blogbackend.module.chat.message.model.user.ChatMessageVO;
 import com.cybzacg.blogbackend.module.chat.member.model.user.ChatReadStateVO;
+import com.cybzacg.blogbackend.module.chat.message.model.user.ChatMessageVO;
 import com.cybzacg.blogbackend.module.chat.websocket.model.ChatWsConversationUpdatedPayload;
 import com.cybzacg.blogbackend.module.chat.websocket.model.ChatWsMembersUpdatedPayload;
 import com.cybzacg.blogbackend.module.chat.websocket.model.ChatWsMessageDeletedPayload;

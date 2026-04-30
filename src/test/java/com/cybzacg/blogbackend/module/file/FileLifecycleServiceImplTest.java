@@ -2,8 +2,8 @@ package com.cybzacg.blogbackend.module.file;
 
 import com.cybzacg.blogbackend.common.storage.StorageManager;
 import com.cybzacg.blogbackend.common.storage.StorageService;
-import com.cybzacg.blogbackend.domain.FileInfo;
-import com.cybzacg.blogbackend.domain.FileUploadTask;
+import com.cybzacg.blogbackend.domain.file.FileInfo;
+import com.cybzacg.blogbackend.domain.file.FileUploadTask;
 import com.cybzacg.blogbackend.enums.file.FileResultCode;
 import com.cybzacg.blogbackend.enums.file.FileStatusEnum;
 import com.cybzacg.blogbackend.enums.storage.TaskStatusEnum;

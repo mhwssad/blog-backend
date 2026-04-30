@@ -1,11 +1,12 @@
 package com.cybzacg.blogbackend.module.auth.notice;
 
 import com.cybzacg.blogbackend.common.constant.NoticeConstants;
-import com.cybzacg.blogbackend.domain.SysNotice;
-import com.cybzacg.blogbackend.domain.SysUserNotice;
+import com.cybzacg.blogbackend.domain.notice.SysNotice;
+import com.cybzacg.blogbackend.domain.notice.SysUserNotice;
+import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.auth.convert.SysNoticeModelMapper;
+import com.cybzacg.blogbackend.module.auth.notice.convert.SysNoticeModelMapper;
 import com.cybzacg.blogbackend.module.auth.notice.repository.SysNoticeRepository;
 import com.cybzacg.blogbackend.module.auth.notice.repository.SysUserNoticeRepository;
 import com.cybzacg.blogbackend.module.auth.notice.service.UserNotificationPreferenceService;
@@ -27,7 +28,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
 
 @ExtendWith(MockitoExtension.class)
 class UserNoticeInboxServiceImplTest {

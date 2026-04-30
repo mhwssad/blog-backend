@@ -10,11 +10,7 @@ import com.cybzacg.blogbackend.module.ai.model.admin.AiUsageLogVO;
 import com.cybzacg.blogbackend.module.ai.model.user.AiMessageVO;
 import com.cybzacg.blogbackend.module.ai.model.user.AiSessionDetailVO;
 import com.cybzacg.blogbackend.module.ai.model.user.AiSessionVO;
-import org.mapstruct.InheritConfiguration;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.*;
 
 /**
  * AI模块对象转换。

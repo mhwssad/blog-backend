@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.auth.rbac;
 
 import com.cybzacg.blogbackend.common.constant.MenuConstants;
-import com.cybzacg.blogbackend.domain.SysMenu;
+import com.cybzacg.blogbackend.domain.auth.SysMenu;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.rbac.convert.RbacAdminModelMapper;

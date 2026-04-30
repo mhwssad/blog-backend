@@ -32,7 +32,7 @@
 | `auth-api.md`      | 登录注册、后台权限框架、系统管理、用户通知中心           | `/api/auth/**`、`/api/sys/**` 中的认证/系统管理接口、`/api/user/notices/**`                                                          |
 | `content-api.md`   | 前台内容页、登录后内容行为、后台内容管理              | `/api/articles/**`、`/api/categories/**`、`/api/tags/**`、`/api/comments/**`、`/api/user/**` 中的内容行为接口、`/api/sys/**` 中的内容管理接口 |
 | `file-api.md`      | 上传流程、我的文件、后台文件库                   | `/api/user/files/**`、`/api/sys/files/**`                                                                                 |
-| `chat-api.md`      | 聊天 HTTP 接口、后台聊天管理与 WebSocket 实时协议 | `/api/user/chat/**`、`/api/sys/chats/**`、`/ws/chat`                                                                       |
+| `chat-api.md`      | 聊天 HTTP 接口、后台聊天管理、大厅/主题频道管理、公开频道访客接口与 WebSocket 实时协议 | `/api/user/chat/**`、`/api/sys/chats/**`、`/api/public/chat/**`、`/ws/chat`                                                                       |
 | `websocket-api.md` | WebSocket 连接、认证、心跳、收发消息与推送事件      | `/ws/chat`                                                                                                               |
 | `follow-api.md`    | 关注、粉丝、互关状态、公开查看与后台治理              | `/api/user/follows/**`、`/api/users/{userId}/**`、`/api/sys/follows/**`                                                    |
 | `ai-api.md`        | AI 对话、渠道配置、后台 AI 管理与使用统计         | `/api/user/ai/**`、`/api/sys/ai/**`                                                                                      |
@@ -119,7 +119,7 @@ Authorization: Bearer <accessToken>
 | `article` | `content-api.md`   | 后台文章、前台文章、文章点赞                       |
 | `content` | `content-api.md`   | 分类、标签、评论、收藏、互动、足迹                    |
 | `file`    | `file-api.md`      | 用户上传、我的文件、后台文件管理                     |
-| `chat`    | `chat-api.md`      | 会话列表、后台聊天管理、消息发送、群管理与 WebSocket 实时推送 |
+| `chat`    | `chat-api.md`      | 会话列表、后台聊天管理、大厅/主题频道管理、消息发送、群管理与 WebSocket 实时推送 |
 | `chat`    | `websocket-api.md` | WebSocket 连接、认证、心跳、收发消息与推送事件         |
 | `follow`  | `follow-api.md`    | 关注、取关、粉丝列表、互关判断、公开查看、后台治理            |
 | `experience` | `auth-api.md`  | 用户等级、经验体系、后台经验配置管理                      |
@@ -153,6 +153,6 @@ Authorization: Bearer <accessToken>
 - 新增、删除、修改前端可见接口时，必须同步更新对应文档。
 - 如果只是补字段、改枚举或改边界行为，也不能只改代码不改文档。
 - 当某个接口更适合归入另一个前端场景时，允许调整文档结构，但要保持本页导航可用。
-- 当前 `chat-api.md` 已覆盖 chat v1 的用户侧 HTTP 接口、后台聊天管理接口与 WebSocket 实时协议，联调可直接按文档接入。
+- 当前 `chat-api.md` 已覆盖 chat v1 的用户侧 HTTP 接口、后台聊天管理接口、大厅/主题频道管理、公开频道访客接口与 WebSocket 实时协议，联调可直接按文档接入。
 - 当前 `ai-api.md` 已覆盖 AI 模块的用户侧接口与后台管理接口。
 - 当前 `report-api.md` 已覆盖举报模块的用户侧接口与后台管理接口。

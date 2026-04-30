@@ -1,22 +1,21 @@
 package com.cybzacg.blogbackend.module.chat;
 
-import com.cybzacg.blogbackend.module.chat.conversation.model.admin.*;
-import com.cybzacg.blogbackend.module.chat.member.model.admin.*;
-import com.cybzacg.blogbackend.module.chat.message.model.admin.*;
-import com.cybzacg.blogbackend.module.chat.member.model.user.ChatMemberVO;
+import com.cybzacg.blogbackend.module.chat.conversation.model.admin.ChatAdminConversationPageQuery;
 import com.cybzacg.blogbackend.module.chat.governance.service.ChatAdminGovernanceService;
 import com.cybzacg.blogbackend.module.chat.governance.service.ChatAdminQueryService;
 import com.cybzacg.blogbackend.module.chat.governance.service.impl.ChatAdminServiceImpl;
+import com.cybzacg.blogbackend.module.chat.member.model.admin.ChatAdminMemberMuteUpdateRequest;
+import com.cybzacg.blogbackend.module.chat.member.model.admin.ChatAdminMemberRoleUpdateRequest;
+import com.cybzacg.blogbackend.module.chat.member.model.admin.ChatAdminMemberStatusUpdateRequest;
+import com.cybzacg.blogbackend.module.chat.message.model.admin.ChatAdminMessagePageQuery;
+import com.cybzacg.blogbackend.module.chat.message.model.admin.ChatAdminMessageReceiptPageQuery;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class ChatAdminServiceImplTest {

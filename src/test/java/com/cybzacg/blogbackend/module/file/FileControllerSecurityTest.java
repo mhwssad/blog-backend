@@ -12,7 +12,7 @@ import com.cybzacg.blogbackend.module.file.model.user.FileUploadInitVO;
 import com.cybzacg.blogbackend.module.file.model.user.UserFileVO;
 import com.cybzacg.blogbackend.module.file.service.FileAdminService;
 import com.cybzacg.blogbackend.module.file.service.UserFileService;
-import com.cybzacg.blogbackend.utils.HttpServletResponseUtils;
+import com.cybzacg.blogbackend.core.util.HttpServletResponseUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

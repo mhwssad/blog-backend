@@ -10,6 +10,7 @@
 
 | 路由前缀                 | 面向场景                 | 是否需要登录                    |
 |----------------------|----------------------|---------------------------|
+| `/api/public/files/**` | 公开文件访问代理（带文章权限校验） | 否，资源级校验仍生效               |
 | `/api/user/files/**` | 登录用户上传、查询我的文件、查询上传任务 | 是                         |
 | `/api/sys/files/**`  | 后台文件库、后台上传任务管理       | 是，且要求 `content:file:*` 权限 |
 
@@ -94,9 +95,30 @@ Authorization: Bearer <accessToken>
 | `fileId` / `fileUrl`         | 完成类响应  | 上传成功后用于回填业务表单  |
 | `errorCode` / `errorMessage` | 上传任务列表 | 展示失败原因         |
 
-## 3. 用户文件接口
+## 3. 公开文件访问接口
 
-### 3.1 初始化上传任务
+### 3.1 代理访问文件
+
+- 请求：`GET /api/public/files/{fileId}`
+- 鉴权：否，但资源级权限校验仍生效
+- 用途：代理文件下载并对关联文章做访问控制校验，防止私密/白名单文章附件被绕过文章权限直接访问
+- 路径参数：`fileId`
+
+响应说明：
+
+- 返回文件二进制内容
+- 对于文章附件，会校验当前用户是否有权访问该文件的关联文章
+- 无权访问关联文章时返回 HTTP `403`
+
+关键规则：
+
+- 仅对 `article_attachment` 类型的引用做文章权限校验
+- 其他类型的文件引用（如 `avatar`、`comment_image`）可直接访问
+- 文件不存在或已删除时返回业务错误
+
+## 4. 用户文件接口
+
+### 4.1 初始化上传任务
 
 - 请求：`POST /api/user/files/upload-tasks/init`
 - 用途：任何上传流程的第一步
@@ -157,7 +179,7 @@ Authorization: Bearer <accessToken>
 }
 ```
 
-### 3.2 秒传检测
+### 4.2 秒传检测
 
 - 请求：`POST /api/user/files/upload-tasks/{uploadId}/quick-check`
 - 用途：在初始化后显式执行秒传判断
@@ -177,7 +199,7 @@ Authorization: Bearer <accessToken>
 | `fileUrl`        | String  | 文件访问地址   |
 | `referenceCount` | Integer | 当前引用数    |
 
-### 3.3 普通上传
+### 4.3 普通上传
 
 - 请求：`POST /api/user/files/upload-tasks/{uploadId}/file`
 - 用途：全量上传一个完整文件
@@ -193,7 +215,7 @@ Authorization: Bearer <accessToken>
     - 已完成或已取消的任务不能继续上传，继续调用会返回 `UPLOAD_TASK_STATUS_INVALID`。
 - 响应：`FileUploadResultVO`
 
-### 3.4 上传分片
+### 4.4 上传分片
 
 - 请求：`POST /api/user/files/upload-tasks/{uploadId}/chunks/{chunkNumber}`
 - 用途：上传单个分片
@@ -219,7 +241,7 @@ Authorization: Bearer <accessToken>
 | `totalChunks`    | Integer | 总分片数   |
 | `taskStatus`     | Integer | 当前任务状态 |
 
-### 3.5 完成上传
+### 4.5 完成上传
 
 - 请求：`POST /api/user/files/upload-tasks/{uploadId}/complete`
 - 用途：分片全部上传完成后触发合并
@@ -236,7 +258,7 @@ Authorization: Bearer <accessToken>
     - 已完成或已取消的任务不能重复调用完成接口，继续调用会返回 `UPLOAD_TASK_STATUS_INVALID`。
 - 响应：`FileUploadResultVO`
 
-### 3.6 查询我的文件
+### 4.6 查询我的文件
 
 - 请求：`GET /api/user/files`
 - 用途：我的资源库、上传结果选择器
@@ -274,7 +296,7 @@ Authorization: Bearer <accessToken>
 | `status`        | Integer  | 文件状态                               |
 | `createdAt`     | DateTime | 引用创建时间                             |
 
-### 3.7 查询我的上传任务
+### 4.7 查询我的上传任务
 
 - 请求：`GET /api/user/files/upload-tasks`
 - 用途：上传记录列表、失败重试提示
@@ -314,7 +336,7 @@ Authorization: Bearer <accessToken>
 | `completeTime`   | DateTime | 完成时间   |
 | `createdAt`      | DateTime | 创建时间   |
 
-### 3.8 删除我的文件引用
+### 4.8 删除我的文件引用
 
 - 请求：`DELETE /api/user/files/{businessId}`
 - 用途：删除当前用户自己的业务引用记录
@@ -323,7 +345,7 @@ Authorization: Bearer <accessToken>
     - 删除的是“文件引用”，不是直接按 `fileId` 删除物理文件。
     - 若同一底层文件没有任何引用，系统会尝试清理存储对象，并把文件状态改为 `0`。
 
-## 4. 后台文件管理接口
+## 5. 后台文件管理接口
 
 所有后台接口都要求登录，并且需要对应权限：
 
@@ -331,7 +353,7 @@ Authorization: Bearer <accessToken>
 - `content:file:update`
 - `content:file:delete`
 
-### 4.1 文件库接口
+### 5.1 文件库接口
 
 #### 接口速览
 
@@ -423,7 +445,7 @@ Authorization: Bearer <accessToken>
 | `createdAt`      | DateTime | 创建时间    |
 | `completeTime`   | DateTime | 完成时间    |
 
-### 4.2 后台上传任务管理
+### 5.2 后台上传任务管理
 
 #### 接口速览
 
@@ -450,7 +472,7 @@ Authorization: Bearer <accessToken>
 
 - 响应字段：`FileTaskAdminVO`
 
-### 4.3 更新文件状态
+### 5.3 更新文件状态
 
 - 请求：`PUT /api/sys/files/{id}/status`
 - 请求体：`FileStatusUpdateRequest`
@@ -471,16 +493,16 @@ Authorization: Bearer <accessToken>
     - 真正删除文件请使用 `DELETE /api/sys/files/{id}`。
     - 已删除文件不支持通过该接口恢复状态。
 
-### 4.4 删除文件
+### 5.4 删除文件
 
 - 请求：`DELETE /api/sys/files/{id}`
 - 前端说明：
     - 后台删除会移除文件记录及关联业务引用。
     - 同时会清理上传任务、分片和物理文件，具体以服务当前实现为准。
 
-## 5. 取值速查
+## 6. 取值速查
 
-### 5.1 上传模式
+### 6.1 上传模式
 
 | 值   | 说明   |
 |-----|------|
@@ -488,7 +510,7 @@ Authorization: Bearer <accessToken>
 | `2` | 分片上传 |
 | `3` | 全量上传 |
 
-### 5.2 任务状态
+### 6.2 任务状态
 
 | 值   | 说明               |
 |-----|------------------|
@@ -499,7 +521,7 @@ Authorization: Bearer <accessToken>
 | `4` | 失败               |
 | `5` | 已取消，过期任务也会收口到该状态 |
 
-### 5.3 文件状态
+### 6.3 文件状态
 
 | 值   | 说明   |
 |-----|------|
@@ -508,7 +530,7 @@ Authorization: Bearer <accessToken>
 | `2` | 审核中  |
 | `3` | 违规下架 |
 
-### 5.4 引用类型
+### 6.4 引用类型
 
 | 值                    | 说明   |
 |----------------------|------|
@@ -517,7 +539,7 @@ Authorization: Bearer <accessToken>
 | `comment_image`      | 评论图片 |
 | `temp`               | 临时文件 |
 
-## 6. 常见联调问题
+## 7. 常见联调问题
 
 | 问题                      | 当前行为                                                             |
 |-------------------------|------------------------------------------------------------------|

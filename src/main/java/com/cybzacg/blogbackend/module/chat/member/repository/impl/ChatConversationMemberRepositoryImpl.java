@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.domain.chat.ChatConversationMember;
 import com.cybzacg.blogbackend.mapper.chat.ChatConversationMemberMapper;
-import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.member.repository.ChatConversationMemberRepository;
+import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;

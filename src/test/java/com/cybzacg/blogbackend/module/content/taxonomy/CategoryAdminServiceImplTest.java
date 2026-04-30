@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.content.taxonomy;
 
-import com.cybzacg.blogbackend.domain.SysCategory;
+import com.cybzacg.blogbackend.domain.content.SysCategory;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleCategoryRepository;

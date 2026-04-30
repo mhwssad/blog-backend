@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.config.websocket;
 import com.cybzacg.blogbackend.common.constant.HttpHeaderConstants;
 import com.cybzacg.blogbackend.common.constant.WebSocketConstants;
 import com.cybzacg.blogbackend.config.property.WebSocketProperties;
-import com.cybzacg.blogbackend.module.auth.token.TokenManager;
+import com.cybzacg.blogbackend.module.auth.account.token.TokenManager;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.content.taxonomy.controller;
 
 import com.cybzacg.blogbackend.core.web.Result;
-import com.cybzacg.blogbackend.module.auth.model.admin.StatusUpdateRequest;
+import com.cybzacg.blogbackend.module.auth.account.model.admin.StatusUpdateRequest;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.admin.CategoryAdminVO;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.admin.CategorySaveRequest;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.admin.CategoryTreeVO;

@@ -1,7 +1,12 @@
 package com.cybzacg.blogbackend.module.chat.member.service;
 
-import com.cybzacg.blogbackend.module.chat.conversation.model.user.*;
-import com.cybzacg.blogbackend.module.chat.member.model.user.*;
+import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatConversationVO;
+import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatCreateGroupRequest;
+import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatGroupNoticeUpdateRequest;
+import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatTransferGroupOwnerRequest;
+import com.cybzacg.blogbackend.module.chat.member.model.user.ChatGroupMemberOperateRequest;
+import com.cybzacg.blogbackend.module.chat.member.model.user.ChatMemberVO;
+import com.cybzacg.blogbackend.module.chat.member.model.user.ChatMuteMemberRequest;
 
 import java.util.List;
 

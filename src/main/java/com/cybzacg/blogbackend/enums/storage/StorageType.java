@@ -17,11 +17,6 @@ public enum StorageType {
     OSS("oss", "阿里云 OSS 对象存储"),
 
     /**
-     * 腾讯云 COS
-     */
-    COS("cos", "腾讯云 COS 对象存储"),
-
-    /**
      * 本地存储
      */
     LOCAL("local", "本地文件存储"),

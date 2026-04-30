@@ -5,9 +5,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.domain.chat.ChatMessage;
 import com.cybzacg.blogbackend.mapper.chat.ChatMessageMapper;
 import com.cybzacg.blogbackend.module.chat.message.model.admin.ChatAdminMessagePageQuery;
+import com.cybzacg.blogbackend.module.chat.message.repository.ChatMessageRepository;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatAdminMessageItem;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatMessageHistoryItem;
-import com.cybzacg.blogbackend.module.chat.message.repository.ChatMessageRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;

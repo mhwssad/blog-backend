@@ -2,11 +2,7 @@ package com.cybzacg.blogbackend.module.article.controller;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.core.web.Result;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleAdminVO;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleReviewAdminDetailVO;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleReviewAdminPageQuery;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleReviewDecisionRequest;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleReviewRepairRequest;
+import com.cybzacg.blogbackend.module.article.model.admin.*;
 import com.cybzacg.blogbackend.module.article.service.ArticleReviewAdminService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

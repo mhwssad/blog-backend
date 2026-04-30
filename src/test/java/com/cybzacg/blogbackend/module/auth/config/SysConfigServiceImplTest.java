@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.auth.config;
 import com.cybzacg.blogbackend.common.constant.ConfigConstants;
 import com.cybzacg.blogbackend.common.redis.RedisKeyUtils;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
-import com.cybzacg.blogbackend.domain.SysConfig;
+import com.cybzacg.blogbackend.domain.config.SysConfig;
 import com.cybzacg.blogbackend.module.auth.config.repository.SysConfigRepository;
 import com.cybzacg.blogbackend.module.auth.config.service.impl.SysConfigServiceImpl;
 import org.junit.jupiter.api.BeforeEach;

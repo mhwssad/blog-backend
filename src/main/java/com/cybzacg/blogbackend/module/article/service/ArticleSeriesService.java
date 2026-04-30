@@ -3,11 +3,7 @@ package com.cybzacg.blogbackend.module.article.service;
 import com.cybzacg.blogbackend.module.article.model.common.ArticleSeriesSummaryVO;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleSeriesDetailVO;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleSeriesVO;
-import com.cybzacg.blogbackend.module.article.model.user.ArticleSeriesArticleRequest;
-import com.cybzacg.blogbackend.module.article.model.user.ArticleSeriesSaveRequest;
-import com.cybzacg.blogbackend.module.article.model.user.ArticleSeriesSortRequest;
-import com.cybzacg.blogbackend.module.article.model.user.UserArticleSeriesDetailVO;
-import com.cybzacg.blogbackend.module.article.model.user.UserArticleSeriesVO;
+import com.cybzacg.blogbackend.module.article.model.user.*;
 
 import java.util.List;
 

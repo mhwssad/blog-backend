@@ -1,11 +1,7 @@
 package com.cybzacg.blogbackend.module.article.controller;
 
 import com.cybzacg.blogbackend.core.web.Result;
-import com.cybzacg.blogbackend.module.article.model.user.ArticleSeriesArticleRequest;
-import com.cybzacg.blogbackend.module.article.model.user.ArticleSeriesSaveRequest;
-import com.cybzacg.blogbackend.module.article.model.user.ArticleSeriesSortRequest;
-import com.cybzacg.blogbackend.module.article.model.user.UserArticleSeriesDetailVO;
-import com.cybzacg.blogbackend.module.article.model.user.UserArticleSeriesVO;
+import com.cybzacg.blogbackend.module.article.model.user.*;
 import com.cybzacg.blogbackend.module.article.service.ArticleSeriesService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

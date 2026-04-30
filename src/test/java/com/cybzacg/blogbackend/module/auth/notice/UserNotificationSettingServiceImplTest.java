@@ -1,13 +1,13 @@
 package com.cybzacg.blogbackend.module.auth.notice;
 
-import com.cybzacg.blogbackend.domain.SysUserNotificationSetting;
+import com.cybzacg.blogbackend.domain.notice.SysUserNotificationSetting;
 import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.auth.model.user.UserNotificationSettingBatchUpdateItemRequest;
-import com.cybzacg.blogbackend.module.auth.model.user.UserNotificationSettingBatchUpdateRequest;
-import com.cybzacg.blogbackend.module.auth.model.user.UserNotificationSettingItemVO;
-import com.cybzacg.blogbackend.module.auth.model.user.UserNotificationSettingStatusUpdateRequest;
+import com.cybzacg.blogbackend.module.auth.notice.model.user.UserNotificationSettingBatchUpdateItemRequest;
+import com.cybzacg.blogbackend.module.auth.notice.model.user.UserNotificationSettingBatchUpdateRequest;
+import com.cybzacg.blogbackend.module.auth.notice.model.user.UserNotificationSettingItemVO;
+import com.cybzacg.blogbackend.module.auth.notice.model.user.UserNotificationSettingStatusUpdateRequest;
 import com.cybzacg.blogbackend.module.auth.notice.service.UserNotificationPreferenceService;
 import com.cybzacg.blogbackend.module.auth.notice.service.impl.UserNotificationSettingServiceImpl;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;

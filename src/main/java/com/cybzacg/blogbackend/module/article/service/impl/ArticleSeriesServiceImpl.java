@@ -11,11 +11,7 @@ import com.cybzacg.blogbackend.module.article.model.common.ArticleSeriesArticleV
 import com.cybzacg.blogbackend.module.article.model.common.ArticleSeriesSummaryVO;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleSeriesDetailVO;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleSeriesVO;
-import com.cybzacg.blogbackend.module.article.model.user.ArticleSeriesArticleRequest;
-import com.cybzacg.blogbackend.module.article.model.user.ArticleSeriesSaveRequest;
-import com.cybzacg.blogbackend.module.article.model.user.ArticleSeriesSortRequest;
-import com.cybzacg.blogbackend.module.article.model.user.UserArticleSeriesDetailVO;
-import com.cybzacg.blogbackend.module.article.model.user.UserArticleSeriesVO;
+import com.cybzacg.blogbackend.module.article.model.user.*;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleSeriesItemRepository;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleSeriesRepository;
@@ -23,7 +19,7 @@ import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlServic
 import com.cybzacg.blogbackend.module.article.service.ArticleSeriesItemService;
 import com.cybzacg.blogbackend.module.article.service.ArticleSeriesService;
 import com.cybzacg.blogbackend.module.article.service.ArticleStatusMachine;
-import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
+import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.author.service.AuthorPermissionService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;

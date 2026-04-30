@@ -9,20 +9,21 @@ import com.cybzacg.blogbackend.domain.chat.ChatMessage;
 import com.cybzacg.blogbackend.domain.chat.ChatMessageRecipient;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
+import com.cybzacg.blogbackend.module.chat.conversation.model.admin.ChatAdminConversationPageQuery;
+import com.cybzacg.blogbackend.module.chat.conversation.model.admin.ChatAdminConversationVO;
+import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatConversationLastMessageVO;
+import com.cybzacg.blogbackend.module.chat.conversation.repository.ChatConversationRepository;
+import com.cybzacg.blogbackend.module.chat.governance.service.ChatAdminQueryService;
+import com.cybzacg.blogbackend.module.chat.member.model.user.ChatMemberVO;
+import com.cybzacg.blogbackend.module.chat.member.repository.ChatConversationMemberRepository;
+import com.cybzacg.blogbackend.module.chat.message.model.admin.*;
+import com.cybzacg.blogbackend.module.chat.message.repository.ChatMessageRecipientRepository;
+import com.cybzacg.blogbackend.module.chat.message.repository.ChatMessageRepository;
 import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelMapper;
-import com.cybzacg.blogbackend.module.chat.conversation.model.admin.*;
-import com.cybzacg.blogbackend.module.chat.message.model.admin.*;
 import com.cybzacg.blogbackend.module.chat.shared.model.common.ChatReplyMessageVO;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatAdminConversationListItem;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatAdminMessageItem;
-import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatConversationLastMessageVO;
-import com.cybzacg.blogbackend.module.chat.member.model.user.ChatMemberVO;
-import com.cybzacg.blogbackend.module.chat.member.repository.ChatConversationMemberRepository;
-import com.cybzacg.blogbackend.module.chat.conversation.repository.ChatConversationRepository;
-import com.cybzacg.blogbackend.module.chat.message.repository.ChatMessageRecipientRepository;
-import com.cybzacg.blogbackend.module.chat.message.repository.ChatMessageRepository;
-import com.cybzacg.blogbackend.module.chat.governance.service.ChatAdminQueryService;
 import com.cybzacg.blogbackend.module.chat.shared.support.ChatMemberHelper;
 import com.cybzacg.blogbackend.module.chat.shared.support.ChatPayloadHelper;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
@@ -34,7 +35,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * 后台聊天查询服务实现。

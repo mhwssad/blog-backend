@@ -1,24 +1,25 @@
 package com.cybzacg.blogbackend.module.chat;
 
 import com.cybzacg.blogbackend.common.constant.ConfigConstants;
-import com.cybzacg.blogbackend.domain.ChatConversation;
-import com.cybzacg.blogbackend.domain.ChatConversationMember;
-import com.cybzacg.blogbackend.domain.SysUser;
+import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.domain.chat.ChatConversation;
+import com.cybzacg.blogbackend.domain.chat.ChatConversationMember;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.auth.experience.service.UserExperienceService;
+import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.config.service.SysConfigService;
+import com.cybzacg.blogbackend.module.auth.experience.service.UserExperienceService;
+import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatConversationVO;
+import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatCreateGroupRequest;
+import com.cybzacg.blogbackend.module.chat.conversation.repository.ChatConversationRepository;
+import com.cybzacg.blogbackend.module.chat.member.repository.ChatConversationMemberRepository;
+import com.cybzacg.blogbackend.module.chat.member.service.impl.ChatGroupManageServiceImpl;
+import com.cybzacg.blogbackend.module.chat.push.service.ChatNotificationService;
+import com.cybzacg.blogbackend.module.chat.push.service.ChatPushService;
 import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelMapper;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatConversationListItem;
-import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatConversationVO;
-import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatCreateGroupRequest;
-import com.cybzacg.blogbackend.module.chat.member.repository.ChatConversationMemberRepository;
-import com.cybzacg.blogbackend.module.chat.conversation.repository.ChatConversationRepository;
-import com.cybzacg.blogbackend.module.chat.push.service.ChatNotificationService;
-import com.cybzacg.blogbackend.module.chat.push.service.ChatPushService;
 import com.cybzacg.blogbackend.module.chat.shared.support.ChatMemberHelper;
 import com.cybzacg.blogbackend.module.chat.shared.support.ChatPushPayloadBuilder;
-import com.cybzacg.blogbackend.module.chat.member.service.impl.ChatGroupManageServiceImpl;
 import com.cybzacg.blogbackend.module.chat.shared.support.ChatServiceSupport;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,7 +31,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -51,7 +54,7 @@ class ChatGroupManageServiceImplTest {
     @Mock
     private com.cybzacg.blogbackend.module.chat.message.repository.ChatMessageReadCursorRepository chatMessageReadCursorRepository;
     @Mock
-    private com.cybzacg.blogbackend.module.auth.repository.SysUserRepository sysUserRepository;
+    private SysUserRepository sysUserRepository;
     @Mock
     private ChatModelMapper chatModelMapper;
     @Mock

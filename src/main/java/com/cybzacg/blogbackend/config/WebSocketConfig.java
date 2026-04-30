@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.config;
 import com.cybzacg.blogbackend.config.property.WebSocketProperties;
 import com.cybzacg.blogbackend.config.websocket.AuthenticatedPrincipalHandshakeHandler;
 import com.cybzacg.blogbackend.config.websocket.WebSocketAuthHandshakeInterceptor;
-import com.cybzacg.blogbackend.module.chat.websocket.ChatWebSocketHandler;
+import com.cybzacg.blogbackend.module.chat.websocket.handler.ChatWebSocketHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;

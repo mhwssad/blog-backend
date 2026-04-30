@@ -2,10 +2,10 @@ package com.cybzacg.blogbackend.module.auth.account.service.impl;
 
 import com.cybzacg.blogbackend.domain.auth.SysUser;
 import com.cybzacg.blogbackend.module.auth.account.model.AuthUserDetails;
-import com.cybzacg.blogbackend.module.auth.rbac.repository.SysMenuRepository;
-import com.cybzacg.blogbackend.module.auth.rbac.repository.SysRoleRepository;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.account.service.AuthUserDetailsService;
+import com.cybzacg.blogbackend.module.auth.rbac.repository.SysMenuRepository;
+import com.cybzacg.blogbackend.module.auth.rbac.repository.SysRoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

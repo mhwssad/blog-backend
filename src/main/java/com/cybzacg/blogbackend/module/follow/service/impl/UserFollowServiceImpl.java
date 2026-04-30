@@ -4,7 +4,7 @@ import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.auth.SysUser;
 import com.cybzacg.blogbackend.domain.follow.SysUserFollow;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
+import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.follow.convert.FollowModelMapper;
 import com.cybzacg.blogbackend.module.follow.model.data.FollowRelationUserItem;
 import com.cybzacg.blogbackend.module.follow.model.user.*;

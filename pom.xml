@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.3</version>
+        <version>3.5.3</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.cybzacg</groupId>
@@ -34,7 +34,7 @@
         <aliyun-sdk-oss.version>3.16.3</aliyun-sdk-oss.version>
 
         <!-- redisson 分布式锁 -->
-        <redisson.version>4.1.0</redisson.version>
+        <redisson.version>3.49.0</redisson.version>
         <!-- IP 地区转换 -->
         <ip2region.version>2.7.0</ip2region.version>
         <!-- 阿里 TransmittableThreadLocal (支持异步场景的ThreadLocal传递) -->
@@ -138,10 +138,9 @@
             <artifactId>spring-boot-starter-cache</artifactId>
         </dependency>
 
-        <!-- Spring Boot 4.x 已改名 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-aspectj</artifactId>
+            <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
 
         <dependency>
@@ -201,10 +200,9 @@
             <version>${druid.version}</version>
         </dependency>
 
-        <!-- Spring Boot 4.x 必须使用boot4版本 -->
         <dependency>
             <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
             <version>${mybatis-plus.version}</version>
         </dependency>
         <dependency>

@@ -10,7 +10,7 @@ import com.cybzacg.blogbackend.module.follow.model.publics.PublicFollowUserVO;
 import com.cybzacg.blogbackend.module.follow.service.FollowAdminService;
 import com.cybzacg.blogbackend.module.follow.service.PublicFollowService;
 import com.cybzacg.blogbackend.module.follow.service.UserFollowService;
-import com.cybzacg.blogbackend.utils.HttpServletResponseUtils;
+import com.cybzacg.blogbackend.core.util.HttpServletResponseUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

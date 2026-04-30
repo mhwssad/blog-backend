@@ -1,7 +1,7 @@
 spring:
   autoconfigure:
     exclude:
-      - org.redisson.spring.starter.RedissonAutoConfigurationV4
+      - org.redisson.spring.starter.RedissonAutoConfigurationV2
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: org.h2.Driver

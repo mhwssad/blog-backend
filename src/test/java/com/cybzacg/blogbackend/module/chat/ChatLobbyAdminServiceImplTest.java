@@ -1,23 +1,22 @@
 package com.cybzacg.blogbackend.module.chat;
 
-import com.cybzacg.blogbackend.domain.ChatConversation;
-import com.cybzacg.blogbackend.domain.ChatConversationMember;
-import com.cybzacg.blogbackend.domain.ChatMessage;
-import com.cybzacg.blogbackend.domain.SysUser;
-import com.cybzacg.blogbackend.exception.BusinessException;
+import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.domain.chat.ChatConversation;
+import com.cybzacg.blogbackend.domain.chat.ChatConversationMember;
+import com.cybzacg.blogbackend.domain.chat.ChatMessage;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
-import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelMapper;
-import com.cybzacg.blogbackend.module.chat.member.model.admin.ChatAdminMemberMuteUpdateRequest;
 import com.cybzacg.blogbackend.module.chat.conversation.model.admin.ChatLobbySettingsUpdateRequest;
 import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatConversationVO;
-import com.cybzacg.blogbackend.module.chat.member.model.user.ChatMemberVO;
-import com.cybzacg.blogbackend.module.chat.message.model.user.ChatMessageVO;
-import com.cybzacg.blogbackend.module.chat.member.repository.ChatConversationMemberRepository;
 import com.cybzacg.blogbackend.module.chat.conversation.repository.ChatConversationRepository;
+import com.cybzacg.blogbackend.module.chat.conversation.service.impl.ChatLobbyAdminServiceImpl;
+import com.cybzacg.blogbackend.module.chat.member.model.admin.ChatAdminMemberMuteUpdateRequest;
+import com.cybzacg.blogbackend.module.chat.member.model.user.ChatMemberVO;
+import com.cybzacg.blogbackend.module.chat.member.repository.ChatConversationMemberRepository;
+import com.cybzacg.blogbackend.module.chat.message.model.user.ChatMessageVO;
 import com.cybzacg.blogbackend.module.chat.message.repository.ChatMessageRepository;
 import com.cybzacg.blogbackend.module.chat.push.service.ChatPushService;
-import com.cybzacg.blogbackend.module.chat.conversation.service.impl.ChatLobbyAdminServiceImpl;
+import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
+import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,9 +26,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * ChatLobbyAdminServiceImpl unit tests.

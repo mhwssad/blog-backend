@@ -11,8 +11,8 @@ import com.cybzacg.blogbackend.module.auth.notice.model.admin.UserNoticePageQuer
 import com.cybzacg.blogbackend.module.auth.notice.model.admin.UserNoticeVO;
 import com.cybzacg.blogbackend.module.auth.notice.repository.SysNoticeRepository;
 import com.cybzacg.blogbackend.module.auth.notice.repository.SysUserNoticeRepository;
-import com.cybzacg.blogbackend.module.auth.notice.service.UserNotificationPreferenceService;
 import com.cybzacg.blogbackend.module.auth.notice.service.UserNoticeInboxService;
+import com.cybzacg.blogbackend.module.auth.notice.service.UserNotificationPreferenceService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;

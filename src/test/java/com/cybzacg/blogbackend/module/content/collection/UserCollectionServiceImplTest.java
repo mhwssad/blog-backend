@@ -1,18 +1,15 @@
 package com.cybzacg.blogbackend.module.content.collection;
 
-import com.cybzacg.blogbackend.domain.BlogArticle;
-import com.cybzacg.blogbackend.domain.SysCollection;
-import com.cybzacg.blogbackend.domain.SysCollectionFolder;
+import com.cybzacg.blogbackend.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.domain.content.SysCollection;
+import com.cybzacg.blogbackend.domain.content.SysCollectionFolder;
 import com.cybzacg.blogbackend.module.article.service.ArticleContentFacadeService;
 import com.cybzacg.blogbackend.module.auth.notice.service.NotificationDeliveryService;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
-import com.cybzacg.blogbackend.module.content.collection.model.user.CollectionFolderSaveRequest;
-import com.cybzacg.blogbackend.module.content.collection.model.user.CollectionFolderVO;
 import com.cybzacg.blogbackend.module.content.collection.model.user.CollectionSaveRequest;
-import com.cybzacg.blogbackend.module.content.collection.model.user.CollectionVO;
 import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionFolderRepository;
 import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionRepository;
 import com.cybzacg.blogbackend.module.content.collection.service.impl.UserCollectionServiceImpl;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,7 +20,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)

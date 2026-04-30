@@ -1,13 +1,14 @@
 package com.cybzacg.blogbackend.module.chat;
 
-import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.module.chat.conversation.model.user.*;
-import com.cybzacg.blogbackend.module.chat.message.model.user.*;
+import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatConversationPageQuery;
+import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatOpenSingleConversationRequest;
 import com.cybzacg.blogbackend.module.chat.conversation.service.ChatConversationQueryService;
-import com.cybzacg.blogbackend.module.chat.message.service.ChatMessageSendService;
-import com.cybzacg.blogbackend.module.chat.message.service.ChatMessageLifecycleService;
-import com.cybzacg.blogbackend.module.chat.member.service.ChatGroupManageService;
 import com.cybzacg.blogbackend.module.chat.member.service.ChatChannelJoinService;
+import com.cybzacg.blogbackend.module.chat.member.service.ChatGroupManageService;
+import com.cybzacg.blogbackend.module.chat.message.model.user.ChatMessagePageQuery;
+import com.cybzacg.blogbackend.module.chat.message.model.user.ChatSendTextRequest;
+import com.cybzacg.blogbackend.module.chat.message.service.ChatMessageLifecycleService;
+import com.cybzacg.blogbackend.module.chat.message.service.ChatMessageSendService;
 import com.cybzacg.blogbackend.module.chat.message.service.impl.UserChatServiceImpl;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,8 +18,8 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class UserChatServiceImplTest {

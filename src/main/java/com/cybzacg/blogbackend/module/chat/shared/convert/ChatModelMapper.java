@@ -1,15 +1,16 @@
 package com.cybzacg.blogbackend.module.chat.shared.convert;
 
-import com.cybzacg.blogbackend.domain.chat.ChatConversation;
-import com.cybzacg.blogbackend.domain.chat.ChatConversationMember;
-import com.cybzacg.blogbackend.domain.chat.ChatChannelCreateApplication;
-import com.cybzacg.blogbackend.domain.chat.ChatGroupJoinApplication;
-import com.cybzacg.blogbackend.domain.chat.ChatGroupInviteLink;
-import com.cybzacg.blogbackend.domain.chat.ChatMessage;
-import com.cybzacg.blogbackend.domain.chat.ChatMessageReadCursor;
+import com.cybzacg.blogbackend.domain.chat.*;
 import com.cybzacg.blogbackend.module.chat.conversation.model.admin.ChatAdminConversationVO;
+import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatConversationLastMessageVO;
+import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatConversationVO;
+import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatCreateGroupRequest;
+import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatGroupSearchVO;
 import com.cybzacg.blogbackend.module.chat.member.model.admin.ChatChannelApplicationAdminVO;
+import com.cybzacg.blogbackend.module.chat.member.model.user.*;
 import com.cybzacg.blogbackend.module.chat.message.model.admin.ChatAdminMessageVO;
+import com.cybzacg.blogbackend.module.chat.message.model.user.ChatMessageVO;
+import com.cybzacg.blogbackend.module.chat.message.model.user.ChatSendTextRequest;
 import com.cybzacg.blogbackend.module.chat.shared.model.common.ChatFilePayloadVO;
 import com.cybzacg.blogbackend.module.chat.shared.model.common.ChatMessagePayloadVO;
 import com.cybzacg.blogbackend.module.chat.shared.model.common.ChatReplyMessageVO;
@@ -17,9 +18,6 @@ import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatAdminConversati
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatAdminMessageItem;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatConversationListItem;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatMessageHistoryItem;
-import com.cybzacg.blogbackend.module.chat.conversation.model.user.*;
-import com.cybzacg.blogbackend.module.chat.member.model.user.*;
-import com.cybzacg.blogbackend.module.chat.message.model.user.*;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

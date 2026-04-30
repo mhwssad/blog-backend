@@ -18,7 +18,7 @@ import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlServic
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessManageService;
 import com.cybzacg.blogbackend.module.article.service.ArticleSeriesService;
 import com.cybzacg.blogbackend.module.article.service.UserArticleManageService;
-import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
+import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysTagRelationRepository;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PaginationUtils;

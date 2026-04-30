@@ -1,11 +1,7 @@
 package com.cybzacg.blogbackend.module.article.service;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleReviewAdminDetailVO;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleReviewAdminPageQuery;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleReviewDecisionRequest;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleReviewRepairRequest;
-import com.cybzacg.blogbackend.module.article.model.admin.ArticleAdminVO;
+import com.cybzacg.blogbackend.module.article.model.admin.*;
 
 /**
  * 文章审核后台服务。
