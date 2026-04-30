@@ -5,7 +5,7 @@ import com.cybzacg.blogbackend.domain.notice.SysUserNotificationSetting;
 import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.auth.notice.repository.SysUserNotificationSettingRepository;
-import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
+import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.notice.service.UserNotificationPreferenceService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import lombok.RequiredArgsConstructor;

@@ -14,7 +14,7 @@ import com.cybzacg.blogbackend.module.auth.experience.level.LevelConfig;
 import com.cybzacg.blogbackend.module.auth.experience.model.user.UserLevelInfoVO;
 import com.cybzacg.blogbackend.module.auth.experience.repository.UserExperienceLogRepository;
 import com.cybzacg.blogbackend.module.auth.experience.service.UserExperienceService;
-import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
+import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.config.service.SysConfigService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -6,7 +6,7 @@ import com.cybzacg.blogbackend.domain.SysUserNotice;
 import com.cybzacg.blogbackend.module.auth.convert.SysNoticeModelMapper;
 import com.cybzacg.blogbackend.module.auth.notice.repository.SysNoticeRepository;
 import com.cybzacg.blogbackend.module.auth.notice.repository.SysUserNoticeRepository;
-import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
+import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.notice.service.impl.SysNoticeAdminServiceImpl;
 import com.cybzacg.blogbackend.module.auth.notice.service.impl.SysNoticeFactory;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;

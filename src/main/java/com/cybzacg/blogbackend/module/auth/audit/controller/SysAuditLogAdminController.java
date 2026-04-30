@@ -5,7 +5,7 @@ import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.core.web.Result;
 import com.cybzacg.blogbackend.module.auth.audit.model.admin.SysAuditLogAdminVO;
 import com.cybzacg.blogbackend.module.auth.audit.model.admin.SysAuditLogPageQuery;
-import com.cybzacg.blogbackend.module.auth.service.SuperAdminVerifier;
+import com.cybzacg.blogbackend.module.auth.account.service.SuperAdminVerifier;
 import com.cybzacg.blogbackend.module.auth.audit.service.SysAuditLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

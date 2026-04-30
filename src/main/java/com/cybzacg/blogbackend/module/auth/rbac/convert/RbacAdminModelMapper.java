@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.auth.rbac.convert;
 import com.cybzacg.blogbackend.domain.auth.SysMenu;
 import com.cybzacg.blogbackend.domain.auth.SysRole;
 import com.cybzacg.blogbackend.domain.auth.SysUser;
-import com.cybzacg.blogbackend.module.auth.model.admin.*;
+import com.cybzacg.blogbackend.module.auth.rbac.model.admin.*;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import org.mapstruct.*;
 

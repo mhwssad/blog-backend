@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.auth;
 import com.cybzacg.blogbackend.core.filter.TokenAuthenticationFilter;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.auth.token.TokenManager;
+import com.cybzacg.blogbackend.module.auth.account.token.TokenManager;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

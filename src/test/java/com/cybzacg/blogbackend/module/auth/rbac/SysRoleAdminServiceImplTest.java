@@ -13,7 +13,7 @@ import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysRoleSaveRequest;
 import com.cybzacg.blogbackend.module.auth.rbac.repository.SysMenuRepository;
 import com.cybzacg.blogbackend.module.auth.rbac.repository.SysRoleMenuRepository;
 import com.cybzacg.blogbackend.module.auth.rbac.repository.SysRoleRepository;
-import com.cybzacg.blogbackend.module.auth.repository.SysUserRoleRepository;
+import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRoleRepository;
 import com.cybzacg.blogbackend.module.auth.rbac.service.impl.RbacAssociationFactory;
 import com.cybzacg.blogbackend.module.auth.rbac.service.impl.SysRoleAdminServiceImpl;
 import org.junit.jupiter.api.BeforeEach;

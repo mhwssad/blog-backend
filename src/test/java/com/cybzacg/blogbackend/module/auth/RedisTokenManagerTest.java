@@ -2,9 +2,9 @@ package com.cybzacg.blogbackend.module.auth;
 
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
 import com.cybzacg.blogbackend.config.property.SecurityProperties;
-import com.cybzacg.blogbackend.module.auth.model.AuthUserPrincipal;
-import com.cybzacg.blogbackend.module.auth.model.AuthenticationToken;
-import com.cybzacg.blogbackend.module.auth.token.RedisTokenManager;
+import com.cybzacg.blogbackend.module.auth.account.model.AuthUserPrincipal;
+import com.cybzacg.blogbackend.module.auth.account.model.AuthenticationToken;
+import com.cybzacg.blogbackend.module.auth.account.token.RedisTokenManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

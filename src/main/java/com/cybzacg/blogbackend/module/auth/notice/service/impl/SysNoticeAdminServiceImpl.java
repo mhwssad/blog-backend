@@ -11,7 +11,7 @@ import com.cybzacg.blogbackend.module.auth.notice.model.admin.SysNoticePageQuery
 import com.cybzacg.blogbackend.module.auth.notice.model.admin.SysNoticeSaveRequest;
 import com.cybzacg.blogbackend.module.auth.notice.repository.SysNoticeRepository;
 import com.cybzacg.blogbackend.module.auth.notice.repository.SysUserNoticeRepository;
-import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
+import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.notice.service.SysNoticeAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.IdCollectionUtils;

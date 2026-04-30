@@ -6,7 +6,7 @@ import com.cybzacg.blogbackend.module.article.model.internal.AuthorPublicProfile
 import com.cybzacg.blogbackend.module.article.service.ArticleProfileQueryService;
 import com.cybzacg.blogbackend.module.auth.author.convert.PublicAuthorProfileModelMapper;
 import com.cybzacg.blogbackend.module.auth.author.model.publics.PublicAuthorProfileVO;
-import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
+import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.author.service.AuthorPermissionService;
 import com.cybzacg.blogbackend.module.auth.author.service.PublicAuthorProfileService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;

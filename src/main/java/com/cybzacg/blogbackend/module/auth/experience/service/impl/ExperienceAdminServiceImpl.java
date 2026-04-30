@@ -12,7 +12,7 @@ import com.cybzacg.blogbackend.module.auth.experience.level.LevelConfig;
 import com.cybzacg.blogbackend.module.auth.experience.model.admin.*;
 import com.cybzacg.blogbackend.module.auth.experience.repository.UserExperienceLogRepository;
 import com.cybzacg.blogbackend.module.auth.experience.service.ExperienceAdminService;
-import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
+import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.config.service.SysConfigService;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;

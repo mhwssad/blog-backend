@@ -2,7 +2,7 @@ package com.cybzacg.blogbackend.module.auth.rbac.controller;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.core.web.Result;
-import com.cybzacg.blogbackend.module.auth.model.admin.*;
+import com.cybzacg.blogbackend.module.auth.rbac.model.admin.*;
 import com.cybzacg.blogbackend.module.auth.rbac.service.SysRoleAdminService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

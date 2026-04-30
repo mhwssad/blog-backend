@@ -10,7 +10,7 @@ import com.cybzacg.blogbackend.module.auth.audit.model.admin.SysAuditLogAdminVO;
 import com.cybzacg.blogbackend.module.auth.audit.model.admin.SysAuditLogPageQuery;
 import com.cybzacg.blogbackend.module.auth.audit.model.common.SysAuditLogCreateRequest;
 import com.cybzacg.blogbackend.module.auth.audit.repository.SysAuditLogRepository;
-import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
+import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.audit.service.SysAuditLogService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import lombok.RequiredArgsConstructor;

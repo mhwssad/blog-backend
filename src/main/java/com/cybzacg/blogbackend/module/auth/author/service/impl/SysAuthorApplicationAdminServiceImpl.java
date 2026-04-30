@@ -12,7 +12,7 @@ import com.cybzacg.blogbackend.module.auth.author.model.admin.SysAuthorApplicati
 import com.cybzacg.blogbackend.module.auth.author.model.admin.SysAuthorApplicationAdminReviewRequest;
 import com.cybzacg.blogbackend.module.auth.author.model.admin.SysAuthorApplicationAdminVO;
 import com.cybzacg.blogbackend.module.auth.author.repository.SysAuthorApplicationRepository;
-import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
+import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.author.service.AuthorPermissionService;
 import com.cybzacg.blogbackend.module.auth.author.service.SysAuthorApplicationAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
