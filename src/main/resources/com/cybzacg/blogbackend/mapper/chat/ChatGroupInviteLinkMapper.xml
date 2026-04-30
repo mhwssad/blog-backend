@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.cybzacg.blogbackend.mapper.chat.ChatGroupInviteLinkMapper">
 
-    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.ChatGroupInviteLink">
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.chat.ChatGroupInviteLink">
         <id property="id" column="id" jdbcType="BIGINT"/>
         <result property="conversationId" column="conversation_id" jdbcType="BIGINT"/>
         <result property="inviteToken" column="invite_token" jdbcType="VARCHAR"/>

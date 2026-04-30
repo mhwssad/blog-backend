@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.cybzacg.blogbackend.mapper.auth.SysRoleMapper">
 
-    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.SysRole">
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.auth.SysRole">
         <id property="id" column="id" jdbcType="BIGINT"/>
         <result property="name" column="name" jdbcType="VARCHAR"/>
         <result property="code" column="code" jdbcType="VARCHAR"/>

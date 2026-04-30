@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.cybzacg.blogbackend.mapper.content.SysCollectionMapper">
 
-    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.SysCollection">
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.content.SysCollection">
         <id property="id" column="id" jdbcType="BIGINT"/>
         <result property="userId" column="user_id" jdbcType="BIGINT"/>
         <result property="folderId" column="folder_id" jdbcType="BIGINT"/>

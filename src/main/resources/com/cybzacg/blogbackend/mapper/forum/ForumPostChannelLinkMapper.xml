@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.cybzacg.blogbackend.mapper.forum.ForumPostChannelLinkMapper">
 
-    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.ForumPostChannelLink">
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.forum.ForumPostChannelLink">
         <id property="id" column="id" jdbcType="BIGINT"/>
         <result property="forumPostId" column="forum_post_id" jdbcType="BIGINT"/>
         <result property="conversationId" column="conversation_id" jdbcType="BIGINT"/>

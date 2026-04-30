@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.cybzacg.blogbackend.mapper.notice.SysUserNoticeMapper">
 
-    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.SysUserNotice">
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.notice.SysUserNotice">
         <id property="id" column="id" jdbcType="BIGINT"/>
         <result property="noticeId" column="notice_id" jdbcType="BIGINT"/>
         <result property="userId" column="user_id" jdbcType="BIGINT"/>

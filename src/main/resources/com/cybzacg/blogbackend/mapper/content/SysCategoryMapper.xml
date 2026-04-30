@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.cybzacg.blogbackend.mapper.content.SysCategoryMapper">
 
-    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.SysCategory">
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.content.SysCategory">
         <id property="id" column="id" jdbcType="BIGINT"/>
         <result property="parentId" column="parent_id" jdbcType="BIGINT"/>
         <result property="name" column="name" jdbcType="VARCHAR"/>

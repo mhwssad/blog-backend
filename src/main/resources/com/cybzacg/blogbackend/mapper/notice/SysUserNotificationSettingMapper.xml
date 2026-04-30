@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.cybzacg.blogbackend.mapper.notice.SysUserNotificationSettingMapper">
 
-    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.SysUserNotificationSetting">
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.notice.SysUserNotificationSetting">
         <id property="id" column="id" jdbcType="BIGINT"/>
         <result property="userId" column="user_id" jdbcType="BIGINT"/>
         <result property="commentNoticeEnabled" column="comment_notice_enabled" jdbcType="TINYINT"/>

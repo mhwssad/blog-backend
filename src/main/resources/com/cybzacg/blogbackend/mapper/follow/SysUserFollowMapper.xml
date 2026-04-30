@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.cybzacg.blogbackend.mapper.follow.SysUserFollowMapper">
 
-    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.SysUserFollow">
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.follow.SysUserFollow">
         <id property="id" column="id" jdbcType="BIGINT"/>
         <result property="followerId" column="follower_id" jdbcType="BIGINT"/>
         <result property="followingId" column="following_id" jdbcType="BIGINT"/>

@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.cybzacg.blogbackend.mapper.chat.ChatConversationMemberMapper">
 
-    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.ChatConversationMember">
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.chat.ChatConversationMember">
         <id property="id" column="id" jdbcType="BIGINT"/>
         <result property="conversationId" column="conversation_id" jdbcType="BIGINT"/>
         <result property="userId" column="user_id" jdbcType="BIGINT"/>

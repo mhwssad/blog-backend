@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.cybzacg.blogbackend.mapper.report.SysReportHandleLogMapper">
-    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.SysReportHandleLog">
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.report.SysReportHandleLog">
         <id property="id" column="id" jdbcType="BIGINT"/>
         <result property="reportId" column="report_id" jdbcType="BIGINT"/>
         <result property="fromStatus" column="from_status" jdbcType="TINYINT"/>

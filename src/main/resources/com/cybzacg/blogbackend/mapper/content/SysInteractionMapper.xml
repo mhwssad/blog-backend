@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.cybzacg.blogbackend.mapper.content.SysInteractionMapper">
 
-    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.SysInteraction">
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.content.SysInteraction">
         <id property="id" column="id" jdbcType="BIGINT"/>
         <result property="userId" column="user_id" jdbcType="BIGINT"/>
         <result property="targetId" column="target_id" jdbcType="BIGINT"/>

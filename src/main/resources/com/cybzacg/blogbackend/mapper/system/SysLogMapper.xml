@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.cybzacg.blogbackend.mapper.system.SysLogMapper">
 
-    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.SysLog">
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.system.SysLog">
         <id property="id" column="id" jdbcType="BIGINT"/>
         <result property="module" column="module" jdbcType="VARCHAR"/>
         <result property="requestMethod" column="request_method" jdbcType="VARCHAR"/>
