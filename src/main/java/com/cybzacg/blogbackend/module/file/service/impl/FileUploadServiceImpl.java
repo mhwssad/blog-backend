@@ -3,7 +3,6 @@ package com.cybzacg.blogbackend.module.file.service.impl;
 import com.cybzacg.blogbackend.common.storage.StorageManager;
 import com.cybzacg.blogbackend.common.storage.StorageService;
 import com.cybzacg.blogbackend.config.property.FileUploadProperties;
-import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.file.FileBusinessInfo;
 import com.cybzacg.blogbackend.domain.file.FileChunk;
 import com.cybzacg.blogbackend.domain.file.FileInfo;
@@ -17,7 +16,7 @@ import com.cybzacg.blogbackend.enums.storage.TaskStatusEnum;
 import com.cybzacg.blogbackend.enums.storage.UploadModeEnum;
 import com.cybzacg.blogbackend.module.file.convert.FileModelMapper;
 import com.cybzacg.blogbackend.module.file.model.admin.UserTaskVO;
-import com.cybzacg.blogbackend.module.file.model.user.*;
+import com.cybzacg.blogbackend.module.file.model.user.UserUploadInitRequest;
 import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
 import com.cybzacg.blogbackend.module.file.repository.FileChunkRepository;
 import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
@@ -33,16 +32,16 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
-import java.security.MessageDigest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.UUID;
 
 /**
  * 文件上传服务实现。

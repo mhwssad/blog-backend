@@ -1,7 +1,8 @@
-package com.cybzacg.blogbackend.utils;
+package com.cybzacg.blogbackend.core.util;
 
 import com.cybzacg.blogbackend.core.web.Result;
 import com.cybzacg.blogbackend.enums.error.ResultCode;
+import com.cybzacg.blogbackend.utils.JsonUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.MediaType;
 

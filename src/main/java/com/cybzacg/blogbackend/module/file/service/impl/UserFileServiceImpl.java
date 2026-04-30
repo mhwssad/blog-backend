@@ -86,7 +86,7 @@ public class UserFileServiceImpl implements UserFileService {
         Long userId = SecurityUtils.requireUserId();
         String md5 = com.cybzacg.blogbackend.utils.FileUtils.normalizeMd5(null);
 
-        com.cybzacg.blogbackend.domain.FileInfo fileInfo = new com.cybzacg.blogbackend.domain.FileInfo();
+        com.cybzacg.blogbackend.domain.file.FileInfo fileInfo = new com.cybzacg.blogbackend.domain.file.FileInfo();
         // fileInfo would be populated from the MultipartFile
 
         com.cybzacg.blogbackend.module.file.model.admin.UserTaskVO taskVO =
@@ -108,7 +108,7 @@ public class UserFileServiceImpl implements UserFileService {
     public ChunkUploadVO uploadChunk(String uploadId, Integer chunkNumber, MultipartFile file, String chunkMd5, String sourceIp) {
         Long userId = SecurityUtils.requireUserId();
 
-        com.cybzacg.blogbackend.domain.FileInfo chunkFileInfo = new com.cybzacg.blogbackend.domain.FileInfo();
+        com.cybzacg.blogbackend.domain.file.FileInfo chunkFileInfo = new com.cybzacg.blogbackend.domain.file.FileInfo();
         chunkFileInfo.setFileSize(file != null ? file.getSize() : null);
         chunkFileInfo.setMd5(chunkMd5);
         chunkFileInfo.setMimeType(file != null ? file.getContentType() : null);

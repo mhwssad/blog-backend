@@ -1,10 +1,10 @@
 package com.cybzacg.blogbackend.core.filter;
 
 import com.cybzacg.blogbackend.common.constant.HttpHeaderConstants;
+import com.cybzacg.blogbackend.core.util.HttpServletResponseUtils;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.auth.token.TokenManager;
-import com.cybzacg.blogbackend.utils.HttpServletResponseUtils;
+import com.cybzacg.blogbackend.module.auth.account.token.TokenManager;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

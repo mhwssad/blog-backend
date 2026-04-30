@@ -1,8 +1,8 @@
 package com.cybzacg.blogbackend.utils;
 
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.auth.model.AuthUserDetails;
-import com.cybzacg.blogbackend.module.auth.model.AuthUserPrincipal;
+import com.cybzacg.blogbackend.module.auth.account.model.AuthUserDetails;
+import com.cybzacg.blogbackend.module.auth.account.model.AuthUserPrincipal;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
