@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.dashboard.service.impl;
 
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.mapper.DashboardMetricsMapper;
+import com.cybzacg.blogbackend.mapper.dashboard.DashboardMetricsMapper;
 import com.cybzacg.blogbackend.module.dashboard.model.admin.*;
 import com.cybzacg.blogbackend.module.dashboard.service.DashboardAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;

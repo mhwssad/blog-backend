@@ -13,10 +13,11 @@ import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.authentication.EmailCodeAuthenticationToken;
 import com.cybzacg.blogbackend.module.auth.convert.AuthModelMapper;
 import com.cybzacg.blogbackend.module.auth.model.*;
-import com.cybzacg.blogbackend.module.auth.repository.SysConfigRepository;
-import com.cybzacg.blogbackend.module.auth.repository.SysMenuRepository;
-import com.cybzacg.blogbackend.module.auth.repository.SysRoleRepository;
+import com.cybzacg.blogbackend.module.auth.config.repository.SysConfigRepository;
+import com.cybzacg.blogbackend.module.auth.rbac.repository.SysMenuRepository;
+import com.cybzacg.blogbackend.module.auth.rbac.repository.SysRoleRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
+import com.cybzacg.blogbackend.module.auth.notice.service.UserNotificationPreferenceService;
 import com.cybzacg.blogbackend.module.auth.service.impl.AuthServiceImpl;
 import com.cybzacg.blogbackend.module.auth.token.TokenManager;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
@@ -28,7 +29,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.mail.autoconfigure.MailProperties;
+import org.springframework.boot.autoconfigure.mail.MailProperties;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -70,6 +71,10 @@ class AuthServiceImplTest {
     private MailProperties mailProperties;
     @Mock
     private PasswordEncoder passwordEncoder;
+    @Mock
+    private UserNotificationPreferenceService userNotificationPreferenceService;
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     private AuthServiceImpl authService;
 
@@ -86,7 +91,9 @@ class AuthServiceImplTest {
                 redisOperator,
                 javaMailSender,
                 mailProperties,
-                passwordEncoder
+                passwordEncoder,
+                userNotificationPreferenceService,
+                eventPublisher
         );
     }
 

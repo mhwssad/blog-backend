@@ -2,8 +2,8 @@ package com.cybzacg.blogbackend.module.content.taxonomy.repository.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.cybzacg.blogbackend.domain.SysTagRelation;
-import com.cybzacg.blogbackend.mapper.SysTagRelationMapper;
+import com.cybzacg.blogbackend.domain.content.SysTagRelation;
+import com.cybzacg.blogbackend.mapper.content.SysTagRelationMapper;
 import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysTagRelationRepository;
 import org.springframework.stereotype.Repository;
 

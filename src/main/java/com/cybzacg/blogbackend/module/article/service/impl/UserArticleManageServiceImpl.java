@@ -2,9 +2,9 @@ package com.cybzacg.blogbackend.module.article.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.BlogArticle;
-import com.cybzacg.blogbackend.domain.BlogArticleCategory;
-import com.cybzacg.blogbackend.domain.SysUser;
+import com.cybzacg.blogbackend.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.domain.article.BlogArticleCategory;
+import com.cybzacg.blogbackend.domain.auth.SysUser;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.convert.ArticleModelMapper;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleAccessItem;
@@ -19,7 +19,7 @@ import com.cybzacg.blogbackend.module.article.service.ArticleAccessManageService
 import com.cybzacg.blogbackend.module.article.service.ArticleSeriesService;
 import com.cybzacg.blogbackend.module.article.service.UserArticleManageService;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.content.repository.SysTagRelationRepository;
+import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysTagRelationRepository;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;

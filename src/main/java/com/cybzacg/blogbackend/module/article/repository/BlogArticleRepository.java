@@ -2,7 +2,7 @@ package com.cybzacg.blogbackend.module.article.repository;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.cybzacg.blogbackend.domain.BlogArticle;
+import com.cybzacg.blogbackend.domain.article.BlogArticle;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleAdminPageQuery;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticlePageQuery;
 

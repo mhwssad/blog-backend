@@ -2,7 +2,7 @@ package com.cybzacg.blogbackend.module.ai.repository;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.cybzacg.blogbackend.domain.AiChatSession;
+import com.cybzacg.blogbackend.domain.ai.AiChatSession;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiSessionPageQuery;
 
 import java.util.List;

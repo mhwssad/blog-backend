@@ -2,7 +2,7 @@ package com.cybzacg.blogbackend.module.content.footprint.repository;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.cybzacg.blogbackend.domain.SysUserFootprint;
+import com.cybzacg.blogbackend.domain.content.SysUserFootprint;
 import com.cybzacg.blogbackend.module.content.footprint.model.admin.FootprintPageQuery;
 
 /**

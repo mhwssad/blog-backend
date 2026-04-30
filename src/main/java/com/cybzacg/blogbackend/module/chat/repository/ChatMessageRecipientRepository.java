@@ -2,7 +2,7 @@ package com.cybzacg.blogbackend.module.chat.repository;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.cybzacg.blogbackend.domain.ChatMessageRecipient;
+import com.cybzacg.blogbackend.domain.chat.ChatMessageRecipient;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageReceiptPageQuery;
 
 import java.time.LocalDateTime;

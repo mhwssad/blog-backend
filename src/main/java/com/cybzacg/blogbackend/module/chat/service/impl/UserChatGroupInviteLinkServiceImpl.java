@@ -2,9 +2,9 @@ package com.cybzacg.blogbackend.module.chat.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.ChatConversation;
-import com.cybzacg.blogbackend.domain.ChatConversationMember;
-import com.cybzacg.blogbackend.domain.ChatGroupInviteLink;
+import com.cybzacg.blogbackend.domain.chat.ChatConversation;
+import com.cybzacg.blogbackend.domain.chat.ChatConversationMember;
+import com.cybzacg.blogbackend.domain.chat.ChatGroupInviteLink;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.chat.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.convert.ChatModelMapper;

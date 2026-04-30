@@ -2,7 +2,7 @@ package com.cybzacg.blogbackend.module.content.comment.repository;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.cybzacg.blogbackend.domain.SysComment;
+import com.cybzacg.blogbackend.domain.content.SysComment;
 import com.cybzacg.blogbackend.module.content.comment.model.admin.CommentPageQuery;
 
 import java.util.List;

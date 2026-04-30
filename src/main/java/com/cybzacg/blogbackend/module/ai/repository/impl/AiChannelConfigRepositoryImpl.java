@@ -2,8 +2,8 @@ package com.cybzacg.blogbackend.module.ai.repository.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.cybzacg.blogbackend.domain.AiChannelConfig;
-import com.cybzacg.blogbackend.mapper.AiChannelConfigMapper;
+import com.cybzacg.blogbackend.domain.ai.AiChannelConfig;
+import com.cybzacg.blogbackend.mapper.ai.AiChannelConfigMapper;
 import com.cybzacg.blogbackend.module.ai.repository.AiChannelConfigRepository;
 import org.springframework.stereotype.Repository;
 

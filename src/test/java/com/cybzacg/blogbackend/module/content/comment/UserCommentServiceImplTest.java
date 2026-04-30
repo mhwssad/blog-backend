@@ -6,7 +6,7 @@ import com.cybzacg.blogbackend.domain.SysInteraction;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.article.service.ArticleContentFacadeService;
-import com.cybzacg.blogbackend.module.auth.service.NotificationDeliveryService;
+import com.cybzacg.blogbackend.module.auth.notice.service.NotificationDeliveryService;
 import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.comment.model.user.CommentSaveRequest;
 import com.cybzacg.blogbackend.module.content.comment.repository.SysCommentRepository;

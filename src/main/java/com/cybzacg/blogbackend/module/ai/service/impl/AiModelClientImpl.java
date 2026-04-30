@@ -1,8 +1,8 @@
 package com.cybzacg.blogbackend.module.ai.service.impl;
 
 import com.cybzacg.blogbackend.config.LangChain4jConfig;
-import com.cybzacg.blogbackend.domain.AiChannelConfig;
-import com.cybzacg.blogbackend.domain.AiChatMessage;
+import com.cybzacg.blogbackend.domain.ai.AiChannelConfig;
+import com.cybzacg.blogbackend.domain.ai.AiChatMessage;
 import com.cybzacg.blogbackend.module.ai.constant.AiConstants;
 import com.cybzacg.blogbackend.module.ai.model.data.AiModelCallResult;
 import com.cybzacg.blogbackend.module.ai.service.AiModelClient;

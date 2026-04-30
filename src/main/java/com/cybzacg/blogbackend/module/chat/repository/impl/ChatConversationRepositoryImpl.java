@@ -2,8 +2,8 @@ package com.cybzacg.blogbackend.module.chat.repository.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.cybzacg.blogbackend.domain.ChatConversation;
-import com.cybzacg.blogbackend.mapper.ChatConversationMapper;
+import com.cybzacg.blogbackend.domain.chat.ChatConversation;
+import com.cybzacg.blogbackend.mapper.chat.ChatConversationMapper;
 import com.cybzacg.blogbackend.module.chat.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminConversationPageQuery;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatAdminConversationListItem;

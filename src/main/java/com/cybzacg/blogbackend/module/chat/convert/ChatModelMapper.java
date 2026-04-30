@@ -1,12 +1,12 @@
 package com.cybzacg.blogbackend.module.chat.convert;
 
-import com.cybzacg.blogbackend.domain.ChatConversation;
-import com.cybzacg.blogbackend.domain.ChatConversationMember;
-import com.cybzacg.blogbackend.domain.ChatChannelCreateApplication;
-import com.cybzacg.blogbackend.domain.ChatGroupJoinApplication;
-import com.cybzacg.blogbackend.domain.ChatGroupInviteLink;
-import com.cybzacg.blogbackend.domain.ChatMessage;
-import com.cybzacg.blogbackend.domain.ChatMessageReadCursor;
+import com.cybzacg.blogbackend.domain.chat.ChatConversation;
+import com.cybzacg.blogbackend.domain.chat.ChatConversationMember;
+import com.cybzacg.blogbackend.domain.chat.ChatChannelCreateApplication;
+import com.cybzacg.blogbackend.domain.chat.ChatGroupJoinApplication;
+import com.cybzacg.blogbackend.domain.chat.ChatGroupInviteLink;
+import com.cybzacg.blogbackend.domain.chat.ChatMessage;
+import com.cybzacg.blogbackend.domain.chat.ChatMessageReadCursor;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminConversationVO;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatChannelApplicationAdminVO;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminMessageVO;

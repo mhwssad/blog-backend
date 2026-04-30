@@ -1,9 +1,9 @@
 package com.cybzacg.blogbackend.module.file.controller;
 
 import com.cybzacg.blogbackend.common.storage.StorageManager;
-import com.cybzacg.blogbackend.domain.BlogArticle;
-import com.cybzacg.blogbackend.domain.FileBusinessInfo;
-import com.cybzacg.blogbackend.domain.FileInfo;
+import com.cybzacg.blogbackend.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.domain.file.FileBusinessInfo;
+import com.cybzacg.blogbackend.domain.file.FileInfo;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;

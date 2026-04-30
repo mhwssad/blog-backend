@@ -4,8 +4,8 @@ package com.cybzacg.blogbackend.common.storage.impl;
 import com.cybzacg.blogbackend.common.storage.StorageHealthCheckService;
 import com.cybzacg.blogbackend.common.storage.StorageHealthInfo;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.health.contributor.Health;
-import org.springframework.boot.health.contributor.HealthIndicator;
+import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.HealthIndicator;
 
 import java.util.HashMap;
 import java.util.List;

@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.follow.convert;
 
-import com.cybzacg.blogbackend.domain.SysUserFollow;
+import com.cybzacg.blogbackend.domain.follow.SysUserFollow;
 import com.cybzacg.blogbackend.module.follow.model.admin.FollowAdminRelationVO;
 import com.cybzacg.blogbackend.module.follow.model.data.FollowAdminRelationItem;
 import com.cybzacg.blogbackend.module.follow.model.data.FollowRelationUserItem;

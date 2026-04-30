@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cybzacg.blogbackend.mapper.content.SysUserFootprintMapper">
+
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.SysUserFootprint">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="userId" column="user_id" jdbcType="BIGINT"/>
+        <result property="targetId" column="target_id" jdbcType="BIGINT"/>
+        <result property="targetType" column="target_type" jdbcType="VARCHAR"/>
+        <result property="title" column="title" jdbcType="VARCHAR"/>
+        <result property="url" column="url" jdbcType="VARCHAR"/>
+        <result property="ipAddress" column="ip_address" jdbcType="VARCHAR"/>
+        <result property="userAgent" column="user_agent" jdbcType="VARCHAR"/>
+        <result property="visitedAt" column="visited_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id
+        ,user_id,target_id,target_type,title,url,ip_address,user_agent,visited_at
+    </sql>
+
+    <insert id="upsertFootprint" parameterType="com.cybzacg.blogbackend.domain.SysUserFootprint">
+        insert into sys_user_footprint (user_id, target_id, target_type, title, url, ip_address, user_agent, visited_at)
+        values (#{userId}, #{targetId}, #{targetType}, #{title}, #{url}, #{ipAddress}, #{userAgent},
+                #{visitedAt}) on duplicate key
+        update
+            title =
+        values (title), url =
+        values (url), ip_address =
+        values (ip_address), user_agent =
+        values (user_agent), visited_at =
+        values (visited_at)
+    </insert>
+</mapper>

@@ -1,14 +1,14 @@
 package com.cybzacg.blogbackend.module.follow.service.impl;
 
 import com.cybzacg.blogbackend.common.constant.NoticeConstants;
-import com.cybzacg.blogbackend.domain.SysNotice;
-import com.cybzacg.blogbackend.domain.SysUser;
-import com.cybzacg.blogbackend.domain.SysUserNotice;
+import com.cybzacg.blogbackend.domain.notice.SysNotice;
+import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.domain.notice.SysUserNotice;
 import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
-import com.cybzacg.blogbackend.module.auth.repository.SysNoticeRepository;
-import com.cybzacg.blogbackend.module.auth.repository.SysUserNoticeRepository;
+import com.cybzacg.blogbackend.module.auth.notice.repository.SysNoticeRepository;
+import com.cybzacg.blogbackend.module.auth.notice.repository.SysUserNoticeRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.auth.service.UserNotificationPreferenceService;
+import com.cybzacg.blogbackend.module.auth.notice.service.UserNotificationPreferenceService;
 import com.cybzacg.blogbackend.module.follow.service.FollowNoticeService;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;

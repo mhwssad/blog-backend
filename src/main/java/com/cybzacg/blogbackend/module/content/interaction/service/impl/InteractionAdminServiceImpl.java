@@ -2,8 +2,8 @@ package com.cybzacg.blogbackend.module.content.interaction.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.SysComment;
-import com.cybzacg.blogbackend.domain.SysInteraction;
+import com.cybzacg.blogbackend.domain.content.SysComment;
+import com.cybzacg.blogbackend.domain.content.SysInteraction;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.service.ArticleContentFacadeService;
 import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;

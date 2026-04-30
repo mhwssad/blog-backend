@@ -2,8 +2,8 @@ package com.cybzacg.blogbackend.module.follow.repository.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.cybzacg.blogbackend.domain.SysUserFollow;
-import com.cybzacg.blogbackend.mapper.SysUserFollowMapper;
+import com.cybzacg.blogbackend.domain.follow.SysUserFollow;
+import com.cybzacg.blogbackend.mapper.follow.SysUserFollowMapper;
 import com.cybzacg.blogbackend.module.follow.model.admin.FollowAdminPageQuery;
 import com.cybzacg.blogbackend.module.follow.model.data.FollowAdminRelationItem;
 import com.cybzacg.blogbackend.module.follow.model.data.FollowRelationUserItem;

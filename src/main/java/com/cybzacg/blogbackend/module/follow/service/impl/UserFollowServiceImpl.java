@@ -1,8 +1,8 @@
 package com.cybzacg.blogbackend.module.follow.service.impl;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.SysUser;
-import com.cybzacg.blogbackend.domain.SysUserFollow;
+import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.domain.follow.SysUserFollow;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.follow.convert.FollowModelMapper;

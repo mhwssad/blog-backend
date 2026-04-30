@@ -1,8 +1,8 @@
 package com.cybzacg.blogbackend.common.aspect;
 
 import com.cybzacg.blogbackend.common.annotation.DisableSysLog;
-import com.cybzacg.blogbackend.domain.SysLog;
-import com.cybzacg.blogbackend.module.auth.repository.SysLogRepository;
+import com.cybzacg.blogbackend.domain.system.SysLog;
+import com.cybzacg.blogbackend.module.auth.audit.repository.SysLogRepository;
 import com.cybzacg.blogbackend.utils.IPUtils;
 import com.cybzacg.blogbackend.utils.JsonUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;

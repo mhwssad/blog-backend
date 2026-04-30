@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.article.task;
 
-import com.cybzacg.blogbackend.domain.BlogArticle;
+import com.cybzacg.blogbackend.domain.article.BlogArticle;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.article.service.ArticleStatusMachine;
 import lombok.RequiredArgsConstructor;

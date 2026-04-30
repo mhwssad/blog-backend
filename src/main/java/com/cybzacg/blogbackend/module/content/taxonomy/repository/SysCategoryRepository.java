@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.content.taxonomy.repository;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.cybzacg.blogbackend.domain.SysCategory;
+import com.cybzacg.blogbackend.domain.content.SysCategory;
 
 import java.util.Collection;
 import java.util.List;

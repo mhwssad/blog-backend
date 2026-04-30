@@ -6,9 +6,11 @@ import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
+import com.cybzacg.blogbackend.module.article.service.ArticleStatusMachine;
 import com.cybzacg.blogbackend.module.article.service.impl.UserArticleActionServiceImpl;
-import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
-import com.cybzacg.blogbackend.module.content.repository.SysInteractionRepository;
+import com.cybzacg.blogbackend.module.auth.notice.service.NotificationDeliveryService;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.interaction.repository.SysInteractionRepository;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -31,7 +34,13 @@ class UserArticleActionServiceImplTest {
     @Mock
     private ArticleAccessControlService articleAccessControlService;
     @Mock
+    private ArticleStatusMachine articleStatusMachine;
+    @Mock
     private ContentModelMapper contentModelMapper;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+    @Mock
+    private NotificationDeliveryService notificationDeliveryService;
 
     private UserArticleActionServiceImpl userArticleActionService;
 
@@ -41,8 +50,12 @@ class UserArticleActionServiceImplTest {
                 blogArticleRepository,
                 sysInteractionRepository,
                 articleAccessControlService,
-                contentModelMapper
+                articleStatusMachine,
+                contentModelMapper,
+                eventPublisher,
+                notificationDeliveryService
         );
+        lenient().when(articleStatusMachine.canInteract(any())).thenReturn(true);
     }
 
     @Test
@@ -96,12 +109,13 @@ class UserArticleActionServiceImplTest {
         BlogArticle article = publishedArticle(1L, 2);
         article.setStatus(0);
         when(blogArticleRepository.getById(1L)).thenReturn(article);
+        when(articleStatusMachine.canInteract(article)).thenReturn(false);
 
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(7L)) {
             BusinessException exception = assertThrows(BusinessException.class, () -> userArticleActionService.likeArticle(1L));
 
-            assertEquals(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), exception.getCode());
-            assertEquals("文章不存在", exception.getMessage());
+            assertEquals(ResultErrorCode.FORBIDDEN.getCode(), exception.getCode());
+            assertEquals("当前文章状态不允许点赞", exception.getMessage());
             verifyNoInteractions(contentModelMapper);
         }
     }
@@ -140,16 +154,13 @@ class UserArticleActionServiceImplTest {
 
     @Test
     void unlikeArticleShouldBeIdempotentWhenNotLiked() {
-        BlogArticle article = publishedArticle(1L, 3);
-        when(blogArticleRepository.getById(1L)).thenReturn(article);
         when(sysInteractionRepository.findOneByUserIdAndTargetIdAndTargetTypeAndActionType(7L, 1L, "article", "like")).thenReturn(null);
 
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(7L)) {
             userArticleActionService.unlikeArticle(1L);
 
-            assertEquals(3, article.getLikeCount());
             verify(sysInteractionRepository, never()).removeById(anyLong());
-            verify(blogArticleRepository, never()).updateById(article);
+            verify(blogArticleRepository, never()).updateById(any());
         }
     }
 

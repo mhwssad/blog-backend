@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.follow.repository;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.cybzacg.blogbackend.domain.SysUserFollow;
+import com.cybzacg.blogbackend.domain.follow.SysUserFollow;
 import com.cybzacg.blogbackend.module.follow.model.admin.FollowAdminPageQuery;
 import com.cybzacg.blogbackend.module.follow.model.data.FollowAdminRelationItem;
 import com.cybzacg.blogbackend.module.follow.model.data.FollowRelationUserItem;

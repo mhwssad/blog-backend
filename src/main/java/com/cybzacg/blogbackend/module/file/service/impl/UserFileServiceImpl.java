@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.file.service.impl;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.FileBusinessInfo;
+import com.cybzacg.blogbackend.domain.file.FileBusinessInfo;
 import com.cybzacg.blogbackend.module.file.model.user.*;
 import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;

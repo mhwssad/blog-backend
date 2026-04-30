@@ -2,8 +2,8 @@ package com.cybzacg.blogbackend.module.auth.repository.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.cybzacg.blogbackend.domain.SysUserRole;
-import com.cybzacg.blogbackend.mapper.SysUserRoleMapper;
+import com.cybzacg.blogbackend.domain.auth.SysUserRole;
+import com.cybzacg.blogbackend.mapper.auth.SysUserRoleMapper;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRoleRepository;
 import org.springframework.stereotype.Repository;
 

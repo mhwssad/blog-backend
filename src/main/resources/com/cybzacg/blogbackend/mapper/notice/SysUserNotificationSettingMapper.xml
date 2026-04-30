@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cybzacg.blogbackend.mapper.notice.SysUserNotificationSettingMapper">
+
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.SysUserNotificationSetting">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="userId" column="user_id" jdbcType="BIGINT"/>
+        <result property="commentNoticeEnabled" column="comment_notice_enabled" jdbcType="TINYINT"/>
+        <result property="likeNoticeEnabled" column="like_notice_enabled" jdbcType="TINYINT"/>
+        <result property="collectNoticeEnabled" column="collect_notice_enabled" jdbcType="TINYINT"/>
+        <result property="followNoticeEnabled" column="follow_notice_enabled" jdbcType="TINYINT"/>
+        <result property="privateChatNoticeEnabled" column="private_chat_notice_enabled" jdbcType="TINYINT"/>
+        <result property="mentionNoticeEnabled" column="mention_notice_enabled" jdbcType="TINYINT"/>
+        <result property="channelAnnouncementEnabled" column="channel_announcement_enabled" jdbcType="TINYINT"/>
+        <result property="systemNoticeEnabled" column="system_notice_enabled" jdbcType="TINYINT"/>
+        <result property="aiTaskNoticeEnabled" column="ai_task_notice_enabled" jdbcType="TINYINT"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,
+        user_id, comment_notice_enabled, like_notice_enabled,
+        collect_notice_enabled, follow_notice_enabled, private_chat_notice_enabled,
+        mention_notice_enabled, channel_announcement_enabled, system_notice_enabled,
+        ai_task_notice_enabled, created_at, updated_at
+    </sql>
+</mapper>

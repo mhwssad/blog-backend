@@ -3,8 +3,8 @@ package com.cybzacg.blogbackend.module.ai.repository.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.cybzacg.blogbackend.domain.AiChatMessage;
-import com.cybzacg.blogbackend.mapper.AiChatMessageMapper;
+import com.cybzacg.blogbackend.domain.ai.AiChatMessage;
+import com.cybzacg.blogbackend.mapper.ai.AiChatMessageMapper;
 import com.cybzacg.blogbackend.module.ai.repository.AiChatMessageRepository;
 import org.springframework.stereotype.Repository;
 

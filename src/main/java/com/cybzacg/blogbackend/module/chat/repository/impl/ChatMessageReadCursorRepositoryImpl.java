@@ -2,8 +2,8 @@ package com.cybzacg.blogbackend.module.chat.repository.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.cybzacg.blogbackend.domain.ChatMessageReadCursor;
-import com.cybzacg.blogbackend.mapper.ChatMessageReadCursorMapper;
+import com.cybzacg.blogbackend.domain.chat.ChatMessageReadCursor;
+import com.cybzacg.blogbackend.mapper.chat.ChatMessageReadCursorMapper;
 import com.cybzacg.blogbackend.module.chat.repository.ChatMessageReadCursorRepository;
 import org.springframework.stereotype.Repository;
 

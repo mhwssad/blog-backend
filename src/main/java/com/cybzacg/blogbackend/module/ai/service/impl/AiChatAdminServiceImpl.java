@@ -2,9 +2,9 @@ package com.cybzacg.blogbackend.module.ai.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.AiChannelConfig;
-import com.cybzacg.blogbackend.domain.AiChatSession;
-import com.cybzacg.blogbackend.domain.SysUser;
+import com.cybzacg.blogbackend.domain.ai.AiChannelConfig;
+import com.cybzacg.blogbackend.domain.ai.AiChatSession;
+import com.cybzacg.blogbackend.domain.auth.SysUser;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiSessionAdminVO;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiSessionPageQuery;

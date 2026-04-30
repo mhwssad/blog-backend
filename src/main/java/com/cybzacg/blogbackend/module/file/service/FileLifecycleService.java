@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.file.service;
 
-import com.cybzacg.blogbackend.domain.FileUploadTask;
+import com.cybzacg.blogbackend.domain.file.FileUploadTask;
 
 /**
  * 文件生命周期收口服务。

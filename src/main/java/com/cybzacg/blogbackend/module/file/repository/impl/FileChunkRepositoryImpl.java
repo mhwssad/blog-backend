@@ -2,8 +2,8 @@ package com.cybzacg.blogbackend.module.file.repository.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.cybzacg.blogbackend.domain.FileChunk;
-import com.cybzacg.blogbackend.mapper.FileChunkMapper;
+import com.cybzacg.blogbackend.domain.file.FileChunk;
+import com.cybzacg.blogbackend.mapper.file.FileChunkMapper;
 import com.cybzacg.blogbackend.module.file.repository.FileChunkRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,9 +1,9 @@
 package com.cybzacg.blogbackend.module.file.service.impl;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.FileBusinessInfo;
-import com.cybzacg.blogbackend.domain.FileInfo;
-import com.cybzacg.blogbackend.domain.FileUploadTask;
+import com.cybzacg.blogbackend.domain.file.FileBusinessInfo;
+import com.cybzacg.blogbackend.domain.file.FileInfo;
+import com.cybzacg.blogbackend.domain.file.FileUploadTask;
 import com.cybzacg.blogbackend.module.file.model.user.UserFilePageQuery;
 import com.cybzacg.blogbackend.module.file.model.user.UserFileTaskPageQuery;
 import com.cybzacg.blogbackend.module.file.model.user.UserFileTaskVO;

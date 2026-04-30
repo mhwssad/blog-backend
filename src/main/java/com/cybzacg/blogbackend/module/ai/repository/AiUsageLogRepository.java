@@ -2,7 +2,7 @@ package com.cybzacg.blogbackend.module.ai.repository;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.cybzacg.blogbackend.domain.AiUsageLog;
+import com.cybzacg.blogbackend.domain.ai.AiUsageLog;
 
 import java.time.LocalDateTime;
 

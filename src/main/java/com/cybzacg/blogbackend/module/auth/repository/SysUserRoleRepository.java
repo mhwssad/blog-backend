@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.auth.repository;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.cybzacg.blogbackend.domain.SysUserRole;
+import com.cybzacg.blogbackend.domain.auth.SysUserRole;
 
 import java.util.List;
 

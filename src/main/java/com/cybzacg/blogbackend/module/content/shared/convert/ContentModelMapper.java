@@ -1,6 +1,13 @@
 package com.cybzacg.blogbackend.module.content.shared.convert;
 
-import com.cybzacg.blogbackend.domain.*;
+import com.cybzacg.blogbackend.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.domain.content.SysCategory;
+import com.cybzacg.blogbackend.domain.content.SysTag;
+import com.cybzacg.blogbackend.domain.content.SysComment;
+import com.cybzacg.blogbackend.domain.content.SysCollection;
+import com.cybzacg.blogbackend.domain.content.SysCollectionFolder;
+import com.cybzacg.blogbackend.domain.content.SysInteraction;
+import com.cybzacg.blogbackend.domain.content.SysUserFootprint;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.admin.*;
 import com.cybzacg.blogbackend.module.content.comment.model.admin.CommentVO;
 import com.cybzacg.blogbackend.module.content.collection.model.admin.CollectionVO;

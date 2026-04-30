@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.cybzacg.blogbackend.domain.UserExperienceLog;
-import com.cybzacg.blogbackend.mapper.UserExperienceLogMapper;
+import com.cybzacg.blogbackend.domain.auth.UserExperienceLog;
+import com.cybzacg.blogbackend.mapper.auth.UserExperienceLogMapper;
 import com.cybzacg.blogbackend.module.auth.experience.repository.UserExperienceLogRepository;
 import org.springframework.stereotype.Repository;
 

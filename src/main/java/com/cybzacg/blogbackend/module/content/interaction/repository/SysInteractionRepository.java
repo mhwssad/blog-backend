@@ -2,7 +2,7 @@ package com.cybzacg.blogbackend.module.content.interaction.repository;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.cybzacg.blogbackend.domain.SysInteraction;
+import com.cybzacg.blogbackend.domain.content.SysInteraction;
 import com.cybzacg.blogbackend.module.content.interaction.model.admin.InteractionPageQuery;
 
 import java.util.Collection;

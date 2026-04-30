@@ -2,7 +2,7 @@ package com.cybzacg.blogbackend.module.report.repository;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.cybzacg.blogbackend.domain.SysReportRecord;
+import com.cybzacg.blogbackend.domain.report.SysReportRecord;
 
 import java.time.LocalDateTime;
 

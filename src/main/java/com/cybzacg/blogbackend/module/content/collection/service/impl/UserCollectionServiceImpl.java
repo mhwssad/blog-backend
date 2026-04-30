@@ -2,13 +2,13 @@ package com.cybzacg.blogbackend.module.content.collection.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.BlogArticle;
-import com.cybzacg.blogbackend.domain.SysCollection;
-import com.cybzacg.blogbackend.domain.SysCollectionFolder;
+import com.cybzacg.blogbackend.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.domain.content.SysCollection;
+import com.cybzacg.blogbackend.domain.content.SysCollectionFolder;
 import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.service.ArticleContentFacadeService;
-import com.cybzacg.blogbackend.module.auth.service.NotificationDeliveryService;
+import com.cybzacg.blogbackend.module.auth.notice.service.NotificationDeliveryService;
 import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.collection.model.user.CollectionFolderSaveRequest;
 import com.cybzacg.blogbackend.module.content.collection.model.user.CollectionFolderVO;

@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.auth.service;
 
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.auth.repository.SysRoleRepository;
+import com.cybzacg.blogbackend.module.auth.rbac.repository.SysRoleRepository;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;

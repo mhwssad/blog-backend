@@ -1,8 +1,8 @@
 package com.cybzacg.blogbackend.module.article.service.impl;
 
-import com.cybzacg.blogbackend.domain.BlogArticle;
-import com.cybzacg.blogbackend.domain.BlogArticleReviewLog;
-import com.cybzacg.blogbackend.domain.SysUser;
+import com.cybzacg.blogbackend.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.domain.article.BlogArticleReviewLog;
+import com.cybzacg.blogbackend.domain.auth.SysUser;
 import com.cybzacg.blogbackend.enums.article.ArticleReviewActionEnum;
 import com.cybzacg.blogbackend.enums.article.ArticleReviewStatusEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;

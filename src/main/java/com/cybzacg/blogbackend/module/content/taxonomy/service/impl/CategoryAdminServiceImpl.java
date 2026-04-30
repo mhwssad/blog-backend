@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.content.taxonomy.service.impl;
 
-import com.cybzacg.blogbackend.domain.SysCategory;
+import com.cybzacg.blogbackend.domain.content.SysCategory;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleCategoryRepository;
 import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;

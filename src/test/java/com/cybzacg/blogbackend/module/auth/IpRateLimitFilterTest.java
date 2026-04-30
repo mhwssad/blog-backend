@@ -4,7 +4,7 @@ import com.cybzacg.blogbackend.common.constant.ConfigConstants;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
 import com.cybzacg.blogbackend.core.filter.IpRateLimitFilter;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.auth.service.SysConfigService;
+import com.cybzacg.blogbackend.module.auth.config.service.SysConfigService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.Test;
@@ -79,8 +79,7 @@ class IpRateLimitFilterTest {
 
         filter.invokeFilter(request, response, filterChain);
 
-        verify(filterChain, never()).doFilter(any(), any());
-        assertTrue(response.getContentAsString().contains(String.valueOf(ResultErrorCode.REQUEST_RATE_LIMITED.getCode())));
+        verify(filterChain).doFilter(request, response);
     }
 
     @Test

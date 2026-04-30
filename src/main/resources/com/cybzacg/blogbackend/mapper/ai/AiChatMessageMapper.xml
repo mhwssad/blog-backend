@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cybzacg.blogbackend.mapper.ai.AiChatMessageMapper">
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.AiChatMessage">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="sessionId" column="session_id" jdbcType="BIGINT"/>
+        <result property="userId" column="user_id" jdbcType="BIGINT"/>
+        <result property="roleType" column="role_type" jdbcType="VARCHAR"/>
+        <result property="content" column="content" jdbcType="LONGVARCHAR"/>
+        <result property="requestSceneType" column="request_scene_type" jdbcType="VARCHAR"/>
+        <result property="requestTargetId" column="request_target_id" jdbcType="BIGINT"/>
+        <result property="tokenCount" column="token_count" jdbcType="INTEGER"/>
+        <result property="dataScopeSnapshot" column="data_scope_snapshot" jdbcType="VARCHAR"/>
+        <result property="responseStatus" column="response_status" jdbcType="TINYINT"/>
+        <result property="errorMessage" column="error_message" jdbcType="VARCHAR"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id, session_id, user_id, role_type, content, request_scene_type, request_target_id,
+        token_count, data_scope_snapshot, response_status, error_message, created_at
+    </sql>
+</mapper>

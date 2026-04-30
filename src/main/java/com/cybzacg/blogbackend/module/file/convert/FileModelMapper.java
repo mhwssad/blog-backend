@@ -1,13 +1,14 @@
 package com.cybzacg.blogbackend.module.file.convert;
 
-import com.cybzacg.blogbackend.domain.FileBusinessInfo;
-import com.cybzacg.blogbackend.domain.FileChunk;
-import com.cybzacg.blogbackend.domain.FileInfo;
-import com.cybzacg.blogbackend.domain.FileUploadTask;
+import com.cybzacg.blogbackend.domain.file.FileBusinessInfo;
+import com.cybzacg.blogbackend.domain.file.FileChunk;
+import com.cybzacg.blogbackend.domain.file.FileInfo;
+import com.cybzacg.blogbackend.domain.file.FileUploadTask;
 import com.cybzacg.blogbackend.module.file.model.admin.FileAdminVO;
 import com.cybzacg.blogbackend.module.file.model.admin.FileDetailVO;
 import com.cybzacg.blogbackend.module.file.model.admin.FileReferenceVO;
 import com.cybzacg.blogbackend.module.file.model.admin.FileTaskAdminVO;
+import com.cybzacg.blogbackend.module.file.model.admin.UserTaskVO;
 import com.cybzacg.blogbackend.module.file.model.user.*;
 import org.mapstruct.*;
 
@@ -76,6 +77,14 @@ public interface FileModelMapper {
     @Mapping(target = "createdAt", ignore = true)
     UserFileVO toUserFileVOFromBoth(FileBusinessInfo businessInfo, FileInfo fileInfo);
 
+    // ==================== 管理侧用户文件 VO ====================
+
+    @Mapping(target = "businessId", source = "id")
+    @Mapping(target = "fileId", source = "id")
+    @Mapping(target = "referenceId", ignore = true)
+    @Mapping(target = "referenceType", ignore = true)
+    UserFileVO toAdminUserFileVO(FileInfo fileInfo);
+
     // ==================== 管理侧 VO ====================
 
     @Mapping(target = "id", source = "id")
@@ -105,6 +114,11 @@ public interface FileModelMapper {
     @Mapping(target = "errorMessage", ignore = true)
     @Mapping(target = "completeTime", ignore = true)
     FileTaskAdminVO toFileTaskAdminVO(FileUploadTask task);
+
+    @Mapping(target = "uploadId", source = "uploadId")
+    @Mapping(target = "taskId", source = "id")
+    @Mapping(target = "quickUpload", ignore = true)
+    UserTaskVO toUserTaskVO(FileUploadTask task);
 
     // ==================== AfterMapping 填充运行时字段 ====================
 

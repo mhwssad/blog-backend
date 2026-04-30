@@ -2,7 +2,7 @@ package com.cybzacg.blogbackend.module.report.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.SysReportRecord;
+import com.cybzacg.blogbackend.domain.report.SysReportRecord;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.enums.report.ReportRecordStatusEnum;
 import com.cybzacg.blogbackend.enums.report.ReportTargetTypeEnum;

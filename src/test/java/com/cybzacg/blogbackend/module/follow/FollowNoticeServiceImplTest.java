@@ -4,9 +4,10 @@ import com.cybzacg.blogbackend.common.constant.NoticeConstants;
 import com.cybzacg.blogbackend.domain.SysNotice;
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.domain.SysUserNotice;
-import com.cybzacg.blogbackend.module.auth.repository.SysNoticeRepository;
-import com.cybzacg.blogbackend.module.auth.repository.SysUserNoticeRepository;
+import com.cybzacg.blogbackend.module.auth.notice.repository.SysNoticeRepository;
+import com.cybzacg.blogbackend.module.auth.notice.repository.SysUserNoticeRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
+import com.cybzacg.blogbackend.module.auth.notice.service.UserNotificationPreferenceService;
 import com.cybzacg.blogbackend.module.follow.service.impl.FollowNoticeServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,12 +33,14 @@ class FollowNoticeServiceImplTest {
     private SysUserNoticeRepository sysUserNoticeRepository;
     @Mock
     private SysUserRepository sysUserRepository;
+    @Mock
+    private UserNotificationPreferenceService userNotificationPreferenceService;
 
     private FollowNoticeServiceImpl followNoticeService;
 
     @BeforeEach
     void setUp() {
-        followNoticeService = new FollowNoticeServiceImpl(sysNoticeRepository, sysUserNoticeRepository, sysUserRepository);
+        followNoticeService = new FollowNoticeServiceImpl(sysNoticeRepository, sysUserNoticeRepository, sysUserRepository, userNotificationPreferenceService);
     }
 
     @AfterEach
@@ -50,6 +53,7 @@ class FollowNoticeServiceImplTest {
     @Test
     void notifyNewFollowerAfterCommitShouldRegisterCallbackInsideTransaction() {
         TransactionSynchronizationManager.initSynchronization();
+        when(userNotificationPreferenceService.isNotificationEnabled(any(), any())).thenReturn(true);
         when(sysUserRepository.getById(7L)).thenReturn(activeFollower(7L));
         when(sysNoticeRepository.save(any(SysNotice.class))).thenAnswer(invocation -> {
             SysNotice notice = invocation.getArgument(0);
@@ -80,6 +84,7 @@ class FollowNoticeServiceImplTest {
 
     @Test
     void notifyNewFollowerAfterCommitShouldRunImmediatelyWithoutTransaction() {
+        when(userNotificationPreferenceService.isNotificationEnabled(any(), any())).thenReturn(true);
         when(sysUserRepository.getById(7L)).thenReturn(activeFollower(7L));
         when(sysNoticeRepository.save(any(SysNotice.class))).thenAnswer(invocation -> {
             SysNotice notice = invocation.getArgument(0);

@@ -2,7 +2,7 @@ package com.cybzacg.blogbackend.module.ai.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.AiUsageLog;
+import com.cybzacg.blogbackend.domain.ai.AiUsageLog;
 import com.cybzacg.blogbackend.enums.ai.AiUsageSuccessStatusEnum;
 import com.cybzacg.blogbackend.module.ai.convert.AiModelMapper;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiUsageLogPageQuery;

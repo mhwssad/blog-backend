@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.file.repository;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.cybzacg.blogbackend.domain.FileChunk;
+import com.cybzacg.blogbackend.domain.file.FileChunk;
 
 /**
  * 文件分片 Repository。<p>封装文件分片记录的持久化操作，提供按任务查询分片、统计完成数及批量删除。

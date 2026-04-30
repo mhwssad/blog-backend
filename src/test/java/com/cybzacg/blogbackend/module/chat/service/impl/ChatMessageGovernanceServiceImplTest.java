@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.chat.service.impl;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.auth.service.SysConfigService;
+import com.cybzacg.blogbackend.module.auth.config.service.SysConfigService;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

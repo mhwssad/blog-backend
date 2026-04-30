@@ -3,8 +3,8 @@ package com.cybzacg.blogbackend.module.report.repository.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.cybzacg.blogbackend.domain.SysReportRecord;
-import com.cybzacg.blogbackend.mapper.SysReportRecordMapper;
+import com.cybzacg.blogbackend.domain.report.SysReportRecord;
+import com.cybzacg.blogbackend.mapper.report.SysReportRecordMapper;
 import com.cybzacg.blogbackend.module.report.repository.SysReportRecordRepository;
 import org.springframework.stereotype.Repository;
 

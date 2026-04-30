@@ -4,7 +4,7 @@ import com.cybzacg.blogbackend.domain.BlogArticle;
 import com.cybzacg.blogbackend.domain.SysCollection;
 import com.cybzacg.blogbackend.domain.SysCollectionFolder;
 import com.cybzacg.blogbackend.module.article.service.ArticleContentFacadeService;
-import com.cybzacg.blogbackend.module.auth.service.NotificationDeliveryService;
+import com.cybzacg.blogbackend.module.auth.notice.service.NotificationDeliveryService;
 import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.collection.model.user.CollectionFolderSaveRequest;
 import com.cybzacg.blogbackend.module.content.collection.model.user.CollectionFolderVO;

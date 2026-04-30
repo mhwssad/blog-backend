@@ -2,7 +2,7 @@ package com.cybzacg.blogbackend.module.chat.repository;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.cybzacg.blogbackend.domain.ChatChannelCreateApplication;
+import com.cybzacg.blogbackend.domain.chat.ChatChannelCreateApplication;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatChannelApplicationAdminPageQuery;
 
 /**

@@ -1,9 +1,9 @@
 package com.cybzacg.blogbackend.module.auth.service;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.module.auth.model.admin.SysUserAdminVO;
-import com.cybzacg.blogbackend.module.auth.model.admin.SysUserPageQuery;
-import com.cybzacg.blogbackend.module.auth.model.admin.SysUserSaveRequest;
+import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysUserAdminVO;
+import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysUserPageQuery;
+import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysUserSaveRequest;
 
 import java.util.List;
 

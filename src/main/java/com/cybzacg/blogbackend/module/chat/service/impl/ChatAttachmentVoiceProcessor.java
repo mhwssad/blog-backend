@@ -2,7 +2,7 @@ package com.cybzacg.blogbackend.module.chat.service.impl;
 
 import com.cybzacg.blogbackend.common.storage.MediaAssetPathUtils;
 import com.cybzacg.blogbackend.common.storage.StorageService;
-import com.cybzacg.blogbackend.domain.FileInfo;
+import com.cybzacg.blogbackend.domain.file.FileInfo;
 import com.cybzacg.blogbackend.module.chat.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.model.common.ChatFilePayloadVO;
 import com.cybzacg.blogbackend.module.chat.service.ChatAttachmentMetadataResolver;

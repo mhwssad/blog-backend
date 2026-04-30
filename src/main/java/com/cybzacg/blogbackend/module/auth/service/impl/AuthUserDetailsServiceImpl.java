@@ -1,9 +1,9 @@
 package com.cybzacg.blogbackend.module.auth.service.impl;
 
-import com.cybzacg.blogbackend.domain.SysUser;
+import com.cybzacg.blogbackend.domain.auth.SysUser;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserDetails;
-import com.cybzacg.blogbackend.module.auth.repository.SysMenuRepository;
-import com.cybzacg.blogbackend.module.auth.repository.SysRoleRepository;
+import com.cybzacg.blogbackend.module.auth.rbac.repository.SysMenuRepository;
+import com.cybzacg.blogbackend.module.auth.rbac.repository.SysRoleRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.service.AuthUserDetailsService;
 import lombok.RequiredArgsConstructor;

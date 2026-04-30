@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.ai.repository;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.cybzacg.blogbackend.domain.AiChannelConfig;
+import com.cybzacg.blogbackend.domain.ai.AiChannelConfig;
 
 import java.util.List;
 

@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.article.service.impl;
 
-import com.cybzacg.blogbackend.domain.BlogArticle;
+import com.cybzacg.blogbackend.domain.article.BlogArticle;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;

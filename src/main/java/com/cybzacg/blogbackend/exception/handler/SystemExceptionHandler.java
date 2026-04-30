@@ -362,7 +362,10 @@ public class SystemExceptionHandler extends BaseExceptionHandler {
         }
 
         if (isSseRequest()) {
-            handleSseErrorResponse(ResultErrorCode.SYSTEM_ERROR.getMessage());
+            log.error("系统异常(SSE) [TraceID: {}] - {}", getTraceId(), e.getMessage(), e);
+            Object sseDetail = "production".equals(profile) ? null : buildErrorDetail(e);
+            String sseMessage = "production".equals(profile) ? ResultErrorCode.SYSTEM_ERROR.getMessage() : e.getMessage();
+            handleSseErrorResponse(sseMessage, sseDetail);
             return null;
         }
 

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cybzacg.blogbackend.mapper.ai.AiChannelConfigMapper">
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.AiChannelConfig">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="channelCode" column="channel_code" jdbcType="VARCHAR"/>
+        <result property="channelName" column="channel_name" jdbcType="VARCHAR"/>
+        <result property="provider" column="provider" jdbcType="VARCHAR"/>
+        <result property="modelName" column="model_name" jdbcType="VARCHAR"/>
+        <result property="apiBaseUrl" column="api_base_url" jdbcType="VARCHAR"/>
+        <result property="apiKeyEncrypted" column="api_key_encrypted" jdbcType="VARCHAR"/>
+        <result property="dailyQuota" column="daily_quota" jdbcType="INTEGER"/>
+        <result property="userDailyQuota" column="user_daily_quota" jdbcType="INTEGER"/>
+        <result property="maxContextTokens" column="max_context_tokens" jdbcType="INTEGER"/>
+        <result property="dataScopeJson" column="data_scope_json" jdbcType="VARCHAR"/>
+        <result property="systemPromptTemplate" column="system_prompt_template" jdbcType="VARCHAR"/>
+        <result property="status" column="status" jdbcType="TINYINT"/>
+        <result property="isDefault" column="is_default" jdbcType="TINYINT"/>
+        <result property="createdBy" column="created_by" jdbcType="BIGINT"/>
+        <result property="updatedBy" column="updated_by" jdbcType="BIGINT"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id, channel_code, channel_name, provider, model_name, api_base_url, api_key_encrypted,
+        daily_quota, user_daily_quota, max_context_tokens, data_scope_json, system_prompt_template,
+        status, is_default, created_by, updated_by, created_at, updated_at
+    </sql>
+</mapper>

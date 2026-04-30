@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.content.taxonomy.service.impl;
 
-import com.cybzacg.blogbackend.domain.SysTag;
+import com.cybzacg.blogbackend.domain.content.SysTag;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.admin.TagSaveRequest;

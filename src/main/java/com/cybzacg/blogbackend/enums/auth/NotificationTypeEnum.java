@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.enums.auth;
 
-import com.cybzacg.blogbackend.domain.SysUserNotificationSetting;
+import com.cybzacg.blogbackend.domain.notice.SysUserNotificationSetting;
 import lombok.Getter;
 
 /**

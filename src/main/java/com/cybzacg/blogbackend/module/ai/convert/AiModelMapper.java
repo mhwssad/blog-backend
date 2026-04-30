@@ -1,9 +1,9 @@
 package com.cybzacg.blogbackend.module.ai.convert;
 
-import com.cybzacg.blogbackend.domain.AiChannelConfig;
-import com.cybzacg.blogbackend.domain.AiChatMessage;
-import com.cybzacg.blogbackend.domain.AiChatSession;
-import com.cybzacg.blogbackend.domain.AiUsageLog;
+import com.cybzacg.blogbackend.domain.ai.AiChannelConfig;
+import com.cybzacg.blogbackend.domain.ai.AiChatMessage;
+import com.cybzacg.blogbackend.domain.ai.AiChatSession;
+import com.cybzacg.blogbackend.domain.ai.AiUsageLog;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiChannelConfigSaveRequest;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiChannelConfigVO;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiUsageLogVO;

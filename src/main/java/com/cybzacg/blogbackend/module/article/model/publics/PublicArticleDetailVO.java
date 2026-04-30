@@ -1,8 +1,8 @@
 package com.cybzacg.blogbackend.module.article.model.publics;
 
 import com.cybzacg.blogbackend.module.article.model.common.ArticleSeriesSummaryVO;
-import com.cybzacg.blogbackend.module.content.model.publics.PublicCategoryTreeVO;
-import com.cybzacg.blogbackend.module.content.model.publics.PublicTagVO;
+import com.cybzacg.blogbackend.module.content.taxonomy.model.publics.PublicCategoryTreeVO;
+import com.cybzacg.blogbackend.module.content.taxonomy.model.publics.PublicTagVO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 

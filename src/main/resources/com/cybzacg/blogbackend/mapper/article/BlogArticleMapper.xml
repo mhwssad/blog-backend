@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cybzacg.blogbackend.mapper.article.BlogArticleMapper">
+
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.BlogArticle">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="title" column="title" jdbcType="VARCHAR"/>
+        <result property="summary" column="summary" jdbcType="VARCHAR"/>
+        <result property="content" column="content" jdbcType="VARCHAR"/>
+        <result property="coverImage" column="cover_image" jdbcType="VARCHAR"/>
+        <result property="authorId" column="author_id" jdbcType="BIGINT"/>
+        <result property="isTop" column="is_top" jdbcType="TINYINT"/>
+        <result property="isRecommend" column="is_recommend" jdbcType="TINYINT"/>
+        <result property="isOriginal" column="is_original" jdbcType="TINYINT"/>
+        <result property="sourceUrl" column="source_url" jdbcType="VARCHAR"/>
+        <result property="status" column="status" jdbcType="TINYINT"/>
+        <result property="reviewStatus" column="review_status" jdbcType="TINYINT"/>
+        <result property="publishTime" column="publish_time" jdbcType="TIMESTAMP"/>
+        <result property="scheduledPublishTime" column="scheduled_publish_time" jdbcType="TIMESTAMP"/>
+        <result property="accessLevel" column="access_level" jdbcType="TINYINT"/>
+        <result property="visibilityScope" column="visibility_scope" jdbcType="TINYINT"/>
+        <result property="viewCount" column="view_count" jdbcType="INTEGER"/>
+        <result property="likeCount" column="like_count" jdbcType="INTEGER"/>
+        <result property="commentCount" column="comment_count" jdbcType="INTEGER"/>
+        <result property="collectCount" column="collect_count" jdbcType="INTEGER"/>
+        <result property="shareCount" column="share_count" jdbcType="INTEGER"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
+        <result property="remark" column="remark" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id
+        ,title,summary,
+        content,cover_image,author_id,
+        is_top,is_recommend,is_original,source_url,
+        status,review_status,publish_time,scheduled_publish_time,access_level,visibility_scope,
+        view_count,like_count,comment_count,
+        collect_count,share_count,created_at,
+        updated_at,remark
+    </sql>
+
+    <select id="selectAdminPage" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from blog_article
+        order by updated_at desc, id desc
+    </select>
+
+    <select id="selectPublishedPage" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from blog_article
+        where status = 1
+          and review_status in (0, 2)
+          and visibility_scope = 0
+          and access_level = 0
+          and (scheduled_publish_time is null or scheduled_publish_time &lt;= now())
+        order by is_top desc, is_recommend desc, publish_time desc, id desc
+    </select>
+
+    <select id="selectArticleDetailById" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from blog_article
+        where id = #{id}
+        limit 1
+    </select>
+</mapper>

@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.chat.repository;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.cybzacg.blogbackend.domain.ChatAttachmentProcessTask;
+import com.cybzacg.blogbackend.domain.chat.ChatAttachmentProcessTask;
 
 import java.time.LocalDateTime;
 import java.util.List;

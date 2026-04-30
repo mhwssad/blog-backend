@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.chat.repository;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.cybzacg.blogbackend.domain.ChatConversation;
+import com.cybzacg.blogbackend.domain.chat.ChatConversation;
 import com.cybzacg.blogbackend.module.chat.model.admin.ChatAdminConversationPageQuery;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatAdminConversationListItem;
 import com.cybzacg.blogbackend.module.chat.model.data.ChatConversationListItem;

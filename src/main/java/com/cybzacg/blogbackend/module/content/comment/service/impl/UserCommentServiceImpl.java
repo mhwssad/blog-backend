@@ -1,12 +1,12 @@
 package com.cybzacg.blogbackend.module.content.comment.service.impl;
 
-import com.cybzacg.blogbackend.domain.BlogArticle;
-import com.cybzacg.blogbackend.domain.SysComment;
-import com.cybzacg.blogbackend.domain.SysInteraction;
+import com.cybzacg.blogbackend.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.domain.content.SysComment;
+import com.cybzacg.blogbackend.domain.content.SysInteraction;
 import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.service.ArticleContentFacadeService;
-import com.cybzacg.blogbackend.module.auth.service.NotificationDeliveryService;
+import com.cybzacg.blogbackend.module.auth.notice.service.NotificationDeliveryService;
 import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.module.content.comment.model.user.CommentSaveRequest;
 import com.cybzacg.blogbackend.module.content.comment.repository.SysCommentRepository;

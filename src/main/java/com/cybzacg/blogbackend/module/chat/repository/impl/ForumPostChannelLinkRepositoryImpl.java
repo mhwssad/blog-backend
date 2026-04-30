@@ -1,8 +1,8 @@
 package com.cybzacg.blogbackend.module.chat.repository.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.cybzacg.blogbackend.domain.ForumPostChannelLink;
-import com.cybzacg.blogbackend.mapper.ForumPostChannelLinkMapper;
+import com.cybzacg.blogbackend.domain.forum.ForumPostChannelLink;
+import com.cybzacg.blogbackend.mapper.forum.ForumPostChannelLinkMapper;
 import com.cybzacg.blogbackend.module.chat.repository.ForumPostChannelLinkRepository;
 import org.springframework.stereotype.Repository;
 

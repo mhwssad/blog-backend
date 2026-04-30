@@ -1,12 +1,12 @@
 package com.cybzacg.blogbackend.module.chat.service.impl;
 
-import com.cybzacg.blogbackend.domain.ChatConversation;
-import com.cybzacg.blogbackend.domain.ChatConversationMember;
-import com.cybzacg.blogbackend.domain.ChatMessage;
-import com.cybzacg.blogbackend.domain.SysUser;
+import com.cybzacg.blogbackend.domain.chat.ChatConversation;
+import com.cybzacg.blogbackend.domain.chat.ChatConversationMember;
+import com.cybzacg.blogbackend.domain.chat.ChatMessage;
+import com.cybzacg.blogbackend.domain.auth.SysUser;
 import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.auth.service.NotificationDeliveryService;
+import com.cybzacg.blogbackend.module.auth.notice.service.NotificationDeliveryService;
 import com.cybzacg.blogbackend.module.chat.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.service.ChatNotificationService;
 import com.cybzacg.blogbackend.utils.StrUtils;

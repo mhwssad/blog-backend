@@ -2,7 +2,7 @@ package com.cybzacg.blogbackend.module.auth.experience.repository;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.cybzacg.blogbackend.domain.UserExperienceLog;
+import com.cybzacg.blogbackend.domain.auth.UserExperienceLog;
 
 import java.time.LocalDate;
 

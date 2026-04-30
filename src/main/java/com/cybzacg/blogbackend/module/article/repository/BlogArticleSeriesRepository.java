@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.article.repository;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.cybzacg.blogbackend.domain.BlogArticleSeries;
+import com.cybzacg.blogbackend.domain.article.BlogArticleSeries;
 
 import java.util.List;
 

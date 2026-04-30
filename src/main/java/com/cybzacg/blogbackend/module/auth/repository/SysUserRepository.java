@@ -2,8 +2,8 @@ package com.cybzacg.blogbackend.module.auth.repository;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.cybzacg.blogbackend.domain.SysUser;
-import com.cybzacg.blogbackend.module.auth.model.admin.SysUserPageQuery;
+import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysUserPageQuery;
 
 import java.util.Collection;
 

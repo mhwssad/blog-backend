@@ -5,14 +5,18 @@ import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.SysUser;
 import com.cybzacg.blogbackend.domain.SysUserRole;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.auth.convert.RbacAdminModelMapper;
-import com.cybzacg.blogbackend.module.auth.model.admin.SysUserAdminVO;
-import com.cybzacg.blogbackend.module.auth.model.admin.SysUserPageQuery;
-import com.cybzacg.blogbackend.module.auth.model.admin.SysUserSaveRequest;
-import com.cybzacg.blogbackend.module.auth.repository.SysRoleRepository;
+import com.cybzacg.blogbackend.module.auth.rbac.convert.RbacAdminModelMapper;
+import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysUserAdminVO;
+import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysUserPageQuery;
+import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysUserSaveRequest;
+import com.cybzacg.blogbackend.module.auth.rbac.repository.SysRoleRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRoleRepository;
-import com.cybzacg.blogbackend.module.auth.service.impl.RbacAssociationFactory;
+import com.cybzacg.blogbackend.module.auth.service.SuperAdminVerifier;
+import com.cybzacg.blogbackend.module.auth.audit.service.SysAuditLogService;
+import com.cybzacg.blogbackend.module.auth.token.TokenManager;
+import com.cybzacg.blogbackend.module.auth.notice.service.UserNotificationPreferenceService;
+import com.cybzacg.blogbackend.module.auth.rbac.service.impl.RbacAssociationFactory;
 import com.cybzacg.blogbackend.module.auth.service.impl.SysUserAdminServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +33,13 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
+import com.cybzacg.blogbackend.module.auth.token.TokenManager;
+import com.cybzacg.blogbackend.module.auth.service.SuperAdminVerifier;
+import com.cybzacg.blogbackend.module.auth.audit.service.SysAuditLogService;
+import com.cybzacg.blogbackend.module.auth.service.TwoFactorService;
+import com.cybzacg.blogbackend.module.auth.notice.service.UserNotificationPreferenceService;
+import com.cybzacg.blogbackend.module.auth.rbac.service.impl.RbacAssociationFactory;
+
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,6 +56,16 @@ class SysUserAdminServiceImplTest {
     private RbacAdminModelMapper rbacAdminModelMapper;
     @Mock
     private RbacAssociationFactory rbacAssociationFactory;
+    @Mock
+    private UserNotificationPreferenceService userNotificationPreferenceService;
+    @Mock
+    private SuperAdminVerifier superAdminVerifier;
+    @Mock
+    private TwoFactorService twoFactorService;
+    @Mock
+    private SysAuditLogService sysAuditLogService;
+    @Mock
+    private TokenManager tokenManager;
 
     private SysUserAdminServiceImpl sysUserAdminService;
 
@@ -56,7 +77,12 @@ class SysUserAdminServiceImplTest {
                 sysUserRoleRepository,
                 passwordEncoder,
                 rbacAdminModelMapper,
-                rbacAssociationFactory
+                rbacAssociationFactory,
+                userNotificationPreferenceService,
+                superAdminVerifier,
+                twoFactorService,
+                sysAuditLogService,
+                tokenManager
         );
     }
 
@@ -255,5 +281,57 @@ class SysUserAdminServiceImplTest {
 
         verify(sysUserRoleRepository).deleteByUserId(1L);
         verify(sysUserRoleRepository, never()).saveBatch(anyCollection());
+    }
+
+    @Test
+    void banUserByReportShouldBanTargetAndRecordAuditWithoutMfa() {
+        SysUser target = new SysUser();
+        target.setId(5L);
+        target.setUsername("baduser");
+        target.setStatus(1);
+        target.setDeletedFlag(0);
+
+        when(sysUserRepository.getById(5L)).thenReturn(target);
+
+        sysUserAdminService.banUserByReport(1L, 5L, "举报封禁：违规内容", "127.0.0.1", "TestAgent");
+
+        assertEquals(0, target.getStatus());
+        verify(sysUserRepository).updateById(target);
+        verify(tokenManager).invalidateUserSessions(5L);
+
+        ArgumentCaptor<com.cybzacg.blogbackend.module.auth.model.common.SysAuditLogCreateRequest> captor =
+                ArgumentCaptor.forClass(com.cybzacg.blogbackend.module.auth.model.common.SysAuditLogCreateRequest.class);
+        verify(sysAuditLogService).record(captor.capture());
+        var audit = captor.getValue();
+        assertEquals(1L, audit.getOperatorUserId());
+        assertEquals(5L, audit.getTargetUserId());
+        assertEquals(com.cybzacg.blogbackend.enums.SysAuditOperationType.BAN_USER.getCode(), audit.getOperationType());
+        assertEquals("举报封禁：违规内容", audit.getRemark());
+        assertEquals(0, audit.getMfaPassed());
+    }
+
+    @Test
+    void banUserByReportShouldRejectIfOperatorIsNotSuperAdmin() {
+        doThrow(new com.cybzacg.blogbackend.exception.BusinessException(
+                com.cybzacg.blogbackend.enums.error.ResultErrorCode.NOT_SUPER_ADMIN))
+                .when(superAdminVerifier).requireSuperAdmin(1L);
+
+        assertThrows(com.cybzacg.blogbackend.exception.BusinessException.class,
+                () -> sysUserAdminService.banUserByReport(1L, 5L, "reason", "127.0.0.1", "UA"));
+
+        verify(sysUserRepository, never()).updateById(any());
+        verify(tokenManager, never()).invalidateUserSessions(anyLong());
+        verify(sysAuditLogService, never()).record(any());
+    }
+
+    @Test
+    void banUserByReportShouldRejectSelfBan() {
+        doNothing().when(superAdminVerifier).requireSuperAdmin(1L);
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> sysUserAdminService.banUserByReport(1L, 1L, "reason", "127.0.0.1", "UA"));
+
+        assertEquals(com.cybzacg.blogbackend.enums.error.ResultErrorCode.CANNOT_MODIFY_SELF.getCode(), exception.getCode());
+        verify(sysUserRepository, never()).updateById(any());
     }
 }

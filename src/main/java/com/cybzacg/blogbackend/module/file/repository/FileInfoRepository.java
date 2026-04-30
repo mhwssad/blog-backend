@@ -2,7 +2,7 @@ package com.cybzacg.blogbackend.module.file.repository;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.cybzacg.blogbackend.domain.FileInfo;
+import com.cybzacg.blogbackend.domain.file.FileInfo;
 import com.cybzacg.blogbackend.module.file.model.admin.FileAdminPageQuery;
 
 import java.util.Collection;

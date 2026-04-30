@@ -1,9 +1,9 @@
 package com.cybzacg.blogbackend.module.article.service.impl;
 
-import com.cybzacg.blogbackend.domain.BlogArticle;
-import com.cybzacg.blogbackend.domain.BlogArticleSeries;
-import com.cybzacg.blogbackend.domain.BlogArticleSeriesItem;
-import com.cybzacg.blogbackend.domain.SysUser;
+import com.cybzacg.blogbackend.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.domain.article.BlogArticleSeries;
+import com.cybzacg.blogbackend.domain.article.BlogArticleSeriesItem;
+import com.cybzacg.blogbackend.domain.auth.SysUser;
 import com.cybzacg.blogbackend.enums.article.ArticleVisibilityScopeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.convert.ArticleSeriesModelMapper;
@@ -24,7 +24,7 @@ import com.cybzacg.blogbackend.module.article.service.ArticleSeriesItemService;
 import com.cybzacg.blogbackend.module.article.service.ArticleSeriesService;
 import com.cybzacg.blogbackend.module.article.service.ArticleStatusMachine;
 import com.cybzacg.blogbackend.module.auth.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.auth.service.AuthorPermissionService;
+import com.cybzacg.blogbackend.module.auth.author.service.AuthorPermissionService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;

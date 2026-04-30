@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.ai.service;
 
-import com.cybzacg.blogbackend.domain.AiChannelConfig;
-import com.cybzacg.blogbackend.domain.AiChatMessage;
+import com.cybzacg.blogbackend.domain.ai.AiChannelConfig;
+import com.cybzacg.blogbackend.domain.ai.AiChatMessage;
 import com.cybzacg.blogbackend.module.ai.model.data.AiModelCallResult;
 
 import java.util.List;

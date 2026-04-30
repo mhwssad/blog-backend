@@ -3,8 +3,8 @@ package com.cybzacg.blogbackend.module.ai.repository.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.cybzacg.blogbackend.domain.AiUsageLog;
-import com.cybzacg.blogbackend.mapper.AiUsageLogMapper;
+import com.cybzacg.blogbackend.domain.ai.AiUsageLog;
+import com.cybzacg.blogbackend.mapper.ai.AiUsageLogMapper;
 import com.cybzacg.blogbackend.module.ai.repository.AiUsageLogRepository;
 import org.springframework.stereotype.Repository;
 

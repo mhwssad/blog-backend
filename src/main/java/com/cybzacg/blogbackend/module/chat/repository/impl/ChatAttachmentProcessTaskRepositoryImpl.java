@@ -2,8 +2,8 @@ package com.cybzacg.blogbackend.module.chat.repository.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.cybzacg.blogbackend.domain.ChatAttachmentProcessTask;
-import com.cybzacg.blogbackend.mapper.ChatAttachmentProcessTaskMapper;
+import com.cybzacg.blogbackend.domain.chat.ChatAttachmentProcessTask;
+import com.cybzacg.blogbackend.mapper.chat.ChatAttachmentProcessTaskMapper;
 import com.cybzacg.blogbackend.module.chat.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.repository.ChatAttachmentProcessTaskRepository;
 import org.springframework.dao.DuplicateKeyException;

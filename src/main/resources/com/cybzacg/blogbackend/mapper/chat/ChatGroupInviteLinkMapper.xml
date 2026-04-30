@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cybzacg.blogbackend.mapper.chat.ChatGroupInviteLinkMapper">
+
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.ChatGroupInviteLink">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="conversationId" column="conversation_id" jdbcType="BIGINT"/>
+        <result property="inviteToken" column="invite_token" jdbcType="VARCHAR"/>
+        <result property="createdBy" column="created_by" jdbcType="BIGINT"/>
+        <result property="expireAt" column="expire_at" jdbcType="TIMESTAMP"/>
+        <result property="maxUseCount" column="max_use_count" jdbcType="INTEGER"/>
+        <result property="usedCount" column="used_count" jdbcType="INTEGER"/>
+        <result property="status" column="status" jdbcType="TINYINT"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, conversation_id, invite_token, created_by, expire_at, max_use_count,
+        used_count, status, created_at, updated_at
+    </sql>
+</mapper>

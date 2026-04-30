@@ -289,10 +289,20 @@ public abstract class BaseExceptionHandler {
      * @param errorMessage 错误消息内容
      */
     protected void handleSseErrorResponse(String errorMessage) {
+        handleSseErrorResponse(errorMessage, null);
+    }
+
+    /**
+     * 向 SSE 连接写入错误事件响应（含附加数据）。
+     *
+     * @param errorMessage 错误消息内容
+     * @param data         附加数据（如异常详情）
+     */
+    protected void handleSseErrorResponse(String errorMessage, Object data) {
         HttpServletResponse response = getResponse();
         if (response != null) {
             try {
-                Result<Object> errorResult = buildErrorResult(ResultErrorCode.SYSTEM_ERROR, errorMessage, null);
+                Result<Object> errorResult = buildErrorResult(ResultErrorCode.SYSTEM_ERROR, errorMessage, data);
                 String errorJson = JsonUtils.toJson(errorResult);
 
                 response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());

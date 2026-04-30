@@ -1,6 +1,7 @@
 package com.cybzacg.blogbackend.module.auth;
 
 import com.cybzacg.blogbackend.common.constant.AuthConstants;
+import com.cybzacg.blogbackend.common.redis.RedisOperator;
 import com.cybzacg.blogbackend.config.property.SecurityProperties;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.model.AuthUserPrincipal;
@@ -8,6 +9,9 @@ import com.cybzacg.blogbackend.module.auth.model.AuthenticationToken;
 import com.cybzacg.blogbackend.module.auth.token.JwtTokenManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -16,8 +20,13 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
+@ExtendWith(MockitoExtension.class)
 class JwtTokenManagerTest {
+    @Mock
+    private RedisOperator redisOperator;
+
     private JwtTokenManager jwtTokenManager;
 
     @BeforeEach
@@ -32,7 +41,7 @@ class JwtTokenManagerTest {
         session.setJwt(jwt);
         properties.setSession(session);
 
-        jwtTokenManager = new JwtTokenManager(properties);
+        jwtTokenManager = new JwtTokenManager(properties, redisOperator);
         ReflectionTestUtils.invokeMethod(jwtTokenManager, "init");
     }
 
@@ -127,7 +136,7 @@ class JwtTokenManagerTest {
         otherSession.setJwt(otherJwt);
         otherProps.setSession(otherSession);
 
-        JwtTokenManager otherManager = new JwtTokenManager(otherProps);
+        JwtTokenManager otherManager = new JwtTokenManager(otherProps, mock(RedisOperator.class));
         ReflectionTestUtils.invokeMethod(otherManager, "init");
 
         Authentication auth = createAuthentication(1L, "admin", "ROLE_ADMIN");

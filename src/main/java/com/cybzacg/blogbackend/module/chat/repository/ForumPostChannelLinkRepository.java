@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.chat.repository;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.cybzacg.blogbackend.domain.ForumPostChannelLink;
+import com.cybzacg.blogbackend.domain.forum.ForumPostChannelLink;
 
 /**
  * 论坛帖子频道关联 Repository。

@@ -1,8 +1,8 @@
 package com.cybzacg.blogbackend.module.article.service.impl;
 
-import com.cybzacg.blogbackend.domain.BlogArticle;
-import com.cybzacg.blogbackend.domain.BlogArticleSeries;
-import com.cybzacg.blogbackend.domain.BlogArticleSeriesItem;
+import com.cybzacg.blogbackend.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.domain.article.BlogArticleSeries;
+import com.cybzacg.blogbackend.domain.article.BlogArticleSeriesItem;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.convert.ArticleSeriesModelMapper;
 import com.cybzacg.blogbackend.module.article.model.common.ArticleSeriesArticleVO;

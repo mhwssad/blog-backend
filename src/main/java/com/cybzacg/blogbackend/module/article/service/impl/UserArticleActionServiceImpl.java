@@ -1,16 +1,16 @@
 package com.cybzacg.blogbackend.module.article.service.impl;
 
-import com.cybzacg.blogbackend.domain.BlogArticle;
-import com.cybzacg.blogbackend.domain.SysInteraction;
+import com.cybzacg.blogbackend.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.domain.content.SysInteraction;
 import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
 import com.cybzacg.blogbackend.module.article.service.ArticleStatusMachine;
 import com.cybzacg.blogbackend.module.article.service.UserArticleActionService;
-import com.cybzacg.blogbackend.module.auth.service.NotificationDeliveryService;
-import com.cybzacg.blogbackend.module.content.convert.ContentModelMapper;
-import com.cybzacg.blogbackend.module.content.repository.SysInteractionRepository;
+import com.cybzacg.blogbackend.module.auth.notice.service.NotificationDeliveryService;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.interaction.repository.SysInteractionRepository;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import com.cybzacg.blogbackend.module.auth.experience.event.XpAwardEvent;

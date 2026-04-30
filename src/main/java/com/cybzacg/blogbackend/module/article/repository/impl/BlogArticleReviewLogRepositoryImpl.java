@@ -2,8 +2,8 @@ package com.cybzacg.blogbackend.module.article.repository.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.cybzacg.blogbackend.domain.BlogArticleReviewLog;
-import com.cybzacg.blogbackend.mapper.BlogArticleReviewLogMapper;
+import com.cybzacg.blogbackend.domain.article.BlogArticleReviewLog;
+import com.cybzacg.blogbackend.mapper.article.BlogArticleReviewLogMapper;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleReviewLogRepository;
 import org.springframework.stereotype.Repository;
 

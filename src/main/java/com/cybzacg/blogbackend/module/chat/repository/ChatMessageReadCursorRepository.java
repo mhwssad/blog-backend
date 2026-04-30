@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.chat.repository;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.cybzacg.blogbackend.domain.ChatMessageReadCursor;
+import com.cybzacg.blogbackend.domain.chat.ChatMessageReadCursor;
 
 import java.time.LocalDateTime;
 

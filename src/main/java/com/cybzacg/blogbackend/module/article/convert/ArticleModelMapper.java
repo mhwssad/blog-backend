@@ -1,9 +1,9 @@
 package com.cybzacg.blogbackend.module.article.convert;
 
-import com.cybzacg.blogbackend.domain.BlogArticle;
-import com.cybzacg.blogbackend.domain.BlogArticleAccess;
-import com.cybzacg.blogbackend.domain.BlogArticleCategory;
-import com.cybzacg.blogbackend.domain.SysTagRelation;
+import com.cybzacg.blogbackend.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.domain.article.BlogArticleAccess;
+import com.cybzacg.blogbackend.domain.article.BlogArticleCategory;
+import com.cybzacg.blogbackend.domain.content.SysTagRelation;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleAccessItem;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleAdminVO;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleDetailVO;

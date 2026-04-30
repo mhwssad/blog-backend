@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cybzacg.blogbackend.mapper.chat.ChatGroupJoinApplicationMapper">
+
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.ChatGroupJoinApplication">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="conversationId" column="conversation_id" jdbcType="BIGINT"/>
+        <result property="applicantUserId" column="applicant_user_id" jdbcType="BIGINT"/>
+        <result property="applyMessage" column="apply_message" jdbcType="VARCHAR"/>
+        <result property="applyStatus" column="apply_status" jdbcType="TINYINT"/>
+        <result property="reviewerId" column="reviewer_id" jdbcType="BIGINT"/>
+        <result property="reviewComment" column="review_comment" jdbcType="VARCHAR"/>
+        <result property="submittedAt" column="submitted_at" jdbcType="TIMESTAMP"/>
+        <result property="reviewedAt" column="reviewed_at" jdbcType="TIMESTAMP"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, conversation_id, applicant_user_id, apply_message, apply_status,
+        reviewer_id, review_comment, submitted_at, reviewed_at, created_at, updated_at
+    </sql>
+</mapper>

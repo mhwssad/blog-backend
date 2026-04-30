@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.auth.model;
 
-import com.cybzacg.blogbackend.domain.SysUser;
+import com.cybzacg.blogbackend.domain.auth.SysUser;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;

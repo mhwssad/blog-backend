@@ -7,7 +7,7 @@ public final class ConfigConstants {
     public static final String CACHE_KEY_PREFIX = "sys:config";
     public static final String SECURITY_IP_RATE_LIMIT_PER_SECOND_NAME = "全局IP每秒请求限流阈值";
     public static final String SECURITY_IP_RATE_LIMIT_PER_SECOND_KEY = "security.ip.rate-limit.per-second";
-    public static final int DEFAULT_SECURITY_IP_RATE_LIMIT_PER_SECOND = 10;
+    public static final int DEFAULT_SECURITY_IP_RATE_LIMIT_PER_SECOND = 100;
     public static final String AUTH_LOGIN_FAIL_MAX_ATTEMPTS_NAME = "登录失败锁定阈值";
     public static final String AUTH_LOGIN_FAIL_MAX_ATTEMPTS_KEY = "auth.login-fail.max-attempts";
     public static final int DEFAULT_AUTH_LOGIN_FAIL_MAX_ATTEMPTS = 5;
