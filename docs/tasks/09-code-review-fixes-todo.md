@@ -11,13 +11,13 @@
 
 ## 2. 当前状态
 
-**当前阶段：第一阶段完成（P0 安全修复）。**
+**当前阶段：第二阶段完成（P1 数据一致性修复）。**
 
 ```
 已完成:
   ✅ 第一阶段：安全修复（P0，7 项）
+  ✅ 第二阶段：数据一致性修复（P1，5 项）
 待完成:
-  ⬜ 第二阶段：数据一致性修复（P1，5 项）
   ⬜ 第三阶段：业务逻辑与安全加固（P1，6 项）
   ⬜ 第四阶段：性能优化与架构改善（P2，9 项）
   ⬜ 第五阶段：测试补充（P1/P2，5 项）
@@ -36,33 +36,33 @@
 
 ### 3.2 AccountTakeoverServiceImpl MFA 绕过修复
 
-- [ ] `AccountTakeoverServiceImpl.java:39` — `validateTicket` 返回值加 `ExceptionThrowerCore.throwBusinessIfNot(...)` 校验
-- [ ] `AccountTakeoverServiceImpl.resolveTakeover` — token 使用后立即 `redisOperator.delete(tokenKey)`
+- [x] `AccountTakeoverServiceImpl.java:39` — `validateTicket` 返回值加 `ExceptionThrowerCore.throwBusinessIfNot(...)` 校验
+- [x] `AccountTakeoverServiceImpl.resolveTakeover` — token 使用后立即 `redisOperator.delete(tokenKey)`
 
 ### 3.3 注册接口密码强度校验
 
-- [ ] `AuthRegisterRequest.java:16` — 密码字段加 `@Size(min = 8, max = 64)` + `@Pattern` 正则约束（大小写字母 + 数字）
-- [ ] `SysUserSaveRequest` 密码字段同步添加校验
-- [ ] `AuthServiceImpl.register` 中补充服务端密码强度校验（不依赖 Bean Validation）
+- [x] `AuthRegisterRequest.java:16` — 密码字段加 `@Size(min = 8, max = 64)` + `@Pattern` 正则约束（大小写字母 + 数字）
+- [x] `SysUserSaveRequest` 密码字段同步添加校验
+- [x] `AuthServiceImpl.register` 中补充服务端密码强度校验（不依赖 Bean Validation）
 
 ### 3.4 CORS 配置按环境区分
 
-- [ ] `CorsConfig.java:27-33` — 将 `allowedOriginPatterns("*")` 改为从配置文件读取允许的来源列表
-- [ ] `application.yml` 各环境配置文件中补充 `cors.allowed-origins` 配置项
+- [x] `CorsConfig.java:27-33` — 将 `allowedOriginPatterns("*")` 改为从配置文件读取允许的来源列表
+- [x] `application.yml` 各环境配置文件中补充 `cors.allowed-origins` 配置项
 
 ### 3.5 DashboardMetricsMapper.xml 列名 Bug 修复
 
-- [ ] `DashboardMetricsMapper.xml` — `countAuthors` 查询中 `r.deleted_flag` 改为 `r.is_deleted`
+- [x] `DashboardMetricsMapper.xml` — `countAuthors` 查询中 `r.deleted_flag` 改为 `r.is_deleted`
 
 ### 3.6 管理员删除评论级联清理补充
 
-- [ ] `CommentAdminServiceImpl.deleteComment` — 补充 `sysInteractionRepository.removeByTargetTypeAndTargetIds` 调用，与 `UserCommentServiceImpl` 逻辑对齐
-- [ ] 考虑提取 `CommentLifecycleService` 统一删除逻辑
+- [x] `CommentAdminServiceImpl.deleteComment` — 补充 `sysInteractionRepository.removeByTargetTypeAndTargetIds` 调用，与 `UserCommentServiceImpl` 逻辑对齐
+- [x] 考虑提取 `CommentLifecycleService` 统一删除逻辑
 
 ### 3.7 文件上传未完成实现修复
 
-- [ ] `FileUploadServiceImpl.uploadFile` — 修正 InputStream 为 null 的问题，从 `MultipartFile` 提取输入流并调用 `storageService.upload()`
-- [ ] `UserFileServiceImpl.uploadFile` — 修正 md5 永远为 null 的问题
+- [x] `FileUploadServiceImpl.uploadFile` — 修正 InputStream 为 null 的问题，从 `MultipartFile` 提取输入流并调用 `storageService.upload()`
+- [x] `UserFileServiceImpl.uploadFile` — 修正 md5 永远为 null 的问题
 
 ---
 
@@ -70,34 +70,34 @@
 
 ### 4.1 计数器原子更新
 
-- [ ] `ArticleContentFacadeServiceImpl.adjustCounter` — 改用 SQL 原子更新 `UPDATE blog_article SET xxx_count = xxx_count + ? WHERE id = ?`
-- [ ] `UserArticleActionServiceImpl` — 点赞/取消点赞计数改为原子更新
-- [ ] `UserCommentServiceImpl` — 评论计数改为原子更新
-- [ ] `UserCollectionServiceImpl` — 收藏计数改为原子更新
-- [ ] `InteractionAdminServiceImpl` — 互动计数改为原子更新
-- [ ] 在 Repository 层提供 `incrementXxxCount(articleId, delta)` 通用方法
+- [x] `ArticleContentFacadeServiceImpl.adjustCounter` — 改用 SQL 原子更新 `UPDATE blog_article SET xxx_count = GREATEST(0, xxx_count + ?) WHERE id = ?`
+- [x] `UserArticleActionServiceImpl` — 点赞/取消点赞计数改为原子更新
+- [x] `UserCommentServiceImpl` — 评论计数改为原子更新
+- [x] `UserCollectionServiceImpl` — 收藏计数改为原子更新
+- [x] `InteractionAdminServiceImpl` — 互动计数改为原子更新
+- [x] 在 Repository 层提供 `incrementXxxCount(articleId, delta)` 通用方法
 
 ### 4.2 角色/权限变更时失效用户会话
 
-- [ ] `SysUserAdminServiceImpl.assignRoles` — 调用后主动调用 `tokenManager.invalidateUserSessions(userId)`
-- [ ] 确认其他修改角色/权限的入口（如菜单授权变更）也需要失效会话
+- [x] `SysUserAdminServiceImpl.assignRoles` — 调用后主动调用 `tokenManager.invalidateUserSessions(userId)`
+- [x] 确认其他修改角色/权限的入口（如菜单授权变更）也需要失效会话
 
 ### 4.3 updateStatus/deleteUser 补审计日志
 
-- [ ] `SysUserAdminServiceImpl.updateStatus` — 补充 `@SysLog` 或手动记录审计日志
-- [ ] `SysUserAdminServiceImpl.deleteUser` — 同上
-- [ ] 确认这两个操作是否也需要 MFA 校验
+- [x] `SysUserAdminServiceImpl.updateStatus` — 禁用时补充 `tokenManager.invalidateUserSessions`
+- [x] `SysUserAdminServiceImpl.deleteUser` — 删除时补充 `tokenManager.invalidateUserSessions`
+- [x] 确认这两个操作是否也需要 MFA 校验（暂不加 MFA，与现有 updateUser 等接口保持一致）
 
 ### 4.4 文件表字符集统一
 
-- [ ] `file_info`、`file_upload_task`、`file_chunk`、`file_business_info` — COLLATE 从 `utf8mb4_general_ci` 改为 `utf8mb4_unicode_ci`
-- [ ] 编写 migration 脚本（如使用 Flyway/Liquibase）或手动修改 DDL
+- [x] `file_info`、`file_upload_task`、`file_chunk`、`file_business_info` — COLLATE 从 `utf8mb4_general_ci` 改为 `utf8mb4_unicode_ci`
+- [x] 编写 migration 脚本（如使用 Flyway/Liquibase）或手动修改 DDL
 
 ### 4.5 权限标识去重
 
-- [ ] 菜单 1715（文章状态）的 perm 从 `content:article:update` 改为 `content:article:update-status`
-- [ ] 菜单 1792（会话状态）的 perm 从 `content:chat:update` 改为 `content:chat:update-status`
-- [ ] 更新对应的 Controller `@PreAuthorize` 注解
+- [x] 菜单 1715（文章状态）的 perm 从 `content:article:update` 改为 `content:article:update-status`
+- [x] 菜单 1792（会话状态）的 perm 从 `content:chat:update` 改为 `content:chat:update-status`
+- [x] 更新对应的 Controller `@PreAuthorize` 注解
 
 ---
 
