@@ -711,7 +711,7 @@ POST /api/user/chat/group-invite-links/{inviteToken}/join
 | 更新成员状态   | `PUT`  | `/api/sys/chats/conversations/{conversationId}/members/{memberUserId}/status` | `content:chat:update` |
 | 更新成员禁言   | `PUT`  | `/api/sys/chats/conversations/{conversationId}/members/{memberUserId}/mute`   | `content:chat:update` |
 | 后台撤回消息   | `POST` | `/api/sys/chats/conversations/{conversationId}/messages/{messageId}/revoke`   | `content:chat:update` |
-| 更新会话状态   | `PUT`  | `/api/sys/chats/conversations/{conversationId}/status`                        | `content:chat:update` |
+| 更新会话状态   | `PUT`  | `/api/sys/chats/conversations/{conversationId}/status`                        | `content:chat:update-status` |
 | 更新大厅频道设置 | `PUT`  | `/api/sys/chats/lobby/settings`                                               | `content:chat:update` |
 | 置顶大厅消息   | `POST` | `/api/sys/chats/lobby/messages/{messageId}/pin`                               | `content:chat:update` |
 | 取消置顶大厅消息 | `DELETE` | `/api/sys/chats/lobby/messages/{messageId}/pin`                             | `content:chat:update` |

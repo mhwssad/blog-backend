@@ -147,7 +147,7 @@ Authorization: Bearer <accessToken>
 | 字段         | 类型     | 必填 | 说明         |
 |------------|--------|----|------------|
 | `username` | String | 是  | 用户名        |
-| `password` | String | 是  | 密码         |
+| `password` | String | 是  | 密码，8-64 位，需包含大小写字母和数字 |
 | `nickname` | String | 否  | 未传时默认使用用户名 |
 | `email`    | String | 否  | 邮箱         |
 | `phone`    | String | 否  | 手机号        |
@@ -613,7 +613,7 @@ Authorization: Bearer <accessToken>
 | 字段         | 类型       | 新增必填 | 修改必填 | 说明               |
 |------------|----------|------|------|------------------|
 | `username` | String   | 是    | 否    | 用户名              |
-| `password` | String   | 是    | 否    | 修改时不生效，重置密码走单独接口 |
+| `password` | String   | 是    | 否    | 8-64 位，需包含大小写字母和数字；修改时不生效，重置密码走单独接口 |
 | `nickname` | String   | 否    | 否    | 昵称               |
 | `email`    | String   | 否    | 否    | 邮箱               |
 | `phone`    | String   | 否    | 否    | 手机号              |
@@ -637,7 +637,7 @@ Authorization: Bearer <accessToken>
 
 ```json
 {
-  "password": "123456"
+  "password": "Abc12345"
 }
 ```
 
@@ -1244,7 +1244,12 @@ AI 统计响应字段：`aiCallCount`、`aiSuccessCallCount`、`aiFailedCallCoun
 |---------------------------|-----------|
 | `sys:user:query`          | 查询用户      |
 | `sys:user:create`         | 新增用户      |
-| `sys:user:update`         | 修改用户、修改状态、封禁/解封、调整等级/经验、接管账号 |
+| `sys:user:update`         | 修改用户、修改状态 |
+| `sys:user:ban`            | 封禁用户（同时用于 2FA 发送/校验） |
+| `sys:user:unban`          | 解封用户 |
+| `sys:user:adjust-level`   | 调整用户等级 |
+| `sys:user:adjust-experience` | 调整用户经验 |
+| `sys:user:takeover`       | 账号接管 |
 | `sys:user:delete`         | 删除用户      |
 | `sys:user:reset-password` | 重置用户密码    |
 | `sys:user:assign-role`    | 分配用户角色、带审计的角色分配    |
@@ -1287,13 +1292,13 @@ AI 统计响应字段：`aiCallCount`、`aiSuccessCallCount`、`aiFailedCallCoun
 
 | 场景 | 方法 | 路径 | 权限 |
 | --- | --- | --- | --- |
-| 发送2FA验证码 | POST | `/api/admin/2fa/send-code` | `sys:user:update` |
-| 校验2FA验证码 | POST | `/api/admin/2fa/verify` | `sys:user:update` |
-| 封禁用户 | POST | `/api/admin/users/{id}/ban` | `sys:user:update` |
-| 解封用户 | POST | `/api/admin/users/{id}/unban` | `sys:user:update` |
-| 调整用户等级 | PUT | `/api/admin/users/{id}/level` | `sys:user:update` |
-| 调整用户经验 | PUT | `/api/admin/users/{id}/experience` | `sys:user:update` |
-| 账号接管 | POST | `/api/admin/takeover` | `sys:user:update` |
+| 发送2FA验证码 | POST | `/api/admin/2fa/send-code` | `sys:user:ban` |
+| 校验2FA验证码 | POST | `/api/admin/2fa/verify` | `sys:user:ban` |
+| 封禁用户 | POST | `/api/admin/users/{id}/ban` | `sys:user:ban` |
+| 解封用户 | POST | `/api/admin/users/{id}/unban` | `sys:user:unban` |
+| 调整用户等级 | PUT | `/api/admin/users/{id}/level` | `sys:user:adjust-level` |
+| 调整用户经验 | PUT | `/api/admin/users/{id}/experience` | `sys:user:adjust-experience` |
+| 账号接管 | POST | `/api/admin/takeover` | `sys:user:takeover` |
 | 带审计的角色分配 | PUT | `/api/admin/users/{id}/roles` | `sys:user:assign-role` |
 
 ### 10.2 2FA 二次验证

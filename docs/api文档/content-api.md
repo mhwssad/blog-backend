@@ -770,7 +770,7 @@ Authorization: Bearer <accessToken>
 | 查询文章详情   | GET    | `/api/sys/articles/{id}`        | `content:article:query`  |
 | 新增文章     | POST   | `/api/sys/articles`             | `content:article:create` |
 | 修改文章     | PUT    | `/api/sys/articles/{id}`        | `content:article:update` |
-| 修改文章状态   | PUT    | `/api/sys/articles/{id}/status` | `content:article:update` |
+| 修改文章状态   | PUT    | `/api/sys/articles/{id}/status` | `content:article:update-status` |
 | 切换文章置顶   | PUT    | `/api/sys/articles/{id}/top`    | `content:article:update` |
 | 切换文章推荐   | PUT    | `/api/sys/articles/{id}/recommend` | `content:article:update` |
 | 配置文章访问名单 | PUT    | `/api/sys/articles/{id}/access` | `content:article:access` |
@@ -1278,7 +1278,8 @@ Authorization: Bearer <accessToken>
 |------------------------------|-------------|
 | `content:article:query`      | 查询后台文章      |
 | `content:article:create`     | 新增文章        |
-| `content:article:update`     | 修改文章、修改文章状态 |
+| `content:article:update`     | 修改文章 |
+| `content:article:update-status` | 修改文章状态 |
 | `content:article:delete`     | 删除文章        |
 | `content:article:access`     | 配置文章访问名单    |
 | `content:article-review:query` | 查询文章审核 |
