@@ -11,14 +11,14 @@
 
 ## 2. 当前状态
 
-**当前阶段：第二阶段完成（P1 数据一致性修复）。**
+**当前阶段：第三阶段完成（P1 业务逻辑与安全加固）。**
 
 ```
 已完成:
   ✅ 第一阶段：安全修复（P0，7 项）
   ✅ 第二阶段：数据一致性修复（P1，5 项）
+  ✅ 第三阶段：业务逻辑与安全加固（P1，6 项）
 待完成:
-  ⬜ 第三阶段：业务逻辑与安全加固（P1，6 项）
   ⬜ 第四阶段：性能优化与架构改善（P2，9 项）
   ⬜ 第五阶段：测试补充（P1/P2，5 项）
   ⬜ 第六阶段：代码质量改善（P3，10 项）
@@ -105,32 +105,31 @@
 
 ### 5.1 WebSocket Token 传递方式优化
 
-- [ ] `WebSocketAuthHandshakeInterceptor` — 优先从 Header 获取 Token，查询参数仅作为兜底
-- [ ] 确保日志系统对 WebSocket 握手 URL 做脱敏
+- [x] `WebSocketAuthHandshakeInterceptor` — 优先从 Header 获取 Token，查询参数仅作为兜底（已实现）
+- [x] 确保日志系统对 WebSocket 握手 URL 做脱敏
 
 ### 5.2 IP 限流默认值调整
 
-- [ ] `ConfigConstants.DEFAULT_SECURITY_IP_RATE_LIMIT_PER_SECOND` — 从 100 改为 10-20
+- [x] `ConfigConstants.DEFAULT_SECURITY_IP_RATE_LIMIT_PER_SECOND` — 从 100 改为 20
 
 ### 5.3 IP 地址获取防伪造
 
-- [ ] `IPUtils.java` — 添加可信代理配置，仅信任来自已知反向代理的 `X-Forwarded-For`
-- [ ] 或使用 Spring `server.forward-headers-strategy` 获取正确 IP
+- [x] `IPUtils.java` — 添加可信代理配置 `security.trusted-proxies`，仅信任来自已知反向代理的 `X-Forwarded-For`
 
 ### 5.4 高风险操作细粒度权限
 
-- [ ] `SuperAdminController` — 封禁/解封/等级调整/经验调整/账号接管等操作分别定义权限标识
-- [ ] 更新 `03_permission_init.sql` 中对应的权限数据
-- [ ] 更新角色权限分配
+- [x] `SuperAdminController` — 封禁/解封/等级调整/经验调整/账号接管分别定义权限标识
+- [x] 更新 `03_05_menu_system_init.sql` 中对应的权限数据（菜单 1150-1154）
+- [x] 更新 `03_08_role_menu_auth_init.sql` 角色-菜单授权
 
 ### 5.5 文件 originalName 路径遍历防护
 
-- [ ] `FileUploadServiceImpl.validateInitRequest` — 增加对 originalName 的非法字符校验（过滤 `/`、`\`、`\0`、换行符）
-- [ ] 文件扩展名校验 — 禁止双重扩展名（如 `malware.jpg.php`）
+- [x] `FileUploadServiceImpl.validateInitRequest` — 增加对 originalName 的非法字符校验（过滤 `/`、`\`、`\0`、换行符）
+- [x] 文件扩展名校验 — 禁止双重扩展名（如 `malware.jpg.php`）
 
 ### 5.6 消息内容长度校验
 
-- [ ] `ChatMessageSendServiceImpl.validateSendRequest` — 增加内容长度上限校验（建议 5000 字符）
+- [x] `ChatMessageSendServiceImpl.validateSendRequest` — 增加内容长度上限校验（5000 字符）
 
 ---
 
