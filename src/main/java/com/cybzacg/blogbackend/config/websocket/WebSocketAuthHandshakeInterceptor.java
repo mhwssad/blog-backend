@@ -6,6 +6,7 @@ import com.cybzacg.blogbackend.config.property.WebSocketProperties;
 import com.cybzacg.blogbackend.module.auth.account.token.TokenManager;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
@@ -24,6 +25,7 @@ import java.util.Map;
 /**
  * WebSocket 握手鉴权拦截器。<p>复用现有 TokenManager，在握手阶段从请求头或查询参数中提取访问令牌并完成校验，将用户认证信息回填到握手属性中。</p>
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class WebSocketAuthHandshakeInterceptor implements HandshakeInterceptor {
@@ -46,6 +48,7 @@ public class WebSocketAuthHandshakeInterceptor implements HandshakeInterceptor {
                                    Map<String, Object> attributes) {
         String token = resolveToken(request);
         if (!StringUtils.hasText(token) || !tokenManager.validateToken(token)) {
+            log.warn("WebSocket 握手鉴权失败: uri={}", sanitizeUri(request.getURI()));
             response.setStatusCode(HttpStatus.UNAUTHORIZED);
             return false;
         }
@@ -85,6 +88,22 @@ public class WebSocketAuthHandshakeInterceptor implements HandshakeInterceptor {
         URI uri = request.getURI();
         MultiValueMap<String, String> queryParams = UriComponentsBuilder.fromUri(uri).build().getQueryParams();
         return queryParams.getFirst(webSocketProperties.getTokenQueryParam());
+    }
+
+    private String sanitizeUri(URI uri) {
+        String query = uri.getQuery();
+        if (query == null) {
+            return uri.getPath();
+        }
+        String tokenParam = webSocketProperties.getTokenQueryParam() + "=";
+        String sanitized = query;
+        int idx = sanitized.indexOf(tokenParam);
+        if (idx >= 0) {
+            int end = sanitized.indexOf('&', idx);
+            sanitized = sanitized.substring(0, idx) + tokenParam + "***"
+                    + (end >= 0 ? sanitized.substring(end) : "");
+        }
+        return uri.getPath() + "?" + sanitized;
     }
 }
 

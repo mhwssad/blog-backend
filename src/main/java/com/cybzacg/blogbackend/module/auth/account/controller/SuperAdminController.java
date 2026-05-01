@@ -55,7 +55,7 @@ public class SuperAdminController {
 
     @PostMapping("/users/{id}/ban")
     @Operation(summary = "封禁用户")
-    @PreAuthorize("@permission.hasPermission('sys:user:update')")
+    @PreAuthorize("@permission.hasPermission('sys:user:ban')")
     public Result<Void> banUser(@PathVariable Long id,
                                 @Valid @RequestBody BanUserRequest request,
                                 HttpServletRequest httpRequest) {
@@ -68,7 +68,7 @@ public class SuperAdminController {
 
     @PostMapping("/users/{id}/unban")
     @Operation(summary = "解封用户")
-    @PreAuthorize("@permission.hasPermission('sys:user:update')")
+    @PreAuthorize("@permission.hasPermission('sys:user:unban')")
     public Result<Void> unbanUser(@PathVariable Long id,
                                   @Valid @RequestBody BanUserRequest request,
                                   HttpServletRequest httpRequest) {
@@ -81,7 +81,7 @@ public class SuperAdminController {
 
     @PutMapping("/users/{id}/level")
     @Operation(summary = "调整用户等级")
-    @PreAuthorize("@permission.hasPermission('sys:user:update')")
+    @PreAuthorize("@permission.hasPermission('sys:user:adjust-level')")
     public Result<Void> adjustLevel(@PathVariable Long id,
                                     @Valid @RequestBody AdjustLevelRequest request,
                                     HttpServletRequest httpRequest) {
@@ -94,7 +94,7 @@ public class SuperAdminController {
 
     @PutMapping("/users/{id}/experience")
     @Operation(summary = "调整用户经验")
-    @PreAuthorize("@permission.hasPermission('sys:user:update')")
+    @PreAuthorize("@permission.hasPermission('sys:user:adjust-experience')")
     public Result<Void> adjustExperience(@PathVariable Long id,
                                          @Valid @RequestBody AdjustExperienceRequest request,
                                          HttpServletRequest httpRequest) {
@@ -107,7 +107,7 @@ public class SuperAdminController {
 
     @PostMapping("/takeover")
     @Operation(summary = "账号接管")
-    @PreAuthorize("@permission.hasPermission('sys:user:update')")
+    @PreAuthorize("@permission.hasPermission('sys:user:takeover')")
     public Result<AccountTakeoverResponse> takeover(@Valid @RequestBody AccountTakeoverRequest request,
                                                      HttpServletRequest httpRequest) {
         Long operatorId = SecurityUtils.requireUserId();

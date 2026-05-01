@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.lionsoul.ip2region.xdb.Searcher;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
@@ -14,6 +15,8 @@ import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
+import java.util.Set;
 
 /**
  * IP工具类
@@ -33,6 +36,12 @@ public class IPUtils {
 
     private static final String DB_PATH = "ip2region.xdb";
     private static Searcher searcher;
+    private static Set<String> trustedProxies = Set.of();
+
+    @Value("${security.trusted-proxies:127.0.0.1,localhost,0:0:0:0:0:0:0:1}")
+    public void setTrustedProxies(List<String> proxies) {
+        trustedProxies = Set.copyOf(proxies);
+    }
 
     /**
      * 获取IP地址
@@ -46,23 +55,27 @@ public class IPUtils {
             if (request == null) {
                 return "";
             }
-            ip = request.getHeader(HttpHeaderConstants.X_FORWARDED_FOR);
-            if (checkIp(ip)) {
-                ip = request.getHeader(HttpHeaderConstants.PROXY_CLIENT_IP);
+            String remoteAddr = request.getRemoteAddr();
+            boolean fromTrustedProxy = trustedProxies.contains(remoteAddr);
+
+            if (fromTrustedProxy) {
+                ip = request.getHeader(HttpHeaderConstants.X_FORWARDED_FOR);
+                if (checkIp(ip)) {
+                    ip = request.getHeader(HttpHeaderConstants.PROXY_CLIENT_IP);
+                }
+                if (checkIp(ip)) {
+                    ip = request.getHeader(HttpHeaderConstants.WL_PROXY_CLIENT_IP);
+                }
+                if (checkIp(ip)) {
+                    ip = request.getHeader(HttpHeaderConstants.HTTP_CLIENT_IP);
+                }
+                if (checkIp(ip)) {
+                    ip = request.getHeader(HttpHeaderConstants.HTTP_X_FORWARDED_FOR);
+                }
             }
             if (checkIp(ip)) {
-                ip = request.getHeader(HttpHeaderConstants.WL_PROXY_CLIENT_IP);
-            }
-            if (checkIp(ip)) {
-                ip = request.getHeader(HttpHeaderConstants.HTTP_CLIENT_IP);
-            }
-            if (checkIp(ip)) {
-                ip = request.getHeader(HttpHeaderConstants.HTTP_X_FORWARDED_FOR);
-            }
-            if (checkIp(ip)) {
-                ip = request.getRemoteAddr();
+                ip = remoteAddr;
                 if ("127.0.0.1".equals(ip) || "0:0:0:0:0:0:0:1".equals(ip)) {
-                    // 根据网卡取本机配置的IP
                     ip = getLocalAddr();
                 }
             }
@@ -70,7 +83,6 @@ public class IPUtils {
             log.error("IPUtils ERROR, {}", e.getMessage());
         }
 
-        // 使用代理，则获取第一个IP地址
         if (StringUtils.isNotBlank(ip) && ip.indexOf(",") > 0) {
             ip = ip.substring(0, ip.indexOf(","));
         }

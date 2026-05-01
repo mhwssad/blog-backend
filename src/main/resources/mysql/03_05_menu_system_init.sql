@@ -32,7 +32,17 @@ VALUES (1100, 1000, '0,1000', '用户管理', 'M', 'SysUser', 'users', 'system/u
        (1105, 1100, '0,1000,1100', '重置密码', 'B', NULL, NULL, NULL, 'sys:user:reset-password', 0, 0, 1, 5, NULL, NULL,
         NOW(), NOW(), NULL),
        (1106, 1100, '0,1000,1100', '分配角色', 'B', NULL, NULL, NULL, 'sys:user:assign-role', 0, 0, 1, 6, NULL, NULL,
-        NOW(), NOW(), NULL);
+        NOW(), NOW(), NULL),
+	       (1150, 1100, '0,1000,1100', '封禁用户', 'B', NULL, NULL, NULL, 'sys:user:ban', 0, 0, 1, 7, NULL, NULL, NOW(),
+	        NOW(), NULL),
+	       (1151, 1100, '0,1000,1100', '解封用户', 'B', NULL, NULL, NULL, 'sys:user:unban', 0, 0, 1, 8, NULL, NULL, NOW(),
+	        NOW(), NULL),
+	       (1152, 1100, '0,1000,1100', '等级调整', 'B', NULL, NULL, NULL, 'sys:user:adjust-level', 0, 0, 1, 9, NULL, NULL,
+	        NOW(), NOW(), NULL),
+	       (1153, 1100, '0,1000,1100', '经验调整', 'B', NULL, NULL, NULL, 'sys:user:adjust-experience', 0, 0, 1, 10, NULL,
+	        NULL, NOW(), NOW(), NULL),
+	       (1154, 1100, '0,1000,1100', '账号接管', 'B', NULL, NULL, NULL, 'sys:user:takeover', 0, 0, 1, 11, NULL, NULL, NOW(),
+	        NOW(), NULL);
 
 -- 作者申请管理
 INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,

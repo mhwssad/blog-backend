@@ -514,6 +514,7 @@ public class FileUploadServiceImpl implements FileUploadService {
         if (fileUploadProperties.getMaxFileSize() != null && request.getFileSize() > fileUploadProperties.getMaxFileSize()) {
             ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.MAX_UPLOAD_SIZE_EXCEEDED);
         }
+        validateOriginalName(request.getOriginalName());
         String ext = FileUtils.getExtension(request.getOriginalName());
         ExceptionThrowerCore.throwBusinessIfNot(isAllowedExtension(ext), FileResultCode.FILE_EXTENSION_NOT_ALLOWED);
         ExceptionThrowerCore.throwBusinessIf(Boolean.TRUE.equals(fileUploadProperties.getEnableMd5Check()) && !StringUtils.hasText(request.getFileMd5()), FileResultCode.FILE_MD5_REQUIRED);
@@ -546,6 +547,27 @@ public class FileUploadServiceImpl implements FileUploadService {
             }
         }
         return false;
+    }
+
+    private void validateOriginalName(String originalName) {
+        if (!StringUtils.hasText(originalName)) {
+            return;
+        }
+        ExceptionThrowerCore.throwBusinessIf(
+                originalName.indexOf('/') >= 0 || originalName.indexOf('\\') >= 0
+                        || originalName.indexOf('\0') >= 0 || originalName.indexOf('\n') >= 0 || originalName.indexOf('\r') >= 0,
+                ResultErrorCode.ILLEGAL_ARGUMENT,
+                "文件名包含非法字符"
+        );
+        String ext = FileUtils.getExtension(originalName);
+        if (StringUtils.hasText(ext)) {
+            String nameWithoutExt = originalName.substring(0, originalName.length() - ext.length() - 1);
+            ExceptionThrowerCore.throwBusinessIf(
+                    nameWithoutExt.lastIndexOf('.') >= 0,
+                    ResultErrorCode.ILLEGAL_ARGUMENT,
+                    "不允许双重扩展名"
+            );
+        }
     }
 
     private void validateVisibility(Integer isPublic) {

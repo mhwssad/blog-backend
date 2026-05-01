@@ -217,9 +217,16 @@ public class ChatMessageSendServiceImpl implements ChatMessageSendService {
         return conversation;
     }
 
+    private static final int MAX_MESSAGE_CONTENT_LENGTH = 5000;
+
     private void validateSendRequest(ChatSendTextRequest request) {
         ExceptionThrowerCore.throwBusinessIf(request == null, ResultErrorCode.ILLEGAL_ARGUMENT, "发送参数不能为空");
         ExceptionThrowerCore.throwBusinessIfBlank(StrUtils.trimToNull(request.getContent()), ResultErrorCode.ILLEGAL_ARGUMENT, "消息内容不能为空");
+        ExceptionThrowerCore.throwBusinessIf(
+                request.getContent() != null && request.getContent().length() > MAX_MESSAGE_CONTENT_LENGTH,
+                ResultErrorCode.ILLEGAL_ARGUMENT,
+                "消息内容长度不能超过" + MAX_MESSAGE_CONTENT_LENGTH + "个字符"
+        );
         ExceptionThrowerCore.throwBusinessIf(request.getConversationId() == null && request.getTargetUserId() == null, ResultErrorCode.ILLEGAL_ARGUMENT, "会话ID和目标用户ID不能同时为空");
     }
 

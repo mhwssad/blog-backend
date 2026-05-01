@@ -6,6 +6,10 @@ security:
   ignore-urls:
     - /error
     - /favicon.ico
+  trusted-proxies:
+    - 127.0.0.1
+    - localhost
+    - 0:0:0:0:0:0:0:1
   unsecured-urls:
     - /api/auth/login
     - /api/auth/register
