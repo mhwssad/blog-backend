@@ -101,7 +101,7 @@ class AuthServiceImplTest {
     void loginShouldTrimAccountAndUpdateLoginInfo() {
         AuthLoginRequest request = new AuthLoginRequest();
         request.setUsername("  demo@example.com  ");
-        request.setPassword("secret");
+        request.setPassword("Secret1234");
 
         SysUser user = new SysUser();
         user.setId(7L);
@@ -124,7 +124,7 @@ class AuthServiceImplTest {
             ArgumentCaptor<Authentication> authenticationCaptor = ArgumentCaptor.forClass(Authentication.class);
             verify(authenticationManager).authenticate(authenticationCaptor.capture());
             assertEquals("demo@example.com", authenticationCaptor.getValue().getPrincipal());
-            assertEquals("secret", authenticationCaptor.getValue().getCredentials());
+            assertEquals("Secret1234", authenticationCaptor.getValue().getCredentials());
             assertEquals(token, result);
             verify(redisOperator).delete(RedisKeyUtils.build(
                     AuthConstants.LOGIN_FAIL_COUNT_PREFIX,
@@ -140,7 +140,7 @@ class AuthServiceImplTest {
     void loginShouldRejectLockedAccountBeforeAuthenticating() {
         AuthLoginRequest request = new AuthLoginRequest();
         request.setUsername("demo");
-        request.setPassword("secret");
+        request.setPassword("Secret1234");
 
         SysUser user = new SysUser();
         user.setId(9L);
@@ -163,7 +163,7 @@ class AuthServiceImplTest {
     void loginShouldLockAccountAfterConfiguredMaxFailures() {
         AuthLoginRequest request = new AuthLoginRequest();
         request.setUsername("demo");
-        request.setPassword("bad-secret");
+        request.setPassword("BadSecret1");
 
         SysUser user = new SysUser();
         user.setId(9L);
@@ -196,7 +196,7 @@ class AuthServiceImplTest {
     void registerShouldRejectDuplicateUsernameBeforeSaving() {
         AuthRegisterRequest request = new AuthRegisterRequest();
         request.setUsername("  demo  ");
-        request.setPassword("secret");
+        request.setPassword("Secret1234");
         request.setEmail("demo@example.com");
         request.setPhone("13800138000");
 
@@ -215,7 +215,7 @@ class AuthServiceImplTest {
     void registerShouldNormalizeIdentityAndPersistDefaultFlags() {
         AuthRegisterRequest request = new AuthRegisterRequest();
         request.setUsername("  demo  ");
-        request.setPassword("secret");
+        request.setPassword("Secret1234");
         request.setNickname("Demo User");
         request.setEmail("  Demo@Example.com  ");
         request.setPhone(" 13800138000 ");
@@ -233,7 +233,7 @@ class AuthServiceImplTest {
         when(sysUserRepository.existsActiveByIdentity("demo@example.com")).thenReturn(false);
         when(sysUserRepository.existsActiveByIdentity("13800138000")).thenReturn(false);
         when(authModelMapper.toRegisterUser(request)).thenReturn(mappedUser);
-        when(passwordEncoder.encode("secret")).thenReturn("encoded-secret");
+        when(passwordEncoder.encode("Secret1234")).thenReturn("encoded-secret");
         when(authenticationManager.authenticate(any(Authentication.class))).thenReturn(authentication);
         when(tokenManager.generateToken(authentication)).thenReturn(token);
 
@@ -261,7 +261,7 @@ class AuthServiceImplTest {
     void registerShouldTranslateDuplicateKeyConflictToUsernameExistsMessage() {
         AuthRegisterRequest request = new AuthRegisterRequest();
         request.setUsername("demo");
-        request.setPassword("secret");
+        request.setPassword("Secret1234");
         request.setEmail("demo@example.com");
         request.setPhone("13800138000");
 
@@ -271,7 +271,7 @@ class AuthServiceImplTest {
         when(sysUserRepository.existsActiveByIdentity("demo@example.com")).thenReturn(false);
         when(sysUserRepository.existsActiveByIdentity("13800138000")).thenReturn(false);
         when(authModelMapper.toRegisterUser(request)).thenReturn(mappedUser);
-        when(passwordEncoder.encode("secret")).thenReturn("encoded-secret");
+        when(passwordEncoder.encode("Secret1234")).thenReturn("encoded-secret");
         doThrow(new DuplicateKeyException("uk_sys_user_active_username")).when(sysUserRepository).save(mappedUser);
         when(sysUserRepository.existsActiveByField("username", "demo")).thenReturn(true);
 

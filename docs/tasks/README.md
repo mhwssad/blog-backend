@@ -14,6 +14,7 @@
 | [06-notification-dashboard-todo.md](06-notification-dashboard-todo.md) | 通知设置、通知投递过滤、数据看板 | 业务功能+测试已完成 | P1 |
 | [07-database-schema-alignment-todo.md](07-database-schema-alignment-todo.md) | 已补表结构与业务实现对齐 | 业务功能已完成，待测试回补 | P0 |
 | [08-source-structure-optimization-todo.md](08-source-structure-optimization-todo.md) | 源码结构治理、边界收口、重型类拆分与子域化 | 第二阶段(重型类拆分)已完成 | P1 |
+| [09-code-review-fixes-todo.md](09-code-review-fixes-todo.md) | 全项目代码审查整改（安全/数据一致性/性能/测试） | 未开始 | P0 |
 
 ## 2. 参考文档
 
@@ -30,6 +31,7 @@
 4. 然后执行 `04-ai-module-todo.md` 和 `05-governance-report-audit-todo.md`，形成 AI 基础问答和平台治理闭环。
 5. 最后执行 `06-notification-dashboard-todo.md`，补齐通知偏好和后台统计看板。
 6. 结构治理任务按 `08-source-structure-optimization-todo.md` 穿插执行，优先配合当前正在改动的模块做增量收口，不做一次性大搬迁。
+7. 代码审查整改按 `09-code-review-fixes-todo.md` 分阶段推进：第一阶段安全修复优先处理，第二阶段数据一致性紧随其后，其余按需穿插。
 
 ## 4. 通用完成标准
 

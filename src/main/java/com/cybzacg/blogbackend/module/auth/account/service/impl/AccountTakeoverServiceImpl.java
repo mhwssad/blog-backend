@@ -36,7 +36,9 @@ public class AccountTakeoverServiceImpl implements AccountTakeoverService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AccountTakeoverResponse takeover(Long operatorId, Long targetUserId, String mfaTicket, String ip, String ua) {
-        twoFactorService.validateTicket(mfaTicket, operatorId);
+        ExceptionThrowerCore.throwBusinessIfNot(
+                twoFactorService.validateTicket(mfaTicket, operatorId),
+                ResultErrorCode.MFA_TICKET_INVALID);
         superAdminVerifier.requireSuperAdmin(operatorId);
         ExceptionThrowerCore.throwBusinessIf(operatorId.equals(targetUserId), ResultErrorCode.CANNOT_MODIFY_SELF);
 
@@ -74,6 +76,10 @@ public class AccountTakeoverServiceImpl implements AccountTakeoverService {
 
         // Load full user details with authorities
         var userDetails = authUserDetailsService.loadAuthUserByUsername(targetUser.getUsername());
+
+        // Token is one-time use: delete after resolution
+        redisOperator.delete(tokenKey);
+
         return UsernamePasswordAuthenticationToken.authenticated(
                 userDetails, null, userDetails.getAuthorities());
     }

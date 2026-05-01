@@ -344,7 +344,7 @@ class AuthAdminControllerSecurityTest {
     void createUserShouldAllowAuthorizedUser() throws Exception {
         mockMvc.perform(post("/api/sys/users")
                         .contentType(APPLICATION_JSON)
-                        .content("{\"username\":\"tester\",\"password\":\"secret\",\"email\":\"tester@example.com\",\"status\":1}"))
+                        .content("{\"username\":\"tester\",\"password\":\"Secret1234\",\"email\":\"tester@example.com\",\"status\":1}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()));
 
@@ -356,7 +356,7 @@ class AuthAdminControllerSecurityTest {
     void createUserShouldRejectUserWithoutCreatePermission() throws Exception {
         mockMvc.perform(post("/api/sys/users")
                         .contentType(APPLICATION_JSON)
-                        .content("{\"username\":\"tester\",\"password\":\"secret\",\"email\":\"tester@example.com\",\"status\":1}"))
+                        .content("{\"username\":\"tester\",\"password\":\"Secret1234\",\"email\":\"tester@example.com\",\"status\":1}"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value(ResultErrorCode.FORBIDDEN.getCode()));
 
@@ -461,11 +461,11 @@ class AuthAdminControllerSecurityTest {
     void resetPasswordShouldAllowAuthorizedUser() throws Exception {
         mockMvc.perform(put("/api/sys/users/9/password/reset")
                         .contentType(APPLICATION_JSON)
-                        .content("{\"password\":\"new-pass-123\"}"))
+                        .content("{\"password\":\"NewPass123\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()));
 
-        verify(sysUserAdminService).resetPassword(9L, "new-pass-123");
+        verify(sysUserAdminService).resetPassword(9L, "NewPass123");
     }
 
     @Test
@@ -473,11 +473,11 @@ class AuthAdminControllerSecurityTest {
     void resetPasswordShouldRejectUserWithoutResetPermission() throws Exception {
         mockMvc.perform(put("/api/sys/users/9/password/reset")
                         .contentType(APPLICATION_JSON)
-                        .content("{\"password\":\"new-pass-123\"}"))
+                        .content("{\"password\":\"NewPass123\"}"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value(ResultErrorCode.FORBIDDEN.getCode()));
 
-        verify(sysUserAdminService, never()).resetPassword(9L, "new-pass-123");
+        verify(sysUserAdminService, never()).resetPassword(9L, "NewPass123");
     }
 
     @Test

@@ -143,7 +143,7 @@ public class FileUploadServiceImpl implements FileUploadService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public UserTaskVO uploadFile(Long userId, String md5, String taskId, FileInfo fileInfo) {
+    public UserTaskVO uploadFile(Long userId, String md5, String taskId, FileInfo fileInfo, InputStream inputStream) {
         FileUploadTask task = getTaskOrThrow(taskId, userId);
         ExceptionThrowerCore.throwBusinessIf(Integer.valueOf(1).equals(task.getIsChunked()), FileResultCode.CHUNK_TASK_REQUIRED);
         assertTaskActionAllowed(task, TaskStatusEnum.INIT, TaskStatusEnum.UPLOADING, TaskStatusEnum.FAILED);
@@ -157,12 +157,13 @@ public class FileUploadServiceImpl implements FileUploadService {
 
         String objectName = buildFinalObjectName(task.getCategory(), task.getOriginalName());
         StorageService storageService = requireStorageService(task.getStorageKey());
-        String url = null;
-        try (InputStream inputStream = fileInfo.getFileUrl() != null ? null : null) {
-            // 实际使用 MultipartFile，这里简化处理
+        String url;
+        try {
+            url = storageService.upload(inputStream, objectName, fileInfo.getMimeType());
         } catch (Exception e) {
             markTaskFailed(task, FileResultCode.FILE_UPLOAD_FAILED, e.getMessage());
             ExceptionThrowerCore.throwBusinessEx(FileResultCode.FILE_UPLOAD_FAILED);
+            return null; // unreachable, but satisfies compiler
         }
 
         PersistedFileInfo persisted = createOrReuseFileInfo(task, objectName, url, normalizedMd5);
@@ -171,7 +172,7 @@ public class FileUploadServiceImpl implements FileUploadService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public UserTaskVO uploadChunk(Long userId, String taskId, Integer chunkIndex, FileInfo chunkFileInfo) {
+    public UserTaskVO uploadChunk(Long userId, String taskId, Integer chunkIndex, FileInfo chunkFileInfo, InputStream inputStream) {
         ExceptionThrowerCore.throwBusinessIf(chunkIndex == null || chunkIndex < 1, FileResultCode.CHUNK_NUMBER_INVALID);
         FileUploadTask task = getTaskOrThrow(taskId, userId);
         ExceptionThrowerCore.throwBusinessIfNot(Integer.valueOf(1).equals(task.getIsChunked()), FileResultCode.NON_CHUNK_TASK);
@@ -182,7 +183,7 @@ public class FileUploadServiceImpl implements FileUploadService {
         StorageService storageService = requireStorageService(task.getStorageKey());
         String chunkObjectName = task.getUploadId() + "/chunk-" + chunkIndex + ".part";
         try {
-            storageService.uploadToTemp(null, chunkObjectName, chunkFileInfo.getMimeType());
+            storageService.uploadToTemp(inputStream, chunkObjectName, chunkFileInfo.getMimeType());
         } catch (Exception e) {
             markTaskFailed(task, FileResultCode.CHUNK_UPLOAD_FAILED, e.getMessage());
             ExceptionThrowerCore.throwBusinessEx(FileResultCode.CHUNK_UPLOAD_FAILED);

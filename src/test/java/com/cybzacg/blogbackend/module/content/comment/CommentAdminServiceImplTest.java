@@ -10,6 +10,7 @@ import com.cybzacg.blogbackend.module.content.comment.model.admin.CommentPageQue
 import com.cybzacg.blogbackend.module.content.comment.model.admin.CommentVO;
 import com.cybzacg.blogbackend.module.content.comment.repository.SysCommentRepository;
 import com.cybzacg.blogbackend.module.content.comment.service.impl.CommentAdminServiceImpl;
+import com.cybzacg.blogbackend.module.content.interaction.repository.SysInteractionRepository;
 import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,8 @@ class CommentAdminServiceImplTest {
     @Mock
     private SysCommentRepository sysCommentRepository;
     @Mock
+    private SysInteractionRepository sysInteractionRepository;
+    @Mock
     private ArticleContentFacadeService articleContentFacadeService;
     @Mock
     private SysUserRepository sysUserRepository;
@@ -42,6 +45,7 @@ class CommentAdminServiceImplTest {
     void setUp() {
         commentAdminService = new CommentAdminServiceImpl(
                 sysCommentRepository,
+                sysInteractionRepository,
                 articleContentFacadeService,
                 sysUserRepository,
                 contentModelMapper

@@ -22,6 +22,7 @@ import com.cybzacg.blogbackend.module.auth.notice.service.UserNotificationPrefer
 import com.cybzacg.blogbackend.module.auth.rbac.repository.SysMenuRepository;
 import com.cybzacg.blogbackend.module.auth.rbac.repository.SysRoleRepository;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
+import com.cybzacg.blogbackend.utils.PasswordUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
@@ -128,6 +129,7 @@ public class AuthServiceImpl implements AuthService {
         validateRegisterIdentity(username, "用户名已存在");
         validateRegisterIdentity(email, "邮箱已存在");
         validateRegisterIdentity(phone, "手机号已存在");
+        PasswordUtils.validate(request.getPassword());
 
         SysUser user = authModelMapper.toRegisterUser(request);
         user.setUsername(username);

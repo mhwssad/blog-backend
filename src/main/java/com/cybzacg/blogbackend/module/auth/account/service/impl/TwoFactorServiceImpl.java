@@ -14,6 +14,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.UUID;
 
@@ -60,7 +62,9 @@ public class TwoFactorServiceImpl implements TwoFactorService {
     public String verifyMfaCode(Long userId, String code) {
         String storedCode = redisOperator.get(mfaCodeKey(userId), String.class);
         ExceptionThrowerCore.throwBusinessIfBlank(storedCode, ResultErrorCode.MFA_EMAIL_CODE_INVALID);
-        ExceptionThrowerCore.throwBusinessIfNot(storedCode.equals(code), ResultErrorCode.MFA_EMAIL_CODE_INVALID);
+        ExceptionThrowerCore.throwBusinessIfNot(MessageDigest.isEqual(
+                storedCode.getBytes(StandardCharsets.UTF_8),
+                code.getBytes(StandardCharsets.UTF_8)), ResultErrorCode.MFA_EMAIL_CODE_INVALID);
 
         redisOperator.delete(mfaCodeKey(userId));
 

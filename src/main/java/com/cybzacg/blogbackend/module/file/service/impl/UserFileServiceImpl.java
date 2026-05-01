@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+
 /**
  * 用户文件服务门面。
  * 负责委托上传和查询操作到对应子服务，并保留用户侧文件引用删除能力。
@@ -84,13 +86,22 @@ public class UserFileServiceImpl implements UserFileService {
     @Transactional(rollbackFor = Exception.class)
     public FileUploadResultVO uploadFile(String uploadId, MultipartFile file, String sourceIp) {
         Long userId = SecurityUtils.requireUserId();
-        String md5 = com.cybzacg.blogbackend.utils.FileUtils.normalizeMd5(null);
+        ExceptionThrowerCore.throwBusinessIf(file == null || file.isEmpty(),
+                com.cybzacg.blogbackend.enums.error.ResultErrorCode.PARAM_VALIDATION_FAILED, "上传文件不能为空");
 
         com.cybzacg.blogbackend.domain.file.FileInfo fileInfo = new com.cybzacg.blogbackend.domain.file.FileInfo();
-        // fileInfo would be populated from the MultipartFile
+        fileInfo.setFileSize(file.getSize());
+        fileInfo.setMimeType(file.getContentType());
+        fileInfo.setOriginalName(file.getOriginalFilename());
 
-        com.cybzacg.blogbackend.module.file.model.admin.UserTaskVO taskVO =
-                fileUploadService.uploadFile(userId, md5, uploadId, fileInfo);
+        com.cybzacg.blogbackend.module.file.model.admin.UserTaskVO taskVO;
+        try {
+            taskVO = fileUploadService.uploadFile(userId, null, uploadId, fileInfo, file.getInputStream());
+        } catch (IOException e) {
+            ExceptionThrowerCore.throwBusinessEx(
+                    com.cybzacg.blogbackend.enums.file.FileResultCode.FILE_UPLOAD_FAILED, e.getMessage());
+            return null; // unreachable
+        }
 
         FileUploadResultVO vo = new FileUploadResultVO();
         vo.setUploadId(taskVO.getUploadId());
@@ -107,14 +118,22 @@ public class UserFileServiceImpl implements UserFileService {
     @Transactional(rollbackFor = Exception.class)
     public ChunkUploadVO uploadChunk(String uploadId, Integer chunkNumber, MultipartFile file, String chunkMd5, String sourceIp) {
         Long userId = SecurityUtils.requireUserId();
+        ExceptionThrowerCore.throwBusinessIf(file == null || file.isEmpty(),
+                com.cybzacg.blogbackend.enums.error.ResultErrorCode.PARAM_VALIDATION_FAILED, "上传文件不能为空");
 
         com.cybzacg.blogbackend.domain.file.FileInfo chunkFileInfo = new com.cybzacg.blogbackend.domain.file.FileInfo();
-        chunkFileInfo.setFileSize(file != null ? file.getSize() : null);
+        chunkFileInfo.setFileSize(file.getSize());
         chunkFileInfo.setMd5(chunkMd5);
-        chunkFileInfo.setMimeType(file != null ? file.getContentType() : null);
+        chunkFileInfo.setMimeType(file.getContentType());
 
-        com.cybzacg.blogbackend.module.file.model.admin.UserTaskVO taskVO =
-                fileUploadService.uploadChunk(userId, uploadId, chunkNumber, chunkFileInfo);
+        com.cybzacg.blogbackend.module.file.model.admin.UserTaskVO taskVO;
+        try {
+            taskVO = fileUploadService.uploadChunk(userId, uploadId, chunkNumber, chunkFileInfo, file.getInputStream());
+        } catch (IOException e) {
+            ExceptionThrowerCore.throwBusinessEx(
+                    com.cybzacg.blogbackend.enums.file.FileResultCode.CHUNK_UPLOAD_FAILED, e.getMessage());
+            return null; // unreachable
+        }
 
         ChunkUploadVO vo = new ChunkUploadVO();
         vo.setUploadId(taskVO.getUploadId());

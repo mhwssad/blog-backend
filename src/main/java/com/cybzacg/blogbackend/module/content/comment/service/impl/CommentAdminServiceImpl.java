@@ -11,6 +11,7 @@ import com.cybzacg.blogbackend.module.content.comment.model.admin.CommentPageQue
 import com.cybzacg.blogbackend.module.content.comment.model.admin.CommentVO;
 import com.cybzacg.blogbackend.module.content.comment.repository.SysCommentRepository;
 import com.cybzacg.blogbackend.module.content.comment.service.CommentAdminService;
+import com.cybzacg.blogbackend.module.content.interaction.repository.SysInteractionRepository;
 import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.TreeTraversalUtils;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CommentAdminServiceImpl implements CommentAdminService {
     private final SysCommentRepository sysCommentRepository;
+    private final SysInteractionRepository sysInteractionRepository;
     private final ArticleContentFacadeService articleContentFacadeService;
     private final SysUserRepository sysUserRepository;
     private final ContentModelMapper contentModelMapper;
@@ -84,6 +86,7 @@ public class CommentAdminServiceImpl implements CommentAdminService {
         List<SysComment> subtree = TreeTraversalUtils.bfsCollectSubtree(comment, SysComment::getId, SysComment::getParentId, allComments);
         Set<Long> deleteIds = subtree.stream().map(SysComment::getId).collect(Collectors.toSet());
         sysCommentRepository.removeByIds(deleteIds);
+        sysInteractionRepository.removeByTargetTypeAndTargetIds("comment", new ArrayList<>(deleteIds));
 
         if ("article".equals(comment.getTargetType())) {
             articleContentFacadeService.adjustCommentCount(comment.getTargetId(), -subtree.size());

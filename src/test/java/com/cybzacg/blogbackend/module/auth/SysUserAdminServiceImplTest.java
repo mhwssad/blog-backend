@@ -134,13 +134,13 @@ class SysUserAdminServiceImplTest {
     void createUserShouldSaveAndReturnVO() {
         SysUserSaveRequest request = new SysUserSaveRequest();
         request.setUsername("newuser");
-        request.setPassword("123456");
+        request.setPassword("Abc12345");
         request.setEmail("test@example.com");
         request.setPhone("13800138000");
 
         SysUser mappedUser = new SysUser();
         when(rbacAdminModelMapper.toUser(request)).thenReturn(mappedUser);
-        when(passwordEncoder.encode("123456")).thenReturn("encoded_pwd");
+        when(passwordEncoder.encode("Abc12345")).thenReturn("encoded_pwd");
         when(sysUserRepository.existsActiveByUsername("newuser", null)).thenReturn(false);
         when(sysUserRepository.existsActiveByEmail("test@example.com", null)).thenReturn(false);
         when(sysUserRepository.existsActiveByPhone("13800138000", null)).thenReturn(false);
@@ -160,7 +160,7 @@ class SysUserAdminServiceImplTest {
     void createUserShouldThrowWhenUsernameAlreadyExists() {
         SysUserSaveRequest request = new SysUserSaveRequest();
         request.setUsername("existinguser");
-        request.setPassword("123456");
+        request.setPassword("Abc12345");
 
         when(sysUserRepository.existsActiveByUsername("existinguser", null)).thenReturn(true);
 

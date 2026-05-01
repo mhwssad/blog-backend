@@ -9,6 +9,9 @@ import com.cybzacg.blogbackend.module.auth.account.service.AuthUserDetailsServic
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.Authentication;
@@ -31,7 +34,9 @@ public class EmailCodeAuthenticationProvider implements AuthenticationProvider {
 
         String cachedCode = redisOperator.get(emailLoginCodeKey(email), String.class);
         ExceptionThrowerCore.throwBusinessIfBlank(cachedCode, ResultErrorCode.EMAIL_CAPTCHA_EXPIRED);
-        ExceptionThrowerCore.throwBusinessIf(!cachedCode.equals(code), ResultErrorCode.EMAIL_CAPTCHA_INVALID);
+        ExceptionThrowerCore.throwBusinessIf(!MessageDigest.isEqual(
+                cachedCode.getBytes(StandardCharsets.UTF_8),
+                code.getBytes(StandardCharsets.UTF_8)), ResultErrorCode.EMAIL_CAPTCHA_INVALID);
 
         AuthUserDetails userDetails = authUserDetailsService.loadAuthUserByUsername(email);
         if (!userDetails.isEnabled()) {

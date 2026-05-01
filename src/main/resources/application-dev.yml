@@ -1,6 +1,11 @@
 server:
   port: 8080
 
+# CORS 配置（默认 *，生产环境必须限定来源域名）
+cors:
+  allowed-origins:
+    - "*"
+
 spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
