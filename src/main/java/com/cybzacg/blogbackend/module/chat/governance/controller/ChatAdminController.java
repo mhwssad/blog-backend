@@ -116,7 +116,7 @@ public class ChatAdminController {
 
     @PutMapping("/conversations/{conversationId}/status")
     @Operation(summary = "更新会话状态")
-    @PreAuthorize("@permission.hasPermission('content:chat:update')")
+    @PreAuthorize("@permission.hasPermission('content:chat:update-status')")
     public Result<Void> updateConversationStatus(@PathVariable Long conversationId,
                                                  @Valid @RequestBody ChatConversationStatusUpdateRequest request) {
         chatAdminService.updateConversationStatus(conversationId, request.getStatus());

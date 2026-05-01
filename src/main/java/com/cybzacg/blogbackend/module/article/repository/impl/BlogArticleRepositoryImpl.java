@@ -121,4 +121,19 @@ public class BlogArticleRepositoryImpl extends ServiceImpl<BlogArticleMapper, Bl
                         .or()
                         .le(BlogArticle::getScheduledPublishTime, LocalDateTime.now())));
     }
+
+    @Override
+    public void incrementLikeCount(Long id, int delta) {
+        baseMapper.incrementLikeCount(id, delta);
+    }
+
+    @Override
+    public void incrementCommentCount(Long id, int delta) {
+        baseMapper.incrementCommentCount(id, delta);
+    }
+
+    @Override
+    public void incrementCollectCount(Long id, int delta) {
+        baseMapper.incrementCollectCount(id, delta);
+    }
 }

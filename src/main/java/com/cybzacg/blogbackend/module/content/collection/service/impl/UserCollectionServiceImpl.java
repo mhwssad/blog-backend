@@ -145,8 +145,7 @@ public class UserCollectionServiceImpl implements UserCollectionService {
         }
         SysCollection collection = contentModelMapper.toCollection(request, userId, folder.getId(), article);
         sysCollectionRepository.save(collection);
-        folder.setCollectionCount((folder.getCollectionCount() == null ? 0 : folder.getCollectionCount()) + 1);
-        sysCollectionFolderRepository.updateById(folder);
+        sysCollectionFolderRepository.incrementCollectionCount(folder.getId(), 1);
         articleContentFacadeService.adjustCollectCount(article.getId(), 1);
         if (article.getAuthorId() != null && !article.getAuthorId().equals(userId)) {
             notificationDeliveryService.deliverAfterCommit(
@@ -169,8 +168,7 @@ public class UserCollectionServiceImpl implements UserCollectionService {
         ExceptionThrowerCore.throwBusinessIf(collection == null || !userId.equals(collection.getUserId()), ResultErrorCode.ILLEGAL_ARGUMENT, "收藏记录不存在");
         SysCollectionFolder folder = sysCollectionFolderRepository.getById(collection.getFolderId());
         if (folder != null) {
-            folder.setCollectionCount(Math.max(0, (folder.getCollectionCount() == null ? 0 : folder.getCollectionCount()) - 1));
-            sysCollectionFolderRepository.updateById(folder);
+            sysCollectionFolderRepository.incrementCollectionCount(folder.getId(), -1);
         }
         rollbackArticleCollectCount(collection);
         sysCollectionRepository.removeById(id);

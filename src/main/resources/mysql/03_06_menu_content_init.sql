@@ -29,7 +29,7 @@ VALUES (1710, 1700, '0,1700', '文章管理', 'M', 'ContentArticle', 'articles',
         NOW(), NOW(), NULL),
        (1714, 1710, '0,1700,1710', '文章删除', 'B', NULL, NULL, NULL, 'content:article:delete', 0, 0, 1, 4, NULL, NULL,
         NOW(), NOW(), NULL),
-       (1715, 1710, '0,1700,1710', '文章状态', 'B', NULL, NULL, NULL, 'content:article:update', 0, 0, 1, 5, NULL, NULL,
+       (1715, 1710, '0,1700,1710', '文章状态', 'B', NULL, NULL, NULL, 'content:article:update-status', 0, 0, 1, 5, NULL, NULL,
         NOW(), NOW(), NULL),
        (1716, 1710, '0,1700,1710', '访问控制', 'B', NULL, NULL, NULL, 'content:article:access', 0, 0, 1, 6, NULL, NULL,
         NOW(), NOW(), NULL);
@@ -144,7 +144,7 @@ VALUES (1790, 1700, '0,1700', '聊天管理', 'M', 'ContentChat', 'chats', 'cont
         'chat-dot-round', NULL, NOW(), NOW(), NULL),
        (1791, 1790, '0,1700,1790', '会话查询', 'B', NULL, NULL, NULL, 'content:chat:query', 0, 0, 1, 1, NULL, NULL,
         NOW(), NOW(), NULL),
-       (1792, 1790, '0,1700,1790', '会话状态', 'B', NULL, NULL, NULL, 'content:chat:update', 0, 0, 1, 2, NULL, NULL,
+       (1792, 1790, '0,1700,1790', '会话状态', 'B', NULL, NULL, NULL, 'content:chat:update-status', 0, 0, 1, 2, NULL, NULL,
         NOW(), NOW(), NULL);
 
 -- 关注管理

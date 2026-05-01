@@ -56,7 +56,7 @@ public class ArticleAdminController {
 
     @PutMapping("/{id}/status")
     @Operation(summary = "修改文章状态")
-    @PreAuthorize("@permission.hasPermission('content:article:update')")
+    @PreAuthorize("@permission.hasPermission('content:article:update-status')")
     public Result<Void> updateStatus(@PathVariable Long id,
                                      @Valid @RequestBody ArticleStatusRequest request) {
         articleAdminService.updateStatus(id, request.getStatus());

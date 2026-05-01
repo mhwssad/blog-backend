@@ -52,4 +52,18 @@
         and status = 1
         order by created_at asc, id asc
     </select>
+
+    <update id="incrementLikeCount">
+        update sys_comment
+        set like_count = GREATEST(0, like_count + #{delta}),
+            updated_at = now()
+        where id = #{id}
+    </update>
+
+    <update id="incrementReplyCount">
+        update sys_comment
+        set reply_count = GREATEST(0, reply_count + #{delta}),
+            updated_at = now()
+        where id = #{id}
+    </update>
 </mapper>

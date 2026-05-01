@@ -69,4 +69,14 @@ public class SysCommentRepositoryImpl extends ServiceImpl<SysCommentMapper, SysC
                 .eq(SysComment::getTargetType, targetType)
                 .eq(SysComment::getTargetId, targetId));
     }
+
+    @Override
+    public void incrementLikeCount(Long id, int delta) {
+        baseMapper.incrementLikeCount(id, delta);
+    }
+
+    @Override
+    public void incrementReplyCount(Long id, int delta) {
+        baseMapper.incrementReplyCount(id, delta);
+    }
 }

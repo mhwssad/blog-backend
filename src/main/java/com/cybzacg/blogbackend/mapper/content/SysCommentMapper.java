@@ -11,4 +11,8 @@ public interface SysCommentMapper extends BaseMapper<SysComment> {
                                                 @Param("targetType") String targetType);
 
     List<SysComment> selectRepliesByRootIds(@Param("rootIds") List<Long> rootIds);
+
+    int incrementLikeCount(@Param("id") Long id, @Param("delta") int delta);
+
+    int incrementReplyCount(@Param("id") Long id, @Param("delta") int delta);
 }

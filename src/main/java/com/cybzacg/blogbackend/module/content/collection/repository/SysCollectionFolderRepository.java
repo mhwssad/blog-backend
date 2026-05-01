@@ -46,4 +46,6 @@ public interface SysCollectionFolderRepository extends IService<SysCollectionFol
      * @return 默认收藏夹列表
      */
     List<SysCollectionFolder> findDefaultsByUserIdAndFolderType(Long userId, String folderType);
+
+    void incrementCollectionCount(Long id, int delta);
 }

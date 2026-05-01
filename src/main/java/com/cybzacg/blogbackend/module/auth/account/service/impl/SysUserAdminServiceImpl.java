@@ -23,6 +23,7 @@ import com.cybzacg.blogbackend.module.auth.rbac.service.impl.RbacAssociationFact
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.IdCollectionUtils;
 import com.cybzacg.blogbackend.utils.JsonUtils;
+import com.cybzacg.blogbackend.utils.PasswordUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -112,6 +113,9 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
         SysUser user = getAvailableUser(id);
         user.setStatus(status);
         sysUserRepository.updateById(user);
+        if (status == 0) {
+            tokenManager.invalidateUserSessions(id);
+        }
     }
 
     /**
@@ -121,6 +125,7 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
     @Transactional(rollbackFor = Exception.class)
     public void resetPassword(Long id, String password) {
         ExceptionThrowerCore.throwBusinessIfBlank(password, ResultErrorCode.ILLEGAL_ARGUMENT, "新密码不能为空");
+        PasswordUtils.validate(password);
         SysUser user = getAvailableUser(id);
         user.setPassword(passwordEncoder.encode(password));
         sysUserRepository.updateById(user);
@@ -136,6 +141,7 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
         user.setDeletedFlag(1);
         sysUserRepository.updateById(user);
         sysUserRoleRepository.deleteByUserId(id);
+        tokenManager.invalidateUserSessions(id);
     }
 
     /**
@@ -160,11 +166,13 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
         List<Long> distinctRoleIds = validateRolesExist(roleIds);
         sysUserRoleRepository.deleteByUserId(userId);
         if (distinctRoleIds.isEmpty()) {
+            tokenManager.invalidateUserSessions(userId);
             return;
         }
         sysUserRoleRepository.saveBatch(distinctRoleIds.stream()
                 .map(roleId -> rbacAssociationFactory.createUserRole(userId, roleId))
                 .toList());
+        tokenManager.invalidateUserSessions(userId);
     }
 
     @Override

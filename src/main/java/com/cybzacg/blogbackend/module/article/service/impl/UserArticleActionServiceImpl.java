@@ -52,8 +52,7 @@ public class UserArticleActionServiceImpl implements UserArticleActionService {
         }
         SysInteraction interaction = contentModelMapper.toInteraction(userId, articleId, "article", "like");
         sysInteractionRepository.save(interaction);
-        article.setLikeCount((article.getLikeCount() == null ? 0 : article.getLikeCount()) + 1);
-        blogArticleRepository.updateById(article);
+        blogArticleRepository.incrementLikeCount(articleId, 1);
         eventPublisher.publishEvent(new XpAwardEvent(
                 userId, ExperienceSourceTypeEnum.LIKE_GIVEN.getValue(),
                 String.valueOf(articleId),
@@ -86,11 +85,7 @@ public class UserArticleActionServiceImpl implements UserArticleActionService {
             return;
         }
         sysInteractionRepository.removeById(interaction.getId());
-        BlogArticle article = blogArticleRepository.getById(articleId);
-        if (article != null) {
-            article.setLikeCount(Math.max(0, (article.getLikeCount() == null ? 0 : article.getLikeCount()) - 1));
-            blogArticleRepository.updateById(article);
-        }
+        blogArticleRepository.incrementLikeCount(articleId, -1);
     }
 
     /**

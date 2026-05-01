@@ -34,4 +34,10 @@ public interface BlogArticleRepository extends IService<BlogArticle> {
      * 统计指定作者当前可公开展示的文章数量。
      */
     long countPublicVisibleByAuthorId(Long authorId);
+
+    void incrementLikeCount(Long id, int delta);
+
+    void incrementCommentCount(Long id, int delta);
+
+    void incrementCollectCount(Long id, int delta);
 }

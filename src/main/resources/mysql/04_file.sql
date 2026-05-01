@@ -49,7 +49,7 @@ CREATE TABLE file_info
 ) COMMENT '文件信息表（支持秒传、引用计数、逻辑删除）'
 ENGINE = InnoDB
 DEFAULT CHARSET = utf8mb4
-COLLATE = utf8mb4_general_ci;
+COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- 文件上传任务表（管控上传生命周期）
@@ -112,7 +112,7 @@ CREATE TABLE file_upload_task
 ) COMMENT '文件上传任务表（支持秒传、分片、断点续传、安全审计）'
 ENGINE = InnoDB
 DEFAULT CHARSET = utf8mb4
-COLLATE = utf8mb4_general_ci;
+COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- 文件分片表（仅存元数据，不含二进制）
@@ -138,7 +138,7 @@ CREATE TABLE file_chunk
 ) COMMENT '文件分片元数据表（实际文件由对象存储管理）'
 ENGINE = InnoDB
 DEFAULT CHARSET = utf8mb4
-COLLATE = utf8mb4_general_ci;
+COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- 文件业务属性表
@@ -172,4 +172,4 @@ CREATE TABLE file_business_info
 ) COMMENT '文件业务引用表，表示文件与业务对象之间的引用关系'
 ENGINE = InnoDB
 DEFAULT CHARSET = utf8mb4
-COLLATE = utf8mb4_general_ci;
+COLLATE = utf8mb4_unicode_ci;

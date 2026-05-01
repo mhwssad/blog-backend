@@ -63,4 +63,9 @@ public class SysCollectionFolderRepositoryImpl extends ServiceImpl<SysCollection
                 .eq(SysCollectionFolder::getFolderType, folderType)
                 .eq(SysCollectionFolder::getIsDefault, 1));
     }
+
+    @Override
+    public void incrementCollectionCount(Long id, int delta) {
+        baseMapper.incrementCollectionCount(id, delta);
+    }
 }

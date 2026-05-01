@@ -53,4 +53,8 @@ public interface SysCommentRepository extends IService<SysComment> {
      * @return 是否删除成功
      */
     boolean removeByTargetTypeAndTargetId(String targetType, Long targetId);
+
+    void incrementLikeCount(Long id, int delta);
+
+    void incrementReplyCount(Long id, int delta);
 }

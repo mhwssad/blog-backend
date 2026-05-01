@@ -68,4 +68,25 @@
         where id = #{id}
         limit 1
     </select>
+
+    <update id="incrementLikeCount">
+        update blog_article
+        set like_count = GREATEST(0, like_count + #{delta}),
+            updated_at = now()
+        where id = #{id}
+    </update>
+
+    <update id="incrementCommentCount">
+        update blog_article
+        set comment_count = GREATEST(0, comment_count + #{delta}),
+            updated_at = now()
+        where id = #{id}
+    </update>
+
+    <update id="incrementCollectCount">
+        update blog_article
+        set collect_count = GREATEST(0, collect_count + #{delta}),
+            updated_at = now()
+        where id = #{id}
+    </update>
 </mapper>

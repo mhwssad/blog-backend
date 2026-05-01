@@ -25,4 +25,11 @@
         is_default,sort_order,collection_count,
         created_at,updated_at
     </sql>
+
+    <update id="incrementCollectionCount">
+        update sys_collection_folder
+        set collection_count = GREATEST(0, collection_count + #{delta}),
+            updated_at = now()
+        where id = #{id}
+    </update>
 </mapper>

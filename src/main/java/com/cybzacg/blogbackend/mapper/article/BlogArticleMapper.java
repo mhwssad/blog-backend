@@ -18,4 +18,10 @@ public interface BlogArticleMapper extends BaseMapper<BlogArticle> {
     List<BlogArticle> selectPublishedPage();
 
     BlogArticle selectArticleDetailById(@Param("id") Long id);
+
+    int incrementLikeCount(@Param("id") Long id, @Param("delta") int delta);
+
+    int incrementCommentCount(@Param("id") Long id, @Param("delta") int delta);
+
+    int incrementCollectCount(@Param("id") Long id, @Param("delta") int delta);
 }

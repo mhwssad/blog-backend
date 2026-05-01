@@ -85,26 +85,17 @@ public class ArticleContentFacadeServiceImpl implements ArticleContentFacadeServ
     }
 
     /**
-     * 根据计数类型调整文章统计值。
+     * 根据计数类型原子调整文章统计值。
      */
     private void adjustCounter(Long articleId, int delta, CounterType counterType) {
         if (articleId == null || delta == 0) {
             return;
         }
-        BlogArticle article = blogArticleRepository.getById(articleId);
-        if (article == null) {
-            return;
-        }
         switch (counterType) {
-            case COMMENT -> article.setCommentCount(Math.max(0, defaultInt(article.getCommentCount()) + delta));
-            case COLLECT -> article.setCollectCount(Math.max(0, defaultInt(article.getCollectCount()) + delta));
-            case LIKE -> article.setLikeCount(Math.max(0, defaultInt(article.getLikeCount()) + delta));
+            case COMMENT -> blogArticleRepository.incrementCommentCount(articleId, delta);
+            case COLLECT -> blogArticleRepository.incrementCollectCount(articleId, delta);
+            case LIKE -> blogArticleRepository.incrementLikeCount(articleId, delta);
         }
-        blogArticleRepository.updateById(article);
-    }
-
-    private int defaultInt(Integer value) {
-        return value == null ? 0 : value;
     }
 
     private enum CounterType {

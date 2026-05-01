@@ -58,8 +58,7 @@ public class UserCommentServiceImpl implements UserCommentService {
         }
         SysInteraction interaction = contentModelMapper.toInteraction(userId, commentId, "comment", "like");
         sysInteractionRepository.save(interaction);
-        comment.setLikeCount((comment.getLikeCount() == null ? 0 : comment.getLikeCount()) + 1);
-        sysCommentRepository.updateById(comment);
+        sysCommentRepository.incrementLikeCount(commentId, 1);
     }
 
     /**
@@ -79,8 +78,7 @@ public class UserCommentServiceImpl implements UserCommentService {
             return;
         }
         sysInteractionRepository.removeById(interaction.getId());
-        comment.setLikeCount(Math.max(0, (comment.getLikeCount() == null ? 0 : comment.getLikeCount()) - 1));
-        sysCommentRepository.updateById(comment);
+        sysCommentRepository.incrementLikeCount(commentId, -1);
     }
 
     /**
@@ -108,8 +106,7 @@ public class UserCommentServiceImpl implements UserCommentService {
             if (comment.getRootId() == null || comment.getRootId() == 0L) {
                 comment.setRootId(parent.getRootId() == null || parent.getRootId() == 0L ? parent.getId() : parent.getRootId());
             }
-            parent.setReplyCount((parent.getReplyCount() == null ? 0 : parent.getReplyCount()) + 1);
-            sysCommentRepository.updateById(parent);
+            sysCommentRepository.incrementReplyCount(comment.getParentId(), 1);
         } else {
             comment.setRootId(0L);
             comment.setParentId(0L);
@@ -148,11 +145,7 @@ public class UserCommentServiceImpl implements UserCommentService {
 
         articleContentFacadeService.adjustCommentCount(comment.getTargetId(), -subtree.size());
         if (comment.getParentId() != null && comment.getParentId() > 0) {
-            SysComment parent = sysCommentRepository.getById(comment.getParentId());
-            if (parent != null) {
-                parent.setReplyCount(Math.max(0, (parent.getReplyCount() == null ? 0 : parent.getReplyCount()) - 1));
-                sysCommentRepository.updateById(parent);
-            }
+            sysCommentRepository.incrementReplyCount(comment.getParentId(), -1);
         }
     }
 
