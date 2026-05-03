@@ -16,6 +16,11 @@ import org.springframework.stereotype.Component;
 public class FileUploadTaskCleanupScheduler {
     private final FileLifecycleService fileLifecycleService;
 
+    /**
+     * 定时清理过期且未完成的上传任务。
+     * 扫描已超过过期时间但尚未完成的上传任务，清理其关联的临时分片资源。
+     * 仅在有实际处理量时记录 INFO 日志，避免无意义的日志输出。
+     */
     @Scheduled(cron = "${file-upload.expired-task-cleanup-cron:0 0 * * * *}")
     public void cleanupExpiredUploadTasks() {
         int cleaned = fileLifecycleService.cleanupExpiredUploadTasks();

@@ -55,13 +55,12 @@ public class PublicFileAccessController {
         ExceptionThrowerCore.throwBusinessIf(
                 fileInfo.getStatus() != null && fileInfo.getStatus() == 1,
                 ResultErrorCode.ILLEGAL_ARGUMENT, "文件已删除");
-
-        // Check article_attachment access control
+        // 查询该文件关联的业务记录，用于后续鉴权
         List<FileBusinessInfo> refs = fileBusinessInfoRepository.listByFileId(fileId);
         if (refs != null && !refs.isEmpty()) {
             Long currentUserId = SecurityUtils.getUserId();
             boolean hasAccess = false;
-
+            // 遍历关联文章，检查用户是否有文章访问权限
             for (FileBusinessInfo ref : refs) {
                 if (!"article_attachment".equals(ref.getReferenceType()) || ref.getReferenceId() == null) {
                     continue;
@@ -73,7 +72,7 @@ public class PublicFileAccessController {
                 }
             }
 
-            // If no article reference grants access, deny
+            // 无任何文章引用授予访问权限时，拒绝访问
             if (!hasAccess) {
                 boolean hasArticleRefs = refs.stream()
                         .anyMatch(r -> "article_attachment".equals(r.getReferenceType()));
@@ -83,7 +82,7 @@ public class PublicFileAccessController {
             }
         }
 
-        // Determine object name for storage download
+        // 解析对象名用于存储下载
         String objectName = resolveObjectName(fileInfo);
         try (InputStream inputStream = storageManager.download(objectName)) {
             byte[] bytes = inputStream.readAllBytes();
@@ -105,7 +104,7 @@ public class PublicFileAccessController {
         } catch (IOException e) {
             log.error("文件读取失败: fileId={}, objectName={}", fileId, objectName, e);
             ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.IO_ERROR, "文件读取失败");
-            return null; // unreachable
+            return null;
         }
     }
 

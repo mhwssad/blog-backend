@@ -117,6 +117,45 @@ Authorization: Bearer <accessToken>
 | `mutualFollow`    | Integer  | 是否互关：`0/1`   |
 | `followTime`      | DateTime | 最近关注时间       |
 
+响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 2,
+    "current": 1,
+    "size": 10,
+    "records": [
+      {
+        "relationId": 1,
+        "userId": 100,
+        "username": "zhangsan",
+        "nickname": "张三",
+        "avatar": "https://example.com/avatar/100.jpg",
+        "isSpecialFollow": 1,
+        "remark": "前端联调账号",
+        "mutualFollow": 1,
+        "followTime": "2026-04-15T10:30:00"
+      },
+      {
+        "relationId": 2,
+        "userId": 101,
+        "username": "lisi",
+        "nickname": "李四",
+        "avatar": "https://example.com/avatar/101.jpg",
+        "isSpecialFollow": 0,
+        "remark": null,
+        "mutualFollow": 0,
+        "followTime": "2026-04-10T08:20:00"
+      }
+    ]
+  }
+}
+```
+
 当前行为：
 
 - 只返回当前仍处于已关注状态的关系。
@@ -126,15 +165,49 @@ Authorization: Bearer <accessToken>
 ### 2.4 我的粉丝列表
 
 - 请求：`GET /api/user/fans`
-- 查询参数：`current`、`size`
+- 查询参数：
+
+| 参数        | 类型   | 说明                     |
+|-----------|------|------------------------|
+| `current` | Long | 页码，默认 `1`              |
+| `size`    | Long | 每页条数，默认 `10`，最大 `100`  |
+
 - 响应字段：`UserFollowUserVO`
 
 字段说明与关注列表一致，但含义有两点差异：
 
 - `userId` 表示粉丝用户 ID。
 - `followTime` 表示对方关注我的时间。
-- `isSpecialFollow` 和 `remark` 表示“我是否也关注对方，以及我对对方的特别关注/备注设置”；未互关时默认 `isSpecialFollow=0`、
+- `isSpecialFollow` 和 `remark` 表示”我是否也关注对方，以及我对对方的特别关注/备注设置”；未互关时默认 `isSpecialFollow=0`、
   `remark=null`。
+
+响应示例：
+
+```json
+{
+  “code”: 200,
+  “message”: “成功”,
+  “timestamp”: 1774310400000,
+  “data”: {
+    “total”: 1,
+    “current”: 1,
+    “size”: 10,
+    “records”: [
+      {
+        “relationId”: 3,
+        “userId”: 200,
+        “username”: “wangwu”,
+        “nickname”: “王五”,
+        “avatar”: “https://example.com/avatar/200.jpg”,
+        “isSpecialFollow”: 1,
+        “remark”: null,
+        “mutualFollow”: 1,
+        “followTime”: “2026-04-18T14:00:00”
+      }
+    ]
+  }
+}
+```
 
 ### 2.5 互关状态
 
@@ -148,6 +221,22 @@ Authorization: Bearer <accessToken>
 | `followedBy`   | Boolean | 目标用户是否已关注当前用户 |
 | `mutualFollow` | Boolean | 是否互相关注        |
 
+响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "targetUserId": 100,
+    "following": true,
+    "followedBy": true,
+    "mutualFollow": true
+  }
+}
+```
+
 ### 2.6 关注统计
 
 - 请求：`GET /api/user/follows/count`
@@ -157,6 +246,20 @@ Authorization: Bearer <accessToken>
 |------------------|------|-----|
 | `followingCount` | Long | 关注数 |
 | `fanCount`       | Long | 粉丝数 |
+
+响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "followingCount": 10,
+    "fanCount": 5
+  }
+}
+```
 
 说明：
 
@@ -230,6 +333,65 @@ Authorization: Bearer <accessToken>
 - 公开接口不返回备注、特别关注、互关状态等仅用户本人可见的信息。
 - 若路径中的 `userId` 对应用户不存在、已删除或已禁用，会返回业务错误。
 
+#### 公开关注列表示例
+
+请求：`GET /api/users/1/follows?current=1&size=10`
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 2,
+    "current": 1,
+    "size": 10,
+    "records": [
+      {
+        "userId": 100,
+        "username": "zhangsan",
+        "nickname": "张三",
+        "avatar": "https://example.com/avatar/100.jpg",
+        "followTime": "2026-04-15T10:30:00"
+      },
+      {
+        "userId": 101,
+        "username": "lisi",
+        "nickname": "李四",
+        "avatar": "https://example.com/avatar/101.jpg",
+        "followTime": "2026-04-10T08:20:00"
+      }
+    ]
+  }
+}
+```
+
+#### 公开粉丝列表示例
+
+请求：`GET /api/users/1/fans?current=1&size=10`
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 1,
+    "current": 1,
+    "size": 10,
+    "records": [
+      {
+        "userId": 200,
+        "username": "wangwu",
+        "nickname": "王五",
+        "avatar": "https://example.com/avatar/200.jpg",
+        "followTime": "2026-04-18T14:00:00"
+      }
+    ]
+  }
+}
+```
+
 ## 4. 后台管理接口
 
 所有后台接口都要求：
@@ -280,9 +442,48 @@ Authorization: Bearer <adminAccessToken>
 | `createdAt`            | DateTime | 创建时间      |
 | `updatedAt`            | DateTime | 更新时间      |
 
+响应示例：
+
+```json
+{
+  “code”: 200,
+  “message”: “成功”,
+  “timestamp”: 1774310400000,
+  “data”: {
+    “total”: 1,
+    “current”: 1,
+    “size”: 10,
+    “records”: [
+      {
+        “relationId”: 1,
+        “followerId”: 1,
+        “followerUsername”: “admin”,
+        “followerNickname”: “管理员”,
+        “followerStatus”: 1,
+        “followerDeletedFlag”: 0,
+        “followingId”: 100,
+        “followingUsername”: “zhangsan”,
+        “followingNickname”: “张三”,
+        “followingStatus”: 1,
+        “followingDeletedFlag”: 0,
+        “followStatus”: 1,
+        “isSpecialFollow”: 0,
+        “source”: “search”,
+        “remark”: null,
+        “followTime”: “2026-04-15T10:30:00”,
+        “unfollowTime”: null,
+        “createdAt”: “2026-04-15T10:30:00”,
+        “updatedAt”: “2026-04-15T10:30:00”
+      }
+    ]
+  }
+}
+```
+
 说明：
 
-- 后台分页会保留异常关系可见性，用于排查“用户已删 / 已禁用但关系仍存在”的数据。
+- 后台分页会保留异常关系可见性，用于排查”用户已删 / 已禁用但关系仍存在”的数据。
+- `current` 和 `size` 不传时分别默认为 `1` 和 `10`。
 
 ### 4.2 异常关注清理
 

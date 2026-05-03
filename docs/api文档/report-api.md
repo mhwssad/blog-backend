@@ -67,6 +67,28 @@ Authorization: Bearer <accessToken>
 | `status` | Integer | 状态：0-待处理/1-处理中/2-已处理/3-已驳回 |
 | `reportedAt` | DateTime | 举报时间 |
 
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "id": 1,
+    "targetType": "comment",
+    "targetId": 501,
+    "reasonCode": "spam",
+    "reasonDetail": "该评论为垃圾广告内容",
+    "status": 0,
+    "reportedAt": "2026-04-20 16:30:00",
+    "handledAt": null,
+    "resultType": null,
+    "remark": null
+  }
+}
+```
+
 ### 3.3 查询我的举报记录
 
 - 请求：`GET /api/user/reports`
@@ -81,6 +103,47 @@ Authorization: Bearer <accessToken>
 
 - 响应：`PageResult<ReportVO>`
 
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 2,
+    "current": 1,
+    "size": 10,
+    "records": [
+      {
+        "id": 2,
+        "targetType": "article",
+        "targetId": 100,
+        "reasonCode": "plagiarism",
+        "reasonDetail": "该文章抄袭他人原创内容",
+        "status": 1,
+        "reportedAt": "2026-04-21 09:00:00",
+        "handledAt": null,
+        "resultType": null,
+        "remark": null
+      },
+      {
+        "id": 1,
+        "targetType": "comment",
+        "targetId": 501,
+        "reasonCode": "spam",
+        "reasonDetail": "该评论为垃圾广告内容",
+        "status": 2,
+        "reportedAt": "2026-04-20 16:30:00",
+        "handledAt": "2026-04-21 10:00:00",
+        "resultType": "delete_content",
+        "remark": "已核实并删除违规评论"
+      }
+    ]
+  }
+}
+```
+
 ### 3.4 查询举报详情
 
 - 请求：`GET /api/user/reports/{id}`
@@ -92,6 +155,28 @@ Authorization: Bearer <accessToken>
 | `id` | Long | 举报ID |
 
 - 响应：`ReportVO`
+
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "id": 1,
+    "targetType": "comment",
+    "targetId": 501,
+    "reasonCode": "spam",
+    "reasonDetail": "该评论为垃圾广告内容",
+    "status": 2,
+    "reportedAt": "2026-04-20 16:30:00",
+    "handledAt": "2026-04-21 10:00:00",
+    "resultType": "delete_content",
+    "remark": "已核实并删除违规评论"
+  }
+}
+```
 
 ## 4. 后台管理接口
 
@@ -143,6 +228,41 @@ Authorization: Bearer <accessToken>
 | `handledAt` | DateTime | 处理时间 |
 | `createdAt` | DateTime | 创建时间 |
 
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 1,
+    "current": 1,
+    "size": 20,
+    "records": [
+      {
+        "id": 1,
+        "reportTargetType": "comment",
+        "reportTargetId": 501,
+        "reporterUserId": 5,
+        "reporterUsername": "wangwu",
+        "reasonCode": "spam",
+        "reasonDetail": "该评论为垃圾广告内容",
+        "status": 1,
+        "handlerUserId": 1,
+        "handlerUsername": "admin",
+        "resultType": null,
+        "punishmentType": null,
+        "reportedAt": "2026-04-20 16:30:00",
+        "handledAt": null,
+        "remark": null,
+        "createdAt": "2026-04-20 16:30:00"
+      }
+    ]
+  }
+}
+```
+
 ### 4.3 举报详情
 
 - 请求：`GET /api/sys/reports/{id}`
@@ -167,6 +287,17 @@ Authorization: Bearer <accessToken>
 
 - 响应：空
 
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": null
+}
+```
+
 ### 4.5 处理举报
 
 - 请求：`PUT /api/sys/reports/{id}/handle`
@@ -186,6 +317,17 @@ Authorization: Bearer <accessToken>
 | `remark` | String | 否 | 备注 |
 
 - 响应：空
+
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": null
+}
+```
 
 ### 4.6 驳回举报
 

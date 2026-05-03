@@ -5,13 +5,9 @@ import com.cybzacg.blogbackend.common.storage.StorageService;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.file.FileInfo;
 import com.cybzacg.blogbackend.domain.file.FileUploadTask;
-import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.enums.file.FileCategoryEnum;
-import com.cybzacg.blogbackend.enums.file.FileReferenceTypeEnum;
 import com.cybzacg.blogbackend.enums.file.FileResultCode;
 import com.cybzacg.blogbackend.enums.file.FileStatusEnum;
-import com.cybzacg.blogbackend.enums.storage.TaskStatusEnum;
-import com.cybzacg.blogbackend.module.file.convert.FileModelMapper;
+import com.cybzacg.blogbackend.module.file.convert.FileModelConvert;
 import com.cybzacg.blogbackend.module.file.model.admin.*;
 import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
 import com.cybzacg.blogbackend.module.file.repository.FileChunkRepository;
@@ -20,9 +16,9 @@ import com.cybzacg.blogbackend.module.file.repository.FileUploadTaskRepository;
 import com.cybzacg.blogbackend.module.file.service.FileAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -30,6 +26,7 @@ import java.util.List;
  * 后台文件管理服务实现。
  * 负责聚合文件本体、业务引用和上传任务，供管理端统一查询与清理。
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FileAdminServiceImpl implements FileAdminService {
@@ -38,20 +35,15 @@ public class FileAdminServiceImpl implements FileAdminService {
     private final FileChunkRepository fileChunkRepository;
     private final FileBusinessInfoRepository fileBusinessInfoRepository;
     private final StorageManager storageManager;
-    private final FileModelMapper fileModelMapper;
+    private final FileModelConvert fileModelConvert;
 
     /**
      * 按文件属性与业务引用维度分页查询后台文件列表。
      */
     @Override
     public PageResult<FileAdminVO> pageFiles(FileAdminPageQuery query) {
-        validatePageFilesQuery(query);
-        long current = query.getCurrent() == null ? 1L : query.getCurrent();
-        long size = query.getSize() == null ? 10L : query.getSize();
-        query.setCurrent(current);
-        query.setSize(size);
-        var page = fileInfoRepository.pageAdminFiles(query);
-        List<FileAdminVO> records = page.getRecords().stream().map(fileModelMapper::toFileAdminVO).toList();
+        var page = fileInfoRepository.pageAdminFiles(query); // 按管理维度分页查询
+        List<FileAdminVO> records = page.getRecords().stream().map(fileModelConvert::toFileAdminVO).toList();
         return PageResult.of(page, records);
     }
 
@@ -62,15 +54,17 @@ public class FileAdminServiceImpl implements FileAdminService {
     public FileDetailVO getFile(Long id) {
         FileInfo file = fileInfoRepository.getById(id);
         ExceptionThrowerCore.throwBusinessIfNull(file, FileResultCode.FILE_NOT_FOUND);
-        FileDetailVO detail = fileModelMapper.toFileDetailVO(file);
+        FileDetailVO detail = fileModelConvert.toFileDetailVO(file);
+        // 补齐业务引用记录，供管理端评估文件是否可以清理
         List<FileReferenceVO> references = fileBusinessInfoRepository.listByFileId(id)
                 .stream()
-                .map(fileModelMapper::toFileReferenceVO)
+                .map(fileModelConvert::toFileReferenceVO)
                 .toList();
         detail.setReferences(references);
+        // 补齐最近上传任务，帮助定位是否存在未完成的分片上传
         List<FileTaskAdminVO> tasks = fileUploadTaskRepository.listRecentByFileId(id, 20)
                 .stream()
-                .map(fileModelMapper::toFileTaskAdminVO)
+                .map(fileModelConvert::toFileTaskAdminVO)
                 .toList();
         detail.setTasks(tasks);
         return detail;
@@ -81,13 +75,8 @@ public class FileAdminServiceImpl implements FileAdminService {
      */
     @Override
     public PageResult<FileTaskAdminVO> pageTasks(FileTaskPageQuery query) {
-        validateTaskPageQuery(query);
-        long current = query.getCurrent() == null ? 1L : query.getCurrent();
-        long size = query.getSize() == null ? 10L : query.getSize();
-        query.setCurrent(current);
-        query.setSize(size);
-        var page = fileUploadTaskRepository.pageAdminTasks(query);
-        List<FileTaskAdminVO> records = page.getRecords().stream().map(fileModelMapper::toFileTaskAdminVO).toList();
+        var page = fileUploadTaskRepository.pageAdminTasks(query); // 按任务维度分页查询
+        List<FileTaskAdminVO> records = page.getRecords().stream().map(fileModelConvert::toFileTaskAdminVO).toList();
         return PageResult.of(page, records);
     }
 
@@ -97,7 +86,8 @@ public class FileAdminServiceImpl implements FileAdminService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, Integer status) {
-        ExceptionThrowerCore.throwBusinessIfNot(FileStatusEnum.contains(status), FileResultCode.FILE_STATUS_INVALID);
+        log.info("更新文件状态, fileId={}, newStatus={}", id, status);
+        ExceptionThrowerCore.throwBusinessIfNot(FileStatusEnum.contains(status), FileResultCode.FILE_STATUS_INVALID); // 状态值必须在枚举范围内
         ExceptionThrowerCore.throwBusinessIf(
                 FileStatusEnum.DELETED.getValue().equals(status),
                 FileResultCode.FILE_STATUS_INVALID,
@@ -105,9 +95,10 @@ public class FileAdminServiceImpl implements FileAdminService {
         );
         FileInfo file = fileInfoRepository.getById(id);
         ExceptionThrowerCore.throwBusinessIfNull(file, FileResultCode.FILE_NOT_FOUND);
-        ExceptionThrowerCore.throwBusinessIf(FileStatusEnum.DELETED.getValue().equals(file.getStatus()), FileResultCode.FILE_STATUS_INVALID);
+        ExceptionThrowerCore.throwBusinessIf(FileStatusEnum.DELETED.getValue().equals(file.getStatus()), FileResultCode.FILE_STATUS_INVALID); // 不允许操作已删除文件
         file.setStatus(status);
         fileInfoRepository.updateById(file);
+        log.info("文件状态更新成功, fileId={}, status={}", id, status);
     }
 
     /**
@@ -116,6 +107,7 @@ public class FileAdminServiceImpl implements FileAdminService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteFile(Long id) {
+        log.info("开始删除文件, fileId={}", id);
         FileInfo file = fileInfoRepository.getById(id);
         if (file == null) {
             return;
@@ -133,43 +125,31 @@ public class FileAdminServiceImpl implements FileAdminService {
                         storageService.deleteTempFiles(task.getUploadId());
                     }
                 } catch (Exception ignored) {
+                    log.warn("清理上传任务临时文件失败, taskId={}", task.getId());
                 }
             }
             fileUploadTaskRepository.removeByIds(tasks.stream().map(FileUploadTask::getId).toList());
         }
         // 物理文件删除失败时不回滚元数据删除，避免后台任务被外部存储异常长期阻塞。
+        boolean physicalDeleted = true;
         try {
             StorageService storageService = storageManager.getStorageService(file.getStorageKey());
             if (storageService != null) {
                 storageService.delete(file.getFilePath());
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            physicalDeleted = false;
+            log.warn("物理文件删除失败, fileId={}, path={}", id, file.getFilePath());
         }
         file.setReferenceCount(0);
-        file.setStatus(FileStatusEnum.DELETED.getValue());
+        file.setStatus(physicalDeleted ? FileStatusEnum.DELETED.getValue() : FileStatusEnum.PHYSICAL_DELETE_PENDING.getValue());
         fileInfoRepository.updateById(file);
+        if (physicalDeleted) {
+            log.info("文件删除完成, fileId={}", id);
+        } else {
+            log.info("文件元数据标记为待物理删除, fileId={}, 将由定时任务重试", id);
+        }
     }
 
-    private void validatePageFilesQuery(FileAdminPageQuery query) {
-        ExceptionThrowerCore.throwBusinessIf(
-                StringUtils.hasText(query.getCategory()) && !FileCategoryEnum.contains(query.getCategory()),
-                ResultErrorCode.ILLEGAL_ARGUMENT
-        );
-        ExceptionThrowerCore.throwBusinessIf(
-                StringUtils.hasText(query.getReferenceType()) && !FileReferenceTypeEnum.contains(query.getReferenceType()),
-                ResultErrorCode.ILLEGAL_ARGUMENT
-        );
-        ExceptionThrowerCore.throwBusinessIf(
-                query.getStatus() != null && !FileStatusEnum.contains(query.getStatus()),
-                FileResultCode.FILE_STATUS_INVALID
-        );
-    }
-
-    private void validateTaskPageQuery(FileTaskPageQuery query) {
-        ExceptionThrowerCore.throwBusinessIf(
-                query.getTaskStatus() != null && TaskStatusEnum.getByCode(query.getTaskStatus()) == null,
-                FileResultCode.UPLOAD_TASK_STATUS_INVALID
-        );
-    }
 }
 

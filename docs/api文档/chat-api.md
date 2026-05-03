@@ -93,6 +93,32 @@ const socket = new WebSocket(
     - 访客只能查看大厅消息，不能发送。
     - 消息列表按时间倒序返回。
 
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 1,
+    "current": 1,
+    "size": 20,
+    "records": [
+      {
+        "id": 90001,
+        "senderId": 1,
+        "senderName": "张三",
+        "senderAvatar": "https://example.com/avatar/1.png",
+        "messageType": "text",
+        "content": "大家好，欢迎来到全站大厅！",
+        "createdAt": "2026-03-30 10:00:00"
+      }
+    ]
+  }
+}
+```
+
 ## 4. 用户侧 HTTP 接口
 
 ### 4.1 接口总览
@@ -177,6 +203,103 @@ const socket = new WebSocket(
 
 - 首次访问时，如果全站群不存在成员关系，服务端会自动补建。
 - 单聊详情会额外返回 `targetUserId / targetUsername / targetNickname`。
+
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 2,
+    "current": 1,
+    "size": 20,
+    "records": [
+      {
+        "id": 1001,
+        "conversationType": "single",
+        "sceneType": "single_chat",
+        "name": "李四",
+        "avatar": "https://example.com/avatar/2.png",
+        "ownerId": null,
+        "notice": null,
+        "allSite": false,
+        "status": 1,
+        "visibilityScope": null,
+        "allowGuestView": 0,
+        "requireJoinToSpeak": 0,
+        "joinRule": null,
+        "speakLevelLimit": 0,
+        "memberLimit": 0,
+        "slowModeSeconds": 0,
+        "displaySort": 0,
+        "channelCategoryCode": null,
+        "selfRole": null,
+        "memberCount": 2,
+        "unreadCount": 3,
+        "targetUserId": 2,
+        "targetUsername": "lisi",
+        "targetNickname": "李四",
+        "lastReadMessageId": 89999,
+        "lastReadAt": "2026-03-30 09:50:00",
+        "lastDeliveredMessageId": 89999,
+        "lastDeliveredAt": "2026-03-30 09:50:00",
+        "lastMessage": {
+          "id": 90010,
+          "senderId": 2,
+          "senderNickname": "李四",
+          "messageType": "text",
+          "content": "明天一起讨论技术方案吧",
+          "createdAt": "2026-03-30 10:05:00"
+        },
+        "createdAt": "2026-03-20 14:00:00",
+        "updatedAt": "2026-03-30 10:05:00"
+      },
+      {
+        "id": 2001,
+        "conversationType": "group",
+        "sceneType": "user_group",
+        "name": "项目群",
+        "avatar": "https://example.com/group/2001.png",
+        "ownerId": 1,
+        "notice": "入群后请先看置顶说明",
+        "allSite": false,
+        "status": 1,
+        "visibilityScope": "public",
+        "allowGuestView": 0,
+        "requireJoinToSpeak": 1,
+        "joinRule": "approval",
+        "speakLevelLimit": 1,
+        "memberLimit": 200,
+        "slowModeSeconds": 0,
+        "displaySort": 0,
+        "channelCategoryCode": "backend",
+        "selfRole": "owner",
+        "memberCount": 15,
+        "unreadCount": 0,
+        "targetUserId": null,
+        "targetUsername": null,
+        "targetNickname": null,
+        "lastReadMessageId": 80050,
+        "lastReadAt": "2026-03-30 09:30:00",
+        "lastDeliveredMessageId": 80050,
+        "lastDeliveredAt": "2026-03-30 09:30:00",
+        "lastMessage": {
+          "id": 80050,
+          "senderId": 3,
+          "senderNickname": "王五",
+          "messageType": "text",
+          "content": "今晚 8 点发版，请提前同步。",
+          "createdAt": "2026-03-30 09:30:00"
+        },
+        "createdAt": "2026-03-10 08:00:00",
+        "updatedAt": "2026-03-30 09:30:00"
+      }
+    ]
+  }
+}
+```
 
 ### 4.3 加入公开频道或公开群
 
@@ -278,8 +401,83 @@ const socket = new WebSocket(
   会跟随更新；只有原消息不可见时才回退到 payload 快照。
 - 图片和语音消息发送成功后会先返回基础载荷，随后由异步媒体任务补齐缩略图、WAV 预览、时长和波形，并通过 `message_updated`
   推给在线成员。
-- 若旧消息的原始被回复消息已经不可见，`reply.deleted = true`，`reply.state = unavailable`，`reply.content` 会回退为“引用消息已不可见”。
-- 当前不会返回多层 `reply.reply...` 结构；如需展示“被引用消息本身也是回复”，前端可结合 `reply.replyToMessageId` 做弱提示或跳转入口。
+- 若旧消息的原始被回复消息已经不可见，`reply.deleted = true`，`reply.state = unavailable`，`reply.content` 会回退为”引用消息已不可见”。
+- 当前不会返回多层 `reply.reply...` 结构；如需展示”被引用消息本身也是回复”，前端可结合 `reply.replyToMessageId` 做弱提示或跳转入口。
+
+- 响应示例：
+
+```json
+{
+  “code”: 200,
+  “message”: “成功”,
+  “timestamp”: 1774310400000,
+  “data”: {
+    “total”: 2,
+    “current”: 1,
+    “size”: 20,
+    “records”: [
+      {
+        “id”: 90010,
+        “conversationId”: 1001,
+        “senderId”: 2,
+        “senderUsername”: “lisi”,
+        “senderNickname”: “李四”,
+        “senderAvatar”: “https://example.com/avatar/2.png”,
+        “messageType”: “text”,
+        “content”: “明天一起讨论技术方案吧”,
+        “file”: null,
+        “replyMessageId”: 90009,
+        “reply”: {
+          “id”: 90009,
+          “senderId”: 1,
+          “senderUsername”: “zhangsan”,
+          “senderNickname”: “张三”,
+          “senderAvatar”: “https://example.com/avatar/1.png”,
+          “messageType”: “text”,
+          “replyToMessageId”: null,
+          “content”: “有时间吗？”,
+          “file”: null,
+          “revoked”: false,
+          “deleted”: false,
+          “state”: “normal”,
+          “createdAt”: “2026-03-30 10:04:00”
+        },
+        “clientMessageId”: “msg-lisi-001”,
+        “self”: false,
+        “deliveryStatus”: 2,
+        “readByCurrentUser”: true,
+        “readAt”: “2026-03-30 10:06:00”,
+        “revoked”: false,
+        “edited”: false,
+        “updatedAt”: null,
+        “createdAt”: “2026-03-30 10:05:00”
+      },
+      {
+        “id”: 90009,
+        “conversationId”: 1001,
+        “senderId”: 1,
+        “senderUsername”: “zhangsan”,
+        “senderNickname”: “张三”,
+        “senderAvatar”: “https://example.com/avatar/1.png”,
+        “messageType”: “text”,
+        “content”: “有时间吗？”,
+        “file”: null,
+        “replyMessageId”: null,
+        “reply”: null,
+        “clientMessageId”: “msg-zhangsan-001”,
+        “self”: true,
+        “deliveryStatus”: 2,
+        “readByCurrentUser”: true,
+        “readAt”: “2026-03-30 10:04:00”,
+        “revoked”: false,
+        “edited”: false,
+        “updatedAt”: null,
+        “createdAt”: “2026-03-30 10:04:00”
+      }
+    ]
+  }
+}
+```
 
 ### 4.4 发送文本消息
 
@@ -320,6 +518,38 @@ const socket = new WebSocket(
 - 发送成功后，服务端会把被回复消息的摘要快照一并写入消息 payload，避免后续前端必须二次查原消息。
 - 单聊文本消息发送成功后，会按接收方 `private_message` 通知偏好投递站内通知。
 - 群聊 / 全站群 / 频道文本中包含 `@用户ID` 时，会按被 @ 用户的 `group_mention` 通知偏好投递站内通知；第一阶段仅解析当前会话活跃成员的用户 ID。
+
+- 响应示例（发送文本消息 / 发送文件消息 统一返回 ChatMessageVO）：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "id": 90011,
+    "conversationId": 1001,
+    "senderId": 1,
+    "senderUsername": "zhangsan",
+    "senderNickname": "张三",
+    "senderAvatar": "https://example.com/avatar/1.png",
+    "messageType": "text",
+    "content": "好的，明天见！",
+    "file": null,
+    "replyMessageId": null,
+    "reply": null,
+    "clientMessageId": "msg-zhangsan-002",
+    "self": true,
+    "deliveryStatus": 1,
+    "readByCurrentUser": false,
+    "readAt": null,
+    "revoked": false,
+    "edited": false,
+    "updatedAt": null,
+    "createdAt": "2026-03-30 10:10:00"
+  }
+}
+```
 
 ### 4.5 发送文件消息
 
@@ -730,6 +960,57 @@ POST /api/user/chat/group-invite-links/{inviteToken}/join
 
 - `GET /api/sys/chats/conversations`
 - 支持 `keyword / conversationType / status / ownerId / memberUserId / isAllSite`
+- 查询参数默认值：`current=1`，`size=20`
+
+会话分页响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 1,
+    "current": 1,
+    "size": 20,
+    "records": [
+      {
+        "id": 2001,
+        "conversationType": "group",
+        "sceneType": "user_group",
+        "name": "项目群",
+        "avatar": "https://example.com/group/2001.png",
+        "ownerId": 1,
+        "notice": "入群后请先看置顶说明",
+        "ownerUsername": "zhangsan",
+        "ownerNickname": "张三",
+        "allSite": false,
+        "status": 1,
+        "visibilityScope": "public",
+        "allowGuestView": 0,
+        "requireJoinToSpeak": 1,
+        "joinRule": "approval",
+        "speakLevelLimit": 1,
+        "memberLimit": 200,
+        "slowModeSeconds": 0,
+        "displaySort": 100,
+        "channelCategoryCode": "backend",
+        "memberCount": 15,
+        "lastMessage": {
+          "id": 80050,
+          "senderId": 3,
+          "senderNickname": "王五",
+          "messageType": "text",
+          "content": "今晚 8 点发版，请提前同步。",
+          "createdAt": "2026-03-30 09:30:00"
+        },
+        "createdAt": "2026-03-10 08:00:00",
+        "updatedAt": "2026-03-30 09:30:00"
+      }
+    ]
+  }
+}
+```
 
 消息分页：
 

@@ -75,6 +75,26 @@ Authorization: Bearer <accessToken>
 | `createdAt` | DateTime | 创建时间 |
 | `updatedAt` | DateTime | 更新时间 |
 
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "id": 1,
+    "title": "Java 学习助手",
+    "channelConfigId": 1,
+    "sceneType": "general",
+    "status": 1,
+    "lastMessageAt": null,
+    "createdAt": "2026-04-15 14:00:00",
+    "updatedAt": "2026-04-15 14:00:00"
+  }
+}
+```
+
 ### 3.3 查询我的AI会话列表
 
 - 请求：`GET /api/user/ai/sessions`
@@ -87,6 +107,43 @@ Authorization: Bearer <accessToken>
 | `size` | Long | 否 | 每页条数，默认 `10` |
 
 - 响应：`PageResult<AiSessionVO>`
+
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 2,
+    "current": 1,
+    "size": 10,
+    "records": [
+      {
+        "id": 1,
+        "title": "Java 学习助手",
+        "channelConfigId": 1,
+        "sceneType": "general",
+        "status": 1,
+        "lastMessageAt": "2026-04-15 14:05:00",
+        "createdAt": "2026-04-15 14:00:00",
+        "updatedAt": "2026-04-15 14:05:00"
+      },
+      {
+        "id": 2,
+        "title": "文章写作辅助",
+        "channelConfigId": 1,
+        "sceneType": "general",
+        "status": 1,
+        "lastMessageAt": "2026-04-14 09:30:00",
+        "createdAt": "2026-04-14 09:00:00",
+        "updatedAt": "2026-04-14 09:30:00"
+      }
+    ]
+  }
+}
+```
 
 ### 3.4 查询AI会话详情
 
@@ -134,6 +191,41 @@ Authorization: Bearer <accessToken>
 | `errorMessage` | String | 错误信息 |
 | `createdAt` | DateTime | 创建时间 |
 
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 2,
+    "current": 1,
+    "size": 20,
+    "records": [
+      {
+        "id": 10,
+        "roleType": "assistant",
+        "content": "Java 中 Stream API 是 Java 8 引入的功能，用于对集合进行函数式操作...",
+        "tokenCount": 156,
+        "responseStatus": 1,
+        "errorMessage": null,
+        "createdAt": "2026-04-15 14:05:00"
+      },
+      {
+        "id": 9,
+        "roleType": "user",
+        "content": "帮我解释一下 Java 的 Stream API",
+        "tokenCount": 12,
+        "responseStatus": 1,
+        "errorMessage": null,
+        "createdAt": "2026-04-15 14:04:00"
+      }
+    ]
+  }
+}
+```
+
 ### 3.6 发送消息
 
 - 请求：`POST /api/user/ai/sessions/{id}/messages`
@@ -153,6 +245,25 @@ Authorization: Bearer <accessToken>
 | `requestTargetId` | Long | 否 | 关联目标ID |
 
 - 响应：`AiMessageVO`
+
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "id": 9,
+    "roleType": "user",
+    "content": "帮我解释一下 Java 的 Stream API",
+    "tokenCount": 12,
+    "responseStatus": 1,
+    "errorMessage": null,
+    "createdAt": "2026-04-15 14:04:00"
+  }
+}
+```
 
 ### 3.7 关闭会话
 
@@ -177,6 +288,21 @@ Authorization: Bearer <accessToken>
 | `dailyLimit` | int | 每日限额 |
 | `usedToday` | long | 今日已用 |
 | `remainingToday` | long | 今日剩余 |
+
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "dailyLimit": 50,
+    "usedToday": 12,
+    "remainingToday": 38
+  }
+}
+```
 
 ## 4. 后台管理接口
 
@@ -226,6 +352,43 @@ Authorization: Bearer <accessToken>
 | `updatedBy` | Long | 更新人ID |
 | `createdAt` | DateTime | 创建时间 |
 | `updatedAt` | DateTime | 更新时间 |
+
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 1,
+    "current": 1,
+    "size": 10,
+    "records": [
+      {
+        "id": 1,
+        "channelCode": "deepseek-chat",
+        "channelName": "DeepSeek 对话渠道",
+        "provider": "deepseek",
+        "modelName": "deepseek-chat",
+        "apiBaseUrl": "https://api.deepseek.com/v1",
+        "apiKeyEncrypted": "******",
+        "dailyQuota": 10000,
+        "userDailyQuota": 50,
+        "maxContextTokens": 32000,
+        "dataScopeJson": null,
+        "systemPromptTemplate": "你是一个友好的AI助手，请用中文回答用户问题。",
+        "status": 1,
+        "isDefault": 1,
+        "createdBy": 1,
+        "updatedBy": 1,
+        "createdAt": "2026-03-01 10:00:00",
+        "updatedAt": "2026-04-10 15:00:00"
+      }
+    ]
+  }
+}
+```
 
 #### 4.1.3 查询渠道配置详情
 
@@ -366,6 +529,37 @@ Authorization: Bearer <accessToken>
 | `successStatus` | Integer | 成功状态：0-失败/1-成功 |
 | `errorCode` | String | 错误码 |
 | `createdAt` | DateTime | 调用时间 |
+
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 1,
+    "current": 1,
+    "size": 20,
+    "records": [
+      {
+        "id": 1,
+        "userId": 2,
+        "channelConfigId": 1,
+        "sessionId": 1,
+        "requestSceneType": "general",
+        "requestTokens": 12,
+        "responseTokens": 156,
+        "totalTokens": 168,
+        "quotaCost": 1,
+        "successStatus": 1,
+        "errorCode": null,
+        "createdAt": "2026-04-15 14:05:00"
+      }
+    ]
+  }
+}
+```
 
 #### 4.3.3 获取使用统计
 

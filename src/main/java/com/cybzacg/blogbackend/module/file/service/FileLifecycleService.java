@@ -36,4 +36,11 @@ public interface FileLifecycleService {
      * @return 本次清理的任务数量
      */
     int cleanupExpiredUploadTasks();
+
+    /**
+     * 扫描待物理删除的文件并重试删除，成功后标记为已删除。
+     *
+     * @return 本轮成功处理的文件数量
+     */
+    int retryPhysicalDeletePendingFiles();
 }

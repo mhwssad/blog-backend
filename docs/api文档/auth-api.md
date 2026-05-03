@@ -155,6 +155,7 @@ Authorization: Bearer <accessToken>
 - 响应：同 `AuthenticationToken`
 - 边界说明：
     - 用户名 / 邮箱 / 手机号仍由数据库唯一约束兜底，遇到并发注册竞争时，接口会继续返回与单线程校验一致的重复提示，而不是裸露数据库异常。
+- 响应同 3.1 登录接口。
 
 ### 3.3 发送邮箱验证码
 
@@ -188,6 +189,7 @@ Authorization: Bearer <accessToken>
 - 边界说明：
     - 过期验证码会返回 `40113 / 邮箱验证码已过期`。
     - 成功登录后，当前邮箱验证码会立即失效，避免重复消费。
+- 响应同 3.1 登录接口。
 
 ### 3.5 刷新令牌
 
@@ -204,6 +206,7 @@ Authorization: Bearer <accessToken>
 - 当前行为补充：
     - 当 `security.session.type=redis-token` 时，刷新成功会使旧的 `accessToken / refreshToken` 同步失效。
     - 当 `security.session.type=jwt` 时，刷新属于纯无状态换发，服务端不会主动回收旧 JWT。
+- 响应同 3.1 登录接口。
 
 ### 3.6 退出登录
 
@@ -243,6 +246,29 @@ Authorization: Bearer <accessToken>
 | `roles`       | List<String> | 角色编码列表        |
 | `permissions` | List<String> | 权限标识列表        |
 
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "id": 1,
+    "username": "zhangsan",
+    "nickname": "张三",
+    "avatar": "https://example.com/avatar/1.jpg",
+    "email": "zhangsan@example.com",
+    "phone": "13800000001",
+    "status": 1,
+    "userLevel": 2,
+    "experiencePoints": 150,
+    "roles": ["author", "user"],
+    "permissions": ["article:create", "article:update", "article:delete", "comment:create"]
+  }
+}
+```
+
 ### 3.8 获取当前用户菜单
 
 - 请求：`GET /api/auth/current-user-menus`
@@ -268,6 +294,74 @@ Authorization: Bearer <accessToken>
 | `keepAlive`  | Integer            | 是否缓存                 |
 | `params`     | Object             | 额外路由参数               |
 | `children`   | List<AuthMenuInfo> | 子节点                  |
+
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": [
+    {
+      "id": 1,
+      "parentId": 0,
+      "name": "系统管理",
+      "type": "C",
+      "routeName": "System",
+      "routePath": "/system",
+      "component": "Layout",
+      "perm": null,
+      "visible": 1,
+      "sort": 1,
+      "icon": "setting",
+      "redirect": "/system/user",
+      "alwaysShow": 1,
+      "keepAlive": 0,
+      "params": null,
+      "children": [
+        {
+          "id": 2,
+          "parentId": 1,
+          "name": "用户管理",
+          "type": "M",
+          "routeName": "SystemUser",
+          "routePath": "user",
+          "component": "system/user/index",
+          "perm": null,
+          "visible": 1,
+          "sort": 1,
+          "icon": "user",
+          "redirect": null,
+          "alwaysShow": 0,
+          "keepAlive": 1,
+          "params": null,
+          "children": [
+            {
+              "id": 10,
+              "parentId": 2,
+              "name": "用户新增",
+              "type": "B",
+              "routeName": null,
+              "routePath": null,
+              "component": null,
+              "perm": "sys:user:create",
+              "visible": 1,
+              "sort": 1,
+              "icon": null,
+              "redirect": null,
+              "alwaysShow": 0,
+              "keepAlive": 0,
+              "params": null,
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
 
 ## 4. 后台应用启动流程
 
@@ -315,6 +409,31 @@ Authorization: Bearer <accessToken>
 | `representativeArticleIds` | List<Long> | 代表内容文章 ID 列表，当前阶段预留为空 |
 | `featuredSeriesIds` | List<Long> | 系列展示位系列 ID 列表，当前阶段预留为空 |
 | `featuredColumnIds` | List<Long> | 专栏展示位 ID 列表，当前阶段预留为空 |
+
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "userId": 1,
+    "username": "zhangsan",
+    "nickname": "张三",
+    "avatar": "https://example.com/avatar/1.jpg",
+    "userLevel": 3,
+    "author": true,
+    "authorBadge": "author",
+    "publicArticleCount": 42,
+    "publicSeriesCount": 5,
+    "showcaseArticleIds": [],
+    "representativeArticleIds": [],
+    "featuredSeriesIds": [],
+    "featuredColumnIds": []
+  }
+}
+```
 
 - 当前行为补充：
     - 仅允许查询未删除、已启用用户。
@@ -503,12 +622,12 @@ Authorization: Bearer <accessToken>
 - 鉴权：是
 - 查询参数：`UserNoticePageQuery`
 
-| 参数        | 类型      | 说明            |
-|-----------|---------|---------------|
-| `current` | Long    | 页码            |
-| `size`    | Long    | 每页条数          |
-| `title`   | String  | 标题关键词         |
-| `isRead`  | Integer | `0` 未读，`1` 已读 |
+| 参数       | 类型     | 说明               |
+|-----------|---------|-------------------|
+| `current` | Long    | 页码，默认 `1`        |
+| `size`    | Long    | 每页条数，默认 `10`     |
+| `title`   | String  | 标题关键词             |
+| `isRead`  | Integer | `0` 未读，`1` 已读     |
 
 - 响应项：`UserNoticeVO`
 

@@ -4,7 +4,7 @@ import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.file.FileBusinessInfo;
 import com.cybzacg.blogbackend.domain.file.FileInfo;
 import com.cybzacg.blogbackend.domain.file.FileUploadTask;
-import com.cybzacg.blogbackend.module.file.convert.FileModelMapper;
+import com.cybzacg.blogbackend.module.file.convert.FileModelConvert;
 import com.cybzacg.blogbackend.module.file.model.user.UserFilePageQuery;
 import com.cybzacg.blogbackend.module.file.model.user.UserFileTaskPageQuery;
 import com.cybzacg.blogbackend.module.file.model.user.UserFileTaskVO;
@@ -14,6 +14,7 @@ import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
 import com.cybzacg.blogbackend.module.file.repository.FileUploadTaskRepository;
 import com.cybzacg.blogbackend.module.file.service.UserFileQueryService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -23,69 +24,79 @@ import java.util.stream.Collectors;
  * 用户文件查询服务实现。
  * 负责用户文件列表查询、上传任务列表查询及相关业务逻辑。
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserFileQueryServiceImpl implements UserFileQueryService {
     private final FileInfoRepository fileInfoRepository;
     private final FileUploadTaskRepository fileUploadTaskRepository;
     private final FileBusinessInfoRepository fileBusinessInfoRepository;
-    private final FileModelMapper fileModelMapper;
+    private final FileModelConvert fileModelConvert;
 
     @Override
     public PageResult<UserFileVO> pageMyFiles(Long userId, UserFilePageQuery query) {
-        validateUserFileQuery(query);
+        // 设置分页默认值
         long current = query.getCurrent() == null ? 1L : query.getCurrent();
         long size = query.getSize() == null ? 10L : query.getSize();
+
+        // 根据关键字或状态筛选文件ID集合（若无需筛选条件则不查）
         Set<Long> fileIds = null;
         if (org.springframework.util.StringUtils.hasText(query.getKeyword()) || query.getStatus() != null) {
             fileIds = fileInfoRepository.findIdsByStatusAndKeyword(query.getStatus(), query.getKeyword());
+            // 筛选结果为空，直接返回空分页结果
             if (fileIds.isEmpty()) {
-                return PageResult.<UserFileVO>builder().total(0L).current(current).size(size).records(List.of()).build();
+                log.debug("[文件查询] 用户 {} 无符合筛选条件的文件，keyword: {}，status: {}",
+                        userId, query.getKeyword(), query.getStatus());
+                return PageResult.empty(current, size);
             }
         }
+
+        // 修正分页参数后执行分页查询
         query.setCurrent(current);
         query.setSize(size);
         var page = fileBusinessInfoRepository.pageByUserAndFilters(userId, query, fileIds);
-        Map<Long, FileInfo> fileMap = loadFileInfoMap(page.getRecords().stream().map(FileBusinessInfo::getFileId).collect(Collectors.toSet()));
+
+        // 批量加载文件实体，构建 ID -> FileInfo 映射
+        Map<Long, FileInfo> fileMap = loadFileInfoMap(page.getRecords().stream()
+                .map(FileBusinessInfo::getFileId)
+                .collect(Collectors.toSet()));
+
+        // 将业务引用与文件实体组合转换为 VO，过滤无效记录
         List<UserFileVO> records = page.getRecords().stream()
                 .map(ref -> toUserFileVO(ref, fileMap.get(ref.getFileId())))
                 .filter(Objects::nonNull)
                 .toList();
+
+        log.debug("[文件查询] 用户 {} 文件列表查询完成，总数: {}，本页: {}", userId, page.getTotal(), records.size());
         return PageResult.of(page, records);
     }
 
     @Override
     public PageResult<UserFileTaskVO> pageMyUploadTasks(Long userId, UserFileTaskPageQuery query) {
-        validateTaskPageQuery(query.getTaskStatus());
+        // 设置分页默认值
         query.setCurrent(query.getCurrent() == null ? 1L : query.getCurrent());
         query.setSize(query.getSize() == null ? 10L : query.getSize());
+
+        // 分页查询用户的上传任务列表
         var page = fileUploadTaskRepository.pageByUserAndStatus(userId, query);
-        List<UserFileTaskVO> records = page.getRecords().stream().map(this::toUserTaskVO).toList();
+
+        // 转换任务实体为 VO
+        List<UserFileTaskVO> records = page.getRecords().stream()
+                .map(this::toUserTaskVO)
+                .toList();
+
+        log.debug("[任务查询] 用户 {} 上传任务列表查询完成，总数: {}，本页: {}",
+                userId, page.getTotal(), records.size());
         return PageResult.of(page, records);
     }
 
-    private void validateUserFileQuery(UserFilePageQuery query) {
-        com.cybzacg.blogbackend.utils.ExceptionThrowerCore.throwBusinessIf(
-                org.springframework.util.StringUtils.hasText(query.getCategory()) && !com.cybzacg.blogbackend.enums.file.FileCategoryEnum.contains(query.getCategory()),
-                com.cybzacg.blogbackend.enums.error.ResultErrorCode.ILLEGAL_ARGUMENT
-        );
-        com.cybzacg.blogbackend.utils.ExceptionThrowerCore.throwBusinessIf(
-                org.springframework.util.StringUtils.hasText(query.getReferenceType()) && !com.cybzacg.blogbackend.enums.file.FileReferenceTypeEnum.contains(query.getReferenceType()),
-                com.cybzacg.blogbackend.enums.error.ResultErrorCode.ILLEGAL_ARGUMENT
-        );
-        com.cybzacg.blogbackend.utils.ExceptionThrowerCore.throwBusinessIf(
-                query.getStatus() != null && !com.cybzacg.blogbackend.enums.file.FileStatusEnum.contains(query.getStatus()),
-                com.cybzacg.blogbackend.enums.file.FileResultCode.FILE_STATUS_INVALID
-        );
-    }
-
-    private void validateTaskPageQuery(Integer taskStatus) {
-        com.cybzacg.blogbackend.utils.ExceptionThrowerCore.throwBusinessIf(
-                taskStatus != null && com.cybzacg.blogbackend.enums.storage.TaskStatusEnum.getByCode(taskStatus) == null,
-                com.cybzacg.blogbackend.enums.file.FileResultCode.UPLOAD_TASK_STATUS_INVALID
-        );
-    }
-
+    /**
+     * 批量加载文件实体，构建 ID -> FileInfo 映射。
+     * 用于在分页查询业务引用后，一次性加载关联的文件实体，避免 N+1 查询。
+     *
+     * @param ids 文件 ID 集合
+     * @return 文件 ID 与文件实体的映射表
+     */
     private Map<Long, FileInfo> loadFileInfoMap(Set<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return Map.of();
@@ -97,14 +108,28 @@ public class UserFileQueryServiceImpl implements UserFileQueryService {
         return map;
     }
 
+    /**
+     * 将文件业务引用与文件实体组合转换为用户文件 VO。
+     * 若引用或文件实体为 null，则返回 null（由外层 filter 过滤）。
+     *
+     * @param ref     文件业务引用
+     * @param fileInfo 文件实体
+     * @return 用户文件 VO
+     */
     private UserFileVO toUserFileVO(FileBusinessInfo ref, FileInfo fileInfo) {
         if (ref == null || fileInfo == null) {
             return null;
         }
-        return fileModelMapper.toUserFileVOFromBoth(ref, fileInfo);
+        return fileModelConvert.toUserFileVOFromBoth(ref, fileInfo);
     }
 
+    /**
+     * 将上传任务实体转换为用户任务 VO。
+     *
+     * @param task 上传任务实体
+     * @return 用户任务 VO
+     */
     private UserFileTaskVO toUserTaskVO(FileUploadTask task) {
-        return fileModelMapper.toUserFileTaskVO(task);
+        return fileModelConvert.toUserFileTaskVO(task);
     }
 }

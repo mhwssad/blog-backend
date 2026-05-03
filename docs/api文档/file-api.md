@@ -128,7 +128,7 @@ Authorization: Bearer <accessToken>
 |-----------------|---------|------|------------------------------------------------------|
 | `originalName`  | String  | 是    | 原始文件名                                                |
 | `fileSize`      | Long    | 是    | 文件大小，字节                                              |
-| `fileMd5`       | String  | 条件必填 | 默认开启 MD5 校验时必填，建议始终传                                 |
+| `fileMd5`       | String  | 否    | 文件 MD5，建议传入以支持秒传；未传时服务端会在上传过程中自动计算             |
 | `mimeType`      | String  | 否    | MIME 类型                                              |
 | `referenceType` | String  | 否    | `avatar`、`article_attachment`、`comment_image`、`temp` |
 | `referenceId`   | Long    | 否    | 引用对象 ID，未传按 `0` 处理                                   |
@@ -139,7 +139,7 @@ Authorization: Bearer <accessToken>
 | `remark`        | String  | 否    | 备注                                                   |
 
 - 边界说明：
-    - 默认部署下开启 MD5 校验，初始化时未传 `fileMd5` 会直接返回 `FILE_MD5_REQUIRED`。
+    - `fileMd5` 建议传入以支持秒传与完整性校验。未传时服务端会在上传过程中自动计算：普通上传使用流式 MD5 计算，分片上传在合并后从已合并文件计算。
     - `isPublic` 仅允许传 `0` 或 `1`，否则直接返回 `ILLEGAL_ARGUMENT`。
     - `referenceType` 仅支持 `avatar`、`article_attachment`、`comment_image`、`temp`。
     - `category` 仅支持 `avatar`、`attachment`、`comment`、`temp`。
@@ -179,6 +179,52 @@ Authorization: Bearer <accessToken>
 }
 ```
 
+- 响应示例（全量上传）：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "taskId": 101,
+    "uploadId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "uploadMode": 3,
+    "quickUploadAvailable": false,
+    "completed": false,
+    "totalChunks": 0,
+    "chunkSize": 0,
+    "taskStatus": 0,
+    "fileId": null,
+    "fileUrl": null,
+    "businessId": null
+  }
+}
+```
+
+- 响应示例（秒传命中）：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "taskId": 102,
+    "uploadId": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+    "uploadMode": 1,
+    "quickUploadAvailable": true,
+    "completed": true,
+    "totalChunks": 0,
+    "chunkSize": 0,
+    "taskStatus": 3,
+    "fileId": 501,
+    "fileUrl": "https://example.com/files/avatar_1.png",
+    "businessId": 301
+  }
+}
+```
+
 ### 4.2 秒传检测
 
 - 请求：`POST /api/user/files/upload-tasks/{uploadId}/quick-check`
@@ -199,6 +245,46 @@ Authorization: Bearer <accessToken>
 | `fileUrl`        | String  | 文件访问地址   |
 | `referenceCount` | Integer | 当前引用数    |
 
+- 响应示例（秒传成功）：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "uploadId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "taskId": 101,
+    "fileId": 501,
+    "businessId": 301,
+    "quickUpload": true,
+    "taskStatus": 3,
+    "fileUrl": "https://example.com/files/avatar_1.png",
+    "referenceCount": 2
+  }
+}
+```
+
+- 响应示例（未命中秒传）：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "uploadId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "taskId": 101,
+    "fileId": null,
+    "businessId": null,
+    "quickUpload": false,
+    "taskStatus": 0,
+    "fileUrl": null,
+    "referenceCount": null
+  }
+}
+```
+
 ### 4.3 普通上传
 
 - 请求：`POST /api/user/files/upload-tasks/{uploadId}/file`
@@ -207,8 +293,8 @@ Authorization: Bearer <accessToken>
 - 表单字段：
     - `file`：必填，待上传文件
 - 边界说明：
-    - 如果初始化时已记录 `fileMd5`，且服务端开启 MD5 校验，普通上传会先校验整文件 MD5；不一致时直接返回
-      `FILE_MD5_MISMATCH`。
+    - 如果初始化时已传 `fileMd5`，普通上传会先校验整文件 MD5；不一致时直接返回 `FILE_MD5_MISMATCH`。
+    - 如果初始化时未传 `fileMd5`，服务端会在上传过程中自动计算 MD5（流式计算，不占用额外存储）。
     - 如果命中同 `MD5 + 文件大小` 的正常文件，会直接复用已有物理文件并完成当前任务。
     - 如果落存储失败，任务会被回写为失败状态，失败原因可通过“查询我的上传任务”接口查看。
     - 若任务已过期，服务端会立即收口当前任务并返回 `UPLOAD_TASK_EXPIRED`。
@@ -251,12 +337,33 @@ Authorization: Bearer <accessToken>
     - 服务端会校验分片完整性并执行合并。
     - 若分片未全部上传完成，会直接返回 `CHUNK_INCOMPLETE`。
     - 若完成阶段命中同 `MD5 + 文件大小` 的现有正常文件，会直接复用。
+    - 若初始化时未传 `fileMd5`，服务端会在分片合并后自动从已合并文件计算 MD5；若计算失败会返回 `FILE_MD5_REQUIRED`。
     - 若分片合并失败，任务会被回写为失败状态，错误码为 `CHUNK_MERGE_FAILED`。
     - 合并完成后会尽力清理临时分片；清理失败不会改变已完成结果。
     - 本地存储模式下若任一临时分片缺失，完成上传会直接失败，不再跳过缺失分片继续合并。
     - 若任务已过期，服务端会立即收口当前任务并返回 `UPLOAD_TASK_EXPIRED`。
     - 已完成或已取消的任务不能重复调用完成接口，继续调用会返回 `UPLOAD_TASK_STATUS_INVALID`。
 - 响应：`FileUploadResultVO`
+
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "uploadId": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+    "taskId": 103,
+    "fileId": 502,
+    "businessId": 302,
+    "quickUpload": false,
+    "taskStatus": 3,
+    "fileUrl": "https://example.com/files/report_2026.pdf",
+    "referenceCount": 1
+  }
+}
+```
 
 ### 4.6 查询我的文件
 
@@ -276,6 +383,55 @@ Authorization: Bearer <accessToken>
 - 边界说明：
     - `status` 过滤当前已生效。
     - 传入非法 `category`、`referenceType` 或 `status` 时会直接返回错误，不再静默兜底。
+
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 2,
+    "current": 1,
+    "size": 10,
+    "records": [
+      {
+        "businessId": 301,
+        "fileId": 501,
+        "fileName": "avatar_1.png",
+        "originalName": "avatar.png",
+        "fileUrl": "https://example.com/files/avatar_1.png",
+        "fileSize": 245678,
+        "fileType": "image",
+        "mimeType": "image/png",
+        "category": "avatar",
+        "referenceType": "avatar",
+        "referenceId": 1,
+        "isPublic": 1,
+        "status": 1,
+        "createdAt": "2026-03-28 15:30:00"
+      },
+      {
+        "businessId": 302,
+        "fileId": 502,
+        "fileName": "report_2026.pdf",
+        "originalName": "2026年度报告.pdf",
+        "fileUrl": "https://example.com/files/report_2026.pdf",
+        "fileSize": 1048576,
+        "fileType": "document",
+        "mimeType": "application/pdf",
+        "category": "attachment",
+        "referenceType": "article_attachment",
+        "referenceId": 10,
+        "isPublic": 0,
+        "status": 1,
+        "createdAt": "2026-03-29 10:00:00"
+      }
+    ]
+  }
+}
+```
 
 - 响应字段：`UserFileVO`
 
@@ -336,6 +492,41 @@ Authorization: Bearer <accessToken>
 | `completeTime`   | DateTime | 完成时间   |
 | `createdAt`      | DateTime | 创建时间   |
 
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 1,
+    "current": 1,
+    "size": 10,
+    "records": [
+      {
+        "id": 103,
+        "uploadId": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+        "fileId": 502,
+        "originalName": "2026年度报告.pdf",
+        "fileSize": 10485760,
+        "isQuickUpload": 0,
+        "isChunked": 1,
+        "chunkSize": 5242880,
+        "totalChunks": 2,
+        "uploadedChunks": 2,
+        "taskStatus": 3,
+        "errorCode": null,
+        "errorMessage": null,
+        "startTime": "2026-03-29 10:00:00",
+        "completeTime": "2026-03-29 10:01:30",
+        "createdAt": "2026-03-29 09:59:00"
+      }
+    ]
+  }
+}
+```
+
 ### 4.8 删除我的文件引用
 
 - 请求：`DELETE /api/user/files/{businessId}`
@@ -382,6 +573,41 @@ Authorization: Bearer <accessToken>
 
 - 边界说明：
     - 传入非法 `category`、`referenceType` 或 `status` 时会直接返回错误。
+
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 1,
+    "current": 1,
+    "size": 10,
+    "records": [
+      {
+        "id": 501,
+        "fileName": "avatar_1.png",
+        "originalName": "avatar.png",
+        "filePath": "/upload/2026/03/28/avatar_1.png",
+        "fileUrl": "https://example.com/files/avatar_1.png",
+        "storageKey": "local",
+        "fileSize": 245678,
+        "fileType": "image",
+        "mimeType": "image/png",
+        "fileExtension": ".png",
+        "uploadUserId": 1,
+        "isPublic": 1,
+        "category": "avatar",
+        "status": 1,
+        "referenceCount": 2,
+        "createdAt": "2026-03-28 15:30:00"
+      }
+    ]
+  }
+}
+```
 
 - 响应字段：`FileAdminVO`
 

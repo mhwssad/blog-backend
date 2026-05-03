@@ -68,4 +68,13 @@ public interface FileInfoRepository extends IService<FileInfo> {
      * 按 fileUrl 批量查询文件信息。
      */
     List<FileInfo> listByFileUrls(Collection<String> fileUrls);
+
+    /**
+     * 按状态批量查询文件，用于定时任务分批处理。
+     *
+     * @param status 文件状态
+     * @param limit  批次大小
+     * @return 符合条件的文件列表
+     */
+    List<FileInfo> listByStatus(Integer status, int limit);
 }

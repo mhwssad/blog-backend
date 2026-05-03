@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -20,13 +21,14 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/sys/files")
 @Tag(name = "后台文件管理")
 @RequiredArgsConstructor
+@Validated
 public class FileAdminController {
     private final FileAdminService fileAdminService;
 
     @GetMapping
     @Operation(summary = "分页查询文件")
     @PreAuthorize("@permission.hasPermission('content:file:query')")
-    public Result<PageResult<FileAdminVO>> pageFiles(FileAdminPageQuery query) {
+    public Result<PageResult<FileAdminVO>> pageFiles(@Valid FileAdminPageQuery query) {
         return Result.success(fileAdminService.pageFiles(query));
     }
 
@@ -40,7 +42,7 @@ public class FileAdminController {
     @GetMapping("/upload-tasks")
     @Operation(summary = "分页查询上传任务")
     @PreAuthorize("@permission.hasPermission('content:file:query')")
-    public Result<PageResult<FileTaskAdminVO>> pageTasks(FileTaskPageQuery query) {
+    public Result<PageResult<FileTaskAdminVO>> pageTasks(@Valid FileTaskPageQuery query) {
         return Result.success(fileAdminService.pageTasks(query));
     }
 

@@ -11,7 +11,7 @@ import com.cybzacg.blogbackend.enums.file.FileResultCode;
 import com.cybzacg.blogbackend.enums.file.FileStatusEnum;
 import com.cybzacg.blogbackend.enums.storage.TaskStatusEnum;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.file.convert.FileModelMapper;
+import com.cybzacg.blogbackend.module.file.convert.FileModelConvert;
 import com.cybzacg.blogbackend.module.file.model.admin.*;
 import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
 import com.cybzacg.blogbackend.module.file.repository.FileChunkRepository;
@@ -45,7 +45,7 @@ class FileAdminServiceImplTest {
     @Mock
     private StorageService storageService;
     @Mock
-    private FileModelMapper fileModelMapper;
+    private FileModelConvert fileModelConvert;
     private FileAdminServiceImpl fileAdminService;
 
     @BeforeEach
@@ -56,9 +56,9 @@ class FileAdminServiceImplTest {
                 fileChunkRepository,
                 fileBusinessInfoRepository,
                 storageManager,
-                fileModelMapper
+                fileModelConvert
         );
-        lenient().when(fileModelMapper.toFileAdminVO(any(FileInfo.class))).thenAnswer(inv -> {
+        lenient().when(fileModelConvert.toFileAdminVO(any(FileInfo.class))).thenAnswer(inv -> {
             FileInfo f = inv.getArgument(0);
             FileAdminVO vo = new FileAdminVO();
             vo.setId(f.getId());
@@ -67,21 +67,21 @@ class FileAdminServiceImplTest {
             vo.setStatus(f.getStatus());
             return vo;
         });
-        lenient().when(fileModelMapper.toFileDetailVO(any(FileInfo.class))).thenAnswer(inv -> {
+        lenient().when(fileModelConvert.toFileDetailVO(any(FileInfo.class))).thenAnswer(inv -> {
             FileInfo f = inv.getArgument(0);
             FileDetailVO vo = new FileDetailVO();
             vo.setId(f.getId());
             vo.setOriginalName(f.getOriginalName());
             return vo;
         });
-        lenient().when(fileModelMapper.toFileReferenceVO(any(FileBusinessInfo.class))).thenAnswer(inv -> {
+        lenient().when(fileModelConvert.toFileReferenceVO(any(FileBusinessInfo.class))).thenAnswer(inv -> {
             FileBusinessInfo b = inv.getArgument(0);
             FileReferenceVO vo = new FileReferenceVO();
             vo.setId(b.getId());
             vo.setReferenceType(b.getReferenceType());
             return vo;
         });
-        lenient().when(fileModelMapper.toFileTaskAdminVO(any(FileUploadTask.class))).thenAnswer(inv -> {
+        lenient().when(fileModelConvert.toFileTaskAdminVO(any(FileUploadTask.class))).thenAnswer(inv -> {
             FileUploadTask t = inv.getArgument(0);
             FileTaskAdminVO vo = new FileTaskAdminVO();
             vo.setId(t.getId());

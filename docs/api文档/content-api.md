@@ -75,8 +75,8 @@
 
 | 参数           | 类型     | 说明                   |
 |--------------|--------|----------------------|
-| `current`    | Long   | 页码                   |
-| `size`       | Long   | 每页数量                 |
+| `current`    | Long   | 页码，默认 `1`            |
+| `size`       | Long   | 每页数量，默认 `10`        |
 | `keyword`    | String | 标题 / 摘要关键字           |
 | `categoryId` | Long   | 分类 ID                |
 | `tagId`      | Long   | 标签 ID                |
@@ -99,6 +99,38 @@
 | `commentCount` | Long     | 评论数   |
 | `collectCount` | Long     | 收藏数   |
 | `publishTime`  | DateTime | 发布时间  |
+
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 1,
+    "current": 1,
+    "size": 10,
+    "records": [
+      {
+        "id": 1,
+        "title": "Spring Boot 4 + JWT 认证实践",
+        "summary": "使用当前项目的认证模块快速搭建账号登录能力。",
+        "coverImage": null,
+        "authorId": 1,
+        "authorName": "管理员",
+        "isTop": 1,
+        "accessLevel": 0,
+        "viewCount": 128,
+        "likeCount": 1,
+        "commentCount": 2,
+        "collectCount": 1,
+        "publishTime": "2026-03-12 10:00:00"
+      }
+    ]
+  }
+}
+```
 
 ### 2.2 文章详情
 
@@ -294,6 +326,43 @@
 | `description` | String  | 描述             |
 | `children`    | List    | 子节点            |
 
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": [
+    {
+      "id": 1,
+      "parentId": 0,
+      "name": "技术",
+      "code": "article-tech",
+      "type": "article",
+      "level": 1,
+      "sortOrder": 1,
+      "icon": "code",
+      "description": "编程技术相关文章",
+      "children": [
+        {
+          "id": 3,
+          "parentId": 1,
+          "name": "Java 后端",
+          "code": "article-java-backend",
+          "type": "article",
+          "level": 2,
+          "sortOrder": 1,
+          "icon": "java",
+          "description": "Spring Boot、MyBatis Plus 等后端内容",
+          "children": []
+        }
+      ]
+    }
+  ]
+}
+```
+
 ### 2.4 标签列表
 
 - 请求：`GET /api/tags`
@@ -313,6 +382,28 @@
 | `name`  | String | 标签名   |
 | `color` | String | 标签颜色  |
 
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": [
+    {
+      "id": 1,
+      "name": "Spring Boot",
+      "color": "#409EFF"
+    },
+    {
+      "id": 2,
+      "name": "MyBatis",
+      "color": "#E6A23C"
+    }
+  ]
+}
+```
+
 - 说明：
     - 当前仅对 `targetType=article` 返回数据。
     - 其他目标类型按当前实现返回空数组。
@@ -326,8 +417,8 @@
 
 | 参数           | 类型     | 说明             |
 |--------------|--------|----------------|
-| `current`    | Long   | 页码             |
-| `size`       | Long   | 每页数量           |
+| `current`    | Long   | 页码，默认 `1`     |
+| `size`       | Long   | 每页数量，默认 `10`  |
 | `targetType` | String | 当前固定 `article` |
 | `targetId`   | Long   | 目标文章 ID        |
 
@@ -351,6 +442,60 @@
 | `createdAt`    | DateTime     | 创建时间      |
 | `liked`        | Boolean      | 当前用户是否已点赞 |
 | `children`     | List         | 回复树       |
+
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 1,
+    "current": 1,
+    "size": 10,
+    "records": [
+      {
+        "id": 1,
+        "targetId": 1,
+        "targetType": "article",
+        "content": "这篇内容适合作为联调样例。",
+        "images": [],
+        "userId": 2,
+        "userNickname": "张三",
+        "userAvatar": "/avatars/2.png",
+        "rootId": 0,
+        "parentId": 0,
+        "likeCount": 3,
+        "replyCount": 1,
+        "status": 1,
+        "createdAt": "2026-04-10 14:30:00",
+        "liked": false,
+        "children": [
+          {
+            "id": 2,
+            "targetId": 1,
+            "targetType": "article",
+            "content": "同感，收藏了。",
+            "images": [],
+            "userId": 3,
+            "userNickname": "李四",
+            "userAvatar": "/avatars/3.png",
+            "rootId": 1,
+            "parentId": 1,
+            "likeCount": 0,
+            "replyCount": 0,
+            "status": 1,
+            "createdAt": "2026-04-10 15:00:00",
+            "liked": false,
+            "children": []
+          }
+        ]
+      }
+    ]
+  }
+}
+```
 
 - 关键规则：
     - 评论查询会复用文章资源级访问控制，不可见文章不会返回评论。
@@ -422,6 +567,45 @@ Authorization: Bearer <accessToken>
 | `createdAt` | DateTime | 创建时间 |
 | `updatedAt` | DateTime | 更新时间 |
 | `remark` | String | 备注 |
+
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 1,
+    "current": 1,
+    "size": 10,
+    "records": [
+      {
+        "id": 12,
+        "title": "MyBatis-Plus 通用字段自动填充方案",
+        "summary": "介绍如何在 Spring Boot 项目中利用 MyBatis-Plus 的 MetaObjectHandler 自动填充创建时间、更新时间等通用字段。",
+        "coverImage": null,
+        "isTop": 0,
+        "isOriginal": 1,
+        "status": 1,
+        "reviewStatus": 2,
+        "accessLevel": 0,
+        "visibilityScope": 0,
+        "viewCount": 56,
+        "likeCount": 3,
+        "commentCount": 1,
+        "collectCount": 2,
+        "shareCount": 0,
+        "publishTime": "2026-04-01 09:00:00",
+        "scheduledPublishTime": null,
+        "createdAt": "2026-03-28 16:20:00",
+        "updatedAt": "2026-04-01 09:00:00",
+        "remark": null
+      }
+    ]
+  }
+}
+```
 
 - 关键规则：
     - 只返回当前登录用户自己的文章。
@@ -616,6 +800,31 @@ Authorization: Bearer <accessToken>
 
 详情会额外返回 `articles` 字段，字段结构同 `ArticleSeriesArticleVO`。
 
+- 系列列表响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": [
+    {
+      "id": 8,
+      "title": "Spring Boot 实战系列",
+      "description": "持续收录当前博客里的 Spring Boot 相关文章。",
+      "coverImage": null,
+      "ownerUserId": 1,
+      "ownerName": "管理员",
+      "visibilityScope": 0,
+      "articleCount": 6,
+      "sortOrder": 1,
+      "createdAt": "2026-03-15 10:00:00",
+      "updatedAt": "2026-04-20 14:30:00"
+    }
+  ]
+}
+```
+
 ### 3.4 评论行为
 
 | 场景     | 方法     | 路径                              |
@@ -708,6 +917,31 @@ Authorization: Bearer <accessToken>
 | `createdAt`       | DateTime | 创建时间           |
 | `updatedAt`       | DateTime | 更新时间           |
 
+- 收藏夹列表响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": [
+    {
+      "id": 1,
+      "userId": 1,
+      "folderName": "默认收藏夹",
+      "folderType": "article",
+      "description": "文章收藏",
+      "isPublic": 0,
+      "isDefault": 1,
+      "sortOrder": 0,
+      "collectionCount": 3,
+      "createdAt": "2026-03-01 10:00:00",
+      "updatedAt": "2026-04-15 09:20:00"
+    }
+  ]
+}
+```
+
 - 收藏记录：`CollectionVO`
 
 | 字段            | 类型       | 说明             |
@@ -739,7 +973,14 @@ Authorization: Bearer <accessToken>
 
 #### 足迹列表
 
-- 查询参数：`current`、`size`、`targetType`
+- 查询参数：
+
+| 参数           | 类型     | 说明              |
+|--------------|--------|-----------------|
+| `current`    | Long   | 页码，默认 `1`       |
+| `size`       | Long   | 每页数量，默认 `10`    |
+| `targetType` | String | 当前固定 `article`  |
+
 - 响应字段：`UserFootprintVO`
 
 | 字段            | 类型       | 说明             |
@@ -750,6 +991,31 @@ Authorization: Bearer <accessToken>
 | `targetTitle` | String   | 目标标题           |
 | `targetUrl`   | String   | 目标链接           |
 | `visitedAt`   | DateTime | 最近访问时间         |
+
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 1,
+    "current": 1,
+    "size": 10,
+    "records": [
+      {
+        "id": 1,
+        "targetId": 1,
+        "targetType": "article",
+        "targetTitle": "Spring Boot 4 + JWT 认证实践",
+        "targetUrl": "/api/articles/1",
+        "visitedAt": "2026-04-20 16:30:00"
+      }
+    ]
+  }
+}
+```
 
 - 当前行为：
     - 登录用户访问文章详情时，系统会自动记录文章足迹。
@@ -823,6 +1089,47 @@ Authorization: Bearer <accessToken>
 | `createdAt`    | DateTime | 创建时间  |
 | `updatedAt`    | DateTime | 更新时间  |
 | `remark`       | String   | 备注    |
+
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 1,
+    "current": 1,
+    "size": 10,
+    "records": [
+      {
+        "id": 1,
+        "title": "Spring Boot 4 + JWT 认证实践",
+        "summary": "使用当前项目的认证模块快速搭建账号登录能力。",
+        "coverImage": null,
+        "authorId": 1,
+        "authorName": "管理员",
+        "isTop": 1,
+        "isOriginal": 1,
+        "status": 1,
+        "reviewStatus": 2,
+        "accessLevel": 0,
+        "visibilityScope": 0,
+        "viewCount": 128,
+        "likeCount": 1,
+        "commentCount": 2,
+        "collectCount": 1,
+        "shareCount": 6,
+        "publishTime": "2026-03-12 10:00:00",
+        "scheduledPublishTime": null,
+        "createdAt": "2026-03-10 15:30:00",
+        "updatedAt": "2026-03-12 10:00:00",
+        "remark": null
+      }
+    ]
+  }
+}
+```
 
 #### 文章详情
 
@@ -982,7 +1289,7 @@ Authorization: Bearer <accessToken>
 #### 分页查询审核文章
 
 - 请求：`GET /api/sys/article-reviews`
-- 查询参数：`current`、`size`、`keyword`、`authorId`、`reviewStatus`
+- 查询参数：`current`（默认 `1`）、`size`（默认 `10`）、`keyword`、`authorId`、`reviewStatus`
 - 默认行为：`reviewStatus` 未传时按 `1=审核中` 查询。
 - 响应字段：复用 `ArticleAdminVO`
 
@@ -1148,7 +1455,16 @@ Authorization: Bearer <accessToken>
 
 #### 查询参数
 
-- `current`、`size`、`targetId`、`targetType`、`userId`、`rootId`、`parentId`、`status`
+| 参数           | 类型     | 说明             |
+|--------------|--------|----------------|
+| `current`    | Long   | 页码，默认 `1`     |
+| `size`       | Long   | 每页数量，默认 `10`  |
+| `targetId`   | Long   | 目标 ID          |
+| `targetType` | String | 当前固定 `article` |
+| `userId`     | Long   | 评论用户 ID       |
+| `rootId`     | Long   | 根评论 ID        |
+| `parentId`   | Long   | 父评论 ID        |
+| `status`     | Integer | 评论状态          |
 
 #### 评论详情
 
@@ -1200,8 +1516,8 @@ Authorization: Bearer <accessToken>
 
 #### 查询参数
 
-- 收藏夹：`current`、`size`、`userId`
-- 收藏记录：`current`、`size`、`userId`、`folderId`、`targetId`、`targetType`
+- 收藏夹：`current`（默认 `1`）、`size`（默认 `10`）、`userId`
+- 收藏记录：`current`（默认 `1`）、`size`（默认 `10`）、`userId`、`folderId`、`targetId`、`targetType`
 
 #### 响应字段
 
@@ -1221,7 +1537,7 @@ Authorization: Bearer <accessToken>
 
 #### 查询参数
 
-- `current`、`size`、`userId`、`targetId`、`targetType`、`actionType`
+- `current`（默认 `1`）、`size`（默认 `10`）、`userId`、`targetId`、`targetType`、`actionType`
 
 #### 响应字段
 
@@ -1248,7 +1564,7 @@ Authorization: Bearer <accessToken>
 
 #### 查询参数
 
-- `current`、`size`、`userId`、`targetId`、`targetType`、`visitedAtStart`、`visitedAtEnd`
+- `current`（默认 `1`）、`size`（默认 `10`）、`userId`、`targetId`、`targetType`、`visitedAtStart`、`visitedAtEnd`
 
 #### 响应字段
 

@@ -18,55 +18,23 @@ import org.mapstruct.*;
         nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS,
         unmappedTargetPolicy = ReportingPolicy.IGNORE
 )
-public interface FileModelMapper {
+public interface FileModelConvert {
 
     // ==================== 用户侧 VO ====================
 
     @Mapping(target = "taskId", source = "id")
-    @Mapping(target = "completed", ignore = true)
-    @Mapping(target = "quickUploadAvailable", ignore = true)
-    @Mapping(target = "fileUrl", ignore = true)
-    @Mapping(target = "businessId", ignore = true)
     FileUploadInitVO toFileUploadInitVO(FileUploadTask task);
 
-    @Mapping(target = "uploadId", source = "uploadId")
     @Mapping(target = "taskId", source = "id")
-    @Mapping(target = "fileId", ignore = true)
-    @Mapping(target = "businessId", ignore = true)
-    @Mapping(target = "quickUpload", ignore = true)
-    @Mapping(target = "fileUrl", ignore = true)
-    @Mapping(target = "referenceCount", ignore = true)
     FileUploadResultVO toFileUploadResultVO(FileUploadTask task);
 
-    @Mapping(target = "uploadId", source = "uploadId")
-    @Mapping(target = "fileId", ignore = true)
-    @Mapping(target = "errorCode", ignore = true)
-    @Mapping(target = "startTime", ignore = true)
     UserFileTaskVO toUserFileTaskVO(FileUploadTask task);
 
-    @Mapping(target = "uploadId", ignore = true)
-    @Mapping(target = "uploadedChunks", ignore = true)
-    @Mapping(target = "totalChunks", ignore = true)
-    @Mapping(target = "taskStatus", ignore = true)
     ChunkUploadVO toChunkUploadVO(FileChunk chunk);
 
-    @Mapping(target = "businessId", ignore = true)
     @Mapping(target = "fileId", source = "id")
-    @Mapping(target = "referenceId", ignore = true)
-    @Mapping(target = "referenceType", ignore = true)
-    @Mapping(target = "fileUrl", ignore = true)
     UserFileVO toUserFileVO(FileInfo fileInfo);
 
-    @Mapping(target = "businessId", ignore = true)
-    @Mapping(target = "fileId", ignore = true)
-    @Mapping(target = "fileName", ignore = true)
-    @Mapping(target = "originalName", ignore = true)
-    @Mapping(target = "fileUrl", ignore = true)
-    @Mapping(target = "fileSize", ignore = true)
-    @Mapping(target = "fileType", ignore = true)
-    @Mapping(target = "mimeType", ignore = true)
-    @Mapping(target = "status", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
     UserFileVO toUserFileVO(FileBusinessInfo businessInfo);
 
     @Mapping(target = "category", ignore = true)
@@ -78,43 +46,19 @@ public interface FileModelMapper {
 
     @Mapping(target = "businessId", source = "id")
     @Mapping(target = "fileId", source = "id")
-    @Mapping(target = "referenceId", ignore = true)
-    @Mapping(target = "referenceType", ignore = true)
     UserFileVO toAdminUserFileVO(FileInfo fileInfo);
 
     // ==================== 管理侧 VO ====================
 
-    @Mapping(target = "id", source = "id")
     FileAdminVO toFileAdminVO(FileInfo fileInfo);
 
-    @Mapping(target = "id", source = "id")
-    @Mapping(target = "userId", source = "userId")
-    @Mapping(target = "referenceType", source = "referenceType")
-    @Mapping(target = "referenceId", source = "referenceId")
-    @Mapping(target = "isPublic", source = "isPublic")
-    @Mapping(target = "category", source = "category")
-    @Mapping(target = "remark", source = "remark")
-    @Mapping(target = "createdAt", source = "createdAt")
     FileReferenceVO toFileReferenceVO(FileBusinessInfo businessInfo);
 
-    @Mapping(target = "references", ignore = true)
-    @Mapping(target = "tasks", ignore = true)
     FileDetailVO toFileDetailVO(FileInfo fileInfo);
 
-    @Mapping(target = "fileId", ignore = true)
-    @Mapping(target = "uploadUserId", ignore = true)
-    @Mapping(target = "storageKey", ignore = true)
-    @Mapping(target = "isQuickUpload", ignore = true)
-    @Mapping(target = "isChunked", ignore = true)
-    @Mapping(target = "uploadedChunks", ignore = true)
-    @Mapping(target = "totalChunks", ignore = true)
-    @Mapping(target = "errorMessage", ignore = true)
-    @Mapping(target = "completeTime", ignore = true)
     FileTaskAdminVO toFileTaskAdminVO(FileUploadTask task);
 
-    @Mapping(target = "uploadId", source = "uploadId")
     @Mapping(target = "taskId", source = "id")
-    @Mapping(target = "quickUpload", ignore = true)
     UserTaskVO toUserTaskVO(FileUploadTask task);
 
     // ==================== AfterMapping 填充运行时字段 ====================

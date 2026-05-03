@@ -1,5 +1,6 @@
 package com.cybzacg.blogbackend.module.file.controller;
 
+import com.cybzacg.blogbackend.core.validation.FileNotEmpty;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.core.web.Result;
 import com.cybzacg.blogbackend.module.file.model.user.*;
@@ -8,7 +9,9 @@ import com.cybzacg.blogbackend.utils.RequestContextUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @Tag(name = "用户文件")
 @RequiredArgsConstructor
+@Validated
 public class UserFileController {
     private final UserFileService userFileService;
 
@@ -38,15 +42,15 @@ public class UserFileController {
     @PostMapping("/api/user/files/upload-tasks/{uploadId}/file")
     @Operation(summary = "普通上传")
     public Result<FileUploadResultVO> uploadFile(@PathVariable String uploadId,
-                                                 @RequestParam("file") MultipartFile file) {
+                                                 @RequestParam("file") @FileNotEmpty MultipartFile file) {
         return Result.success(userFileService.uploadFile(uploadId, file, RequestContextUtils.getClientIp()));
     }
 
     @PostMapping("/api/user/files/upload-tasks/{uploadId}/chunks/{chunkNumber}")
     @Operation(summary = "上传分片")
     public Result<ChunkUploadVO> uploadChunk(@PathVariable String uploadId,
-                                             @PathVariable Integer chunkNumber,
-                                             @RequestParam("file") MultipartFile file,
+                                             @PathVariable @Min(value = 1, message = "分片序号必须大于0") Integer chunkNumber,
+                                             @RequestParam("file") @FileNotEmpty MultipartFile file,
                                              @RequestParam(value = "chunkMd5", required = false) String chunkMd5) {
         return Result.success(userFileService.uploadChunk(uploadId, chunkNumber, file, chunkMd5, RequestContextUtils.getClientIp()));
     }
@@ -59,13 +63,13 @@ public class UserFileController {
 
     @GetMapping("/api/user/files")
     @Operation(summary = "查询我的文件")
-    public Result<PageResult<UserFileVO>> pageMyFiles(UserFilePageQuery query) {
+    public Result<PageResult<UserFileVO>> pageMyFiles(@Valid UserFilePageQuery query) {
         return Result.success(userFileService.pageMyFiles(query));
     }
 
     @GetMapping("/api/user/files/upload-tasks")
     @Operation(summary = "查询我的上传任务")
-    public Result<PageResult<UserFileTaskVO>> pageMyUploadTasks(UserFileTaskPageQuery query) {
+    public Result<PageResult<UserFileTaskVO>> pageMyUploadTasks(@Valid UserFileTaskPageQuery query) {
         return Result.success(userFileService.pageMyUploadTasks(query));
     }
 
