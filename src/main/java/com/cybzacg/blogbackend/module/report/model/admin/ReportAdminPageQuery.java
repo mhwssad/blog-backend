@@ -1,17 +1,20 @@
 package com.cybzacg.blogbackend.module.report.model.admin;
 
+import com.cybzacg.blogbackend.core.web.PageQuery;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
 
 /**
- * 后台举报分页查询条件。
- */
+ * 后台举报分页查询条件�? */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "后台举报分页查询条件")
-public class ReportAdminPageQuery {
-    @Schema(description = "状态：0-待处理/1-处理中/2-已处理/3-已驳回")
+public class ReportAdminPageQuery extends PageQuery {
+    @Schema(description = "状态：0-待处理，1-处理中，2-已处理，3-已驳回")
     private Integer status;
 
     @Schema(description = "举报对象类型：article/comment/chat_message")
@@ -25,9 +28,6 @@ public class ReportAdminPageQuery {
 
     @Schema(description = "举报结束时间")
     private LocalDateTime reportedEnd;
-
-    @Schema(description = "页码")
-    private Long current = 1L;
 
     @Schema(description = "每页条数")
     private Long size = 20L;

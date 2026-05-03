@@ -18,7 +18,7 @@ import com.cybzacg.blogbackend.module.chat.message.model.user.ChatMessageVO;
 import com.cybzacg.blogbackend.module.chat.message.repository.ChatMessageRepository;
 import com.cybzacg.blogbackend.module.chat.push.service.ChatPushService;
 import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
-import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelMapper;
+import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelConvert;
 import com.cybzacg.blogbackend.module.chat.shared.model.common.ChatReplyMessageVO;
 import com.cybzacg.blogbackend.module.chat.shared.support.ChatPayloadHelper;
 import com.cybzacg.blogbackend.module.chat.shared.support.ChatPushPayloadBuilder;
@@ -44,7 +44,7 @@ public class ChatAdminGovernanceServiceImpl implements ChatAdminGovernanceServic
     private final ChatMessageRepository chatMessageRepository;
     private final ChatConversationMemberRepository chatConversationMemberRepository;
     private final SysUserRepository sysUserRepository;
-    private final ChatModelMapper chatModelMapper;
+    private final ChatModelConvert chatModelConvert;
     private final ChatPushService chatPushService;
     private final FileChatFacadeService fileChatFacadeService;
     private final ChatPushPayloadBuilder chatPushPayloadBuilder;

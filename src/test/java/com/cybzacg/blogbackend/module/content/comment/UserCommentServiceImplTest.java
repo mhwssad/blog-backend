@@ -11,7 +11,7 @@ import com.cybzacg.blogbackend.module.content.comment.model.user.CommentSaveRequ
 import com.cybzacg.blogbackend.module.content.comment.repository.SysCommentRepository;
 import com.cybzacg.blogbackend.module.content.comment.service.impl.UserCommentServiceImpl;
 import com.cybzacg.blogbackend.module.content.interaction.repository.SysInteractionRepository;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +37,7 @@ class UserCommentServiceImplTest {
     @Mock
     private ArticleContentFacadeService articleContentFacadeService;
     @Mock
-    private ContentModelMapper contentModelMapper;
+    private ContentModelConvert contentModelConvert;
     @Mock
     private ApplicationEventPublisher eventPublisher;
     @Mock
@@ -51,7 +51,7 @@ class UserCommentServiceImplTest {
                 sysCommentRepository,
                 sysInteractionRepository,
                 articleContentFacadeService,
-                contentModelMapper,
+                contentModelConvert,
                 eventPublisher,
                 notificationDeliveryService
         );
@@ -82,7 +82,7 @@ class UserCommentServiceImplTest {
         SysComment comment = new SysComment();
 
         when(articleContentFacadeService.requireInteractableArticle(10L, 7L, "评论")).thenReturn(article);
-        when(contentModelMapper.toComment(request)).thenReturn(comment);
+        when(contentModelConvert.toComment(request)).thenReturn(comment);
         when(sysCommentRepository.getById(100L)).thenReturn(parent);
         when(sysCommentRepository.save(comment)).thenAnswer(invocation -> {
             comment.setId(101L);
@@ -180,7 +180,7 @@ class UserCommentServiceImplTest {
 
         when(sysCommentRepository.getById(100L)).thenReturn(comment);
         when(sysInteractionRepository.existsByUserIdAndTargetIdAndTargetTypeAndActionType(7L, 100L, "comment", "like")).thenReturn(false);
-        when(contentModelMapper.toInteraction(7L, 100L, "comment", "like")).thenReturn(interaction);
+        when(contentModelConvert.toInteraction(7L, 100L, "comment", "like")).thenReturn(interaction);
 
         try (MockedStatic<?> securityUtils = SecurityTestUtils.mockUserId(7L)) {
             userCommentService.likeComment(100L);

@@ -50,6 +50,7 @@ public class PublicFileAccessController {
     @GetMapping("/{fileId}")
     @Operation(summary = "代理访问文件")
     public ResponseEntity<byte[]> getFile(@PathVariable Long fileId) {
+        log.info("开始代理访问文件, fileId={}", fileId);
         FileInfo fileInfo = fileInfoRepository.getById(fileId);
         ExceptionThrowerCore.throwBusinessIfNull(fileInfo, ResultErrorCode.ILLEGAL_ARGUMENT, "文件不存在");
         ExceptionThrowerCore.throwBusinessIf(

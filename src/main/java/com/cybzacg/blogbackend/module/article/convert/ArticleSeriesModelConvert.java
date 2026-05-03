@@ -22,22 +22,14 @@ import org.mapstruct.*;
         nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS,
         unmappedTargetPolicy = ReportingPolicy.IGNORE
 )
-public interface ArticleSeriesModelMapper {
+public interface ArticleSeriesModelConvert {
 
     /**
      * 将系列保存请求转换为系列实体。
      */
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "ownerUserId", ignore = true)
     @Mapping(target = "title", expression = "java(StrUtils.normalize(request.getTitle()))")
     @Mapping(target = "description", expression = "java(StrUtils.normalize(request.getDescription()))")
     @Mapping(target = "coverImage", expression = "java(StrUtils.normalize(request.getCoverImage()))")
-    @Mapping(target = "status", source = "status")
-    @Mapping(target = "visibilityScope", source = "visibilityScope")
-    @Mapping(target = "articleCount", ignore = true)
-    @Mapping(target = "sortOrder", source = "sortOrder")
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
     BlogArticleSeries toSeries(ArticleSeriesSaveRequest request);
 
     /**

@@ -4,7 +4,7 @@ import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.auth.SysUser;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.follow.convert.FollowModelMapper;
+import com.cybzacg.blogbackend.module.follow.convert.FollowModelConvert;
 import com.cybzacg.blogbackend.module.follow.model.publics.PublicFollowPageQuery;
 import com.cybzacg.blogbackend.module.follow.model.publics.PublicFollowUserVO;
 import com.cybzacg.blogbackend.module.follow.repository.SysUserFollowRepository;
@@ -29,7 +29,7 @@ public class PublicFollowServiceImpl implements PublicFollowService {
 
     private final SysUserFollowRepository sysUserFollowRepository;
     private final SysUserRepository sysUserRepository;
-    private final FollowModelMapper followModelMapper;
+    private final FollowModelConvert followModelConvert;
 
     /**
      * 分页查询指定用户的关注列表（公开接口）。
@@ -46,14 +46,9 @@ public class PublicFollowServiceImpl implements PublicFollowService {
         long offset = (current - 1) * size;
         List<PublicFollowUserVO> records = sysUserFollowRepository.selectPublicFollowPage(userId, offset, size)
                 .stream()
-                .map(followModelMapper::toPublicFollowUserVO)
+                .map(followModelConvert::toPublicFollowUserVO)
                 .toList();
-        return PageResult.<PublicFollowUserVO>builder()
-                .total(total)
-                .current(current)
-                .size(size)
-                .records(records)
-                .build();
+        return PageResult.of(total, current, size, records);
     }
 
     /**
@@ -71,14 +66,9 @@ public class PublicFollowServiceImpl implements PublicFollowService {
         long offset = (current - 1) * size;
         List<PublicFollowUserVO> records = sysUserFollowRepository.selectPublicFanPage(userId, offset, size)
                 .stream()
-                .map(followModelMapper::toPublicFollowUserVO)
+                .map(followModelConvert::toPublicFollowUserVO)
                 .toList();
-        return PageResult.<PublicFollowUserVO>builder()
-                .total(total)
-                .current(current)
-                .size(size)
-                .records(records)
-                .build();
+        return PageResult.of(total, current, size, records);
     }
 
     private void requireActiveUser(Long userId) {
@@ -92,12 +82,7 @@ public class PublicFollowServiceImpl implements PublicFollowService {
     }
 
     private PageResult<PublicFollowUserVO> emptyPage(long current, long size) {
-        return PageResult.<PublicFollowUserVO>builder()
-                .total(0L)
-                .current(current)
-                .size(size)
-                .records(List.of())
-                .build();
+        return PageResult.empty(current, size);
     }
 
 }

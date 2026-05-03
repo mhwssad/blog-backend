@@ -10,7 +10,7 @@ import com.cybzacg.blogbackend.module.content.interaction.model.admin.Interactio
 import com.cybzacg.blogbackend.module.content.interaction.model.admin.InteractionVO;
 import com.cybzacg.blogbackend.module.content.interaction.repository.SysInteractionRepository;
 import com.cybzacg.blogbackend.module.content.interaction.service.InteractionAdminService;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,7 +29,7 @@ public class InteractionAdminServiceImpl implements InteractionAdminService {
     private final SysInteractionRepository sysInteractionRepository;
     private final ArticleContentFacadeService articleContentFacadeService;
     private final SysCommentRepository sysCommentRepository;
-    private final ContentModelMapper contentModelMapper;
+    private final ContentModelConvert contentModelConvert;
 
     /**
      * 按管理端条件分页查询互动记录列表。
@@ -38,7 +38,7 @@ public class InteractionAdminServiceImpl implements InteractionAdminService {
     public PageResult<InteractionVO> pageInteractions(InteractionPageQuery query) {
         Page<SysInteraction> page = sysInteractionRepository.pageByAdminConditions(query);
         List<InteractionVO> records = page.getRecords().stream()
-                .map(contentModelMapper::toInteractionVO)
+                .map(contentModelConvert::toInteractionVO)
                 .toList();
         return PageResult.of(page, records);
     }

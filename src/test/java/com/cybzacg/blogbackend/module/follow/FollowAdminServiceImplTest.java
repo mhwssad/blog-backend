@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.follow;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.module.follow.convert.FollowModelMapper;
+import com.cybzacg.blogbackend.module.follow.convert.FollowModelConvert;
 import com.cybzacg.blogbackend.module.follow.model.admin.FollowAdminPageQuery;
 import com.cybzacg.blogbackend.module.follow.model.admin.FollowAdminRelationVO;
 import com.cybzacg.blogbackend.module.follow.model.admin.FollowRelationCleanRequest;
@@ -24,13 +24,13 @@ class FollowAdminServiceImplTest {
     @Mock
     private SysUserFollowRepository sysUserFollowRepository;
     @Mock
-    private FollowModelMapper followModelMapper;
+    private FollowModelConvert followModelConvert;
 
     private FollowAdminServiceImpl followAdminService;
 
     @BeforeEach
     void setUp() {
-        followAdminService = new FollowAdminServiceImpl(sysUserFollowRepository, followModelMapper);
+        followAdminService = new FollowAdminServiceImpl(sysUserFollowRepository, followModelConvert);
     }
 
     @Test
@@ -47,7 +47,7 @@ class FollowAdminServiceImplTest {
         vo.setRelationId(9L);
         vo.setFollowerId(2L);
         when(sysUserFollowRepository.selectAdminRelationPage(query, 4L, 2L)).thenReturn(List.of(item));
-        when(followModelMapper.toFollowAdminRelationVO(item)).thenReturn(vo);
+        when(followModelConvert.toFollowAdminRelationVO(item)).thenReturn(vo);
 
         PageResult<FollowAdminRelationVO> result = followAdminService.pageRelations(query);
 

@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.auth.audit.service.impl;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.system.SysLog;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.auth.audit.convert.SysLogModelMapper;
+import com.cybzacg.blogbackend.module.auth.audit.convert.SysLogModelConvert;
 import com.cybzacg.blogbackend.module.auth.audit.model.admin.SysLogAdminVO;
 import com.cybzacg.blogbackend.module.auth.audit.model.admin.SysLogCleanRequest;
 import com.cybzacg.blogbackend.module.auth.audit.model.admin.SysLogPageQuery;
@@ -25,7 +25,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SysLogAdminServiceImpl implements SysLogAdminService {
     private final SysLogRepository sysLogRepository;
-    private final SysLogModelMapper sysLogModelMapper;
+    private final SysLogModelConvert sysLogModelConvert;
 
     /**
      * 分页查询系统日志列表。
@@ -34,7 +34,7 @@ public class SysLogAdminServiceImpl implements SysLogAdminService {
     public PageResult<SysLogAdminVO> pageLogs(SysLogPageQuery query) {
         var page = sysLogRepository.pageByAdminConditions(query);
         List<SysLogAdminVO> records = page.getRecords().stream()
-                .map(sysLogModelMapper::toLogVO)
+                .map(sysLogModelConvert::toLogVO)
                 .toList();
         return PageResult.of(page, records);
     }
@@ -44,7 +44,7 @@ public class SysLogAdminServiceImpl implements SysLogAdminService {
      */
     @Override
     public SysLogAdminVO getLog(Long id) {
-        return sysLogModelMapper.toLogVO(getLogOrThrow(id));
+        return sysLogModelConvert.toLogVO(getLogOrThrow(id));
     }
 
     /**

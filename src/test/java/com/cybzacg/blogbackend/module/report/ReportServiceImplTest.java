@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.report;
 import com.cybzacg.blogbackend.domain.report.SysReportRecord;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.report.convert.ReportModelMapper;
+import com.cybzacg.blogbackend.module.report.convert.ReportModelConvert;
 import com.cybzacg.blogbackend.module.report.model.user.ReportCreateRequest;
 import com.cybzacg.blogbackend.module.report.model.user.ReportVO;
 import com.cybzacg.blogbackend.module.report.repository.SysReportRecordRepository;
@@ -27,13 +27,13 @@ class ReportServiceImplTest {
     @Mock
     private SysReportRecordRepository sysReportRecordRepository;
     @Mock
-    private ReportModelMapper reportModelMapper;
+    private ReportModelConvert reportModelConvert;
 
     private ReportServiceImpl reportService;
 
     @BeforeEach
     void setUp() {
-        reportService = new ReportServiceImpl(sysReportRecordRepository, reportModelMapper);
+        reportService = new ReportServiceImpl(sysReportRecordRepository, reportModelConvert);
     }
 
     // ==================== submitReport ====================
@@ -45,9 +45,9 @@ class ReportServiceImplTest {
         ReportVO vo = buildReportVO(1L, "article", 100L, "spam", 0);
 
         when(sysReportRecordRepository.existsByReporterAndTarget(1L, "article", 100L)).thenReturn(false);
-        when(reportModelMapper.toRecord(request)).thenReturn(record);
+        when(reportModelConvert.toRecord(request)).thenReturn(record);
         when(sysReportRecordRepository.save(record)).thenReturn(true);
-        when(reportModelMapper.toUserVO(record)).thenReturn(vo);
+        when(reportModelConvert.toUserVO(record)).thenReturn(vo);
 
         ReportVO result = reportService.submitReport(1L, request);
 
@@ -65,9 +65,9 @@ class ReportServiceImplTest {
         ReportVO vo = buildReportVO(2L, "comment", 200L, "abuse", 0);
 
         when(sysReportRecordRepository.existsByReporterAndTarget(1L, "comment", 200L)).thenReturn(false);
-        when(reportModelMapper.toRecord(request)).thenReturn(record);
+        when(reportModelConvert.toRecord(request)).thenReturn(record);
         when(sysReportRecordRepository.save(record)).thenReturn(true);
-        when(reportModelMapper.toUserVO(record)).thenReturn(vo);
+        when(reportModelConvert.toUserVO(record)).thenReturn(vo);
 
         ReportVO result = reportService.submitReport(1L, request);
 
@@ -85,9 +85,9 @@ class ReportServiceImplTest {
         ReportVO vo = buildReportVO(3L, "chat_message", 300L, "porn", 0);
 
         when(sysReportRecordRepository.existsByReporterAndTarget(1L, "chat_message", 300L)).thenReturn(false);
-        when(reportModelMapper.toRecord(request)).thenReturn(record);
+        when(reportModelConvert.toRecord(request)).thenReturn(record);
         when(sysReportRecordRepository.save(record)).thenReturn(true);
-        when(reportModelMapper.toUserVO(record)).thenReturn(vo);
+        when(reportModelConvert.toUserVO(record)).thenReturn(vo);
 
         ReportVO result = reportService.submitReport(1L, request);
 
@@ -119,7 +119,7 @@ class ReportServiceImplTest {
                 () -> reportService.submitReport(1L, request));
 
         assertEquals(ResultErrorCode.REPORT_DUPLICATE_RATE_LIMITED.getCode(), exception.getCode());
-        verify(reportModelMapper, never()).toRecord(any());
+        verify(reportModelConvert, never()).toRecord(any());
         verify(sysReportRecordRepository, never()).save(any());
     }
 

@@ -4,7 +4,7 @@ import com.cybzacg.blogbackend.common.constant.MenuConstants;
 import com.cybzacg.blogbackend.domain.auth.SysMenu;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.auth.rbac.convert.RbacAdminModelMapper;
+import com.cybzacg.blogbackend.module.auth.rbac.convert.RbacAdminModelConvert;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysMenuAdminVO;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysMenuSaveRequest;
 import com.cybzacg.blogbackend.module.auth.rbac.repository.SysMenuRepository;
@@ -31,13 +31,13 @@ class SysMenuAdminServiceImplTest {
     @Mock
     private SysRoleMenuRepository sysRoleMenuRepository;
     @Mock
-    private RbacAdminModelMapper rbacAdminModelMapper;
+    private RbacAdminModelConvert rbacAdminModelConvert;
 
     private SysMenuAdminServiceImpl sysMenuAdminService;
 
     @BeforeEach
     void setUp() {
-        sysMenuAdminService = new SysMenuAdminServiceImpl(sysMenuRepository, sysRoleMenuRepository, rbacAdminModelMapper);
+        sysMenuAdminService = new SysMenuAdminServiceImpl(sysMenuRepository, sysRoleMenuRepository, rbacAdminModelConvert);
     }
 
     @Test
@@ -61,7 +61,7 @@ class SysMenuAdminServiceImplTest {
     void createMenuShouldSaveRootMenuWithRootTreePath() {
         SysMenuSaveRequest request = menuSaveRequest(0L, "系统管理", MenuConstants.TYPE_CATALOG);
         SysMenu mapped = new SysMenu();
-        when(rbacAdminModelMapper.toMenu(request)).thenReturn(mapped);
+        when(rbacAdminModelConvert.toMenu(request)).thenReturn(mapped);
         when(sysMenuRepository.save(mapped)).thenAnswer(invocation -> {
             mapped.setId(100L);
             return true;
@@ -129,11 +129,11 @@ class SysMenuAdminServiceImplTest {
             menu.setName(request.getName());
             menu.setType(request.getType());
             return null;
-        }).when(rbacAdminModelMapper).updateMenu(any(SysMenuSaveRequest.class), any(SysMenu.class));
+        }).when(rbacAdminModelConvert).updateMenu(any(SysMenuSaveRequest.class), any(SysMenu.class));
     }
 
     private void stubMenuVoMapping() {
-        when(rbacAdminModelMapper.toMenuVO(any(SysMenu.class))).thenAnswer(invocation -> toMenuVO(invocation.getArgument(0)));
+        when(rbacAdminModelConvert.toMenuVO(any(SysMenu.class))).thenAnswer(invocation -> toMenuVO(invocation.getArgument(0)));
     }
 
     private SysMenuAdminVO toMenuVO(SysMenu menu) {

@@ -9,7 +9,7 @@ import com.cybzacg.blogbackend.domain.content.SysCategory;
 import com.cybzacg.blogbackend.domain.content.SysTag;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.article.convert.ArticleModelMapper;
+import com.cybzacg.blogbackend.module.article.convert.ArticleModelConvert;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleCardVO;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleDetailVO;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticlePageQuery;
@@ -23,7 +23,7 @@ import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionRepository;
 import com.cybzacg.blogbackend.module.content.footprint.service.UserFootprintService;
 import com.cybzacg.blogbackend.module.content.interaction.repository.SysInteractionRepository;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.publics.PublicCategoryTreeVO;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.publics.PublicTagVO;
 import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysCategoryRepository;
@@ -79,9 +79,9 @@ class PublicArticleServiceImplTest {
     @Mock
     private ArticleStatusMachine articleStatusMachine;
     @Mock
-    private ArticleModelMapper articleModelMapper;
+    private ArticleModelConvert articleModelConvert;
     @Mock
-    private ContentModelMapper contentModelMapper;
+    private ContentModelConvert contentModelConvert;
     @Mock
     private UserFootprintService userFootprintService;
 
@@ -101,8 +101,8 @@ class PublicArticleServiceImplTest {
                 articleAccessControlService,
                 articleSeriesService,
                 articleStatusMachine,
-                articleModelMapper,
-                contentModelMapper,
+                articleModelConvert,
+                contentModelConvert,
                 userFootprintService
         );
         mockArticleMappings();
@@ -632,7 +632,7 @@ class PublicArticleServiceImplTest {
     }
 
     private void mockArticleMappings() {
-        lenient().when(articleModelMapper.toPublicCardVO(any(BlogArticle.class))).thenAnswer(invocation -> {
+        lenient().when(articleModelConvert.toPublicCardVO(any(BlogArticle.class))).thenAnswer(invocation -> {
             BlogArticle article = invocation.getArgument(0);
             PublicArticleCardVO vo = new PublicArticleCardVO();
             vo.setId(article.getId());
@@ -648,7 +648,7 @@ class PublicArticleServiceImplTest {
             vo.setPublishTime(article.getPublishTime());
             return vo;
         });
-        lenient().when(articleModelMapper.toPublicDetailVO(any(BlogArticle.class))).thenAnswer(invocation -> {
+        lenient().when(articleModelConvert.toPublicDetailVO(any(BlogArticle.class))).thenAnswer(invocation -> {
             BlogArticle article = invocation.getArgument(0);
             PublicArticleDetailVO vo = new PublicArticleDetailVO();
             vo.setId(article.getId());
@@ -663,7 +663,7 @@ class PublicArticleServiceImplTest {
     }
 
     private void mockContentMappings() {
-        lenient().when(contentModelMapper.toPublicCategoryTreeVO(any(SysCategory.class))).thenAnswer(invocation -> {
+        lenient().when(contentModelConvert.toPublicCategoryTreeVO(any(SysCategory.class))).thenAnswer(invocation -> {
             SysCategory category = invocation.getArgument(0);
             PublicCategoryTreeVO vo = new PublicCategoryTreeVO();
             vo.setId(category.getId());
@@ -671,7 +671,7 @@ class PublicArticleServiceImplTest {
             vo.setChildren(new ArrayList<>());
             return vo;
         });
-        lenient().when(contentModelMapper.toPublicTagVO(any(SysTag.class))).thenAnswer(invocation -> {
+        lenient().when(contentModelConvert.toPublicTagVO(any(SysTag.class))).thenAnswer(invocation -> {
             SysTag tag = invocation.getArgument(0);
             PublicTagVO vo = new PublicTagVO();
             vo.setId(tag.getId());

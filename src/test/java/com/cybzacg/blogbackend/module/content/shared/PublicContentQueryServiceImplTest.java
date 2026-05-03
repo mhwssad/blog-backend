@@ -11,7 +11,7 @@ import com.cybzacg.blogbackend.module.content.comment.model.publics.PublicCommen
 import com.cybzacg.blogbackend.module.content.comment.model.publics.PublicCommentVO;
 import com.cybzacg.blogbackend.module.content.comment.repository.SysCommentRepository;
 import com.cybzacg.blogbackend.module.content.interaction.repository.SysInteractionRepository;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.module.content.shared.service.impl.PublicContentQueryServiceImpl;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.publics.PublicCategoryTreeVO;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.publics.PublicTagVO;
@@ -47,7 +47,7 @@ class PublicContentQueryServiceImplTest {
     @Mock
     private ArticleContentFacadeService articleContentFacadeService;
     @Mock
-    private ContentModelMapper contentModelMapper;
+    private ContentModelConvert contentModelConvert;
 
     private PublicContentQueryServiceImpl publicContentQueryService;
 
@@ -60,7 +60,7 @@ class PublicContentQueryServiceImplTest {
                 sysInteractionRepository,
                 sysUserRepository,
                 articleContentFacadeService,
-                contentModelMapper
+                contentModelConvert
         );
     }
 
@@ -73,8 +73,8 @@ class PublicContentQueryServiceImplTest {
         PublicCategoryTreeVO childVo = categoryVO(2L, 1L, "Java");
 
         when(sysCategoryRepository.findByTypeAndStatusOrderBySortOrderAndId("article", 1)).thenReturn(List.of(root, child));
-        when(contentModelMapper.toPublicCategoryTreeVO(root)).thenReturn(rootVo);
-        when(contentModelMapper.toPublicCategoryTreeVO(child)).thenReturn(childVo);
+        when(contentModelConvert.toPublicCategoryTreeVO(root)).thenReturn(rootVo);
+        when(contentModelConvert.toPublicCategoryTreeVO(child)).thenReturn(childVo);
 
         List<PublicCategoryTreeVO> result = publicContentQueryService.listCategoryTree();
 
@@ -89,7 +89,7 @@ class PublicContentQueryServiceImplTest {
         List<PublicTagVO> result = publicContentQueryService.listTags("comment");
 
         assertTrue(result.isEmpty());
-        verifyNoInteractions(sysTagRepository, contentModelMapper);
+        verifyNoInteractions(sysTagRepository, contentModelConvert);
     }
 
     @Test
@@ -104,7 +104,7 @@ class PublicContentQueryServiceImplTest {
         vo.setName("Spring");
 
         when(sysTagRepository.findByTargetType("article")).thenReturn(List.of(tag));
-        when(contentModelMapper.toPublicTagVO(tag)).thenReturn(vo);
+        when(contentModelConvert.toPublicTagVO(tag)).thenReturn(vo);
 
         List<PublicTagVO> result = publicContentQueryService.listTags(null);
 
@@ -132,8 +132,8 @@ class PublicContentQueryServiceImplTest {
         when(sysCommentRepository.selectRootCommentsByTarget(100L, "article")).thenReturn(List.of(root));
         when(sysCommentRepository.selectRepliesByRootIds(List.of(20L))).thenReturn(List.of(reply));
         when(sysUserRepository.listByIds(anyCollection())).thenReturn(List.of(rootUser, replyUser));
-        when(contentModelMapper.toPublicCommentVO(root)).thenReturn(rootVo);
-        when(contentModelMapper.toPublicCommentVO(reply)).thenReturn(replyVo);
+        when(contentModelConvert.toPublicCommentVO(root)).thenReturn(rootVo);
+        when(contentModelConvert.toPublicCommentVO(reply)).thenReturn(replyVo);
         when(sysInteractionRepository.findByUserIdAndTargetTypeAndActionTypeInTargetIds(eq(7L), eq("comment"), eq("like"), anyCollection()))
                 .thenReturn(List.of(like));
 

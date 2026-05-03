@@ -6,7 +6,7 @@ import com.cybzacg.blogbackend.domain.notice.SysNotice;
 import com.cybzacg.blogbackend.domain.notice.SysUserNotice;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.auth.notice.convert.SysNoticeModelMapper;
+import com.cybzacg.blogbackend.module.auth.notice.convert.SysNoticeModelConvert;
 import com.cybzacg.blogbackend.module.auth.notice.model.admin.SysNoticeAdminVO;
 import com.cybzacg.blogbackend.module.auth.notice.model.admin.SysNoticePageQuery;
 import com.cybzacg.blogbackend.module.auth.notice.model.admin.SysNoticeSaveRequest;
@@ -36,7 +36,7 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
     private final SysNoticeRepository sysNoticeRepository;
     private final SysUserNoticeRepository sysUserNoticeRepository;
     private final SysUserRepository sysUserRepository;
-    private final SysNoticeModelMapper sysNoticeModelMapper;
+    private final SysNoticeModelConvert sysNoticeModelConvert;
     private final SysNoticeFactory sysNoticeFactory;
 
     /**
@@ -46,7 +46,7 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
     public PageResult<SysNoticeAdminVO> pageNotices(SysNoticePageQuery query) {
         var page = sysNoticeRepository.pageByAdminConditions(query);
         List<SysNoticeAdminVO> records = page.getRecords().stream()
-                .map(notice -> sysNoticeModelMapper.toNoticeAdminVO(notice, sysNoticeModelMapper.toIdList(notice.getTargetUserIds())))
+                .map(notice -> sysNoticeModelConvert.toNoticeAdminVO(notice, sysNoticeModelConvert.toIdList(notice.getTargetUserIds())))
                 .toList();
         return PageResult.of(page, records);
     }
@@ -57,7 +57,7 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
     @Override
     public SysNoticeAdminVO getNotice(Long id) {
         SysNotice notice = getAvailableNotice(id);
-        return sysNoticeModelMapper.toNoticeAdminVO(notice, sysNoticeModelMapper.toIdList(notice.getTargetUserIds()));
+        return sysNoticeModelConvert.toNoticeAdminVO(notice, sysNoticeModelConvert.toIdList(notice.getTargetUserIds()));
     }
 
     /**
@@ -72,7 +72,7 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         notice.setPublishStatus(NoticeConstants.PUBLISH_STATUS_DRAFT);
         notice.setIsDeleted(0);
         sysNoticeRepository.save(notice);
-        return sysNoticeModelMapper.toNoticeAdminVO(notice, targetUserIds);
+        return sysNoticeModelConvert.toNoticeAdminVO(notice, targetUserIds);
     }
 
     /**
@@ -85,7 +85,7 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         List<Long> targetUserIds = validateTargetUsers(request);
         applyFields(notice, request, targetUserIds);
         sysNoticeRepository.updateById(notice);
-        return sysNoticeModelMapper.toNoticeAdminVO(notice, targetUserIds);
+        return sysNoticeModelConvert.toNoticeAdminVO(notice, targetUserIds);
     }
 
     /**
@@ -135,7 +135,7 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
         if (!Objects.equals(NoticeConstants.TARGET_SPECIFIED, notice.getTargetType())) {
             return;
         }
-        List<Long> targetUserIds = sysNoticeModelMapper.toIdList(notice.getTargetUserIds());
+        List<Long> targetUserIds = sysNoticeModelConvert.toIdList(notice.getTargetUserIds());
         ExceptionThrowerCore.throwBusinessIf(targetUserIds.isEmpty(), ResultErrorCode.ILLEGAL_ARGUMENT, "指定用户通知缺少目标用户");
         List<SysUserNotice> records = targetUserIds.stream()
                 .map(userId -> sysNoticeFactory.createDeliveryRecord(notice.getId(), userId, now))

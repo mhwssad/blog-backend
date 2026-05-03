@@ -76,7 +76,7 @@ public class ChatMessageSendServiceImpl implements ChatMessageSendService {
             }
             ChatMessageHistoryItem replyMessage = resolveReplyMessage(userId, conversation.getId(), request.getReplyMessageId());
 
-            ChatMessage message = s.getModelMapper().toTextMessage(request);
+            ChatMessage message = s.getModelConvert().toTextMessage(request);
             message.setConversationId(conversation.getId());
             message.setSenderId(userId);
             message.setReplyMessageId(replyMessage != null ? replyMessage.getId() : null);

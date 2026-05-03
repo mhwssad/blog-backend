@@ -9,7 +9,7 @@ import com.cybzacg.blogbackend.module.content.collection.model.user.CollectionSa
 import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionFolderRepository;
 import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionRepository;
 import com.cybzacg.blogbackend.module.content.collection.service.impl.UserCollectionServiceImpl;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,7 +31,7 @@ class UserCollectionServiceImplTest {
     @Mock
     private ArticleContentFacadeService articleContentFacadeService;
     @Mock
-    private ContentModelMapper contentModelMapper;
+    private ContentModelConvert contentModelConvert;
     @Mock
     private NotificationDeliveryService notificationDeliveryService;
 
@@ -43,7 +43,7 @@ class UserCollectionServiceImplTest {
                 sysCollectionFolderRepository,
                 sysCollectionRepository,
                 articleContentFacadeService,
-                contentModelMapper,
+                contentModelConvert,
                 notificationDeliveryService
         );
     }

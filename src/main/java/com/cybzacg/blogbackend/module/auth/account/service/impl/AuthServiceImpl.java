@@ -11,7 +11,7 @@ import com.cybzacg.blogbackend.domain.config.SysConfig;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.enums.experience.ExperienceSourceTypeEnum;
 import com.cybzacg.blogbackend.module.auth.account.authentication.EmailCodeAuthenticationToken;
-import com.cybzacg.blogbackend.module.auth.account.convert.AuthModelMapper;
+import com.cybzacg.blogbackend.module.auth.account.convert.AuthModelConvert;
 import com.cybzacg.blogbackend.module.auth.account.model.*;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.account.service.AuthService;
@@ -67,7 +67,7 @@ public class AuthServiceImpl implements AuthService {
     private final SysRoleRepository sysRoleRepository;
     private final SysMenuRepository sysMenuRepository;
     private final SysConfigRepository sysConfigRepository;
-    private final AuthModelMapper authModelMapper;
+    private final AuthModelConvert authModelConvert;
     private final RedisOperator redisOperator;
     private final JavaMailSender javaMailSender;
     private final MailProperties mailProperties;
@@ -131,7 +131,7 @@ public class AuthServiceImpl implements AuthService {
         validateRegisterIdentity(phone, "手机号已存在");
         PasswordUtils.validate(request.getPassword());
 
-        SysUser user = authModelMapper.toRegisterUser(request);
+        SysUser user = authModelConvert.toRegisterUser(request);
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setNickname(user.getNickname());
@@ -251,7 +251,7 @@ public class AuthServiceImpl implements AuthService {
         SysUser user = getCurrentSysUser(authentication);
         List<String> roleCodes = sysRoleRepository.findRoleCodesByUserId(user.getId());
         List<String> permissions = sysMenuRepository.findPermissionsByUserId(user.getId());
-        return authModelMapper.toAuthUserInfo(user, roleCodes, permissions);
+        return authModelConvert.toAuthUserInfo(user, roleCodes, permissions);
     }
 
     /**
@@ -291,7 +291,7 @@ public class AuthServiceImpl implements AuthService {
             if (MenuConstants.TYPE_BUTTON.equalsIgnoreCase(menu.getType())) {
                 continue;
             }
-            menuMap.put(menu.getId(), authModelMapper.toAuthMenuInfo(menu));
+            menuMap.put(menu.getId(), authModelConvert.toAuthMenuInfo(menu));
         }
 
         List<AuthMenuInfo> roots = new ArrayList<>();

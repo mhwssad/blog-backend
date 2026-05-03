@@ -6,7 +6,7 @@ import com.cybzacg.blogbackend.domain.notice.SysNotice;
 import com.cybzacg.blogbackend.domain.notice.SysUserNotice;
 import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.auth.notice.convert.SysNoticeModelMapper;
+import com.cybzacg.blogbackend.module.auth.notice.convert.SysNoticeModelConvert;
 import com.cybzacg.blogbackend.module.auth.notice.model.admin.UserNoticePageQuery;
 import com.cybzacg.blogbackend.module.auth.notice.model.admin.UserNoticeVO;
 import com.cybzacg.blogbackend.module.auth.notice.repository.SysNoticeRepository;
@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
     private final SysNoticeRepository sysNoticeRepository;
     private final SysUserNoticeRepository sysUserNoticeRepository;
-    private final SysNoticeModelMapper sysNoticeModelMapper;
+    private final SysNoticeModelConvert sysNoticeModelConvert;
     private final SysNoticeFactory sysNoticeFactory;
     private final UserNotificationPreferenceService userNotificationPreferenceService;
 
@@ -63,7 +63,7 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
         List<UserNoticeVO> records = page.getRecords().stream()
                 .map(notice -> {
                     SysUserNotice relation = relationMap.get(notice.getId());
-                    return sysNoticeModelMapper.toUserNoticeVO(notice,
+                    return sysNoticeModelConvert.toUserNoticeVO(notice,
                             relation != null && Objects.equals(NoticeConstants.READ_READ, relation.getIsRead()),
                             relation != null ? relation.getReadTime() : null);
                 })
@@ -80,7 +80,7 @@ public class UserNoticeInboxServiceImpl implements UserNoticeInboxService {
         Long userId = SecurityUtils.requireUserId();
         SysNotice notice = getAccessibleNotice(userId, noticeId);
         SysUserNotice relation = markReadInternal(userId, notice);
-        return sysNoticeModelMapper.toUserNoticeVO(notice, true, relation.getReadTime());
+        return sysNoticeModelConvert.toUserNoticeVO(notice, true, relation.getReadTime());
     }
 
     /**

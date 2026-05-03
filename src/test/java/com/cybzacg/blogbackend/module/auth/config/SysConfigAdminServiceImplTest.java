@@ -5,7 +5,7 @@ import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.config.SysConfig;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.auth.config.convert.SysConfigModelMapper;
+import com.cybzacg.blogbackend.module.auth.config.convert.SysConfigModelConvert;
 import com.cybzacg.blogbackend.module.auth.config.model.admin.SysConfigAdminVO;
 import com.cybzacg.blogbackend.module.auth.config.model.admin.SysConfigPageQuery;
 import com.cybzacg.blogbackend.module.auth.config.model.admin.SysConfigSaveRequest;
@@ -32,13 +32,13 @@ class SysConfigAdminServiceImplTest {
     @Mock
     private SysConfigService sysConfigService;
     @Mock
-    private SysConfigModelMapper sysConfigModelMapper;
+    private SysConfigModelConvert sysConfigModelConvert;
 
     private SysConfigAdminServiceImpl sysConfigAdminService;
 
     @BeforeEach
     void setUp() {
-        sysConfigAdminService = new SysConfigAdminServiceImpl(sysConfigRepository, sysConfigService, sysConfigModelMapper);
+        sysConfigAdminService = new SysConfigAdminServiceImpl(sysConfigRepository, sysConfigService, sysConfigModelConvert);
     }
 
     @Test
@@ -53,7 +53,7 @@ class SysConfigAdminServiceImplTest {
 
         when(sysConfigRepository.pageByAdminConditions(query)).thenReturn(page);
         SysConfigAdminVO expected = configVO(1L, "站点标题", "site.title", "Blog");
-        when(sysConfigModelMapper.toConfigVO(config)).thenReturn(expected);
+        when(sysConfigModelConvert.toConfigVO(config)).thenReturn(expected);
 
         PageResult<SysConfigAdminVO> result = sysConfigAdminService.pageConfigs(query);
 
@@ -69,7 +69,7 @@ class SysConfigAdminServiceImplTest {
         request.setConfigValue("Blog");
 
         when(sysConfigRepository.existsActiveByConfigKey("site.title", null)).thenReturn(false);
-        when(sysConfigModelMapper.toConfigVO(any(SysConfig.class))).thenAnswer(invocation -> {
+        when(sysConfigModelConvert.toConfigVO(any(SysConfig.class))).thenAnswer(invocation -> {
             SysConfig saved = invocation.getArgument(0);
             return configVO(saved.getId(), saved.getConfigName(), saved.getConfigKey(), saved.getConfigValue());
         });
@@ -86,7 +86,7 @@ class SysConfigAdminServiceImplTest {
         SysConfig existing = config(1L, "站点标题", "site.title", "Blog");
         when(sysConfigRepository.getById(1L)).thenReturn(existing);
         when(sysConfigRepository.existsActiveByConfigKey("site.name", 1L)).thenReturn(false);
-        when(sysConfigModelMapper.toConfigVO(existing)).thenAnswer(invocation ->
+        when(sysConfigModelConvert.toConfigVO(existing)).thenAnswer(invocation ->
                 configVO(existing.getId(), existing.getConfigName(), existing.getConfigKey(), existing.getConfigValue()));
 
         SysConfigSaveRequest request = new SysConfigSaveRequest();

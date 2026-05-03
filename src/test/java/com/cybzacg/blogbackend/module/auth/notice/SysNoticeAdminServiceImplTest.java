@@ -4,7 +4,7 @@ import com.cybzacg.blogbackend.common.constant.NoticeConstants;
 import com.cybzacg.blogbackend.domain.notice.SysNotice;
 import com.cybzacg.blogbackend.domain.notice.SysUserNotice;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.auth.notice.convert.SysNoticeModelMapper;
+import com.cybzacg.blogbackend.module.auth.notice.convert.SysNoticeModelConvert;
 import com.cybzacg.blogbackend.module.auth.notice.repository.SysNoticeRepository;
 import com.cybzacg.blogbackend.module.auth.notice.repository.SysUserNoticeRepository;
 import com.cybzacg.blogbackend.module.auth.notice.service.impl.SysNoticeAdminServiceImpl;
@@ -34,7 +34,7 @@ class SysNoticeAdminServiceImplTest {
     @Mock
     private SysUserRepository sysUserRepository;
     @Mock
-    private SysNoticeModelMapper sysNoticeModelMapper;
+    private SysNoticeModelConvert sysNoticeModelConvert;
     @Mock
     private SysNoticeFactory sysNoticeFactory;
 
@@ -46,7 +46,7 @@ class SysNoticeAdminServiceImplTest {
                 sysNoticeRepository,
                 sysUserNoticeRepository,
                 sysUserRepository,
-                sysNoticeModelMapper,
+                sysNoticeModelConvert,
                 sysNoticeFactory
         );
     }
@@ -61,7 +61,7 @@ class SysNoticeAdminServiceImplTest {
         notice.setIsDeleted(0);
 
         when(sysNoticeRepository.getById(10L)).thenReturn(notice);
-        when(sysNoticeModelMapper.toIdList("7,9")).thenReturn(List.of(7L, 9L));
+        when(sysNoticeModelConvert.toIdList("7,9")).thenReturn(List.of(7L, 9L));
         when(sysNoticeFactory.createDeliveryRecord(any(), any(), any())).thenAnswer(inv -> {
             SysUserNotice record = new SysUserNotice();
             record.setNoticeId(inv.getArgument(0));

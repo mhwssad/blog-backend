@@ -11,7 +11,7 @@ import com.cybzacg.blogbackend.module.content.comment.model.publics.PublicCommen
 import com.cybzacg.blogbackend.module.content.comment.model.publics.PublicCommentVO;
 import com.cybzacg.blogbackend.module.content.comment.repository.SysCommentRepository;
 import com.cybzacg.blogbackend.module.content.interaction.repository.SysInteractionRepository;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.module.content.shared.service.PublicContentQueryService;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.publics.PublicCategoryTreeVO;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.publics.PublicTagVO;
@@ -44,7 +44,7 @@ public class PublicContentQueryServiceImpl implements PublicContentQueryService 
     private final SysInteractionRepository sysInteractionRepository;
     private final SysUserRepository sysUserRepository;
     private final ArticleContentFacadeService articleContentFacadeService;
-    private final ContentModelMapper contentModelMapper;
+    private final ContentModelConvert contentModelConvert;
 
     /**
      * 查询前台文章分类树，仅返回启用状态的分类。
@@ -54,7 +54,7 @@ public class PublicContentQueryServiceImpl implements PublicContentQueryService 
         List<SysCategory> categories = sysCategoryRepository.findByTypeAndStatusOrderBySortOrderAndId(ARTICLE_TYPE, 1);
         Map<Long, PublicCategoryTreeVO> categoryMap = new LinkedHashMap<>();
         for (SysCategory category : categories) {
-            categoryMap.put(category.getId(), contentModelMapper.toPublicCategoryTreeVO(category));
+            categoryMap.put(category.getId(), contentModelConvert.toPublicCategoryTreeVO(category));
         }
         List<PublicCategoryTreeVO> roots = new ArrayList<>();
         for (PublicCategoryTreeVO node : categoryMap.values()) {
@@ -81,7 +81,7 @@ public class PublicContentQueryServiceImpl implements PublicContentQueryService 
             return List.of();
         }
         return sysTagRepository.findByTargetType(actualTargetType).stream()
-                .map(contentModelMapper::toPublicTagVO)
+                .map(contentModelConvert::toPublicTagVO)
                 .toList();
     }
 
@@ -118,7 +118,7 @@ public class PublicContentQueryServiceImpl implements PublicContentQueryService 
 
         Map<Long, PublicCommentVO> commentMap = new LinkedHashMap<>();
         for (SysComment comment : comments) {
-            PublicCommentVO vo = contentModelMapper.toPublicCommentVO(comment);
+            PublicCommentVO vo = contentModelConvert.toPublicCommentVO(comment);
             SysUser user = userMap.get(comment.getUserId());
             if (user != null) {
                 vo.setUserNickname(user.getNickname());

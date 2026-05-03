@@ -13,7 +13,7 @@ import java.util.List;
  * 公开作者主页对象转换器。
  */
 @Mapper(componentModel = "spring")
-public interface PublicAuthorProfileModelMapper {
+public interface PublicAuthorProfileModelConvert {
 
     @Mapping(target = "userId", source = "id")
     @Mapping(target = "author", ignore = true)

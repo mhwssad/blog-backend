@@ -44,19 +44,24 @@ VALUES (1, 'Spring Boot', '#409EFF', NOW()),
 -- 示例文章
 INSERT INTO `blog_article`
 (`id`, `title`, `summary`, `content`, `cover_image`, `author_id`, `is_top`, `is_original`, `source_url`, `status`,
- `publish_time`, `access_level`, `view_count`, `like_count`, `comment_count`, `collect_count`, `share_count`,
+ `review_status`, `publish_time`, `scheduled_publish_time`, `access_level`, `visibility_scope`,
+ `view_count`, `like_count`, `comment_count`, `collect_count`, `share_count`,
  `created_at`, `updated_at`, `remark`)
 VALUES (1, 'Spring Boot 4 + JWT 认证实践', '使用当前项目的认证模块快速搭建账号登录、注册与令牌刷新能力。',
         '这是系统初始化的示例文章，用于验证文章、分类、标签、评论和互动等基础功能是否可用。', NULL, 1, 1, 1, NULL, 1,
-        DATE_SUB(NOW(), INTERVAL 7 DAY), 0, 128, 1, 2, 1, 6, DATE_SUB(NOW(), INTERVAL 10 DAY),
-        DATE_SUB(NOW(), INTERVAL 1 DAY), '系统初始化示例文章'),
+        2, DATE_SUB(NOW(), INTERVAL 7 DAY), NULL, 0, 0,
+        128, 1, 2, 1, 6,
+        DATE_SUB(NOW(), INTERVAL 10 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY), '系统初始化示例文章'),
        (2, '博客后台初始化说明', '记录数据库脚本、权限菜单以及演示账号的初始化约定。',
         '该文章用于说明初始化脚本执行顺序，以及管理员账号、演示账号和普通用户角色之间的关系。', NULL, 1, 0, 1, NULL, 1,
-        DATE_SUB(NOW(), INTERVAL 3 DAY), 1, 52, 0, 0, 0, 2, DATE_SUB(NOW(), INTERVAL 5 DAY),
-        DATE_SUB(NOW(), INTERVAL 2 DAY), '登录后可见的文章示例'),
-       (3, '仅对白名单开放的专栏样例', '演示 access_level=4 时的白名单授权数据结构。',
-        '当文章访问级别为指定用户可见时，可通过 blog_article_access 为白名单用户授权。', NULL, 2, 0, 1, NULL, 1,
-        DATE_SUB(NOW(), INTERVAL 1 DAY), 4, 18, 0, 0, 0, 0, DATE_SUB(NOW(), INTERVAL 2 DAY), NOW(), '白名单文章示例');
+        2, DATE_SUB(NOW(), INTERVAL 3 DAY), NULL, 1, 0,
+        52, 0, 0, 0, 2,
+        DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY), '登录后可见的文章示例'),
+       (3, '仅对白名单开放的专栏样例', '演示 visibility_scope=2 时的白名单授权数据结构。',
+        '当文章可见范围为白名单时，可通过 blog_article_access 为白名单用户授权。', NULL, 2, 0, 1, NULL, 1,
+        2, DATE_SUB(NOW(), INTERVAL 1 DAY), NULL, 0, 2,
+        18, 0, 0, 0, 0,
+        DATE_SUB(NOW(), INTERVAL 2 DAY), NOW(), '白名单文章示例');
 
 -- 文章分类关联
 INSERT INTO `blog_article_category`

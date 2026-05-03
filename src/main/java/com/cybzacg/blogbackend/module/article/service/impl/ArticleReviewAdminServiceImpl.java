@@ -9,7 +9,7 @@ import com.cybzacg.blogbackend.domain.auth.SysUser;
 import com.cybzacg.blogbackend.enums.article.ArticleReviewActionEnum;
 import com.cybzacg.blogbackend.enums.article.ArticleReviewStatusEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.article.convert.ArticleModelMapper;
+import com.cybzacg.blogbackend.module.article.convert.ArticleModelConvert;
 import com.cybzacg.blogbackend.module.article.model.admin.*;
 import com.cybzacg.blogbackend.module.article.model.common.ArticleReviewLogVO;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleCategoryRepository;
@@ -46,7 +46,7 @@ public class ArticleReviewAdminServiceImpl implements ArticleReviewAdminService 
     private final BlogArticleCategoryRepository blogArticleCategoryRepository;
     private final SysTagRelationRepository sysTagRelationRepository;
     private final SysUserRepository sysUserRepository;
-    private final ArticleModelMapper articleModelMapper;
+    private final ArticleModelConvert articleModelConvert;
     private final ArticleAccessControlService articleAccessControlService;
 
     @Override
@@ -65,7 +65,7 @@ public class ArticleReviewAdminServiceImpl implements ArticleReviewAdminService 
                 .filter(Objects::nonNull)
                 .collect(Collectors.toCollection(LinkedHashSet::new)));
         List<ArticleAdminVO> records = page.getRecords().stream()
-                .map(articleModelMapper::toAdminVO)
+                .map(articleModelConvert::toAdminVO)
                 .peek(vo -> vo.setAuthorName(authorNameMap.get(vo.getAuthorId())))
                 .toList();
         return PageResult.of(page, records);
@@ -180,12 +180,12 @@ public class ArticleReviewAdminServiceImpl implements ArticleReviewAdminService 
     }
 
     private ArticleDetailVO buildArticleDetail(BlogArticle article) {
-        ArticleDetailVO detailVO = articleModelMapper.toDetailVO(article);
+        ArticleDetailVO detailVO = articleModelConvert.toDetailVO(article);
         detailVO.setAuthorName(loadAuthorName(article.getAuthorId()));
         detailVO.setCategoryIds(listCategoryIds(article.getId()));
         detailVO.setTagIds(sysTagRelationRepository.listTagIdsByTargetTypeAndTargetId("article", article.getId()));
         detailVO.setAccessList(articleAccessControlService.listArticleAccesses(article.getId()).stream()
-                .map(articleModelMapper::toAccessItem)
+                .map(articleModelConvert::toAccessItem)
                 .toList());
         return detailVO;
     }

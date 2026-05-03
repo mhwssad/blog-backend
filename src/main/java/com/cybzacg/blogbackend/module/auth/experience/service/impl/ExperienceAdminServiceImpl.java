@@ -9,7 +9,7 @@ import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.enums.experience.ExperienceSourceTypeEnum;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.config.service.SysConfigService;
-import com.cybzacg.blogbackend.module.auth.experience.convert.ExperienceModelMapper;
+import com.cybzacg.blogbackend.module.auth.experience.convert.ExperienceModelConvert;
 import com.cybzacg.blogbackend.module.auth.experience.level.LevelCalculator;
 import com.cybzacg.blogbackend.module.auth.experience.level.LevelConfig;
 import com.cybzacg.blogbackend.module.auth.experience.model.admin.*;
@@ -34,7 +34,7 @@ public class ExperienceAdminServiceImpl implements ExperienceAdminService {
     private final SysUserRepository sysUserRepository;
     private final UserExperienceLogRepository experienceLogRepository;
     private final SysConfigService sysConfigService;
-    private final ExperienceModelMapper experienceModelMapper;
+    private final ExperienceModelConvert experienceModelConvert;
 
     @Override
     public UserExperienceSummaryVO getUserExperienceSummary(Long userId) {
@@ -76,18 +76,13 @@ public class ExperienceAdminServiceImpl implements ExperienceAdminService {
         IPage<UserExperienceLog> page = experienceLogRepository.pageByConditions(
                 query.getUserId(), query.getSourceType(),
                 query.getStartDate(), query.getEndDate(),
-                query.getCurrent(), query.getSize());
+                query.getCurrent().intValue(), query.getSize().intValue());
 
         List<ExperienceLogVO> records = page.getRecords().stream()
-                .map(experienceModelMapper::toLogVO)
+                .map(experienceModelConvert::toLogVO)
                 .toList();
 
-        return PageResult.<ExperienceLogVO>builder()
-                .total(page.getTotal())
-                .current(page.getCurrent())
-                .size(page.getSize())
-                .records(records)
-                .build();
+        return PageResult.of(page.getTotal(), page.getCurrent(), page.getSize(), records);
     }
 
     @Override

@@ -9,7 +9,7 @@ import com.cybzacg.blogbackend.enums.ai.AiChatSessionStatusEnum;
 import com.cybzacg.blogbackend.enums.ai.AiMessageResponseStatusEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.ai.constant.AiConstants;
-import com.cybzacg.blogbackend.module.ai.convert.AiModelMapper;
+import com.cybzacg.blogbackend.module.ai.convert.AiModelConvert;
 import com.cybzacg.blogbackend.module.ai.model.data.AiModelCallResult;
 import com.cybzacg.blogbackend.module.ai.model.user.*;
 import com.cybzacg.blogbackend.module.ai.repository.AiChannelConfigRepository;
@@ -45,7 +45,7 @@ public class AiChatServiceImpl implements AiChatService {
     private final AiModelClient aiModelClient;
     private final AiQuotaService aiQuotaService;
     private final AiUsageLogService aiUsageLogService;
-    private final AiModelMapper aiModelMapper;
+    private final AiModelConvert aiModelConvert;
 
     /**
      * {@inheritDoc}
@@ -84,7 +84,7 @@ public class AiChatServiceImpl implements AiChatService {
         session.setLastMessageAt(LocalDateTime.now());
         aiChatSessionRepository.save(session);
 
-        return aiModelMapper.toSessionVO(session);
+        return aiModelConvert.toSessionVO(session);
     }
 
     /**
@@ -99,7 +99,7 @@ public class AiChatServiceImpl implements AiChatService {
                 userId, AiChatSessionStatusEnum.NORMAL.getValue(), current, size);
 
         List<AiSessionVO> records = page.getRecords().stream()
-                .map(aiModelMapper::toSessionVO)
+                .map(aiModelConvert::toSessionVO)
                 .toList();
 
         return PageResult.of(page, records);
@@ -113,7 +113,7 @@ public class AiChatServiceImpl implements AiChatService {
         AiChatSession session = verifySessionOwnership(sessionId, userId);
         AiChannelConfig config = aiChannelConfigRepository.getById(session.getChannelConfigId());
 
-        AiSessionDetailVO detail = aiModelMapper.toSessionDetailVO(session);
+        AiSessionDetailVO detail = aiModelConvert.toSessionDetailVO(session);
         if (config != null) {
             detail.setChannelName(config.getChannelName());
             detail.setModelName(config.getModelName());
@@ -132,7 +132,7 @@ public class AiChatServiceImpl implements AiChatService {
 
         Page<AiChatMessage> page = aiChatMessageRepository.pageBySessionId(sessionId, current, size);
         List<AiMessageVO> records = page.getRecords().stream()
-                .map(aiModelMapper::toMessageVO)
+                .map(aiModelConvert::toMessageVO)
                 .toList();
         return PageResult.of(page, records);
     }
@@ -225,7 +225,7 @@ public class AiChatServiceImpl implements AiChatService {
         session.setLastMessageAt(LocalDateTime.now());
         aiChatSessionRepository.updateById(session);
 
-        return aiModelMapper.toMessageVO(assistantMessage);
+        return aiModelConvert.toMessageVO(assistantMessage);
     }
 
     /**

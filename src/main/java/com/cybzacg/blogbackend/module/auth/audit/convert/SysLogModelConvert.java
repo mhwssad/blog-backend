@@ -8,6 +8,6 @@ import org.mapstruct.Mapper;
  * 系统日志对象转换器。
  */
 @Mapper(componentModel = "spring")
-public interface SysLogModelMapper {
+public interface SysLogModelConvert {
     SysLogAdminVO toLogVO(SysLog log);
 }

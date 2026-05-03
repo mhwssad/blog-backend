@@ -18,7 +18,7 @@ import com.cybzacg.blogbackend.module.chat.message.repository.ChatMessageReadCur
 import com.cybzacg.blogbackend.module.chat.message.repository.ChatMessageRecipientRepository;
 import com.cybzacg.blogbackend.module.chat.message.repository.ChatMessageRepository;
 import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
-import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelMapper;
+import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelConvert;
 import com.cybzacg.blogbackend.module.chat.shared.model.common.ChatFilePayloadVO;
 import com.cybzacg.blogbackend.module.chat.shared.model.common.ChatMessagePayloadVO;
 import com.cybzacg.blogbackend.module.chat.shared.model.common.ChatReplyMessageVO;
@@ -50,7 +50,7 @@ public class ChatServiceSupport {
     private final ChatMessageRecipientRepository chatMessageRecipientRepository;
     private final ChatMessageReadCursorRepository chatMessageReadCursorRepository;
     private final SysUserRepository sysUserRepository;
-    private final ChatModelMapper chatModelMapper;
+    private final ChatModelConvert chatModelConvert;
     private final ChatPayloadHelper chatPayloadHelper;
     private final ChatMemberHelper chatMemberHelper;
     private final SysConfigService sysConfigService;
@@ -77,8 +77,8 @@ public class ChatServiceSupport {
         return chatMessageReadCursorRepository;
     }
 
-    public ChatModelMapper getModelMapper() {
-        return chatModelMapper;
+    public ChatModelConvert getModelConvert() {
+        return chatModelConvert;
     }
 
     // ========== Access Context ==========
@@ -143,7 +143,7 @@ public class ChatServiceSupport {
         LocalDateTime referenceMessageTime = resetCursorToLatest ? conversation.getLastMessageTime() : null;
         boolean wasInactive = member == null || !Objects.equals(member.getStatus(), ChatConstants.MEMBER_STATUS_NORMAL);
         if (member == null) {
-            member = chatModelMapper.toConversationMember(conversation.getId(), memberUserId, memberRole, joinSource, referenceMessageId, referenceMessageTime);
+            member = chatModelConvert.toConversationMember(conversation.getId(), memberUserId, memberRole, joinSource, referenceMessageId, referenceMessageTime);
             chatConversationMemberRepository.save(member);
         } else {
             member.setMemberRole(memberRole);
@@ -442,11 +442,11 @@ public class ChatServiceSupport {
                                                   ChatConversationListItem item,
                                                   List<ChatConversationMember> members,
                                                   Map<Long, SysUser> userMap) {
-        ChatConversationVO vo = chatModelMapper.toConversationVO(item);
+        ChatConversationVO vo = chatModelConvert.toConversationVO(item);
         vo.setMemberCount((long) members.size());
         vo.setUnreadCount(Objects.requireNonNullElse(item.getUnreadCount(), 0));
         if (item.getLastMessageId() != null) {
-            var lastMessage = chatModelMapper.toConversationLastMessageVO(item);
+            var lastMessage = chatModelConvert.toConversationLastMessageVO(item);
             SysUser sender = userMap.get(item.getLastMessageSenderId());
             lastMessage.setSenderNickname(UserDisplayNameUtils.resolveDisplayName(sender, item.getLastMessageSenderId()));
             vo.setLastMessage(lastMessage);
@@ -479,7 +479,7 @@ public class ChatServiceSupport {
                         .thenComparing(ChatConversationMember::getJoinedAt, Comparator.nullsLast(LocalDateTime::compareTo))
                         .thenComparing(ChatConversationMember::getUserId))
                 .forEach(member -> {
-                    ChatMemberVO vo = chatModelMapper.toMemberVO(member);
+                    ChatMemberVO vo = chatModelConvert.toMemberVO(member);
                     SysUser user = userMap.get(member.getUserId());
                     vo.setUserId(member.getUserId());
                     vo.setUsername(user != null ? user.getUsername() : null);
@@ -501,7 +501,7 @@ public class ChatServiceSupport {
                                         ChatMessageHistoryItem item,
                                         Map<Long, SysUser> userMap,
                                         Map<Long, ChatReplyMessageVO> replySnapshots) {
-        ChatMessageVO vo = chatModelMapper.toMessageVO(item);
+        ChatMessageVO vo = chatModelConvert.toMessageVO(item);
         SysUser sender = userMap.get(item.getSenderId());
         vo.setSenderUsername(sender != null ? sender.getUsername() : null);
         vo.setSenderNickname(UserDisplayNameUtils.resolveDisplayName(sender, item.getSenderId()));
@@ -517,7 +517,7 @@ public class ChatServiceSupport {
     }
 
     public ChatReadStateVO toReadStateVO(ChatMessageReadCursor cursor, Long userId) {
-        ChatReadStateVO vo = chatModelMapper.toReadStateVO(cursor);
+        ChatReadStateVO vo = chatModelConvert.toReadStateVO(cursor);
         vo.setUserId(userId);
         return vo;
     }
@@ -650,7 +650,7 @@ public class ChatServiceSupport {
         if (filePayload == null && replySnapshot == null) {
             return null;
         }
-        ChatMessagePayloadVO payload = chatModelMapper.toMessagePayloadVO(filePayload, replySnapshot);
+        ChatMessagePayloadVO payload = chatModelConvert.toMessagePayloadVO(filePayload, replySnapshot);
         return JsonUtils.toJson(payload);
     }
 

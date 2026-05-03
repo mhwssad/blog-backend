@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.follow;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.auth.SysUser;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.follow.convert.FollowModelMapper;
+import com.cybzacg.blogbackend.module.follow.convert.FollowModelConvert;
 import com.cybzacg.blogbackend.module.follow.model.data.PublicFollowUserItem;
 import com.cybzacg.blogbackend.module.follow.model.publics.PublicFollowPageQuery;
 import com.cybzacg.blogbackend.module.follow.model.publics.PublicFollowUserVO;
@@ -27,13 +27,13 @@ class PublicFollowServiceImplTest {
     @Mock
     private SysUserRepository sysUserRepository;
     @Mock
-    private FollowModelMapper followModelMapper;
+    private FollowModelConvert followModelConvert;
 
     private PublicFollowServiceImpl publicFollowService;
 
     @BeforeEach
     void setUp() {
-        publicFollowService = new PublicFollowServiceImpl(sysUserFollowRepository, sysUserRepository, followModelMapper);
+        publicFollowService = new PublicFollowServiceImpl(sysUserFollowRepository, sysUserRepository, followModelConvert);
     }
 
     @Test
@@ -51,7 +51,7 @@ class PublicFollowServiceImplTest {
         vo.setUserId(21L);
         vo.setUsername("fan-a");
         when(sysUserFollowRepository.selectPublicFollowPage(12L, 5L, 5L)).thenReturn(List.of(item));
-        when(followModelMapper.toPublicFollowUserVO(item)).thenReturn(vo);
+        when(followModelConvert.toPublicFollowUserVO(item)).thenReturn(vo);
 
         PageResult<PublicFollowUserVO> result = publicFollowService.pageUserFollows(12L, query);
 

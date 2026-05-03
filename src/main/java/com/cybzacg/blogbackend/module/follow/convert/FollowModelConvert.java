@@ -23,18 +23,12 @@ import java.time.LocalDateTime;
  * <p>负责收口关注实体构建、更新请求映射和分页列表视图转换。
  */
 @Mapper(componentModel = "spring", imports = StrUtils.class, unmappedTargetPolicy = ReportingPolicy.IGNORE)
-public interface FollowModelMapper {
-    @Mapping(target = "id", ignore = true)
+public interface FollowModelConvert {
     @Mapping(target = "followerId", source = "userId")
     @Mapping(target = "followingId", source = "targetUserId")
     @Mapping(target = "followStatus", constant = "1")
     @Mapping(target = "isSpecialFollow", constant = "0")
     @Mapping(target = "source", constant = "manual")
-    @Mapping(target = "followTime", source = "followTime")
-    @Mapping(target = "unfollowTime", ignore = true)
-    @Mapping(target = "remark", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
     SysUserFollow toNewFollow(Long userId, Long targetUserId, LocalDateTime followTime);
 
     @Mapping(target = "isSpecialFollow", source = "specialFollow")

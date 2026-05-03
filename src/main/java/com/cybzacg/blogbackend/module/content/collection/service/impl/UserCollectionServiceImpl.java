@@ -16,7 +16,7 @@ import com.cybzacg.blogbackend.module.content.collection.model.user.CollectionVO
 import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionFolderRepository;
 import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionRepository;
 import com.cybzacg.blogbackend.module.content.collection.service.UserCollectionService;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
@@ -39,7 +39,7 @@ public class UserCollectionServiceImpl implements UserCollectionService {
     private final SysCollectionFolderRepository sysCollectionFolderRepository;
     private final SysCollectionRepository sysCollectionRepository;
     private final ArticleContentFacadeService articleContentFacadeService;
-    private final ContentModelMapper contentModelMapper;
+    private final ContentModelConvert contentModelConvert;
     private final NotificationDeliveryService notificationDeliveryService;
 
     /**
@@ -49,7 +49,7 @@ public class UserCollectionServiceImpl implements UserCollectionService {
     public PageResult<CollectionFolderVO> pageFolders() {
         Long userId = SecurityUtils.requireUserId();
         Page<SysCollectionFolder> page = sysCollectionFolderRepository.pageByUserIdOrderByDefaultAndSort(userId, 1, 100);
-        List<CollectionFolderVO> records = page.getRecords().stream().map(contentModelMapper::toCollectionFolderVO).toList();
+        List<CollectionFolderVO> records = page.getRecords().stream().map(contentModelConvert::toCollectionFolderVO).toList();
         return PageResult.of(page, records);
     }
 
@@ -60,7 +60,7 @@ public class UserCollectionServiceImpl implements UserCollectionService {
     @Transactional(rollbackFor = Exception.class)
     public CollectionFolderVO createFolder(CollectionFolderSaveRequest request) {
         Long userId = SecurityUtils.requireUserId();
-        SysCollectionFolder folder = contentModelMapper.toCollectionFolder(request);
+        SysCollectionFolder folder = contentModelConvert.toCollectionFolder(request);
         folder.setUserId(userId);
         folder.setFolderType(resolveFolderType(request.getFolderType()));
         folder.setIsPublic(defaultInt(request.getIsPublic(), 0));
@@ -71,7 +71,7 @@ public class UserCollectionServiceImpl implements UserCollectionService {
             unsetDefaultFolder(userId, folder.getFolderType(), null);
         }
         sysCollectionFolderRepository.save(folder);
-        return contentModelMapper.toCollectionFolderVO(folder);
+        return contentModelConvert.toCollectionFolderVO(folder);
     }
 
     /**
@@ -82,7 +82,7 @@ public class UserCollectionServiceImpl implements UserCollectionService {
     public CollectionFolderVO updateFolder(Long id, CollectionFolderSaveRequest request) {
         Long userId = SecurityUtils.requireUserId();
         SysCollectionFolder folder = getFolderOrThrow(id, userId);
-        contentModelMapper.updateCollectionFolder(request, folder);
+        contentModelConvert.updateCollectionFolder(request, folder);
         folder.setFolderType(resolveFolderType(request.getFolderType()));
         folder.setIsPublic(defaultInt(request.getIsPublic(), 0));
         folder.setIsDefault(defaultInt(request.getIsDefault(), 0));
@@ -91,7 +91,7 @@ public class UserCollectionServiceImpl implements UserCollectionService {
             unsetDefaultFolder(userId, folder.getFolderType(), folder.getId());
         }
         sysCollectionFolderRepository.updateById(folder);
-        return contentModelMapper.toCollectionFolderVO(folder);
+        return contentModelConvert.toCollectionFolderVO(folder);
     }
 
     /**
@@ -120,7 +120,7 @@ public class UserCollectionServiceImpl implements UserCollectionService {
     public PageResult<CollectionVO> pageCollections() {
         Long userId = SecurityUtils.requireUserId();
         Page<SysCollection> page = sysCollectionRepository.pageByUserId(userId, 1, 100);
-        List<CollectionVO> records = page.getRecords().stream().map(contentModelMapper::toUserCollectionVO).toList();
+        List<CollectionVO> records = page.getRecords().stream().map(contentModelConvert::toUserCollectionVO).toList();
         return PageResult.of(page, records);
     }
 
@@ -143,7 +143,7 @@ public class UserCollectionServiceImpl implements UserCollectionService {
         if (exists) {
             return;
         }
-        SysCollection collection = contentModelMapper.toCollection(request, userId, folder.getId(), article);
+        SysCollection collection = contentModelConvert.toCollection(request, userId, folder.getId(), article);
         sysCollectionRepository.save(collection);
         sysCollectionFolderRepository.incrementCollectionCount(folder.getId(), 1);
         articleContentFacadeService.adjustCollectCount(article.getId(), 1);
@@ -182,7 +182,7 @@ public class UserCollectionServiceImpl implements UserCollectionService {
         if (folder != null) {
             return folder;
         }
-        SysCollectionFolder created = contentModelMapper.toDefaultCollectionFolder(userId, folderType);
+        SysCollectionFolder created = contentModelConvert.toDefaultCollectionFolder(userId, folderType);
         unsetDefaultFolder(userId, folderType, null);
         sysCollectionFolderRepository.save(created);
         return created;

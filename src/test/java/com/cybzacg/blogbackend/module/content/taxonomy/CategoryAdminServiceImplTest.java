@@ -4,7 +4,7 @@ import com.cybzacg.blogbackend.domain.content.SysCategory;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleCategoryRepository;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.admin.CategoryAdminVO;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.admin.CategorySaveRequest;
 import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysCategoryRepository;
@@ -26,13 +26,13 @@ class CategoryAdminServiceImplTest {
     @Mock
     private BlogArticleCategoryRepository blogArticleCategoryService;
     @Mock
-    private ContentModelMapper contentModelMapper;
+    private ContentModelConvert contentModelConvert;
 
     private CategoryAdminServiceImpl categoryAdminService;
 
     @BeforeEach
     void setUp() {
-        categoryAdminService = new CategoryAdminServiceImpl(sysCategoryRepository, blogArticleCategoryService, contentModelMapper);
+        categoryAdminService = new CategoryAdminServiceImpl(sysCategoryRepository, blogArticleCategoryService, contentModelConvert);
     }
 
     @Test
@@ -43,7 +43,7 @@ class CategoryAdminServiceImplTest {
         vo.setCode("backend");
 
         when(sysCategoryRepository.getById(10L)).thenReturn(category);
-        when(contentModelMapper.toCategoryAdminVO(category)).thenReturn(vo);
+        when(contentModelConvert.toCategoryAdminVO(category)).thenReturn(vo);
 
         CategoryAdminVO result = categoryAdminService.getCategory(10L);
 
@@ -68,7 +68,7 @@ class CategoryAdminServiceImplTest {
 
         when(sysCategoryRepository.existsByTypeAndCodeExcludingId("article", "java", null)).thenReturn(false);
         when(sysCategoryRepository.getById(5L)).thenReturn(parent);
-        when(contentModelMapper.toCategory(request)).thenReturn(category);
+        when(contentModelConvert.toCategory(request)).thenReturn(category);
         doAnswer(invocation -> {
             CategorySaveRequest actualRequest = invocation.getArgument(0);
             SysCategory actualCategory = invocation.getArgument(1);
@@ -76,12 +76,12 @@ class CategoryAdminServiceImplTest {
             actualCategory.setCode(actualRequest.getCode());
             actualCategory.setType(actualRequest.getType());
             return null;
-        }).when(contentModelMapper).updateCategory(request, category);
+        }).when(contentModelConvert).updateCategory(request, category);
         when(sysCategoryRepository.save(category)).thenAnswer(invocation -> {
             category.setId(20L);
             return true;
         });
-        when(contentModelMapper.toCategoryAdminVO(category)).thenReturn(vo);
+        when(contentModelConvert.toCategoryAdminVO(category)).thenReturn(vo);
 
         CategoryAdminVO result = categoryAdminService.createCategory(request);
 
@@ -133,8 +133,8 @@ class CategoryAdminServiceImplTest {
             actualCategory.setStatus(actualRequest.getStatus());
             actualCategory.setSortOrder(actualRequest.getSortOrder());
             return null;
-        }).when(contentModelMapper).updateCategory(request, category);
-        when(contentModelMapper.toCategoryAdminVO(category)).thenReturn(vo);
+        }).when(contentModelConvert).updateCategory(request, category);
+        when(contentModelConvert.toCategoryAdminVO(category)).thenReturn(vo);
 
         CategoryAdminVO result = categoryAdminService.updateCategory(10L, request);
 

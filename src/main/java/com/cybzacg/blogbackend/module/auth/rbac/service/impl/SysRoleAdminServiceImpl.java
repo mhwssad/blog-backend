@@ -5,7 +5,7 @@ import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.auth.SysRole;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRoleRepository;
-import com.cybzacg.blogbackend.module.auth.rbac.convert.RbacAdminModelMapper;
+import com.cybzacg.blogbackend.module.auth.rbac.convert.RbacAdminModelConvert;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysRoleAdminVO;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysRolePageQuery;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysRoleSaveRequest;
@@ -34,7 +34,7 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
     private final SysRoleMenuRepository sysRoleMenuRepository;
     private final SysUserRoleRepository sysUserRoleRepository;
     private final SysMenuRepository sysMenuRepository;
-    private final RbacAdminModelMapper rbacAdminModelMapper;
+    private final RbacAdminModelConvert rbacAdminModelConvert;
     private final RbacAssociationFactory rbacAssociationFactory;
 
     /**
@@ -44,7 +44,7 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
     public PageResult<SysRoleAdminVO> pageRoles(SysRolePageQuery query) {
         Page<SysRole> page = sysRoleRepository.pageByAdminConditions(query);
         List<SysRoleAdminVO> records = page.getRecords().stream()
-                .map(role -> rbacAdminModelMapper.toRoleVO(role, sysRoleMenuRepository.findMenuIdsByRoleId(role.getId())))
+                .map(role -> rbacAdminModelConvert.toRoleVO(role, sysRoleMenuRepository.findMenuIdsByRoleId(role.getId())))
                 .toList();
         return PageResult.of(page, records);
     }
@@ -55,7 +55,7 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
     @Override
     public SysRoleAdminVO getRole(Long id) {
         SysRole role = getAvailableRole(id);
-        return rbacAdminModelMapper.toRoleVO(role, sysRoleMenuRepository.findMenuIdsByRoleId(id));
+        return rbacAdminModelConvert.toRoleVO(role, sysRoleMenuRepository.findMenuIdsByRoleId(id));
     }
 
     /**
@@ -65,11 +65,11 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
     @Transactional(rollbackFor = Exception.class)
     public SysRoleAdminVO createRole(SysRoleSaveRequest request) {
         validateRoleUniqueness(null, request);
-        SysRole role = rbacAdminModelMapper.toRole(request);
+        SysRole role = rbacAdminModelConvert.toRole(request);
         applyRoleFields(role, request);
         role.setIsDeleted(0);
         sysRoleRepository.save(role);
-        return rbacAdminModelMapper.toRoleVO(role, List.of());
+        return rbacAdminModelConvert.toRoleVO(role, List.of());
     }
 
     /**
@@ -82,7 +82,7 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
         validateRoleUniqueness(id, request);
         applyRoleFields(role, request);
         sysRoleRepository.updateById(role);
-        return rbacAdminModelMapper.toRoleVO(role, sysRoleMenuRepository.findMenuIdsByRoleId(id));
+        return rbacAdminModelConvert.toRoleVO(role, sysRoleMenuRepository.findMenuIdsByRoleId(id));
     }
 
     /**
@@ -138,7 +138,7 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
     }
 
     private void applyRoleFields(SysRole role, SysRoleSaveRequest request) {
-        rbacAdminModelMapper.updateRole(request, role);
+        rbacAdminModelConvert.updateRole(request, role);
     }
 
     private void validateRoleUniqueness(Long currentRoleId, SysRoleSaveRequest request) {

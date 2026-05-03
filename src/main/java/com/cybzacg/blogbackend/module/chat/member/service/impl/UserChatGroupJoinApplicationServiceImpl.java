@@ -18,7 +18,7 @@ import com.cybzacg.blogbackend.module.chat.member.repository.ChatConversationMem
 import com.cybzacg.blogbackend.module.chat.member.repository.ChatGroupJoinApplicationRepository;
 import com.cybzacg.blogbackend.module.chat.member.service.UserChatGroupJoinApplicationService;
 import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
-import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelMapper;
+import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelConvert;
 import com.cybzacg.blogbackend.utils.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -42,7 +42,7 @@ public class UserChatGroupJoinApplicationServiceImpl implements UserChatGroupJoi
     private final ChatConversationRepository chatConversationRepository;
     private final ChatConversationMemberRepository chatConversationMemberRepository;
     private final SysUserRepository sysUserRepository;
-    private final ChatModelMapper chatModelMapper;
+    private final ChatModelConvert chatModelConvert;
 
     /**
      * {@inheritDoc}
@@ -242,7 +242,7 @@ public class UserChatGroupJoinApplicationServiceImpl implements UserChatGroupJoi
     }
 
     private ChatGroupJoinApplicationVO toVO(ChatGroupJoinApplication application, Map<Long, SysUser> userMap) {
-        ChatGroupJoinApplicationVO vo = chatModelMapper.toGroupJoinApplicationVO(application);
+        ChatGroupJoinApplicationVO vo = chatModelConvert.toGroupJoinApplicationVO(application);
         ChatGroupJoinApplicationStatusEnum status = ChatGroupJoinApplicationStatusEnum.fromValue(application.getApplyStatus());
         vo.setApplyStatusLabel(status == null ? null : status.getLabel());
         SysUser applicant = userMap.get(application.getApplicantUserId());

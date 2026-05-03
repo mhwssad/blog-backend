@@ -9,7 +9,7 @@ import com.cybzacg.blogbackend.module.content.footprint.model.admin.FootprintPag
 import com.cybzacg.blogbackend.module.content.footprint.model.admin.FootprintVO;
 import com.cybzacg.blogbackend.module.content.footprint.repository.SysUserFootprintRepository;
 import com.cybzacg.blogbackend.module.content.footprint.service.impl.FootprintAdminServiceImpl;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,13 +29,13 @@ class FootprintAdminServiceImplTest {
     @Mock
     private SysUserFootprintRepository sysUserFootprintRepository;
     @Mock
-    private ContentModelMapper contentModelMapper;
+    private ContentModelConvert contentModelConvert;
 
     private FootprintAdminServiceImpl footprintAdminService;
 
     @BeforeEach
     void setUp() {
-        footprintAdminService = new FootprintAdminServiceImpl(sysUserFootprintRepository, contentModelMapper);
+        footprintAdminService = new FootprintAdminServiceImpl(sysUserFootprintRepository, contentModelConvert);
     }
 
     @Test
@@ -58,7 +58,7 @@ class FootprintAdminServiceImplTest {
         vo.setTargetId(100L);
 
         when(sysUserFootprintRepository.pageByAdminConditions(query)).thenReturn(page);
-        when(contentModelMapper.toFootprintVO(footprint)).thenReturn(vo);
+        when(contentModelConvert.toFootprintVO(footprint)).thenReturn(vo);
 
         PageResult<FootprintVO> result = footprintAdminService.pageFootprints(query);
 

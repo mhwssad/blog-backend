@@ -7,7 +7,7 @@ import com.cybzacg.blogbackend.enums.article.ArticleReviewActionEnum;
 import com.cybzacg.blogbackend.enums.article.ArticleReviewStatusEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.article.convert.ArticleModelMapper;
+import com.cybzacg.blogbackend.module.article.convert.ArticleModelConvert;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleReviewDecisionRequest;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleReviewRepairRequest;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleCategoryRepository;
@@ -49,7 +49,7 @@ class ArticleReviewAdminServiceImplTest {
     @Mock
     private SysUserRepository sysUserRepository;
     @Mock
-    private ArticleModelMapper articleModelMapper;
+    private ArticleModelConvert articleModelConvert;
     @Mock
     private ArticleAccessControlService articleAccessControlService;
 
@@ -63,7 +63,7 @@ class ArticleReviewAdminServiceImplTest {
                 blogArticleCategoryRepository,
                 sysTagRelationRepository,
                 sysUserRepository,
-                articleModelMapper,
+                articleModelConvert,
                 articleAccessControlService
         );
     }

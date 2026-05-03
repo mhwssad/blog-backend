@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.article;
 import com.cybzacg.blogbackend.domain.article.BlogArticleSeries;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.article.convert.ArticleSeriesModelMapper;
+import com.cybzacg.blogbackend.module.article.convert.ArticleSeriesModelConvert;
 import com.cybzacg.blogbackend.module.article.model.user.ArticleSeriesArticleRequest;
 import com.cybzacg.blogbackend.module.article.model.user.ArticleSeriesSaveRequest;
 import com.cybzacg.blogbackend.module.article.model.user.UserArticleSeriesDetailVO;
@@ -54,7 +54,7 @@ class ArticleSeriesServiceImplTest {
     @Mock
     private ArticleAccessControlService articleAccessControlService;
     @Mock
-    private ArticleSeriesModelMapper articleSeriesModelMapper;
+    private ArticleSeriesModelConvert articleSeriesModelConvert;
     @Mock
     private ArticleSeriesItemService articleSeriesItemService;
 
@@ -70,7 +70,7 @@ class ArticleSeriesServiceImplTest {
                 authorPermissionService,
                 articleStatusMachine,
                 articleAccessControlService,
-                articleSeriesModelMapper,
+                articleSeriesModelConvert,
                 articleSeriesItemService
         );
     }
@@ -89,9 +89,9 @@ class ArticleSeriesServiceImplTest {
         mappedSeries.setTitle("测试系列");
         mappedSeries.setStatus(1);
         mappedSeries.setVisibilityScope(0);
-        when(articleSeriesModelMapper.toSeries(request)).thenReturn(mappedSeries);
+        when(articleSeriesModelConvert.toSeries(request)).thenReturn(mappedSeries);
         when(articleStatusMachine.normalizeVisibilityScope(any())).thenReturn(0);
-        lenient().when(articleSeriesModelMapper.toUserSeriesDetailVO(any(BlogArticleSeries.class)))
+        lenient().when(articleSeriesModelConvert.toUserSeriesDetailVO(any(BlogArticleSeries.class)))
                 .thenReturn(new UserArticleSeriesDetailVO());
         lenient().when(blogArticleSeriesItemRepository.listBySeriesIdOrdered(anyLong()))
                 .thenReturn(List.of());
@@ -212,9 +212,9 @@ class ArticleSeriesServiceImplTest {
         vo3.setId(3L);
         vo3.setTitle("系列C");
 
-        when(articleSeriesModelMapper.toUserSeriesVO(series2)).thenReturn(vo2);
-        when(articleSeriesModelMapper.toUserSeriesVO(series1)).thenReturn(vo1);
-        when(articleSeriesModelMapper.toUserSeriesVO(series3)).thenReturn(vo3);
+        when(articleSeriesModelConvert.toUserSeriesVO(series2)).thenReturn(vo2);
+        when(articleSeriesModelConvert.toUserSeriesVO(series1)).thenReturn(vo1);
+        when(articleSeriesModelConvert.toUserSeriesVO(series3)).thenReturn(vo3);
 
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(1L)) {
             when(authorPermissionService.hasAuthorRole(1L)).thenReturn(true);

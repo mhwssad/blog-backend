@@ -16,7 +16,7 @@ import org.mapstruct.*;
  * AI模块对象转换。
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
-public interface AiModelMapper {
+public interface AiModelConvert {
 
     AiSessionVO toSessionVO(AiChatSession session);
 
@@ -26,11 +26,6 @@ public interface AiModelMapper {
 
     AiChannelConfigVO toChannelConfigVO(AiChannelConfig config);
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "createdBy", ignore = true)
-    @Mapping(target = "updatedBy", ignore = true)
     AiChannelConfig toChannelConfig(AiChannelConfigSaveRequest request);
 
     @InheritConfiguration

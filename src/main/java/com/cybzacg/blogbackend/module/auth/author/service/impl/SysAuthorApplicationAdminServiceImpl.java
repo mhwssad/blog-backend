@@ -7,7 +7,7 @@ import com.cybzacg.blogbackend.domain.auth.SysUser;
 import com.cybzacg.blogbackend.enums.auth.AuthorApplicationStatusEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.auth.author.convert.AuthorApplicationModelMapper;
+import com.cybzacg.blogbackend.module.auth.author.convert.AuthorApplicationModelConvert;
 import com.cybzacg.blogbackend.module.auth.author.model.admin.SysAuthorApplicationAdminPageQuery;
 import com.cybzacg.blogbackend.module.auth.author.model.admin.SysAuthorApplicationAdminReviewRequest;
 import com.cybzacg.blogbackend.module.auth.author.model.admin.SysAuthorApplicationAdminVO;
@@ -39,7 +39,7 @@ public class SysAuthorApplicationAdminServiceImpl implements SysAuthorApplicatio
     private final SysAuthorApplicationRepository sysAuthorApplicationRepository;
     private final SysUserRepository sysUserRepository;
     private final AuthorPermissionService authorPermissionService;
-    private final AuthorApplicationModelMapper authorApplicationModelMapper;
+    private final AuthorApplicationModelConvert authorApplicationModelConvert;
 
     /**
      * 分页查询作者申请记录，并补齐申请人与审核人展示信息。
@@ -50,7 +50,7 @@ public class SysAuthorApplicationAdminServiceImpl implements SysAuthorApplicatio
         Page<SysAuthorApplication> page = sysAuthorApplicationRepository.pageByAdminConditions(safeQuery);
         Map<Long, SysUser> userMap = loadUserMap(page.getRecords());
         List<SysAuthorApplicationAdminVO> records = page.getRecords().stream()
-                .map(application -> authorApplicationModelMapper.toAdminVO(
+                .map(application -> authorApplicationModelConvert.toAdminVO(
                         application,
                         userMap.get(application.getUserId()),
                         userMap.get(application.getReviewerId())
@@ -66,7 +66,7 @@ public class SysAuthorApplicationAdminServiceImpl implements SysAuthorApplicatio
     public SysAuthorApplicationAdminVO getApplication(Long id) {
         SysAuthorApplication application = requireApplication(id);
         Map<Long, SysUser> userMap = loadUserMap(List.of(application));
-        return authorApplicationModelMapper.toAdminVO(
+        return authorApplicationModelConvert.toAdminVO(
                 application,
                 userMap.get(application.getUserId()),
                 userMap.get(application.getReviewerId())

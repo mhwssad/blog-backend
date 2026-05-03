@@ -14,7 +14,7 @@ import com.cybzacg.blogbackend.module.auth.account.token.TokenManager;
 import com.cybzacg.blogbackend.module.auth.audit.model.common.SysAuditLogCreateRequest;
 import com.cybzacg.blogbackend.module.auth.audit.service.SysAuditLogService;
 import com.cybzacg.blogbackend.module.auth.notice.service.UserNotificationPreferenceService;
-import com.cybzacg.blogbackend.module.auth.rbac.convert.RbacAdminModelMapper;
+import com.cybzacg.blogbackend.module.auth.rbac.convert.RbacAdminModelConvert;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysUserAdminVO;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysUserPageQuery;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysUserSaveRequest;
@@ -46,7 +46,7 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
     private final SysRoleRepository sysRoleRepository;
     private final SysUserRoleRepository sysUserRoleRepository;
     private final PasswordEncoder passwordEncoder;
-    private final RbacAdminModelMapper rbacAdminModelMapper;
+    private final RbacAdminModelConvert rbacAdminModelConvert;
     private final RbacAssociationFactory rbacAssociationFactory;
     private final UserNotificationPreferenceService userNotificationPreferenceService;
     private final SuperAdminVerifier superAdminVerifier;
@@ -61,7 +61,7 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
     public PageResult<SysUserAdminVO> pageUsers(SysUserPageQuery query) {
         Page<SysUser> page = sysUserRepository.pageByAdminConditions(query);
         List<SysUserAdminVO> records = page.getRecords().stream()
-                .map(user -> rbacAdminModelMapper.toUserVO(user, sysUserRoleRepository.findRoleIdsByUserId(user.getId())))
+                .map(user -> rbacAdminModelConvert.toUserVO(user, sysUserRoleRepository.findRoleIdsByUserId(user.getId())))
                 .toList();
         return PageResult.of(page, records);
     }
@@ -72,7 +72,7 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
     @Override
     public SysUserAdminVO getUser(Long id) {
         SysUser user = getAvailableUser(id);
-        return rbacAdminModelMapper.toUserVO(user, sysUserRoleRepository.findRoleIdsByUserId(id));
+        return rbacAdminModelConvert.toUserVO(user, sysUserRoleRepository.findRoleIdsByUserId(id));
     }
 
     /**
@@ -84,11 +84,11 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
         ExceptionThrowerCore.throwBusinessIfBlank(request.getPassword(), ResultErrorCode.ILLEGAL_ARGUMENT, "新增用户时密码不能为空");
         validateUserUniqueness(null, request);
 
-        SysUser user = rbacAdminModelMapper.toUser(request);
+        SysUser user = rbacAdminModelConvert.toUser(request);
         applyUserFields(user, request, true);
         sysUserRepository.save(user);
         userNotificationPreferenceService.initializeDefaultSettings(user.getId());
-        return rbacAdminModelMapper.toUserVO(user, List.of());
+        return rbacAdminModelConvert.toUserVO(user, List.of());
     }
 
     /**
@@ -101,7 +101,7 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
         validateUserUniqueness(id, request);
         applyUserFields(user, request, false);
         sysUserRepository.updateById(user);
-        return rbacAdminModelMapper.toUserVO(user, sysUserRoleRepository.findRoleIdsByUserId(id));
+        return rbacAdminModelConvert.toUserVO(user, sysUserRoleRepository.findRoleIdsByUserId(id));
     }
 
     /**
@@ -288,7 +288,7 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
     }
 
     private void applyUserFields(SysUser user, SysUserSaveRequest request, boolean includePassword) {
-        rbacAdminModelMapper.updateUser(request, user);
+        rbacAdminModelConvert.updateUser(request, user);
         if (includePassword) {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
             user.setUserLevel(1);

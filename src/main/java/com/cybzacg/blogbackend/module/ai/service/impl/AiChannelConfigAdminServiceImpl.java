@@ -7,7 +7,7 @@ import com.cybzacg.blogbackend.enums.SysAuditOperationType;
 import com.cybzacg.blogbackend.enums.ai.AiChannelStatusEnum;
 import com.cybzacg.blogbackend.enums.ai.AiDataScopeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.ai.convert.AiModelMapper;
+import com.cybzacg.blogbackend.module.ai.convert.AiModelConvert;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiChannelConfigSaveRequest;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiChannelConfigVO;
 import com.cybzacg.blogbackend.module.ai.repository.AiChannelConfigRepository;
@@ -34,7 +34,7 @@ import java.util.List;
 public class AiChannelConfigAdminServiceImpl implements AiChannelConfigAdminService {
 
     private final AiChannelConfigRepository aiChannelConfigRepository;
-    private final AiModelMapper aiModelMapper;
+    private final AiModelConvert aiModelConvert;
     private final SysAuditLogService sysAuditLogService;
     private final TwoFactorService twoFactorService;
     private final SuperAdminVerifier superAdminVerifier;
@@ -75,7 +75,7 @@ public class AiChannelConfigAdminServiceImpl implements AiChannelConfigAdminServ
         AiChannelConfig existing = aiChannelConfigRepository.findByChannelCode(request.getChannelCode());
         ExceptionThrowerCore.throwBusinessIfNotNull(existing, ResultErrorCode.AI_CHANNEL_CODE_DUPLICATE);
 
-        AiChannelConfig config = aiModelMapper.toChannelConfig(request);
+        AiChannelConfig config = aiModelConvert.toChannelConfig(request);
         config.setCreatedBy(operatorId);
         config.setUpdatedBy(operatorId);
         aiChannelConfigRepository.save(config);
@@ -106,7 +106,7 @@ public class AiChannelConfigAdminServiceImpl implements AiChannelConfigAdminServ
         // 审计高风险变更
         auditHighRiskChanges(config, request, operatorId);
 
-        aiModelMapper.updateChannelConfig(request, config);
+        aiModelConvert.updateChannelConfig(request, config);
         config.setUpdatedBy(operatorId);
         aiChannelConfigRepository.updateById(config);
 
@@ -155,7 +155,7 @@ public class AiChannelConfigAdminServiceImpl implements AiChannelConfigAdminServ
      * 将实体转换为 VO 并脱敏 API Key。
      */
     private AiChannelConfigVO toMaskedVO(AiChannelConfig config) {
-        AiChannelConfigVO vo = aiModelMapper.toChannelConfigVO(config);
+        AiChannelConfigVO vo = aiModelConvert.toChannelConfigVO(config);
         if (vo != null && vo.getApiKeyEncrypted() != null && vo.getApiKeyEncrypted().length() > 7) {
             vo.setApiKeyEncrypted(maskApiKey(vo.getApiKeyEncrypted()));
         }

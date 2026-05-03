@@ -5,7 +5,7 @@ import com.cybzacg.blogbackend.enums.auth.AuthorApplicationStatusEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.auth.author.convert.AuthorApplicationModelMapper;
+import com.cybzacg.blogbackend.module.auth.author.convert.AuthorApplicationModelConvert;
 import com.cybzacg.blogbackend.module.auth.author.model.admin.SysAuthorApplicationAdminReviewRequest;
 import com.cybzacg.blogbackend.module.auth.author.model.admin.SysAuthorApplicationRepairRequest;
 import com.cybzacg.blogbackend.module.auth.author.repository.SysAuthorApplicationRepository;
@@ -33,7 +33,7 @@ class SysAuthorApplicationAdminServiceImplTest {
     @Mock
     private AuthorPermissionService authorPermissionService;
     @Mock
-    private AuthorApplicationModelMapper authorApplicationModelMapper;
+    private AuthorApplicationModelConvert authorApplicationModelConvert;
 
     private SysAuthorApplicationAdminServiceImpl service;
 
@@ -43,7 +43,7 @@ class SysAuthorApplicationAdminServiceImplTest {
                 sysAuthorApplicationRepository,
                 sysUserRepository,
                 authorPermissionService,
-                authorApplicationModelMapper
+                authorApplicationModelConvert
         );
     }
 

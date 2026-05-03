@@ -12,7 +12,7 @@ import com.cybzacg.blogbackend.module.article.service.UserArticleActionService;
 import com.cybzacg.blogbackend.module.auth.experience.event.XpAwardEvent;
 import com.cybzacg.blogbackend.module.auth.notice.service.NotificationDeliveryService;
 import com.cybzacg.blogbackend.module.content.interaction.repository.SysInteractionRepository;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ public class UserArticleActionServiceImpl implements UserArticleActionService {
     private final SysInteractionRepository sysInteractionRepository;
     private final ArticleAccessControlService articleAccessControlService;
     private final ArticleStatusMachine articleStatusMachine;
-    private final ContentModelMapper contentModelMapper;
+    private final ContentModelConvert contentModelConvert;
     private final ApplicationEventPublisher eventPublisher;
     private final NotificationDeliveryService notificationDeliveryService;
 
@@ -50,7 +50,7 @@ public class UserArticleActionServiceImpl implements UserArticleActionService {
         if (exists) {
             return;
         }
-        SysInteraction interaction = contentModelMapper.toInteraction(userId, articleId, "article", "like");
+        SysInteraction interaction = contentModelConvert.toInteraction(userId, articleId, "article", "like");
         sysInteractionRepository.save(interaction);
         blogArticleRepository.incrementLikeCount(articleId, 1);
         eventPublisher.publishEvent(new XpAwardEvent(

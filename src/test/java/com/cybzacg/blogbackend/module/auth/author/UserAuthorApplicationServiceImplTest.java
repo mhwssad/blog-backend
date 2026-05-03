@@ -8,7 +8,7 @@ import com.cybzacg.blogbackend.enums.auth.AuthorApplicationStatusEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.auth.author.convert.AuthorApplicationModelMapper;
+import com.cybzacg.blogbackend.module.auth.author.convert.AuthorApplicationModelConvert;
 import com.cybzacg.blogbackend.module.auth.author.model.user.UserAuthorApplicationPageQuery;
 import com.cybzacg.blogbackend.module.auth.author.model.user.UserAuthorApplicationSubmitRequest;
 import com.cybzacg.blogbackend.module.auth.author.model.user.UserAuthorApplicationVO;
@@ -39,7 +39,7 @@ class UserAuthorApplicationServiceImplTest {
     @Mock
     private AuthorPermissionService authorPermissionService;
     @Mock
-    private AuthorApplicationModelMapper authorApplicationModelMapper;
+    private AuthorApplicationModelConvert authorApplicationModelConvert;
 
     private UserAuthorApplicationServiceImpl service;
 
@@ -49,7 +49,7 @@ class UserAuthorApplicationServiceImplTest {
                 sysAuthorApplicationRepository,
                 sysUserRepository,
                 authorPermissionService,
-                authorApplicationModelMapper
+                authorApplicationModelConvert
         );
     }
 
@@ -64,8 +64,8 @@ class UserAuthorApplicationServiceImplTest {
             when(sysUserRepository.getById(1L)).thenReturn(user);
             when(authorPermissionService.hasAuthorRole(1L)).thenReturn(false);
             when(sysAuthorApplicationRepository.findLatestByUserId(1L)).thenReturn(null);
-            when(authorApplicationModelMapper.toApplication(request)).thenReturn(mapped);
-            when(authorApplicationModelMapper.toUserVO(mapped)).thenReturn(expectedVO);
+            when(authorApplicationModelConvert.toApplication(request)).thenReturn(mapped);
+            when(authorApplicationModelConvert.toUserVO(mapped)).thenReturn(expectedVO);
 
             UserAuthorApplicationVO result = service.submitApplication(request);
 
@@ -131,12 +131,12 @@ class UserAuthorApplicationServiceImplTest {
             when(sysUserRepository.getById(1L)).thenReturn(user);
             when(authorPermissionService.hasAuthorRole(1L)).thenReturn(false);
             when(sysAuthorApplicationRepository.findLatestByUserId(1L)).thenReturn(needMoreInfo);
-            when(authorApplicationModelMapper.toUserVO(needMoreInfo)).thenReturn(expectedVO);
+            when(authorApplicationModelConvert.toUserVO(needMoreInfo)).thenReturn(expectedVO);
 
             UserAuthorApplicationVO result = service.submitApplication(request);
 
             assertSame(expectedVO, result);
-            verify(authorApplicationModelMapper).updateApplication(request, needMoreInfo);
+            verify(authorApplicationModelConvert).updateApplication(request, needMoreInfo);
             assertEquals(AuthorApplicationStatusEnum.PENDING.getValue(), needMoreInfo.getApplyStatus());
             assertNull(needMoreInfo.getReviewerId());
             assertNull(needMoreInfo.getReviewComment());
@@ -177,8 +177,8 @@ class UserAuthorApplicationServiceImplTest {
 
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(1L)) {
             when(sysAuthorApplicationRepository.pageByUserId(eq(1L), eq(1L), eq(10L))).thenReturn(page);
-            when(authorApplicationModelMapper.toUserVO(app1)).thenReturn(vo1);
-            when(authorApplicationModelMapper.toUserVO(app2)).thenReturn(vo2);
+            when(authorApplicationModelConvert.toUserVO(app1)).thenReturn(vo1);
+            when(authorApplicationModelConvert.toUserVO(app2)).thenReturn(vo2);
 
             PageResult<UserAuthorApplicationVO> result = service.pageMyApplications(query);
 

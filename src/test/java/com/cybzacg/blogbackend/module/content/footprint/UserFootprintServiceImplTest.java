@@ -11,7 +11,7 @@ import com.cybzacg.blogbackend.module.content.footprint.model.user.UserFootprint
 import com.cybzacg.blogbackend.module.content.footprint.model.user.UserFootprintVO;
 import com.cybzacg.blogbackend.module.content.footprint.repository.SysUserFootprintRepository;
 import com.cybzacg.blogbackend.module.content.footprint.service.impl.UserFootprintServiceImpl;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import com.cybzacg.blogbackend.utils.RequestContextUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,7 +36,7 @@ class UserFootprintServiceImplTest {
     @Mock
     private ArticleContentFacadeService articleContentFacadeService;
     @Mock
-    private ContentModelMapper contentModelMapper;
+    private ContentModelConvert contentModelConvert;
 
     private UserFootprintServiceImpl userFootprintService;
 
@@ -45,7 +45,7 @@ class UserFootprintServiceImplTest {
         userFootprintService = new UserFootprintServiceImpl(
                 sysUserFootprintRepository,
                 articleContentFacadeService,
-                contentModelMapper
+                contentModelConvert
         );
     }
 
@@ -65,7 +65,7 @@ class UserFootprintServiceImplTest {
         vo.setTargetId(100L);
 
         when(sysUserFootprintRepository.pageByUserIdAndTargetType(7L, "article", 2L, 5L)).thenReturn(page);
-        when(contentModelMapper.toUserFootprintVO(footprint)).thenReturn(vo);
+        when(contentModelConvert.toUserFootprintVO(footprint)).thenReturn(vo);
 
         try (MockedStatic<?> securityUtils = SecurityTestUtils.mockUserId(7L)) {
             PageResult<UserFootprintVO> result = userFootprintService.pageFootprints(query);
@@ -123,7 +123,7 @@ class UserFootprintServiceImplTest {
         SysUserFootprint footprint = footprint(null, 7L, 100L, "article");
 
         when(articleContentFacadeService.findAccessiblePublishedArticle(100L, 7L)).thenReturn(article);
-        when(contentModelMapper.toArticleFootprint(eq(7L), eq(article), eq("127.0.0.1"), eq("JUnit"), any(LocalDateTime.class)))
+        when(contentModelConvert.toArticleFootprint(eq(7L), eq(article), eq("127.0.0.1"), eq("JUnit"), any(LocalDateTime.class)))
                 .thenReturn(footprint);
 
         try (MockedStatic<?> securityUtils = SecurityTestUtils.mockUserId(7L);
@@ -134,7 +134,7 @@ class UserFootprintServiceImplTest {
             userFootprintService.recordArticleFootprint(100L);
         }
 
-        verify(contentModelMapper).toArticleFootprint(eq(7L), eq(article), eq("127.0.0.1"), eq("JUnit"), any(LocalDateTime.class));
+        verify(contentModelConvert).toArticleFootprint(eq(7L), eq(article), eq("127.0.0.1"), eq("JUnit"), any(LocalDateTime.class));
         verify(sysUserFootprintRepository).upsertFootprint(footprint);
     }
 

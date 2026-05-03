@@ -11,7 +11,7 @@ import com.cybzacg.blogbackend.module.content.comment.model.admin.CommentVO;
 import com.cybzacg.blogbackend.module.content.comment.repository.SysCommentRepository;
 import com.cybzacg.blogbackend.module.content.comment.service.impl.CommentAdminServiceImpl;
 import com.cybzacg.blogbackend.module.content.interaction.repository.SysInteractionRepository;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,7 +37,7 @@ class CommentAdminServiceImplTest {
     @Mock
     private SysUserRepository sysUserRepository;
     @Mock
-    private ContentModelMapper contentModelMapper;
+    private ContentModelConvert contentModelConvert;
 
     private CommentAdminServiceImpl commentAdminService;
 
@@ -48,7 +48,7 @@ class CommentAdminServiceImplTest {
                 sysInteractionRepository,
                 articleContentFacadeService,
                 sysUserRepository,
-                contentModelMapper
+                contentModelConvert
         );
     }
 
@@ -66,7 +66,7 @@ class CommentAdminServiceImplTest {
         vo.setId(10L);
 
         when(sysCommentRepository.pageByAdminConditions(query)).thenReturn(page);
-        when(contentModelMapper.toCommentVO(comment)).thenReturn(vo);
+        when(contentModelConvert.toCommentVO(comment)).thenReturn(vo);
         when(sysUserRepository.listByIds(any())).thenReturn(List.of());
 
         PageResult<CommentVO> result = commentAdminService.pageComments(query);
@@ -82,7 +82,7 @@ class CommentAdminServiceImplTest {
         vo.setId(10L);
 
         when(sysCommentRepository.getById(10L)).thenReturn(comment);
-        when(contentModelMapper.toCommentVO(comment)).thenReturn(vo);
+        when(contentModelConvert.toCommentVO(comment)).thenReturn(vo);
 
         CommentVO result = commentAdminService.getComment(10L);
 

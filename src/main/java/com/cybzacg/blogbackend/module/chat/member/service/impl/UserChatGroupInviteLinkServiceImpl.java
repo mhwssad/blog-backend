@@ -14,7 +14,7 @@ import com.cybzacg.blogbackend.module.chat.member.repository.ChatConversationMem
 import com.cybzacg.blogbackend.module.chat.member.repository.ChatGroupInviteLinkRepository;
 import com.cybzacg.blogbackend.module.chat.member.service.UserChatGroupInviteLinkService;
 import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
-import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelMapper;
+import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelConvert;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
@@ -45,7 +45,7 @@ public class UserChatGroupInviteLinkServiceImpl implements UserChatGroupInviteLi
     private final ChatGroupInviteLinkRepository chatGroupInviteLinkRepository;
     private final ChatConversationRepository chatConversationRepository;
     private final ChatConversationMemberRepository chatConversationMemberRepository;
-    private final ChatModelMapper chatModelMapper;
+    private final ChatModelConvert chatModelConvert;
 
     /**
      * {@inheritDoc}
@@ -243,7 +243,7 @@ public class UserChatGroupInviteLinkServiceImpl implements UserChatGroupInviteLi
     }
 
     private ChatGroupInviteLinkVO toVO(ChatGroupInviteLink inviteLink) {
-        ChatGroupInviteLinkVO vo = chatModelMapper.toGroupInviteLinkVO(inviteLink);
+        ChatGroupInviteLinkVO vo = chatModelConvert.toGroupInviteLinkVO(inviteLink);
         vo.setExpired(inviteLink.getExpireAt() != null && !inviteLink.getExpireAt().isAfter(LocalDateTime.now()));
         Integer maxUseCount = inviteLink.getMaxUseCount();
         Integer usedCount = inviteLink.getUsedCount();

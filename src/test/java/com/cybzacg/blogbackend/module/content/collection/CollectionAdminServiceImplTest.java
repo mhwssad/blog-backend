@@ -11,7 +11,7 @@ import com.cybzacg.blogbackend.module.content.collection.model.user.CollectionFo
 import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionFolderRepository;
 import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionRepository;
 import com.cybzacg.blogbackend.module.content.collection.service.impl.CollectionAdminServiceImpl;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,7 +32,7 @@ class CollectionAdminServiceImplTest {
     @Mock
     private ArticleContentFacadeService articleContentFacadeService;
     @Mock
-    private ContentModelMapper contentModelMapper;
+    private ContentModelConvert contentModelConvert;
 
     private CollectionAdminServiceImpl collectionAdminService;
 
@@ -42,7 +42,7 @@ class CollectionAdminServiceImplTest {
                 sysCollectionFolderRepository,
                 sysCollectionRepository,
                 articleContentFacadeService,
-                contentModelMapper
+                contentModelConvert
         );
     }
 
@@ -63,7 +63,7 @@ class CollectionAdminServiceImplTest {
         vo.setUserId(7L);
 
         when(sysCollectionFolderRepository.pageByAdminConditions(query)).thenReturn(page);
-        when(contentModelMapper.toCollectionFolderVO(folder)).thenReturn(vo);
+        when(contentModelConvert.toCollectionFolderVO(folder)).thenReturn(vo);
 
         PageResult<CollectionFolderVO> result = collectionAdminService.pageFolders(query);
 
@@ -93,7 +93,7 @@ class CollectionAdminServiceImplTest {
         vo.setTargetId(100L);
 
         when(sysCollectionRepository.pageByAdminConditions(query)).thenReturn(page);
-        when(contentModelMapper.toAdminCollectionVO(collection)).thenReturn(vo);
+        when(contentModelConvert.toAdminCollectionVO(collection)).thenReturn(vo);
 
         PageResult<CollectionVO> result = collectionAdminService.pageCollections(query);
 

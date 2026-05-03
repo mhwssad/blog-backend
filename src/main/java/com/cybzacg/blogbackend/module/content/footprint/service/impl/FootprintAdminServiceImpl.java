@@ -8,7 +8,7 @@ import com.cybzacg.blogbackend.module.content.footprint.model.admin.FootprintPag
 import com.cybzacg.blogbackend.module.content.footprint.model.admin.FootprintVO;
 import com.cybzacg.blogbackend.module.content.footprint.repository.SysUserFootprintRepository;
 import com.cybzacg.blogbackend.module.content.footprint.service.FootprintAdminService;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,7 +25,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FootprintAdminServiceImpl implements FootprintAdminService {
     private final SysUserFootprintRepository sysUserFootprintRepository;
-    private final ContentModelMapper contentModelMapper;
+    private final ContentModelConvert contentModelConvert;
 
     /**
      * 按管理端条件分页查询用户足迹列表。
@@ -34,7 +34,7 @@ public class FootprintAdminServiceImpl implements FootprintAdminService {
     public PageResult<FootprintVO> pageFootprints(FootprintPageQuery query) {
         Page<SysUserFootprint> page = sysUserFootprintRepository.pageByAdminConditions(query);
         List<FootprintVO> records = page.getRecords().stream()
-                .map(contentModelMapper::toFootprintVO)
+                .map(contentModelConvert::toFootprintVO)
                 .toList();
         return PageResult.of(page, records);
     }

@@ -13,60 +13,39 @@ import java.util.List;
 /**
  * RBAC 管理端对象转换器，处理用户、角色、菜单的增删改查映射。
  */
-@Mapper(componentModel = "spring", imports = StrUtils.class)
-public interface RbacAdminModelMapper {
+@Mapper(
+        componentModel = "spring",
+        imports = StrUtils.class,
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
+        nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS,
+        unmappedTargetPolicy = ReportingPolicy.IGNORE
+)
+public interface RbacAdminModelConvert {
 
-    @Mapping(target = "roleIds", ignore = true)
     SysUserAdminVO toUserVO(SysUser user);
 
-    @Mapping(target = "menuIds", ignore = true)
     SysRoleAdminVO toRoleVO(SysRole role);
 
-    @Mapping(target = "children", ignore = true)
     SysMenuAdminVO toMenuVO(SysMenu menu);
 
-    @Mapping(target = "id", ignore = true)
     @Mapping(target = "username", expression = "java(StrUtils.normalize(request.getUsername()))")
     @Mapping(target = "password", ignore = true)
-    @Mapping(target = "nickname", source = "nickname")
     @Mapping(target = "email", expression = "java(StrUtils.normalize(request.getEmail()))")
     @Mapping(target = "phone", expression = "java(StrUtils.normalize(request.getPhone()))")
-    @Mapping(target = "avatar", source = "avatar")
-    @Mapping(target = "gender", source = "gender")
-    @Mapping(target = "birthday", source = "birthday")
     @Mapping(target = "status", expression = "java(request.getStatus() != null ? request.getStatus() : 1)")
-    @Mapping(target = "userLevel", ignore = true)
-    @Mapping(target = "experiencePoints", ignore = true)
-    @Mapping(target = "levelUpdatedAt", ignore = true)
-    @Mapping(target = "lastLoginTime", ignore = true)
-    @Mapping(target = "lastLoginIp", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "deletedFlag", ignore = true)
-    @Mapping(target = "remark", source = "remark")
     SysUser toUser(SysUserSaveRequest request);
 
     @InheritConfiguration(name = "toUser")
     void updateUser(SysUserSaveRequest request, @MappingTarget SysUser user);
 
-    @Mapping(target = "id", ignore = true)
     @Mapping(target = "name", expression = "java(StrUtils.normalize(request.getName()))")
     @Mapping(target = "code", expression = "java(StrUtils.normalize(request.getCode()))")
-    @Mapping(target = "sort", source = "sort")
     @Mapping(target = "status", expression = "java(request.getStatus() != null ? request.getStatus() : 1)")
-    @Mapping(target = "dataScope", source = "dataScope")
-    @Mapping(target = "createBy", ignore = true)
-    @Mapping(target = "createTime", ignore = true)
-    @Mapping(target = "updateBy", ignore = true)
-    @Mapping(target = "updateTime", ignore = true)
-    @Mapping(target = "isDeleted", ignore = true)
     SysRole toRole(SysRoleSaveRequest request);
 
     @InheritConfiguration(name = "toRole")
     void updateRole(SysRoleSaveRequest request, @MappingTarget SysRole role);
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "parentId", source = "parentId")
     @Mapping(target = "treePath", ignore = true)
     @Mapping(target = "name", expression = "java(StrUtils.normalize(request.getName()))")
     @Mapping(target = "type", expression = "java(StrUtils.normalize(request.getType()))")
@@ -80,9 +59,6 @@ public interface RbacAdminModelMapper {
     @Mapping(target = "sort", expression = "java(request.getSort() != null ? request.getSort() : 0)")
     @Mapping(target = "icon", expression = "java(StrUtils.normalize(request.getIcon()))")
     @Mapping(target = "redirect", expression = "java(StrUtils.normalize(request.getRedirect()))")
-    @Mapping(target = "createTime", ignore = true)
-    @Mapping(target = "updateTime", ignore = true)
-    @Mapping(target = "params", source = "params")
     SysMenu toMenu(SysMenuSaveRequest request);
 
     @InheritConfiguration(name = "toMenu")

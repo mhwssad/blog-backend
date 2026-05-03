@@ -11,7 +11,7 @@ import com.cybzacg.blogbackend.domain.config.SysConfig;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.account.authentication.EmailCodeAuthenticationToken;
-import com.cybzacg.blogbackend.module.auth.account.convert.AuthModelMapper;
+import com.cybzacg.blogbackend.module.auth.account.convert.AuthModelConvert;
 import com.cybzacg.blogbackend.module.auth.account.model.*;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.account.service.impl.AuthServiceImpl;
@@ -62,7 +62,7 @@ class AuthServiceImplTest {
     @Mock
     private SysConfigRepository sysConfigRepository;
     @Mock
-    private AuthModelMapper authModelMapper;
+    private AuthModelConvert authModelConvert;
     @Mock
     private RedisOperator redisOperator;
     @Mock
@@ -87,7 +87,7 @@ class AuthServiceImplTest {
                 sysRoleRepository,
                 sysMenuRepository,
                 sysConfigRepository,
-                authModelMapper,
+                authModelConvert,
                 redisOperator,
                 javaMailSender,
                 mailProperties,
@@ -232,7 +232,7 @@ class AuthServiceImplTest {
         when(sysUserRepository.existsActiveByIdentity("demo")).thenReturn(false);
         when(sysUserRepository.existsActiveByIdentity("demo@example.com")).thenReturn(false);
         when(sysUserRepository.existsActiveByIdentity("13800138000")).thenReturn(false);
-        when(authModelMapper.toRegisterUser(request)).thenReturn(mappedUser);
+        when(authModelConvert.toRegisterUser(request)).thenReturn(mappedUser);
         when(passwordEncoder.encode("Secret1234")).thenReturn("encoded-secret");
         when(authenticationManager.authenticate(any(Authentication.class))).thenReturn(authentication);
         when(tokenManager.generateToken(authentication)).thenReturn(token);
@@ -270,7 +270,7 @@ class AuthServiceImplTest {
         when(sysUserRepository.existsActiveByIdentity("demo")).thenReturn(false);
         when(sysUserRepository.existsActiveByIdentity("demo@example.com")).thenReturn(false);
         when(sysUserRepository.existsActiveByIdentity("13800138000")).thenReturn(false);
-        when(authModelMapper.toRegisterUser(request)).thenReturn(mappedUser);
+        when(authModelConvert.toRegisterUser(request)).thenReturn(mappedUser);
         when(passwordEncoder.encode("Secret1234")).thenReturn("encoded-secret");
         doThrow(new DuplicateKeyException("uk_sys_user_active_username")).when(sysUserRepository).save(mappedUser);
         when(sysUserRepository.existsActiveByField("username", "demo")).thenReturn(true);
@@ -382,7 +382,7 @@ class AuthServiceImplTest {
         when(sysUserRepository.getById(12L)).thenReturn(user);
         when(sysRoleRepository.findRoleCodesByUserId(12L)).thenReturn(roleCodes);
         when(sysMenuRepository.findPermissionsByUserId(12L)).thenReturn(permissions);
-        when(authModelMapper.toAuthUserInfo(user, roleCodes, permissions)).thenReturn(expected);
+        when(authModelConvert.toAuthUserInfo(user, roleCodes, permissions)).thenReturn(expected);
 
         try (MockedStatic<?> securityUtils = SecurityTestUtils.mockAuthentication(authentication, 12L, null)) {
             AuthUserInfo result = authService.getCurrentUser();
@@ -425,8 +425,8 @@ class AuthServiceImplTest {
 
         when(sysUserRepository.findByUsername("demo")).thenReturn(user);
         when(sysMenuRepository.findMenusByUserId(21L)).thenReturn(List.of(root, child, button));
-        when(authModelMapper.toAuthMenuInfo(root)).thenReturn(rootInfo);
-        when(authModelMapper.toAuthMenuInfo(child)).thenReturn(childInfo);
+        when(authModelConvert.toAuthMenuInfo(root)).thenReturn(rootInfo);
+        when(authModelConvert.toAuthMenuInfo(child)).thenReturn(childInfo);
 
         try (MockedStatic<?> securityUtils = SecurityTestUtils.mockAuthentication(authentication, null, "demo")) {
             List<AuthMenuInfo> result = authService.getCurrentUserMenus();

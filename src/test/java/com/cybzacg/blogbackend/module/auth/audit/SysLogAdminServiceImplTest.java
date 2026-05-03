@@ -5,7 +5,7 @@ import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.system.SysLog;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.auth.audit.convert.SysLogModelMapper;
+import com.cybzacg.blogbackend.module.auth.audit.convert.SysLogModelConvert;
 import com.cybzacg.blogbackend.module.auth.audit.model.admin.SysLogAdminVO;
 import com.cybzacg.blogbackend.module.auth.audit.model.admin.SysLogCleanRequest;
 import com.cybzacg.blogbackend.module.auth.audit.model.admin.SysLogPageQuery;
@@ -31,13 +31,13 @@ class SysLogAdminServiceImplTest {
     @Mock
     private SysLogRepository sysLogRepository;
     @Mock
-    private SysLogModelMapper sysLogModelMapper;
+    private SysLogModelConvert sysLogModelConvert;
 
     private SysLogAdminServiceImpl sysLogAdminService;
 
     @BeforeEach
     void setUp() {
-        sysLogAdminService = new SysLogAdminServiceImpl(sysLogRepository, sysLogModelMapper);
+        sysLogAdminService = new SysLogAdminServiceImpl(sysLogRepository, sysLogModelConvert);
     }
 
     @Test
@@ -54,7 +54,7 @@ class SysLogAdminServiceImplTest {
         when(sysLogRepository.pageByAdminConditions(query)).thenReturn(page);
 
         SysLogAdminVO expected = logVO(1L, "auth", "/auth/login");
-        when(sysLogModelMapper.toLogVO(log)).thenReturn(expected);
+        when(sysLogModelConvert.toLogVO(log)).thenReturn(expected);
 
         PageResult<SysLogAdminVO> result = sysLogAdminService.pageLogs(query);
 
@@ -69,7 +69,7 @@ class SysLogAdminServiceImplTest {
         when(sysLogRepository.getById(1L)).thenReturn(log);
 
         SysLogAdminVO expected = logVO(1L, "auth", "/auth/login");
-        when(sysLogModelMapper.toLogVO(log)).thenReturn(expected);
+        when(sysLogModelConvert.toLogVO(log)).thenReturn(expected);
 
         SysLogAdminVO result = sysLogAdminService.getLog(1L);
 

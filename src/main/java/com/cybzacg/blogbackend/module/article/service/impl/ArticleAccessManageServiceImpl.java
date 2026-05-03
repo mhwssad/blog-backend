@@ -5,7 +5,7 @@ import com.cybzacg.blogbackend.domain.article.BlogArticleAccess;
 import com.cybzacg.blogbackend.domain.auth.SysUser;
 import com.cybzacg.blogbackend.enums.article.ArticleVisibilityScopeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.article.convert.ArticleModelMapper;
+import com.cybzacg.blogbackend.module.article.convert.ArticleModelConvert;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleAccessItem;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleAccessRepository;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessManageService;
@@ -30,7 +30,7 @@ import java.util.Set;
 public class ArticleAccessManageServiceImpl implements ArticleAccessManageService {
     private final BlogArticleAccessRepository blogArticleAccessRepository;
     private final SysUserRepository sysUserRepository;
-    private final ArticleModelMapper articleModelMapper;
+    private final ArticleModelConvert articleModelConvert;
 
     /**
      * {@inheritDoc}
@@ -82,7 +82,7 @@ public class ArticleAccessManageServiceImpl implements ArticleAccessManageServic
         }
         LocalDateTime now = LocalDateTime.now();
         List<BlogArticleAccess> records = accessList.stream()
-                .map(item -> articleModelMapper.toArticleAccess(articleId, item, now))
+                .map(item -> articleModelConvert.toArticleAccess(articleId, item, now))
                 .toList();
         blogArticleAccessRepository.saveBatch(records);
     }

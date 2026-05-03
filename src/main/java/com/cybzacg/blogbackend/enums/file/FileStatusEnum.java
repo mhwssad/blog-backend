@@ -8,7 +8,8 @@ import lombok.Getter;
 @Getter
 public enum FileStatusEnum {
     DELETED(0, "已删除"),
-    NORMAL(1, "正常");
+    NORMAL(1, "正常"),
+    PHYSICAL_DELETE_PENDING(2, "待物理删除");
 
     private final Integer value;
     private final String label;

@@ -6,7 +6,7 @@ import com.cybzacg.blogbackend.domain.notice.SysUserNotice;
 import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.auth.notice.convert.SysNoticeModelMapper;
+import com.cybzacg.blogbackend.module.auth.notice.convert.SysNoticeModelConvert;
 import com.cybzacg.blogbackend.module.auth.notice.repository.SysNoticeRepository;
 import com.cybzacg.blogbackend.module.auth.notice.repository.SysUserNoticeRepository;
 import com.cybzacg.blogbackend.module.auth.notice.service.UserNotificationPreferenceService;
@@ -36,7 +36,7 @@ class UserNoticeInboxServiceImplTest {
     @Mock
     private SysUserNoticeRepository sysUserNoticeRepository;
     @Mock
-    private SysNoticeModelMapper sysNoticeModelMapper;
+    private SysNoticeModelConvert sysNoticeModelConvert;
     @Mock
     private SysNoticeFactory sysNoticeFactory;
     @Mock
@@ -49,7 +49,7 @@ class UserNoticeInboxServiceImplTest {
         userNoticeInboxService = new UserNoticeInboxServiceImpl(
                 sysNoticeRepository,
                 sysUserNoticeRepository,
-                sysNoticeModelMapper,
+                sysNoticeModelConvert,
                 sysNoticeFactory,
                 userNotificationPreferenceService
         );

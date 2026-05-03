@@ -38,7 +38,7 @@ class ChatAttachmentAsyncProcessingServiceImplTest {
                 null, // chatAttachmentMetadataResolver - not tested here
                 null, // chatPushService - not tested here
                 null, // chatMetricsService - not tested here
-                null, // chatModelMapper - not tested here
+                null, // chatModelConvert - not tested here
                 imageProcessor,
                 voiceProcessor
         );

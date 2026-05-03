@@ -16,7 +16,7 @@ import com.cybzacg.blogbackend.module.chat.member.model.user.ChatChannelApplicat
 import com.cybzacg.blogbackend.module.chat.member.repository.ChatChannelCreateApplicationRepository;
 import com.cybzacg.blogbackend.module.chat.member.service.UserChatChannelApplicationService;
 import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
-import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelMapper;
+import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelConvert;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
@@ -42,7 +42,7 @@ public class UserChatChannelApplicationServiceImpl implements UserChatChannelApp
     private final SysUserRepository sysUserRepository;
     private final UserExperienceService userExperienceService;
     private final SysConfigService sysConfigService;
-    private final ChatModelMapper chatModelMapper;
+    private final ChatModelConvert chatModelConvert;
 
     /**
      * {@inheritDoc}
@@ -61,7 +61,7 @@ public class UserChatChannelApplicationServiceImpl implements UserChatChannelApp
             return resubmitLatestApplication(latest, request);
         }
         LocalDateTime now = LocalDateTime.now();
-        ChatChannelCreateApplication application = chatModelMapper.toChannelApplication(request);
+        ChatChannelCreateApplication application = chatModelConvert.toChannelApplication(request);
         application.setApplicantUserId(userId);
         application.setDesiredSceneType(normalizeDesiredSceneType(application.getDesiredSceneType()));
         application.setApplyStatus(ChatChannelApplicationStatusEnum.PENDING.getValue());
@@ -95,7 +95,7 @@ public class UserChatChannelApplicationServiceImpl implements UserChatChannelApp
 
     private ChatChannelApplicationVO resubmitLatestApplication(ChatChannelCreateApplication latest,
                                                               ChatChannelApplicationSubmitRequest request) {
-        ChatChannelCreateApplication updated = chatModelMapper.toChannelApplication(request);
+        ChatChannelCreateApplication updated = chatModelConvert.toChannelApplication(request);
         latest.setDesiredName(updated.getDesiredName());
         latest.setDesiredSceneType(normalizeDesiredSceneType(updated.getDesiredSceneType()));
         latest.setDesiredCategoryCode(updated.getDesiredCategoryCode());
@@ -154,7 +154,7 @@ public class UserChatChannelApplicationServiceImpl implements UserChatChannelApp
     }
 
     private ChatChannelApplicationVO toUserVO(ChatChannelCreateApplication application) {
-        ChatChannelApplicationVO vo = chatModelMapper.toChannelApplicationVO(application);
+        ChatChannelApplicationVO vo = chatModelConvert.toChannelApplicationVO(application);
         ChatChannelApplicationStatusEnum status = ChatChannelApplicationStatusEnum.fromValue(application.getApplyStatus());
         vo.setApplyStatusLabel(status == null ? null : status.getLabel());
         return vo;

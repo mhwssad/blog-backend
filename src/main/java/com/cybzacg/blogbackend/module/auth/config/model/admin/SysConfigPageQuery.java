@@ -1,19 +1,18 @@
 package com.cybzacg.blogbackend.module.auth.config.model.admin;
 
+import com.cybzacg.blogbackend.core.web.PageQuery;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "系统配置分页查询条件")
-public class SysConfigPageQuery {
-    @Schema(description = "页码", example = "1")
-    private Long current = 1L;
-
-    @Schema(description = "每页条数", example = "10")
-    private Long size = 10L;
+public class SysConfigPageQuery extends PageQuery {
 
     @Schema(description = "配置名称")
     private String configName;

@@ -5,7 +5,7 @@ import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.model.internal.AuthorPublicProfileStats;
 import com.cybzacg.blogbackend.module.article.service.ArticleProfileQueryService;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.auth.author.convert.PublicAuthorProfileModelMapper;
+import com.cybzacg.blogbackend.module.auth.author.convert.PublicAuthorProfileModelConvert;
 import com.cybzacg.blogbackend.module.auth.author.model.publics.PublicAuthorProfileVO;
 import com.cybzacg.blogbackend.module.auth.author.service.AuthorPermissionService;
 import com.cybzacg.blogbackend.module.auth.author.service.PublicAuthorProfileService;
@@ -26,7 +26,7 @@ public class PublicAuthorProfileServiceImpl implements PublicAuthorProfileServic
     private final SysUserRepository sysUserRepository;
     private final AuthorPermissionService authorPermissionService;
     private final ArticleProfileQueryService articleProfileQueryService;
-    private final PublicAuthorProfileModelMapper publicAuthorProfileModelMapper;
+    private final PublicAuthorProfileModelConvert publicAuthorProfileModelConvert;
 
     /**
      * {@inheritDoc}
@@ -34,7 +34,7 @@ public class PublicAuthorProfileServiceImpl implements PublicAuthorProfileServic
     @Override
     public PublicAuthorProfileVO getAuthorProfile(Long userId) {
         SysUser user = requireActiveUser(userId);
-        PublicAuthorProfileVO vo = publicAuthorProfileModelMapper.toPublicAuthorProfileVO(user);
+        PublicAuthorProfileVO vo = publicAuthorProfileModelConvert.toPublicAuthorProfileVO(user);
         boolean isAuthor = authorPermissionService.hasAuthorRole(userId);
         vo.setAuthor(isAuthor);
         vo.setAuthorBadge(isAuthor ? AUTHOR_BADGE : null);

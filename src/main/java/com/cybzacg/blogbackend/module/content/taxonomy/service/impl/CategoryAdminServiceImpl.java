@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.content.taxonomy.service.impl;
 import com.cybzacg.blogbackend.domain.content.SysCategory;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleCategoryRepository;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.admin.CategoryAdminVO;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.admin.CategorySaveRequest;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.admin.CategoryTreeVO;
@@ -34,7 +34,7 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
 
     private final SysCategoryRepository sysCategoryRepository;
     private final BlogArticleCategoryRepository blogArticleCategoryService;
-    private final ContentModelMapper contentModelMapper;
+    private final ContentModelConvert contentModelConvert;
 
     /**
      * 查询文章分类树结构，返回按排序字段组装的层级列表。
@@ -50,7 +50,7 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
      */
     @Override
     public CategoryAdminVO getCategory(Long id) {
-        return contentModelMapper.toCategoryAdminVO(getCategoryOrThrow(id));
+        return contentModelConvert.toCategoryAdminVO(getCategoryOrThrow(id));
     }
 
     /**
@@ -61,10 +61,10 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
     public CategoryAdminVO createCategory(CategorySaveRequest request) {
         validateRequest(request, null);
         SysCategory parent = validateParent(request.getParentId(), null);
-        SysCategory category = contentModelMapper.toCategory(request);
+        SysCategory category = contentModelConvert.toCategory(request);
         applyFields(category, request, parent);
         sysCategoryRepository.save(category);
-        return contentModelMapper.toCategoryAdminVO(category);
+        return contentModelConvert.toCategoryAdminVO(category);
     }
 
     /**
@@ -79,7 +79,7 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
         applyFields(category, request, parent);
         sysCategoryRepository.updateById(category);
         refreshChildrenHierarchy(category);
-        return contentModelMapper.toCategoryAdminVO(category);
+        return contentModelConvert.toCategoryAdminVO(category);
     }
 
     /**
@@ -152,7 +152,7 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
      * 将请求字段和层级信息回填到分类实体，统一维护层级与祖先链。
      */
     private void applyFields(SysCategory category, CategorySaveRequest request, SysCategory parent) {
-        contentModelMapper.updateCategory(request, category);
+        contentModelConvert.updateCategory(request, category);
         category.setSortOrder(category.getSortOrder() == null ? 0 : category.getSortOrder());
         category.setStatus(category.getStatus() == null ? 1 : category.getStatus());
         category.setLevel(parent == null ? 1 : parent.getLevel() + 1);
@@ -185,7 +185,7 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
     private List<CategoryTreeVO> buildCategoryTree(List<SysCategory> categories) {
         Map<Long, CategoryTreeVO> categoryMap = new LinkedHashMap<>();
         for (SysCategory category : categories) {
-            categoryMap.put(category.getId(), contentModelMapper.toCategoryTreeVO(category));
+            categoryMap.put(category.getId(), contentModelConvert.toCategoryTreeVO(category));
         }
         List<CategoryTreeVO> roots = new ArrayList<>();
         for (CategoryTreeVO node : categoryMap.values()) {

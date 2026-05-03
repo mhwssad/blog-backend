@@ -1,19 +1,19 @@
 package com.cybzacg.blogbackend.module.article.model.admin;
 
+import com.cybzacg.blogbackend.core.web.PageQuery;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "后台文章分页查询条件")
-public class ArticleAdminPageQuery {
-    @Schema(description = "页码")
-    private Long current = 1L;
-    @Schema(description = "每页条数")
-    private Long size = 10L;
-    @Schema(description = "搜索关键词")
+public class ArticleAdminPageQuery extends PageQuery {
+    @Schema(description = "搜索关键字")
     private String keyword;
     @Schema(description = "作者ID")
     private Long authorId;

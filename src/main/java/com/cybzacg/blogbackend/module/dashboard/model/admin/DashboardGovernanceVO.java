@@ -11,10 +11,21 @@ import lombok.Data;
 @Builder
 @Schema(description = "后台治理统计指标")
 public class DashboardGovernanceVO {
+    @Schema(description = "时间范围")
     private DashboardRangeVO range;
+
+    @Schema(description = "举报总数")
     private Long reportCount;
+
+    @Schema(description = "待处理举报数")
     private Long pendingReportCount;
+
+    @Schema(description = "处理中举报数")
     private Long processingReportCount;
+
+    @Schema(description = "已处理举报数")
     private Long handledReportCount;
+
+    @Schema(description = "已驳回举报数")
     private Long rejectedReportCount;
 }

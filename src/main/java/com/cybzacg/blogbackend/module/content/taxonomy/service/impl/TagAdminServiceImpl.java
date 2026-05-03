@@ -2,7 +2,7 @@ package com.cybzacg.blogbackend.module.content.taxonomy.service.impl;
 
 import com.cybzacg.blogbackend.domain.content.SysTag;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.admin.TagSaveRequest;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.admin.TagVO;
 import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysTagRelationRepository;
@@ -26,7 +26,7 @@ import java.util.List;
 public class TagAdminServiceImpl implements TagAdminService {
     private final SysTagRepository sysTagRepository;
     private final SysTagRelationRepository sysTagRelationRepository;
-    private final ContentModelMapper contentModelMapper;
+    private final ContentModelConvert contentModelConvert;
 
     /**
      * 查询全部标签列表，按ID降序返回。
@@ -35,7 +35,7 @@ public class TagAdminServiceImpl implements TagAdminService {
     public List<TagVO> listTags() {
         return sysTagRepository.findAllOrderByIdDesc()
                 .stream()
-                .map(contentModelMapper::toTagVO)
+                .map(contentModelConvert::toTagVO)
                 .toList();
     }
 
@@ -44,7 +44,7 @@ public class TagAdminServiceImpl implements TagAdminService {
      */
     @Override
     public TagVO getTag(Long id) {
-        return contentModelMapper.toTagVO(getTagOrThrow(id));
+        return contentModelConvert.toTagVO(getTagOrThrow(id));
     }
 
     /**
@@ -54,9 +54,9 @@ public class TagAdminServiceImpl implements TagAdminService {
     @Transactional(rollbackFor = Exception.class)
     public TagVO createTag(TagSaveRequest request) {
         validateNameUnique(null, request.getName());
-        SysTag tag = contentModelMapper.toTag(request);
+        SysTag tag = contentModelConvert.toTag(request);
         sysTagRepository.save(tag);
-        return contentModelMapper.toTagVO(tag);
+        return contentModelConvert.toTagVO(tag);
     }
 
     /**
@@ -67,9 +67,9 @@ public class TagAdminServiceImpl implements TagAdminService {
     public TagVO updateTag(Long id, TagSaveRequest request) {
         SysTag tag = getTagOrThrow(id);
         validateNameUnique(id, request.getName());
-        contentModelMapper.updateTag(request, tag);
+        contentModelConvert.updateTag(request, tag);
         sysTagRepository.updateById(tag);
-        return contentModelMapper.toTagVO(tag);
+        return contentModelConvert.toTagVO(tag);
     }
 
     /**

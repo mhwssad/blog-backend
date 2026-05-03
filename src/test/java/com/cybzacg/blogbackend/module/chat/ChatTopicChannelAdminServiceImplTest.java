@@ -17,7 +17,7 @@ import com.cybzacg.blogbackend.module.chat.member.repository.ChatConversationMem
 import com.cybzacg.blogbackend.module.chat.member.service.impl.ChatChannelApplicationAdminServiceImpl;
 import com.cybzacg.blogbackend.module.chat.push.service.ChatNotificationService;
 import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
-import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelMapper;
+import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelConvert;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatAdminConversationListItem;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,7 +54,7 @@ class ChatTopicChannelAdminServiceImplTest {
         @Mock
         private SysUserRepository sysUserRepository;
         @Mock
-        private ChatModelMapper chatModelMapper;
+        private ChatModelConvert chatModelConvert;
         @Mock
         private ChatNotificationService chatNotificationService;
 
@@ -66,7 +66,7 @@ class ChatTopicChannelAdminServiceImplTest {
                     chatConversationRepository,
                     chatConversationMemberRepository,
                     sysUserRepository,
-                    chatModelMapper,
+                    chatModelConvert,
                     chatNotificationService
             );
         }
@@ -83,7 +83,7 @@ class ChatTopicChannelAdminServiceImplTest {
             when(chatConversationRepository.selectAdminConversationDetail(any())).thenReturn(detailItem);
             ChatAdminConversationVO expectedVo = new ChatAdminConversationVO();
             expectedVo.setId(1L);
-            when(chatModelMapper.toAdminConversationVO(detailItem)).thenReturn(expectedVo);
+            when(chatModelConvert.toAdminConversationVO(detailItem)).thenReturn(expectedVo);
 
             try (var ignored = SecurityTestUtils.mockUserId(1L)) {
                 ChatAdminConversationVO result = service.createTopicChannel(request);
@@ -109,7 +109,7 @@ class ChatTopicChannelAdminServiceImplTest {
             ChatAdminConversationListItem detailItem = buildAdminConversationListItem(conversationId);
             when(chatConversationRepository.selectAdminConversationDetail(conversationId)).thenReturn(detailItem);
             ChatAdminConversationVO expectedVo = new ChatAdminConversationVO();
-            when(chatModelMapper.toAdminConversationVO(detailItem)).thenReturn(expectedVo);
+            when(chatModelConvert.toAdminConversationVO(detailItem)).thenReturn(expectedVo);
 
             try (var ignored = SecurityTestUtils.mockUserId(1L)) {
                 ChatAdminConversationVO result = service.updateTopicChannel(conversationId, request);
@@ -136,7 +136,7 @@ class ChatTopicChannelAdminServiceImplTest {
             ChatAdminConversationListItem detailItem = buildAdminConversationListItem(conversationId);
             when(chatConversationRepository.selectAdminConversationDetail(conversationId)).thenReturn(detailItem);
             ChatAdminConversationVO expectedVo = new ChatAdminConversationVO();
-            when(chatModelMapper.toAdminConversationVO(detailItem)).thenReturn(expectedVo);
+            when(chatModelConvert.toAdminConversationVO(detailItem)).thenReturn(expectedVo);
 
             try (var ignored = SecurityTestUtils.mockUserId(1L)) {
                 service.updateTopicChannel(conversationId, request);
@@ -191,7 +191,7 @@ class ChatTopicChannelAdminServiceImplTest {
         @Mock
         private SysUserRepository sysUserRepository;
         @Mock
-        private ChatModelMapper chatModelMapper;
+        private ChatModelConvert chatModelConvert;
 
         private ChatChannelApplicationAdminServiceImpl service;
 
@@ -202,7 +202,7 @@ class ChatTopicChannelAdminServiceImplTest {
                     chatConversationRepository,
                     chatConversationMemberRepository,
                     sysUserRepository,
-                    chatModelMapper
+                    chatModelConvert
             );
         }
 

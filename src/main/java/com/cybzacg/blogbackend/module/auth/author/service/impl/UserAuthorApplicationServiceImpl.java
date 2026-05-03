@@ -7,7 +7,7 @@ import com.cybzacg.blogbackend.domain.auth.SysUser;
 import com.cybzacg.blogbackend.enums.auth.AuthorApplicationStatusEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.auth.author.convert.AuthorApplicationModelMapper;
+import com.cybzacg.blogbackend.module.auth.author.convert.AuthorApplicationModelConvert;
 import com.cybzacg.blogbackend.module.auth.author.model.user.UserAuthorApplicationPageQuery;
 import com.cybzacg.blogbackend.module.auth.author.model.user.UserAuthorApplicationSubmitRequest;
 import com.cybzacg.blogbackend.module.auth.author.model.user.UserAuthorApplicationVO;
@@ -37,7 +37,7 @@ public class UserAuthorApplicationServiceImpl implements UserAuthorApplicationSe
     private final SysAuthorApplicationRepository sysAuthorApplicationRepository;
     private final SysUserRepository sysUserRepository;
     private final AuthorPermissionService authorPermissionService;
-    private final AuthorApplicationModelMapper authorApplicationModelMapper;
+    private final AuthorApplicationModelConvert authorApplicationModelConvert;
 
     /**
      * 提交或补充作者申请；当最近申请为“待补充”时复用原记录回到待审核状态。
@@ -65,12 +65,12 @@ public class UserAuthorApplicationServiceImpl implements UserAuthorApplicationSe
             }
         }
         LocalDateTime now = LocalDateTime.now();
-        SysAuthorApplication application = authorApplicationModelMapper.toApplication(request);
+        SysAuthorApplication application = authorApplicationModelConvert.toApplication(request);
         application.setUserId(userId);
         application.setApplyStatus(AuthorApplicationStatusEnum.PENDING.getValue());
         application.setSubmittedAt(now);
         sysAuthorApplicationRepository.save(application);
-        return authorApplicationModelMapper.toUserVO(application);
+        return authorApplicationModelConvert.toUserVO(application);
     }
 
     /**
@@ -80,7 +80,7 @@ public class UserAuthorApplicationServiceImpl implements UserAuthorApplicationSe
     public UserAuthorApplicationVO getLatestApplication() {
         Long userId = SecurityUtils.requireUserId();
         SysAuthorApplication application = sysAuthorApplicationRepository.findLatestByUserId(userId);
-        return application == null ? null : authorApplicationModelMapper.toUserVO(application);
+        return application == null ? null : authorApplicationModelConvert.toUserVO(application);
     }
 
     /**
@@ -93,21 +93,21 @@ public class UserAuthorApplicationServiceImpl implements UserAuthorApplicationSe
         long size = PaginationUtils.normalizeSize(query == null ? null : query.getSize(), DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
         Page<SysAuthorApplication> page = sysAuthorApplicationRepository.pageByUserId(userId, current, size);
         List<UserAuthorApplicationVO> records = page.getRecords().stream()
-                .map(authorApplicationModelMapper::toUserVO)
+                .map(authorApplicationModelConvert::toUserVO)
                 .toList();
         return PageResult.of(page, records);
     }
 
     private UserAuthorApplicationVO resubmitLatestApplication(SysAuthorApplication latest,
                                                               UserAuthorApplicationSubmitRequest request) {
-        authorApplicationModelMapper.updateApplication(request, latest);
+        authorApplicationModelConvert.updateApplication(request, latest);
         latest.setApplyStatus(AuthorApplicationStatusEnum.PENDING.getValue());
         latest.setReviewerId(null);
         latest.setReviewComment(null);
         latest.setReviewedAt(null);
         latest.setSubmittedAt(LocalDateTime.now());
         sysAuthorApplicationRepository.updateById(latest);
-        return authorApplicationModelMapper.toUserVO(latest);
+        return authorApplicationModelConvert.toUserVO(latest);
     }
 
     private void requireSubmittableUser(Long userId) {

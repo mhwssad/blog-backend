@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.auth.rbac.service.impl;
 import com.cybzacg.blogbackend.common.constant.MenuConstants;
 import com.cybzacg.blogbackend.domain.auth.SysMenu;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.auth.rbac.convert.RbacAdminModelMapper;
+import com.cybzacg.blogbackend.module.auth.rbac.convert.RbacAdminModelConvert;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysMenuAdminVO;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysMenuSaveRequest;
 import com.cybzacg.blogbackend.module.auth.rbac.repository.SysMenuRepository;
@@ -31,7 +31,7 @@ import java.util.Map;
 public class SysMenuAdminServiceImpl implements SysMenuAdminService {
     private final SysMenuRepository sysMenuRepository;
     private final SysRoleMenuRepository sysRoleMenuRepository;
-    private final RbacAdminModelMapper rbacAdminModelMapper;
+    private final RbacAdminModelConvert rbacAdminModelConvert;
 
     /**
      * 查询全部菜单并组装为树形结构。
@@ -46,7 +46,7 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
      */
     @Override
     public SysMenuAdminVO getMenu(Long id) {
-        return rbacAdminModelMapper.toMenuVO(getMenuOrThrow(id));
+        return rbacAdminModelConvert.toMenuVO(getMenuOrThrow(id));
     }
 
     /**
@@ -58,11 +58,11 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
         SysMenu parent = validateParent(request.getParentId(), null);
         validateMenuType(request.getType());
 
-        SysMenu menu = rbacAdminModelMapper.toMenu(request);
+        SysMenu menu = rbacAdminModelConvert.toMenu(request);
         applyMenuFields(menu, request);
         menu.setTreePath(buildTreePath(parent));
         sysMenuRepository.save(menu);
-        return rbacAdminModelMapper.toMenuVO(menu);
+        return rbacAdminModelConvert.toMenuVO(menu);
     }
 
     /**
@@ -79,7 +79,7 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
         menu.setTreePath(buildTreePath(parent));
         sysMenuRepository.updateById(menu);
         refreshChildrenTreePath(menu);
-        return rbacAdminModelMapper.toMenuVO(menu);
+        return rbacAdminModelConvert.toMenuVO(menu);
     }
 
     /**
@@ -96,7 +96,7 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
     }
 
     private void applyMenuFields(SysMenu menu, SysMenuSaveRequest request) {
-        rbacAdminModelMapper.updateMenu(request, menu);
+        rbacAdminModelConvert.updateMenu(request, menu);
     }
 
     private SysMenu validateParent(Long parentId, Long currentMenuId) {
@@ -164,7 +164,7 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
 
         Map<Long, SysMenuAdminVO> menuMap = new LinkedHashMap<>();
         for (SysMenu menu : menus) {
-            menuMap.put(menu.getId(), rbacAdminModelMapper.toMenuVO(menu));
+            menuMap.put(menu.getId(), rbacAdminModelConvert.toMenuVO(menu));
         }
 
         List<SysMenuAdminVO> roots = new ArrayList<>();

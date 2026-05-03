@@ -14,7 +14,7 @@ import com.cybzacg.blogbackend.module.chat.message.model.user.ChatMessageVO;
 import com.cybzacg.blogbackend.module.chat.message.repository.ChatMessageRepository;
 import com.cybzacg.blogbackend.module.chat.push.service.ChatPushService;
 import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
-import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelMapper;
+import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelConvert;
 import com.cybzacg.blogbackend.module.chat.shared.model.common.ChatFilePayloadVO;
 import com.cybzacg.blogbackend.module.chat.shared.model.common.ChatMessagePayloadVO;
 import com.cybzacg.blogbackend.module.file.service.FileChatFacadeService;
@@ -48,7 +48,7 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
     private final ChatAttachmentMetadataResolver chatAttachmentMetadataResolver;
     private final ChatPushService chatPushService;
     private final ChatMetricsService chatMetricsService;
-    private final ChatModelMapper chatModelMapper;
+    private final ChatModelConvert chatModelConvert;
     private final ChatAttachmentImageProcessor imageProcessor;
     private final ChatAttachmentVoiceProcessor voiceProcessor;
 
@@ -61,7 +61,7 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
             StorageManager storageManager,
             ChatAttachmentMetadataResolver chatAttachmentMetadataResolver,
             ChatPushService chatPushService,
-            ChatMetricsService chatMetricsService, ChatModelMapper chatModelMapper,
+            ChatMetricsService chatMetricsService, ChatModelConvert chatModelConvert,
             ChatAttachmentImageProcessor imageProcessor,
             ChatAttachmentVoiceProcessor voiceProcessor) {
         this.asyncTaskExecutor = asyncTaskExecutor;
@@ -73,7 +73,7 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
         this.chatAttachmentMetadataResolver = chatAttachmentMetadataResolver;
         this.chatPushService = chatPushService;
         this.chatMetricsService = chatMetricsService;
-        this.chatModelMapper = chatModelMapper;
+        this.chatModelConvert = chatModelConvert;
         this.imageProcessor = imageProcessor;
         this.voiceProcessor = voiceProcessor;
     }
@@ -227,7 +227,7 @@ public class ChatAttachmentAsyncProcessingServiceImpl implements ChatAttachmentA
             if (legacyFilePayload == null || legacyFilePayload.getFileId() == null) {
                 return payload;
             }
-            return chatModelMapper.toMessagePayloadVO(legacyFilePayload);
+            return chatModelConvert.toMessagePayloadVO(legacyFilePayload);
         } catch (RuntimeException ex) {
             return null;
         }

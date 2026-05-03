@@ -1,16 +1,19 @@
 package com.cybzacg.blogbackend.module.ai.model.admin;
 
+import com.cybzacg.blogbackend.core.web.PageQuery;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
 
 /**
- * AI使用日志分页查询条件。
- */
+ * AI使用日志分页查询条件�? */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "AI使用日志分页查询条件")
-public class AiUsageLogPageQuery {
+public class AiUsageLogPageQuery extends PageQuery {
     @Schema(description = "用户ID")
     private Long userId;
 
@@ -25,9 +28,6 @@ public class AiUsageLogPageQuery {
 
     @Schema(description = "成功状态：0-失败，1-成功")
     private Integer successStatus;
-
-    @Schema(description = "页码")
-    private Long current = 1L;
 
     @Schema(description = "每页条数")
     private Long size = 20L;

@@ -345,6 +345,7 @@ Authorization: Bearer <accessToken>
 | `experience` | `auth-api.md`  | 用户等级、经验体系、后台经验配置管理                      |
 | `ai`      | `ai-api.md`        | AI对话、渠道配置、会话管理、使用统计                     |
 | `report`  | `report-api.md`    | 举报提交、举报记录、后台处理与日志                      |
+| `dashboard` | `dashboard-api.md` | 后台数据看板：核心概览、内容/社区/AI/治理统计              |
 
 ## 6. 推荐阅读顺序
 
@@ -367,6 +368,7 @@ Authorization: Bearer <accessToken>
     - 聊天管理：`chat-api.md`
     - AI 对话与统计：`ai-api.md`
     - 举报管理：`report-api.md`
+    - 数据看板：`dashboard-api.md`
 
 ## 7. 维护规则
 
@@ -376,3 +378,4 @@ Authorization: Bearer <accessToken>
 - 当前 `chat-api.md` 已覆盖 chat v1 的用户侧 HTTP 接口、后台聊天管理接口、大厅/主题频道管理、公开频道访客接口与 WebSocket 实时协议，联调可直接按文档接入。
 - 当前 `ai-api.md` 已覆盖 AI 模块的用户侧接口与后台管理接口。
 - 当前 `report-api.md` 已覆盖举报模块的用户侧接口与后台管理接口。
+- 当前 `dashboard-api.md` 已覆盖后台数据看模块的全部接口。

@@ -7,7 +7,7 @@ import com.cybzacg.blogbackend.domain.auth.SysUser;
 import com.cybzacg.blogbackend.domain.content.SysCategory;
 import com.cybzacg.blogbackend.domain.content.SysTag;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.article.convert.ArticleModelMapper;
+import com.cybzacg.blogbackend.module.article.convert.ArticleModelConvert;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleCardVO;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleDetailVO;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticlePageQuery;
@@ -21,7 +21,7 @@ import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionRepository;
 import com.cybzacg.blogbackend.module.content.footprint.service.UserFootprintService;
 import com.cybzacg.blogbackend.module.content.interaction.repository.SysInteractionRepository;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.publics.PublicCategoryTreeVO;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.publics.PublicTagVO;
 import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysCategoryRepository;
@@ -57,8 +57,8 @@ public class PublicArticleServiceImpl implements PublicArticleService {
     private final ArticleAccessControlService articleAccessControlService;
     private final ArticleSeriesService articleSeriesService;
     private final ArticleStatusMachine articleStatusMachine;
-    private final ArticleModelMapper articleModelMapper;
-    private final ContentModelMapper contentModelMapper;
+    private final ArticleModelConvert articleModelConvert;
+    private final ContentModelConvert contentModelConvert;
     private final UserFootprintService userFootprintService;
 
     /**
@@ -68,12 +68,7 @@ public class PublicArticleServiceImpl implements PublicArticleService {
     public PageResult<PublicArticleCardVO> pageArticles(PublicArticlePageQuery query) {
         Set<Long> filteredIds = resolveArticleIdsByRelations(query);
         if (filteredIds != null && filteredIds.isEmpty()) {
-            return PageResult.<PublicArticleCardVO>builder()
-                    .total(0L)
-                    .current(query.getCurrent())
-                    .size(query.getSize())
-                    .records(List.of())
-                    .build();
+            return PageResult.empty(query.getCurrent(), query.getSize());
         }
 
         com.baomidou.mybatisplus.extension.plugins.pagination.Page<BlogArticle> page =
@@ -83,7 +78,7 @@ public class PublicArticleServiceImpl implements PublicArticleService {
                 .collect(Collectors.toSet()));
 
         List<PublicArticleCardVO> records = page.getRecords().stream()
-                .map(articleModelMapper::toPublicCardVO)
+                .map(articleModelConvert::toPublicCardVO)
                 .peek(vo -> vo.setAuthorName(authorNameMap.get(vo.getAuthorId())))
                 .toList();
         return PageResult.of(page, records);
@@ -100,7 +95,7 @@ public class PublicArticleServiceImpl implements PublicArticleService {
         Long userId = SecurityUtils.getUserId();
         articleAccessControlService.validateArticleAccess(article, userId);
 
-        PublicArticleDetailVO detailVO = articleModelMapper.toPublicDetailVO(article);
+        PublicArticleDetailVO detailVO = articleModelConvert.toPublicDetailVO(article);
         detailVO.setAuthorName(loadAuthorName(article.getAuthorId()));
         detailVO.setCategories(loadArticleCategories(article.getId()));
         detailVO.setTags(loadArticleTags(article.getId()));
@@ -151,7 +146,7 @@ public class PublicArticleServiceImpl implements PublicArticleService {
         for (Long categoryId : categoryIds) {
             SysCategory category = categoryMap.get(categoryId);
             if (category != null) {
-                categories.add(contentModelMapper.toPublicCategoryTreeVO(category));
+                categories.add(contentModelConvert.toPublicCategoryTreeVO(category));
             }
         }
         return categories;
@@ -171,7 +166,7 @@ public class PublicArticleServiceImpl implements PublicArticleService {
         for (Long tagId : tagIds) {
             SysTag tag = tagMap.get(tagId);
             if (tag != null) {
-                tags.add(contentModelMapper.toPublicTagVO(tag));
+                tags.add(contentModelConvert.toPublicTagVO(tag));
             }
         }
         return tags;

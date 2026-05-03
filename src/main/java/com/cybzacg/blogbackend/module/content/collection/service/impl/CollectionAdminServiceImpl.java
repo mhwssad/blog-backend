@@ -12,7 +12,7 @@ import com.cybzacg.blogbackend.module.content.collection.model.user.CollectionFo
 import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionFolderRepository;
 import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionRepository;
 import com.cybzacg.blogbackend.module.content.collection.service.CollectionAdminService;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,7 +31,7 @@ public class CollectionAdminServiceImpl implements CollectionAdminService {
     private final SysCollectionFolderRepository sysCollectionFolderRepository;
     private final SysCollectionRepository sysCollectionRepository;
     private final ArticleContentFacadeService articleContentFacadeService;
-    private final ContentModelMapper contentModelMapper;
+    private final ContentModelConvert contentModelConvert;
 
     /**
      * 按管理端条件分页查询收藏夹列表。
@@ -40,7 +40,7 @@ public class CollectionAdminServiceImpl implements CollectionAdminService {
     public PageResult<CollectionFolderVO> pageFolders(CollectionPageQuery query) {
         Page<SysCollectionFolder> page = sysCollectionFolderRepository.pageByAdminConditions(query);
         List<CollectionFolderVO> records = page.getRecords().stream()
-                .map(contentModelMapper::toCollectionFolderVO)
+                .map(contentModelConvert::toCollectionFolderVO)
                 .toList();
         return PageResult.of(page, records);
     }
@@ -52,7 +52,7 @@ public class CollectionAdminServiceImpl implements CollectionAdminService {
     public PageResult<CollectionVO> pageCollections(CollectionPageQuery query) {
         Page<SysCollection> page = sysCollectionRepository.pageByAdminConditions(query);
         List<CollectionVO> records = page.getRecords().stream()
-                .map(contentModelMapper::toAdminCollectionVO)
+                .map(contentModelConvert::toAdminCollectionVO)
                 .toList();
         return PageResult.of(page, records);
     }

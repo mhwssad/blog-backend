@@ -12,14 +12,14 @@ DELETE FROM `sys_menu` WHERE `id` BETWEEN 1700 AND 1799;
 INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
                         `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
                         `update_time`, `params`)
-VALUES (1700, 0, '0', '内容管理', 'C', 'Content', '/content', 'Layout', NULL, 1, 0, 1, 2, 'document',
-        '/content/articles', NOW(), NOW(), NULL);
+VALUES (1700, 0, '0', '内容管理', 'C', 'Content', '/admin/content', 'layouts/RouteView', NULL, 1, 0, 1, 2, 'document',
+        '/admin/articles', NOW(), NOW(), NULL);
 
 -- 文章管理
 INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
                         `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
                         `update_time`, `params`)
-VALUES (1710, 1700, '0,1700', '文章管理', 'M', 'ContentArticle', 'articles', 'content/article/index', NULL, 0, 1, 1, 1,
+VALUES (1710, 1700, '0,1700', '文章管理', 'M', 'ContentArticle', '/admin/articles', 'admin/article/Articles', NULL, 0, 1, 1, 1,
         'edit-pen', NULL, NOW(), NOW(), NULL),
        (1711, 1710, '0,1700,1710', '文章查询', 'B', NULL, NULL, NULL, 'content:article:query', 0, 0, 1, 1, NULL, NULL,
         NOW(), NOW(), NULL),
@@ -29,7 +29,7 @@ VALUES (1710, 1700, '0,1700', '文章管理', 'M', 'ContentArticle', 'articles',
         NOW(), NOW(), NULL),
        (1714, 1710, '0,1700,1710', '文章删除', 'B', NULL, NULL, NULL, 'content:article:delete', 0, 0, 1, 4, NULL, NULL,
         NOW(), NOW(), NULL),
-       (1715, 1710, '0,1700,1710', '文章状态', 'B', NULL, NULL, NULL, 'content:article:update-status', 0, 0, 1, 5, NULL, NULL,
+       (1715, 1710, '0,1700,1710', '文章状态', 'B', NULL, NULL, NULL, 'content:article:update', 0, 0, 1, 5, NULL, NULL,
         NOW(), NOW(), NULL),
        (1716, 1710, '0,1700,1710', '访问控制', 'B', NULL, NULL, NULL, 'content:article:access', 0, 0, 1, 6, NULL, NULL,
         NOW(), NOW(), NULL);
@@ -38,8 +38,8 @@ VALUES (1710, 1700, '0,1700', '文章管理', 'M', 'ContentArticle', 'articles',
 INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
                         `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
                         `update_time`, `params`)
-VALUES (1717, 1700, '0,1700', '文章审核', 'M', 'ContentArticleReview', 'article-reviews', 'content/article-review/index', NULL, 0, 1, 1, 2,
-        'document-checked', NULL, NOW(), NOW(), NULL),
+VALUES (1717, 1700, '0,1700', '文章审核', 'M', 'ContentArticleReview', '/admin/article-reviews',
+        'admin/article/ArticleReview', NULL, 0, 1, 1, 2, 'document-checked', NULL, NOW(), NOW(), NULL),
        (1718, 1717, '0,1700,1717', '审核查询', 'B', NULL, NULL, NULL, 'content:article-review:query', 0, 0, 1, 1, NULL, NULL,
         NOW(), NOW(), NULL),
        (1719, 1717, '0,1700,1717', '审核处理', 'B', NULL, NULL, NULL, 'content:article-review:review', 0, 0, 1, 2, NULL, NULL,
@@ -51,7 +51,7 @@ VALUES (1717, 1700, '0,1700', '文章审核', 'M', 'ContentArticleReview', 'arti
 INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
                         `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
                         `update_time`, `params`)
-VALUES (1720, 1700, '0,1700', '分类管理', 'M', 'ContentCategory', 'categories', 'content/category/index', NULL, 0, 1, 1,
+VALUES (1720, 1700, '0,1700', '分类管理', 'M', 'ContentCategory', '/admin/categories', 'admin/category/Categories', NULL, 0, 1, 1,
         2, 'folder-opened', NULL, NOW(), NOW(), NULL),
        (1721, 1720, '0,1700,1720', '分类查询', 'B', NULL, NULL, NULL, 'content:category:query', 0, 0, 1, 1, NULL, NULL,
         NOW(), NOW(), NULL),
@@ -66,22 +66,22 @@ VALUES (1720, 1700, '0,1700', '分类管理', 'M', 'ContentCategory', 'categorie
 INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
                         `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
                         `update_time`, `params`)
-VALUES (1730, 1700, '0,1700', '标签管理', 'M', 'ContentTag', 'tags', 'content/tag/index', NULL, 0, 1, 1, 3, 'price-tag',
+VALUES (1730, 1700, '0,1700', '标签管理', 'M', 'ContentTag', '/admin/tags', 'admin/tag/Tags', NULL, 0, 1, 1, 3, 'price-tag',
         NULL, NOW(), NOW(), NULL),
-       (1731, 1730, '0,1700,1730', '标签查询', 'B', NULL, NULL, NULL, 'content:tag:query', 0, 0, 1, 1, NULL, NULL,
-        NOW(), NOW(), NULL),
-       (1732, 1730, '0,1700,1730', '标签新增', 'B', NULL, NULL, NULL, 'content:tag:create', 0, 0, 1, 2, NULL, NULL,
-        NOW(), NOW(), NULL),
-       (1733, 1730, '0,1700,1730', '标签修改', 'B', NULL, NULL, NULL, 'content:tag:update', 0, 0, 1, 3, NULL, NULL,
-        NOW(), NOW(), NULL),
-       (1734, 1730, '0,1700,1730', '标签删除', 'B', NULL, NULL, NULL, 'content:tag:delete', 0, 0, 1, 4, NULL, NULL,
-        NOW(), NOW(), NULL);
+       (1731, 1730, '0,1700,1730', '标签查询', 'B', NULL, NULL, NULL, 'content:tag:query', 0, 0, 1, 1, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1732, 1730, '0,1700,1730', '标签新增', 'B', NULL, NULL, NULL, 'content:tag:create', 0, 0, 1, 2, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1733, 1730, '0,1700,1730', '标签修改', 'B', NULL, NULL, NULL, 'content:tag:update', 0, 0, 1, 3, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1734, 1730, '0,1700,1730', '标签删除', 'B', NULL, NULL, NULL, 'content:tag:delete', 0, 0, 1, 4, NULL, NULL, NOW(),
+        NOW(), NULL);
 
 -- 评论管理
 INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
                         `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
                         `update_time`, `params`)
-VALUES (1740, 1700, '0,1700', '评论管理', 'M', 'ContentComment', 'comments', 'content/comment/index', NULL, 0, 1, 1, 4,
+VALUES (1740, 1700, '0,1700', '评论管理', 'M', 'ContentComment', '/admin/comments', 'admin/comment/Comments', NULL, 0, 1, 1, 4,
         'chat-dot-round', NULL, NOW(), NOW(), NULL),
        (1741, 1740, '0,1700,1740', '评论查询', 'B', NULL, NULL, NULL, 'content:comment:query', 0, 0, 1, 1, NULL, NULL,
         NOW(), NOW(), NULL),
@@ -94,7 +94,7 @@ VALUES (1740, 1700, '0,1700', '评论管理', 'M', 'ContentComment', 'comments',
 INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
                         `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
                         `update_time`, `params`)
-VALUES (1750, 1700, '0,1700', '收藏管理', 'M', 'ContentCollection', 'collections', 'content/collection/index', NULL, 0,
+VALUES (1750, 1700, '0,1700', '收藏管理', 'M', 'ContentCollection', '/admin/collections', 'admin/collection/Collections', NULL, 0,
         1, 1, 5, 'star', NULL, NOW(), NOW(), NULL),
        (1751, 1750, '0,1700,1750', '收藏查询', 'B', NULL, NULL, NULL, 'content:collection:query', 0, 0, 1, 1, NULL,
         NULL, NOW(), NOW(), NULL),
@@ -105,7 +105,7 @@ VALUES (1750, 1700, '0,1700', '收藏管理', 'M', 'ContentCollection', 'collect
 INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
                         `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
                         `update_time`, `params`)
-VALUES (1760, 1700, '0,1700', '互动管理', 'M', 'ContentInteraction', 'interactions', 'content/interaction/index', NULL,
+VALUES (1760, 1700, '0,1700', '互动管理', 'M', 'ContentInteraction', '/admin/interactions', 'admin/interaction/Interactions', NULL,
         0, 1, 1, 6, 'pointer', NULL, NOW(), NOW(), NULL),
        (1761, 1760, '0,1700,1760', '互动查询', 'B', NULL, NULL, NULL, 'content:interaction:query', 0, 0, 1, 1, NULL,
         NULL, NOW(), NOW(), NULL),
@@ -116,7 +116,7 @@ VALUES (1760, 1700, '0,1700', '互动管理', 'M', 'ContentInteraction', 'intera
 INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
                         `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
                         `update_time`, `params`)
-VALUES (1770, 1700, '0,1700', '足迹管理', 'M', 'ContentFootprint', 'footprints', 'content/footprint/index', NULL, 0, 1,
+VALUES (1770, 1700, '0,1700', '足迹管理', 'M', 'ContentFootprint', '/admin/footprints', 'admin/footprint/Footprints', NULL, 0, 1,
         1, 7, 'clock', NULL, NOW(), NOW(), NULL),
        (1771, 1770, '0,1700,1770', '足迹查询', 'B', NULL, NULL, NULL, 'content:footprint:query', 0, 0, 1, 1, NULL, NULL,
         NOW(), NOW(), NULL),
@@ -127,7 +127,7 @@ VALUES (1770, 1700, '0,1700', '足迹管理', 'M', 'ContentFootprint', 'footprin
 INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
                         `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
                         `update_time`, `params`)
-VALUES (1780, 1700, '0,1700', '文件管理', 'M', 'ContentFile', 'files', 'content/file/index', NULL, 0, 1, 1, 8, 'folder',
+VALUES (1780, 1700, '0,1700', '文件管理', 'M', 'ContentFile', '/admin/files', 'admin/file/Files', NULL, 0, 1, 1, 8, 'folder',
         NULL, NOW(), NOW(), NULL),
        (1781, 1780, '0,1700,1780', '文件查询', 'B', NULL, NULL, NULL, 'content:file:query', 0, 0, 1, 1, NULL, NULL,
         NOW(), NOW(), NULL),
@@ -140,18 +140,18 @@ VALUES (1780, 1700, '0,1700', '文件管理', 'M', 'ContentFile', 'files', 'cont
 INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
                         `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
                         `update_time`, `params`)
-VALUES (1790, 1700, '0,1700', '聊天管理', 'M', 'ContentChat', 'chats', 'content/chat/index', NULL, 0, 1, 1, 9,
+VALUES (1790, 1700, '0,1700', '聊天管理', 'M', 'ContentChat', '/admin/chats', 'admin/chat/Chats', NULL, 0, 1, 1, 9,
         'chat-dot-round', NULL, NOW(), NOW(), NULL),
        (1791, 1790, '0,1700,1790', '会话查询', 'B', NULL, NULL, NULL, 'content:chat:query', 0, 0, 1, 1, NULL, NULL,
         NOW(), NOW(), NULL),
-       (1792, 1790, '0,1700,1790', '会话状态', 'B', NULL, NULL, NULL, 'content:chat:update-status', 0, 0, 1, 2, NULL, NULL,
+       (1792, 1790, '0,1700,1790', '会话状态', 'B', NULL, NULL, NULL, 'content:chat:update', 0, 0, 1, 2, NULL, NULL,
         NOW(), NOW(), NULL);
 
 -- 关注管理
 INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
                         `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
                         `update_time`, `params`)
-VALUES (1793, 1700, '0,1700', '关注管理', 'M', 'ContentFollow', 'follows', 'content/follow/index', NULL, 0, 1, 1, 10,
+VALUES (1793, 1700, '0,1700', '关注管理', 'M', 'ContentFollow', '/admin/follows', 'admin/follow/Follows', NULL, 0, 1, 1, 10,
         'user-filled', NULL, NOW(), NOW(), NULL),
        (1794, 1793, '0,1700,1793', '关注查询', 'B', NULL, NULL, NULL, 'content:follow:query', 0, 0, 1, 1, NULL, NULL,
         NOW(), NOW(), NULL),

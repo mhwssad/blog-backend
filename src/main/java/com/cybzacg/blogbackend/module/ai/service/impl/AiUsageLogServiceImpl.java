@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.ai.AiUsageLog;
 import com.cybzacg.blogbackend.enums.ai.AiUsageSuccessStatusEnum;
-import com.cybzacg.blogbackend.module.ai.convert.AiModelMapper;
+import com.cybzacg.blogbackend.module.ai.convert.AiModelConvert;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiUsageLogPageQuery;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiUsageLogVO;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiUsageStatsVO;
@@ -27,7 +27,7 @@ import java.util.List;
 public class AiUsageLogServiceImpl implements AiUsageLogService {
 
     private final AiUsageLogRepository aiUsageLogRepository;
-    private final AiModelMapper aiModelMapper;
+    private final AiModelConvert aiModelConvert;
 
     /**
      * {@inheritDoc}
@@ -69,7 +69,7 @@ public class AiUsageLogServiceImpl implements AiUsageLogService {
                 size);
 
         List<AiUsageLogVO> records = page.getRecords().stream()
-                .map(aiModelMapper::toUsageLogVO)
+                .map(aiModelConvert::toUsageLogVO)
                 .toList();
 
         return PageResult.of(page, records);

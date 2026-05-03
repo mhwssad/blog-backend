@@ -16,7 +16,7 @@ import com.cybzacg.blogbackend.module.chat.member.service.impl.ChatGroupManageSe
 import com.cybzacg.blogbackend.module.chat.push.service.ChatNotificationService;
 import com.cybzacg.blogbackend.module.chat.push.service.ChatPushService;
 import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
-import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelMapper;
+import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelConvert;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatConversationListItem;
 import com.cybzacg.blogbackend.module.chat.shared.support.ChatMemberHelper;
 import com.cybzacg.blogbackend.module.chat.shared.support.ChatPushPayloadBuilder;
@@ -56,7 +56,7 @@ class ChatGroupManageServiceImplTest {
     @Mock
     private SysUserRepository sysUserRepository;
     @Mock
-    private ChatModelMapper chatModelMapper;
+    private ChatModelConvert chatModelConvert;
     @Mock
     private com.cybzacg.blogbackend.module.chat.shared.support.ChatPayloadHelper chatPayloadHelper;
     @Mock
@@ -83,7 +83,7 @@ class ChatGroupManageServiceImplTest {
                 chatMessageRecipientRepository,
                 chatMessageReadCursorRepository,
                 sysUserRepository,
-                chatModelMapper,
+                chatModelConvert,
                 chatPayloadHelper,
                 chatMemberHelper,
                 sysConfigService
@@ -134,14 +134,14 @@ class ChatGroupManageServiceImplTest {
         mappedConversation.setMemberLimit(0);
         mappedConversation.setSlowModeSeconds(0);
         mappedConversation.setDisplaySort(0);
-        when(chatModelMapper.toGroupConversation(request)).thenReturn(mappedConversation);
+        when(chatModelConvert.toGroupConversation(request)).thenReturn(mappedConversation);
 
         // Membership upsert - conversation.getId() is null after save in test context
         when(chatConversationMemberRepository.findByConversationAndUser(any(), any())).thenReturn(null);
 
-        // Mapper: toConversationMember returns a real member since chatModelMapper is a mock
+        // Mapper: toConversationMember returns a real member since chatModelConvert is a mock
         // (default methods on mock interfaces return null unless stubbed)
-        when(chatModelMapper.toConversationMember(any(), any(), any(), any(), any(), any()))
+        when(chatModelConvert.toConversationMember(any(), any(), any(), any(), any(), any()))
                 .thenAnswer(invocation -> {
                     ChatConversationMember member = new ChatConversationMember();
                     member.setConversationId(invocation.getArgument(0));
@@ -168,7 +168,7 @@ class ChatGroupManageServiceImplTest {
         when(chatConversationMemberRepository.listActiveByConversationId(any())).thenReturn(List.of());
         ChatConversationVO vo = new ChatConversationVO();
         vo.setId(1L);
-        when(chatModelMapper.toConversationVO(detailItem)).thenReturn(vo);
+        when(chatModelConvert.toConversationVO(detailItem)).thenReturn(vo);
 
         try (var ignored = SecurityTestUtils.mockUserId(ownerId)) {
             ChatConversationVO result = chatGroupManageService.createGroup(ownerId, request);

@@ -6,7 +6,7 @@ import com.cybzacg.blogbackend.domain.article.BlogArticleSeriesItem;
 import com.cybzacg.blogbackend.domain.auth.SysUser;
 import com.cybzacg.blogbackend.enums.article.ArticleVisibilityScopeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.article.convert.ArticleSeriesModelMapper;
+import com.cybzacg.blogbackend.module.article.convert.ArticleSeriesModelConvert;
 import com.cybzacg.blogbackend.module.article.model.common.ArticleSeriesArticleVO;
 import com.cybzacg.blogbackend.module.article.model.common.ArticleSeriesSummaryVO;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleSeriesDetailVO;
@@ -46,14 +46,14 @@ public class ArticleSeriesServiceImpl implements ArticleSeriesService {
     private final AuthorPermissionService authorPermissionService;
     private final ArticleStatusMachine articleStatusMachine;
     private final ArticleAccessControlService articleAccessControlService;
-    private final ArticleSeriesModelMapper articleSeriesModelMapper;
+    private final ArticleSeriesModelConvert articleSeriesConvert;
     private final ArticleSeriesItemService articleSeriesItemService;
 
     @Override
     public List<UserArticleSeriesVO> listMySeries() {
         Long userId = requireAuthorUserId();
         return blogArticleSeriesRepository.listByOwnerUserId(userId).stream()
-                .map(articleSeriesModelMapper::toUserSeriesVO)
+                .map(articleSeriesConvert::toUserSeriesVO)
                 .toList();
     }
 
@@ -69,7 +69,7 @@ public class ArticleSeriesServiceImpl implements ArticleSeriesService {
     public UserArticleSeriesDetailVO createSeries(ArticleSeriesSaveRequest request) {
         Long userId = requireAuthorUserId();
         validateSeriesSaveRequest(request);
-        BlogArticleSeries series = articleSeriesModelMapper.toSeries(request);
+        BlogArticleSeries series = articleSeriesConvert.toSeries(request);
         series.setOwnerUserId(userId);
         series.setStatus(normalizeSeriesStatus(series.getStatus()));
         series.setVisibilityScope(normalizeSeriesVisibilityScope(series.getVisibilityScope()));
@@ -85,7 +85,7 @@ public class ArticleSeriesServiceImpl implements ArticleSeriesService {
         Long userId = requireAuthorUserId();
         validateSeriesSaveRequest(request);
         BlogArticleSeries series = getOwnedSeriesOrThrow(id, userId);
-        articleSeriesModelMapper.updateSeries(request, series);
+        articleSeriesConvert.updateSeries(request, series);
         series.setStatus(normalizeSeriesStatus(series.getStatus()));
         series.setVisibilityScope(normalizeSeriesVisibilityScope(series.getVisibilityScope()));
         series.setSortOrder(series.getSortOrder() == null ? 0 : series.getSortOrder());
@@ -125,7 +125,7 @@ public class ArticleSeriesServiceImpl implements ArticleSeriesService {
         return blogArticleSeriesRepository.listByOwnerUserId(authorId).stream()
                 .filter(series -> canAccessSeries(series, currentUserId))
                 .map(series -> {
-                    PublicArticleSeriesVO vo = articleSeriesModelMapper.toPublicSeriesVO(series);
+                    PublicArticleSeriesVO vo = articleSeriesConvert.toPublicSeriesVO(series);
                     vo.setOwnerName(ownerNameMap.get(series.getOwnerUserId()));
                     return vo;
                 })
@@ -159,7 +159,7 @@ public class ArticleSeriesServiceImpl implements ArticleSeriesService {
                 .filter(series -> canAccessSeries(series, userId))
                 .sorted(Comparator.comparing(BlogArticleSeries::getSortOrder)
                         .thenComparing(BlogArticleSeries::getId))
-                .map(articleSeriesModelMapper::toSeriesSummaryVO)
+                .map(articleSeriesConvert::toSeriesSummaryVO)
                 .toList();
     }
 
@@ -169,14 +169,14 @@ public class ArticleSeriesServiceImpl implements ArticleSeriesService {
     }
 
     private UserArticleSeriesDetailVO buildUserSeriesDetail(BlogArticleSeries series) {
-        UserArticleSeriesDetailVO detailVO = articleSeriesModelMapper.toUserSeriesDetailVO(series);
+        UserArticleSeriesDetailVO detailVO = articleSeriesConvert.toUserSeriesDetailVO(series);
         detailVO.setArticles(loadSeriesArticles(series.getId(), false, SecurityUtils.getUserId()));
         detailVO.setArticleCount(detailVO.getArticles().size());
         return detailVO;
     }
 
     private PublicArticleSeriesDetailVO buildPublicSeriesDetail(BlogArticleSeries series, Long currentUserId) {
-        PublicArticleSeriesDetailVO detailVO = articleSeriesModelMapper.toPublicSeriesDetailVO(series);
+        PublicArticleSeriesDetailVO detailVO = articleSeriesConvert.toPublicSeriesDetailVO(series);
         detailVO.setOwnerName(loadOwnerName(series.getOwnerUserId()));
         List<ArticleSeriesArticleVO> articles = loadSeriesArticles(series.getId(), true, currentUserId);
         detailVO.setArticles(articles);
@@ -203,7 +203,7 @@ public class ArticleSeriesServiceImpl implements ArticleSeriesService {
             if (onlyAccessible && !articleAccessControlService.canAccessArticle(article, currentUserId)) {
                 continue;
             }
-            ArticleSeriesArticleVO articleVO = articleSeriesModelMapper.toSeriesArticleVO(article);
+            ArticleSeriesArticleVO articleVO = articleSeriesConvert.toSeriesArticleVO(article);
             articleVO.setSeqNo(item.getSeqNo());
             articles.add(articleVO);
         }

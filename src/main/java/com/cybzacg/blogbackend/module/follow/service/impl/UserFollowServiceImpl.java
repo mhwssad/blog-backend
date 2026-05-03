@@ -5,7 +5,7 @@ import com.cybzacg.blogbackend.domain.auth.SysUser;
 import com.cybzacg.blogbackend.domain.follow.SysUserFollow;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.follow.convert.FollowModelMapper;
+import com.cybzacg.blogbackend.module.follow.convert.FollowModelConvert;
 import com.cybzacg.blogbackend.module.follow.model.data.FollowRelationUserItem;
 import com.cybzacg.blogbackend.module.follow.model.user.*;
 import com.cybzacg.blogbackend.module.follow.repository.SysUserFollowRepository;
@@ -41,7 +41,7 @@ public class UserFollowServiceImpl implements UserFollowService {
 
     private final SysUserFollowRepository sysUserFollowRepository;
     private final SysUserRepository sysUserRepository;
-    private final FollowModelMapper followModelMapper;
+    private final FollowModelConvert followModelConvert;
     private final FollowNoticeService followNoticeService;
 
     /**
@@ -97,12 +97,7 @@ public class UserFollowServiceImpl implements UserFollowService {
         List<UserFollowUserVO> records = mapUserRecords(
                 sysUserFollowRepository.selectFollowPage(userId, specialOnly, offset, size)
         );
-        return PageResult.<UserFollowUserVO>builder()
-                .total(total)
-                .current(current)
-                .size(size)
-                .records(records)
-                .build();
+        return PageResult.of(total, current, size, records);
     }
 
     /**
@@ -119,12 +114,7 @@ public class UserFollowServiceImpl implements UserFollowService {
         }
         long offset = (current - 1) * size;
         List<UserFollowUserVO> records = mapUserRecords(sysUserFollowRepository.selectFanPage(userId, offset, size));
-        return PageResult.<UserFollowUserVO>builder()
-                .total(total)
-                .current(current)
-                .size(size)
-                .records(records)
-                .build();
+        return PageResult.of(total, current, size, records);
     }
 
     /**
@@ -168,7 +158,7 @@ public class UserFollowServiceImpl implements UserFollowService {
         Long userId = SecurityUtils.requireUserId();
         validateSpecialFollowValue(request);
         SysUserFollow relation = requireActiveFollowRelation(userId, targetUserId);
-        followModelMapper.updateSpecialFollow(request, relation);
+        followModelConvert.updateSpecialFollow(request, relation);
         sysUserFollowRepository.updateById(relation);
     }
 
@@ -180,7 +170,7 @@ public class UserFollowServiceImpl implements UserFollowService {
     public void updateRemark(Long targetUserId, UserFollowRemarkUpdateRequest request) {
         Long userId = SecurityUtils.requireUserId();
         SysUserFollow relation = requireActiveFollowRelation(userId, targetUserId);
-        followModelMapper.updateRemark(request, relation);
+        followModelConvert.updateRemark(request, relation);
         sysUserFollowRepository.updateById(relation);
     }
 
@@ -188,7 +178,7 @@ public class UserFollowServiceImpl implements UserFollowService {
      * 创建新关注关系，并在并发插入撞上唯一键时回退到“读取后恢复”的收口路径。
      */
     private boolean createFollowRelation(Long userId, Long targetUserId, LocalDateTime now) {
-        SysUserFollow created = followModelMapper.toNewFollow(userId, targetUserId, now);
+        SysUserFollow created = followModelConvert.toNewFollow(userId, targetUserId, now);
         try {
             sysUserFollowRepository.save(created);
             return true;
@@ -269,16 +259,11 @@ public class UserFollowServiceImpl implements UserFollowService {
         if (items == null || items.isEmpty()) {
             return List.of();
         }
-        return items.stream().map(followModelMapper::toUserFollowUserVO).toList();
+        return items.stream().map(followModelConvert::toUserFollowUserVO).toList();
     }
 
     private PageResult<UserFollowUserVO> emptyPageResult(long current, long size) {
-        return PageResult.<UserFollowUserVO>builder()
-                .total(0L)
-                .current(current)
-                .size(size)
-                .records(List.of())
-                .build();
+        return PageResult.empty(current, size);
     }
 
 }

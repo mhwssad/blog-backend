@@ -11,7 +11,7 @@ import org.mapstruct.Mapping;
  * 审计日志对象转换器。
  */
 @Mapper(componentModel = "spring", imports = SysAuditOperationType.class)
-public interface SysAuditLogModelMapper {
+public interface SysAuditLogModelConvert {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)

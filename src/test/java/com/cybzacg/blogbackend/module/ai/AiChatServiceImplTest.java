@@ -8,7 +8,7 @@ import com.cybzacg.blogbackend.domain.ai.AiChatSession;
 import com.cybzacg.blogbackend.enums.ai.AiChatSessionStatusEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.ai.convert.AiModelMapper;
+import com.cybzacg.blogbackend.module.ai.convert.AiModelConvert;
 import com.cybzacg.blogbackend.module.ai.model.data.AiModelCallResult;
 import com.cybzacg.blogbackend.module.ai.model.user.AiMessageSendRequest;
 import com.cybzacg.blogbackend.module.ai.model.user.AiMessageVO;
@@ -56,7 +56,7 @@ class AiChatServiceImplTest {
     @Mock
     private AiUsageLogService aiUsageLogService;
     @Mock
-    private AiModelMapper aiModelMapper;
+    private AiModelConvert aiModelConvert;
 
     private AiChatServiceImpl aiChatService;
 
@@ -69,7 +69,7 @@ class AiChatServiceImplTest {
                 aiModelClient,
                 aiQuotaService,
                 aiUsageLogService,
-                aiModelMapper
+                aiModelConvert
         );
     }
 
@@ -89,7 +89,7 @@ class AiChatServiceImplTest {
 
         AiSessionVO expectedVO = new AiSessionVO();
         expectedVO.setId(100L);
-        when(aiModelMapper.toSessionVO(any(AiChatSession.class))).thenReturn(expectedVO);
+        when(aiModelConvert.toSessionVO(any(AiChatSession.class))).thenReturn(expectedVO);
 
         AiSessionVO result = aiChatService.createSession(userId, request);
 
@@ -133,7 +133,7 @@ class AiChatServiceImplTest {
 
         AiMessageVO expectedVO = new AiMessageVO();
         expectedVO.setContent("Hello human");
-        when(aiModelMapper.toMessageVO(any(AiChatMessage.class))).thenReturn(expectedVO);
+        when(aiModelConvert.toMessageVO(any(AiChatMessage.class))).thenReturn(expectedVO);
 
         AiMessageVO result = aiChatService.sendMessage(sessionId, userId, request);
 
@@ -163,7 +163,7 @@ class AiChatServiceImplTest {
                 .thenReturn(Collections.emptyList());
         when(aiChatMessageRepository.save(any(AiChatMessage.class))).thenReturn(true);
         when(aiChatSessionRepository.updateById(any(AiChatSession.class))).thenReturn(true);
-        when(aiModelMapper.toMessageVO(any(AiChatMessage.class))).thenReturn(new AiMessageVO());
+        when(aiModelConvert.toMessageVO(any(AiChatMessage.class))).thenReturn(new AiMessageVO());
 
         AiMessageVO result = aiChatService.sendMessage(sessionId, userId, request);
 
@@ -233,7 +233,7 @@ class AiChatServiceImplTest {
         when(aiChatSessionRepository.pageByUserIdAndStatus(
                 eq(userId), eq(AiChatSessionStatusEnum.NORMAL.getValue()), eq(1L), eq(10L)))
                 .thenReturn(page);
-        when(aiModelMapper.toSessionVO(any(AiChatSession.class))).thenReturn(new AiSessionVO());
+        when(aiModelConvert.toSessionVO(any(AiChatSession.class))).thenReturn(new AiSessionVO());
 
         PageResult<AiSessionVO> result = aiChatService.listMySessions(userId, 1, 10);
 

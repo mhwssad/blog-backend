@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.config.SysConfig;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.auth.config.convert.SysConfigModelMapper;
+import com.cybzacg.blogbackend.module.auth.config.convert.SysConfigModelConvert;
 import com.cybzacg.blogbackend.module.auth.config.model.admin.SysConfigAdminVO;
 import com.cybzacg.blogbackend.module.auth.config.model.admin.SysConfigPageQuery;
 import com.cybzacg.blogbackend.module.auth.config.model.admin.SysConfigSaveRequest;
@@ -29,7 +29,7 @@ import java.util.List;
 public class SysConfigAdminServiceImpl implements SysConfigAdminService {
     private final SysConfigRepository sysConfigRepository;
     private final SysConfigService sysConfigService;
-    private final SysConfigModelMapper sysConfigModelMapper;
+    private final SysConfigModelConvert sysConfigModelConvert;
 
     /**
      * 分页查询系统配置列表。
@@ -38,7 +38,7 @@ public class SysConfigAdminServiceImpl implements SysConfigAdminService {
     public PageResult<SysConfigAdminVO> pageConfigs(SysConfigPageQuery query) {
         Page<SysConfig> page = sysConfigRepository.pageByAdminConditions(query);
         List<SysConfigAdminVO> records = page.getRecords().stream()
-                .map(sysConfigModelMapper::toConfigVO)
+                .map(sysConfigModelConvert::toConfigVO)
                 .toList();
         return PageResult.of(page, records);
     }
@@ -48,7 +48,7 @@ public class SysConfigAdminServiceImpl implements SysConfigAdminService {
      */
     @Override
     public SysConfigAdminVO getConfig(Long id) {
-        return sysConfigModelMapper.toConfigVO(getAvailableConfig(id));
+        return sysConfigModelConvert.toConfigVO(getAvailableConfig(id));
     }
 
     /**
@@ -63,7 +63,7 @@ public class SysConfigAdminServiceImpl implements SysConfigAdminService {
         config.setIsDeleted(0);
         sysConfigRepository.save(config);
         sysConfigService.evictConfigCache(config.getConfigKey());
-        return sysConfigModelMapper.toConfigVO(config);
+        return sysConfigModelConvert.toConfigVO(config);
     }
 
     /**
@@ -79,7 +79,7 @@ public class SysConfigAdminServiceImpl implements SysConfigAdminService {
         sysConfigRepository.updateById(config);
         sysConfigService.evictConfigCache(oldConfigKey);
         sysConfigService.evictConfigCache(config.getConfigKey());
-        return sysConfigModelMapper.toConfigVO(config);
+        return sysConfigModelConvert.toConfigVO(config);
     }
 
     /**

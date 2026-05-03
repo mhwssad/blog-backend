@@ -12,7 +12,7 @@ import com.cybzacg.blogbackend.module.content.comment.model.admin.CommentVO;
 import com.cybzacg.blogbackend.module.content.comment.repository.SysCommentRepository;
 import com.cybzacg.blogbackend.module.content.comment.service.CommentAdminService;
 import com.cybzacg.blogbackend.module.content.interaction.repository.SysInteractionRepository;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.TreeTraversalUtils;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +34,7 @@ public class CommentAdminServiceImpl implements CommentAdminService {
     private final SysInteractionRepository sysInteractionRepository;
     private final ArticleContentFacadeService articleContentFacadeService;
     private final SysUserRepository sysUserRepository;
-    private final ContentModelMapper contentModelMapper;
+    private final ContentModelConvert contentModelConvert;
 
     /**
      * 按管理端条件分页查询评论列表，并填充用户昵称与头像。
@@ -44,7 +44,7 @@ public class CommentAdminServiceImpl implements CommentAdminService {
         Page<SysComment> page = sysCommentRepository.pageByAdminConditions(query);
         Map<Long, SysUser> userMap = loadUserMap(page.getRecords().stream().map(SysComment::getUserId).collect(Collectors.toSet()));
         List<CommentVO> records = page.getRecords().stream()
-                .map(contentModelMapper::toCommentVO)
+                .map(contentModelConvert::toCommentVO)
                 .peek(vo -> fillUserInfo(vo, userMap.get(vo.getUserId())))
                 .peek(vo -> vo.setLiked(false))
                 .toList();
@@ -57,7 +57,7 @@ public class CommentAdminServiceImpl implements CommentAdminService {
     @Override
     public CommentVO getComment(Long id) {
         SysComment comment = getCommentOrThrow(id);
-        CommentVO vo = contentModelMapper.toCommentVO(comment);
+        CommentVO vo = contentModelConvert.toCommentVO(comment);
         fillUserInfo(vo, sysUserRepository.getById(comment.getUserId()));
         vo.setLiked(false);
         return vo;

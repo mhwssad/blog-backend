@@ -55,6 +55,10 @@ spring:
           enable: true
     # 邮件发送者
     from: youlaitech@163.com
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
 
 storage:
   storage-type: local

@@ -92,12 +92,7 @@ public class ChatMessageLifecycleServiceImpl implements ChatMessageLifecycleServ
         Long beforeMessageId = query.getBeforeMessageId();
         long total = Objects.requireNonNullElse(s.getMessageRepository().countMessagePage(conversationId, userId, beforeMessageId), 0L);
         if (total == 0L) {
-            return PageResult.<ChatMessageVO>builder()
-                    .total(0L)
-                    .current(current)
-                    .size(size)
-                    .records(List.of())
-                    .build();
+            return PageResult.empty(current, size);
         }
         long offset = (current - 1) * size;
         List<ChatMessageHistoryItem> items = new ArrayList<>(s.getMessageRepository().selectMessagePage(conversationId, userId, beforeMessageId, offset, size));
@@ -106,12 +101,7 @@ public class ChatMessageLifecycleServiceImpl implements ChatMessageLifecycleServ
         Map<Long, SysUser> userMap = s.loadUsers(s.collectSenderIds(items));
         Map<Long, ChatReplyMessageVO> replySnapshots = s.loadReplySnapshotsForVisibleMessages(userId, conversationId, s.collectReplyMessageIds(items));
         List<ChatMessageVO> records = items.stream().map(item -> s.buildMessageVO(userId, item, userMap, replySnapshots)).toList();
-        return PageResult.<ChatMessageVO>builder()
-                .total(total)
-                .current(current)
-                .size(size)
-                .records(records)
-                .build();
+        return PageResult.of(total, current, size, records);
     }
 
     @Override

@@ -16,7 +16,7 @@ import com.cybzacg.blogbackend.module.chat.message.model.user.ChatMessageVO;
 import com.cybzacg.blogbackend.module.chat.message.repository.ChatMessageRepository;
 import com.cybzacg.blogbackend.module.chat.push.service.ChatPushService;
 import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
-import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelMapper;
+import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelConvert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,7 +48,7 @@ class ChatLobbyAdminServiceImplTest {
     @Mock
     private SysUserRepository sysUserRepository;
     @Mock
-    private ChatModelMapper chatModelMapper;
+    private ChatModelConvert chatModelConvert;
     @Mock
     private ChatPushService chatPushService;
 
@@ -61,7 +61,7 @@ class ChatLobbyAdminServiceImplTest {
                 chatMessageRepository,
                 chatConversationMemberRepository,
                 sysUserRepository,
-                chatModelMapper,
+                chatModelConvert,
                 chatPushService
         );
     }
@@ -122,7 +122,7 @@ class ChatLobbyAdminServiceImplTest {
                 .thenReturn(List.of(activeMember));
         SysUser user = buildSysUser(200L, "testuser");
         when(sysUserRepository.listByIds(anyCollection())).thenReturn(List.of(user));
-        when(chatModelMapper.toMemberVO(any(ChatConversationMember.class))).thenReturn(new ChatMemberVO());
+        when(chatModelConvert.toMemberVO(any(ChatConversationMember.class))).thenReturn(new ChatMemberVO());
 
         ChatAdminMemberMuteUpdateRequest request = new ChatAdminMemberMuteUpdateRequest();
         request.setMuteUntil(muteUntil);
@@ -149,7 +149,7 @@ class ChatLobbyAdminServiceImplTest {
                 .thenReturn(List.of(activeMember));
         SysUser user = buildSysUser(300L, "otheruser");
         when(sysUserRepository.listByIds(anyCollection())).thenReturn(List.of(user));
-        when(chatModelMapper.toMemberVO(any(ChatConversationMember.class))).thenReturn(new ChatMemberVO());
+        when(chatModelConvert.toMemberVO(any(ChatConversationMember.class))).thenReturn(new ChatMemberVO());
 
         List<ChatMemberVO> result = chatLobbyAdminService.kickLobbyMember(200L);
 

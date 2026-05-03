@@ -5,7 +5,7 @@ import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatGroupSear
 import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatGroupSearchVO;
 import com.cybzacg.blogbackend.module.chat.conversation.repository.ChatConversationRepository;
 import com.cybzacg.blogbackend.module.chat.member.service.UserChatGroupDiscoveryService;
-import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelMapper;
+import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelConvert;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatConversationListItem;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
@@ -26,7 +26,7 @@ public class UserChatGroupDiscoveryServiceImpl implements UserChatGroupDiscovery
     private static final long MAX_PAGE_SIZE = 100L;
 
     private final ChatConversationRepository chatConversationRepository;
-    private final ChatModelMapper chatModelMapper;
+    private final ChatModelConvert chatModelConvert;
 
     /**
      * {@inheritDoc}
@@ -50,6 +50,6 @@ public class UserChatGroupDiscoveryServiceImpl implements UserChatGroupDiscovery
                 (current - 1) * size,
                 size
         );
-        return PageResult.of(total, current, size, items.stream().map(chatModelMapper::toGroupSearchVO).toList());
+        return PageResult.of(total, current, size, items.stream().map(chatModelConvert::toGroupSearchVO).toList());
     }
 }

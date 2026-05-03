@@ -10,7 +10,7 @@ import com.cybzacg.blogbackend.module.content.footprint.model.user.UserFootprint
 import com.cybzacg.blogbackend.module.content.footprint.model.user.UserFootprintVO;
 import com.cybzacg.blogbackend.module.content.footprint.repository.SysUserFootprintRepository;
 import com.cybzacg.blogbackend.module.content.footprint.service.UserFootprintService;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.RequestContextUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
@@ -31,7 +31,7 @@ import java.util.List;
 public class UserFootprintServiceImpl implements UserFootprintService {
     private final SysUserFootprintRepository sysUserFootprintRepository;
     private final ArticleContentFacadeService articleContentFacadeService;
-    private final ContentModelMapper contentModelMapper;
+    private final ContentModelConvert contentModelConvert;
 
     /**
      * 分页查询当前用户的浏览足迹列表。
@@ -44,7 +44,7 @@ public class UserFootprintServiceImpl implements UserFootprintService {
                 query.getTargetType(),
                 query.getCurrent(),
                 query.getSize());
-        List<UserFootprintVO> records = page.getRecords().stream().map(contentModelMapper::toUserFootprintVO).toList();
+        List<UserFootprintVO> records = page.getRecords().stream().map(contentModelConvert::toUserFootprintVO).toList();
         return PageResult.of(page, records);
     }
 
@@ -85,7 +85,7 @@ public class UserFootprintServiceImpl implements UserFootprintService {
             return;
         }
 
-        SysUserFootprint footprint = contentModelMapper.toArticleFootprint(
+        SysUserFootprint footprint = contentModelConvert.toArticleFootprint(
                 userId,
                 article,
                 RequestContextUtils.getClientIp(),

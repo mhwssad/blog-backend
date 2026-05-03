@@ -28,43 +28,33 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ChatConversationQueryServiceImpl implements ChatConversationQueryService {
 
-    private final ChatServiceSupport s;
+    private final ChatServiceSupport chatServiceSupport;
 
     @Override
     public PageResult<ChatConversationVO> pageMyConversations(Long userId, ChatConversationPageQuery query) {
-        s.ensureGlobalConversationMembership(userId);
+        chatServiceSupport.ensureGlobalConversationMembership(userId);
         long current = PaginationUtils.normalizeCurrent(query.getCurrent());
         long size = PaginationUtils.normalizeSize(query.getSize(), 20L, 100L);
-        String keyword = s.trimKeyword(query.getKeyword());
-        long total = Objects.requireNonNullElse(s.getConversationRepository().countConversationPage(userId, keyword), 0L);
+        String keyword = chatServiceSupport.trimKeyword(query.getKeyword());
+        long total = Objects.requireNonNullElse(chatServiceSupport.getConversationRepository().countConversationPage(userId, keyword), 0L);
         if (total == 0L) {
-            return PageResult.<ChatConversationVO>builder()
-                    .total(0L)
-                    .current(current)
-                    .size(size)
-                    .records(List.of())
-                    .build();
+            return PageResult.empty(current, size);
         }
         long offset = (current - 1) * size;
-        List<ChatConversationListItem> items = s.getConversationRepository().selectConversationPage(userId, keyword, offset, size);
-        return PageResult.<ChatConversationVO>builder()
-                .total(total)
-                .current(current)
-                .size(size)
-                .records(s.buildConversationRecords(userId, items))
-                .build();
+        List<ChatConversationListItem> items = chatServiceSupport.getConversationRepository().selectConversationPage(userId, keyword, offset, size);
+        return PageResult.of(total, current, size, chatServiceSupport.buildConversationRecords(userId, items));
     }
 
     @Override
     public ChatConversationVO getMyConversation(Long userId, Long conversationId) {
-        s.ensureGlobalConversationMembership(userId);
-        s.requireConversationAccess(userId, conversationId);
-        return s.getConversationVO(userId, conversationId);
+        chatServiceSupport.ensureGlobalConversationMembership(userId);
+        chatServiceSupport.requireConversationAccess(userId, conversationId);
+        return chatServiceSupport.getConversationVO(userId, conversationId);
     }
 
     @Override
     public PageResult<ChatLobbyMessageVO> pageLobbyMessages(Long current, Long size, Long beforeMessageId) {
-        ChatConversation conversation = s.getConversationRepository().findGlobalConversation();
+        ChatConversation conversation = chatServiceSupport.getConversationRepository().findGlobalConversation();
         if (conversation == null) {
             conversation = new ChatConversation();
             conversation.setConversationType(ChatConstants.CONVERSATION_TYPE_GLOBAL);
@@ -72,9 +62,9 @@ public class ChatConversationQueryServiceImpl implements ChatConversationQuerySe
             conversation.setIsAllSite(1);
             conversation.setStatus(ChatConstants.CONVERSATION_STATUS_NORMAL);
             try {
-                s.getConversationRepository().save(conversation);
+                chatServiceSupport.getConversationRepository().save(conversation);
             } catch (DuplicateKeyException ex) {
-                conversation = s.getConversationRepository().findGlobalConversation();
+                conversation = chatServiceSupport.getConversationRepository().findGlobalConversation();
             }
         }
 
@@ -88,15 +78,10 @@ public class ChatConversationQueryServiceImpl implements ChatConversationQuerySe
         if (beforeMessageId != null) {
             countWrapper.lt(ChatMessage::getId, beforeMessageId);
         }
-        long total = s.getMessageRepository().count(countWrapper);
+        long total = chatServiceSupport.getMessageRepository().count(countWrapper);
 
         if (total == 0L) {
-            return PageResult.<ChatLobbyMessageVO>builder()
-                    .total(0L)
-                    .current(currentVal)
-                    .size(sizeVal)
-                    .records(List.of())
-                    .build();
+            return PageResult.empty(currentVal, sizeVal);
         }
 
         LambdaQueryWrapper<ChatMessage> queryWrapper = new LambdaQueryWrapper<ChatMessage>()
@@ -108,11 +93,11 @@ public class ChatConversationQueryServiceImpl implements ChatConversationQuerySe
         if (beforeMessageId != null) {
             queryWrapper.lt(ChatMessage::getId, beforeMessageId);
         }
-        List<ChatMessage> messages = s.getMessageRepository().list(queryWrapper);
+        List<ChatMessage> messages = chatServiceSupport.getMessageRepository().list(queryWrapper);
 
         Collections.reverse(messages);
         Set<Long> senderIds = messages.stream().map(ChatMessage::getSenderId).collect(Collectors.toCollection(LinkedHashSet::new));
-        Map<Long, SysUser> userMap = s.loadUsers(senderIds);
+        Map<Long, SysUser> userMap = chatServiceSupport.loadUsers(senderIds);
         List<ChatLobbyMessageVO> records = messages.stream().map(msg -> {
             ChatLobbyMessageVO vo = new ChatLobbyMessageVO();
             vo.setId(msg.getId());
@@ -125,11 +110,6 @@ public class ChatConversationQueryServiceImpl implements ChatConversationQuerySe
             vo.setCreatedAt(msg.getCreatedAt());
             return vo;
         }).toList();
-        return PageResult.<ChatLobbyMessageVO>builder()
-                .total(total)
-                .current(currentVal)
-                .size(sizeVal)
-                .records(records)
-                .build();
+        return PageResult.of(total, currentVal, sizeVal, records);
     }
 }

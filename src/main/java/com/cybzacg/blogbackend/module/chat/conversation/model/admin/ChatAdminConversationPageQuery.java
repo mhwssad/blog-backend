@@ -1,27 +1,25 @@
 package com.cybzacg.blogbackend.module.chat.conversation.model.admin;
 
+import com.cybzacg.blogbackend.core.web.PageQuery;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
- * 后台会话分页查询条件。
- */
+ * 后台会话分页查询条件�? */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "后台会话分页查询条件")
-public class ChatAdminConversationPageQuery {
-    @Schema(description = "页码")
-    private Long current = 1L;
+public class ChatAdminConversationPageQuery extends PageQuery {
 
-    @Schema(description = "每页条数")
-    private Long size = 10L;
-
-    @Schema(description = "关键字，当前支持按会话名称和最后一条消息内容筛选")
+    @Schema(description = "关键字，当前支持按会话名称和最后一条消息内容筛")
     private String keyword;
 
     @Schema(description = "会话类型：single/group/global")
     private String conversationType;
 
-    @Schema(description = "会话状态：0-禁用，1-正常，2-已解散")
+    @Schema(description = "会话状态：0-禁用，1-正常，2-已解")
     private Integer status;
 
     @Schema(description = "群主ID")

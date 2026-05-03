@@ -16,21 +16,12 @@ import java.util.List;
  * 作者申请模型转换器。
  */
 @Mapper(componentModel = "spring", imports = StrUtils.class, unmappedTargetPolicy = ReportingPolicy.IGNORE)
-public interface AuthorApplicationModelMapper {
+public interface AuthorApplicationModelConvert {
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "userId", ignore = true)
-    @Mapping(target = "applyStatus", ignore = true)
     @Mapping(target = "applyReason", expression = "java(StrUtils.normalize(request.getApplyReason()))")
     @Mapping(target = "contentDirection", expression = "java(StrUtils.normalize(request.getContentDirection()))")
     @Mapping(target = "introduction", expression = "java(StrUtils.trimToNull(request.getIntroduction()))")
     @Mapping(target = "sampleLinksJson", expression = "java(writeSampleLinks(request.getSampleLinks()))")
-    @Mapping(target = "reviewerId", ignore = true)
-    @Mapping(target = "reviewComment", ignore = true)
-    @Mapping(target = "submittedAt", ignore = true)
-    @Mapping(target = "reviewedAt", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
     SysAuthorApplication toApplication(UserAuthorApplicationSubmitRequest request);
 
     @InheritConfiguration(name = "toApplication")
@@ -40,10 +31,6 @@ public interface AuthorApplicationModelMapper {
     @Mapping(target = "sampleLinks", expression = "java(readSampleLinks(application.getSampleLinksJson()))")
     UserAuthorApplicationVO toUserVO(SysAuthorApplication application);
 
-    @Mapping(target = "username", ignore = true)
-    @Mapping(target = "nickname", ignore = true)
-    @Mapping(target = "reviewerUsername", ignore = true)
-    @Mapping(target = "reviewerNickname", ignore = true)
     @Mapping(target = "applyStatusLabel", expression = "java(resolveStatusLabel(application.getApplyStatus()))")
     @Mapping(target = "sampleLinks", expression = "java(readSampleLinks(application.getSampleLinksJson()))")
     SysAuthorApplicationAdminVO toAdminVO(SysAuthorApplication application);

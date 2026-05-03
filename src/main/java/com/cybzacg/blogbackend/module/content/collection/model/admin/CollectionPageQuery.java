@@ -1,15 +1,15 @@
 package com.cybzacg.blogbackend.module.content.collection.model.admin;
 
+import com.cybzacg.blogbackend.core.web.PageQuery;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "后台收藏分页查询条件")
-public class CollectionPageQuery {
-    @Schema(description = "页码", example = "1")
-    private Long current = 1L;
-    @Schema(description = "每页条数", example = "10")
-    private Long size = 10L;
+public class CollectionPageQuery extends PageQuery {
     @Schema(description = "用户ID")
     private Long userId;
     @Schema(description = "收藏夹ID")

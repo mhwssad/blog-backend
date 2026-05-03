@@ -51,7 +51,7 @@ public class ChatGroupManageServiceImpl implements ChatGroupManageService {
         ExceptionThrowerCore.throwBusinessIf(memberUserIds.isEmpty(), ResultErrorCode.ILLEGAL_ARGUMENT, "群成员不能为空");
         s.requireActiveUsers(memberUserIds, true);
         s.ensureMemberLimitAllows(request.getMemberLimit(), memberUserIds.size() + 1, "初始群成员数量超过群人数上限");
-        ChatConversation conversation = s.getModelMapper().toGroupConversation(request);
+        ChatConversation conversation = s.getModelConvert().toGroupConversation(request);
         normalizeGroupConversationOptions(conversation);
         conversation.setOwnerId(userId);
         s.getConversationRepository().save(conversation);

@@ -10,7 +10,7 @@ import com.cybzacg.blogbackend.module.content.interaction.model.admin.Interactio
 import com.cybzacg.blogbackend.module.content.interaction.model.admin.InteractionVO;
 import com.cybzacg.blogbackend.module.content.interaction.repository.SysInteractionRepository;
 import com.cybzacg.blogbackend.module.content.interaction.service.impl.InteractionAdminServiceImpl;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,7 +31,7 @@ class InteractionAdminServiceImplTest {
     @Mock
     private SysCommentRepository sysCommentRepository;
     @Mock
-    private ContentModelMapper contentModelMapper;
+    private ContentModelConvert contentModelConvert;
 
     private InteractionAdminServiceImpl interactionAdminService;
 
@@ -41,7 +41,7 @@ class InteractionAdminServiceImplTest {
                 sysInteractionRepository,
                 articleContentFacadeService,
                 sysCommentRepository,
-                contentModelMapper
+                contentModelConvert
         );
     }
 
@@ -64,7 +64,7 @@ class InteractionAdminServiceImplTest {
         vo.setTargetId(100L);
 
         when(sysInteractionRepository.pageByAdminConditions(query)).thenReturn(page);
-        when(contentModelMapper.toInteractionVO(interaction)).thenReturn(vo);
+        when(contentModelConvert.toInteractionVO(interaction)).thenReturn(vo);
 
         PageResult<InteractionVO> result = interactionAdminService.pageInteractions(query);
 

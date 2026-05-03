@@ -20,7 +20,7 @@ import com.cybzacg.blogbackend.module.chat.message.model.user.ChatMessageVO;
 import com.cybzacg.blogbackend.module.chat.message.repository.ChatMessageRepository;
 import com.cybzacg.blogbackend.module.chat.push.service.ChatPushService;
 import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
-import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelMapper;
+import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelConvert;
 import com.cybzacg.blogbackend.module.chat.websocket.model.ChatWsConversationUpdatedPayload;
 import com.cybzacg.blogbackend.module.chat.websocket.model.ChatWsMembersUpdatedPayload;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
@@ -47,7 +47,7 @@ public class ChatLobbyAdminServiceImpl implements ChatLobbyAdminService {
     private final ChatMessageRepository chatMessageRepository;
     private final ChatConversationMemberRepository chatConversationMemberRepository;
     private final SysUserRepository sysUserRepository;
-    private final ChatModelMapper chatModelMapper;
+    private final ChatModelConvert chatModelConvert;
     private final ChatPushService chatPushService;
 
     /**
@@ -147,8 +147,7 @@ public class ChatLobbyAdminServiceImpl implements ChatLobbyAdminService {
         long total = chatMessageRepository.count(countWrapper);
 
         if (total == 0L) {
-            return PageResult.<ChatLobbyPinnedMessageVO>builder()
-                    .total(0L).current(currentVal).size(sizeVal).records(List.of()).build();
+            return PageResult.empty(currentVal, sizeVal);
         }
 
         LambdaQueryWrapper<ChatMessage> queryWrapper = new LambdaQueryWrapper<ChatMessage>()
@@ -176,8 +175,7 @@ public class ChatLobbyAdminServiceImpl implements ChatLobbyAdminService {
             return vo;
         }).toList();
 
-        return PageResult.<ChatLobbyPinnedMessageVO>builder()
-                .total(total).current(currentVal).size(sizeVal).records(records).build();
+        return PageResult.of(total, currentVal, sizeVal, records);
     }
 
     /**
@@ -335,7 +333,7 @@ public class ChatLobbyAdminServiceImpl implements ChatLobbyAdminService {
                         .thenComparing(ChatConversationMember::getJoinedAt, Comparator.nullsLast(LocalDateTime::compareTo))
                         .thenComparing(ChatConversationMember::getUserId, Comparator.nullsLast(Comparator.naturalOrder())))
                 .forEach(member -> {
-                    ChatMemberVO vo = chatModelMapper.toMemberVO(member);
+                    ChatMemberVO vo = chatModelConvert.toMemberVO(member);
                     SysUser user = userMap.get(member.getUserId());
                     vo.setUserId(member.getUserId());
                     vo.setUsername(user != null ? user.getUsername() : null);

@@ -12,7 +12,7 @@ import com.cybzacg.blogbackend.module.chat.conversation.service.ChatTopicChannel
 import com.cybzacg.blogbackend.module.chat.member.repository.ChatConversationMemberRepository;
 import com.cybzacg.blogbackend.module.chat.push.service.ChatNotificationService;
 import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
-import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelMapper;
+import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelConvert;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatAdminConversationListItem;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
@@ -33,7 +33,7 @@ public class ChatTopicChannelAdminServiceImpl implements ChatTopicChannelAdminSe
     private final ChatConversationRepository chatConversationRepository;
     private final ChatConversationMemberRepository chatConversationMemberRepository;
     private final SysUserRepository sysUserRepository;
-    private final ChatModelMapper chatModelMapper;
+    private final ChatModelConvert chatModelConvert;
     private final ChatNotificationService chatNotificationService;
 
     /**
@@ -175,6 +175,6 @@ public class ChatTopicChannelAdminServiceImpl implements ChatTopicChannelAdminSe
     private ChatAdminConversationVO getTopicChannelVO(Long conversationId) {
         ChatAdminConversationListItem item = chatConversationRepository.selectAdminConversationDetail(conversationId);
         ExceptionThrowerCore.throwBusinessIfNull(item, ResultErrorCode.ILLEGAL_ARGUMENT, "主题频道不存在");
-        return chatModelMapper.toAdminConversationVO(item);
+        return chatModelConvert.toAdminConversationVO(item);
     }
 }

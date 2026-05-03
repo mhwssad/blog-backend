@@ -10,7 +10,7 @@ import com.cybzacg.blogbackend.module.article.service.ArticleStatusMachine;
 import com.cybzacg.blogbackend.module.article.service.impl.UserArticleActionServiceImpl;
 import com.cybzacg.blogbackend.module.auth.notice.service.NotificationDeliveryService;
 import com.cybzacg.blogbackend.module.content.interaction.repository.SysInteractionRepository;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,7 +36,7 @@ class UserArticleActionServiceImplTest {
     @Mock
     private ArticleStatusMachine articleStatusMachine;
     @Mock
-    private ContentModelMapper contentModelMapper;
+    private ContentModelConvert contentModelConvert;
     @Mock
     private ApplicationEventPublisher eventPublisher;
     @Mock
@@ -51,7 +51,7 @@ class UserArticleActionServiceImplTest {
                 sysInteractionRepository,
                 articleAccessControlService,
                 articleStatusMachine,
-                contentModelMapper,
+                contentModelConvert,
                 eventPublisher,
                 notificationDeliveryService
         );
@@ -64,7 +64,7 @@ class UserArticleActionServiceImplTest {
         SysInteraction interaction = interaction(100L, 7L, 1L);
         when(blogArticleRepository.getById(1L)).thenReturn(article);
         when(sysInteractionRepository.existsByUserIdAndTargetIdAndTargetTypeAndActionType(7L, 1L, "article", "like")).thenReturn(false);
-        when(contentModelMapper.toInteraction(7L, 1L, "article", "like")).thenReturn(interaction);
+        when(contentModelConvert.toInteraction(7L, 1L, "article", "like")).thenReturn(interaction);
 
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(7L)) {
             userArticleActionService.likeArticle(1L);
@@ -100,7 +100,7 @@ class UserArticleActionServiceImplTest {
 
             assertEquals(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), exception.getCode());
             assertEquals("文章不存在", exception.getMessage());
-            verifyNoInteractions(articleAccessControlService, contentModelMapper);
+            verifyNoInteractions(articleAccessControlService, contentModelConvert);
         }
     }
 
@@ -116,7 +116,7 @@ class UserArticleActionServiceImplTest {
 
             assertEquals(ResultErrorCode.FORBIDDEN.getCode(), exception.getCode());
             assertEquals("当前文章状态不允许点赞", exception.getMessage());
-            verifyNoInteractions(contentModelMapper);
+            verifyNoInteractions(contentModelConvert);
         }
     }
 

@@ -16,7 +16,7 @@ import java.util.Objects;
  * 系统通知对象转换器，处理通知视图映射及目标用户 ID 解析。
  */
 @Mapper(componentModel = "spring")
-public interface SysNoticeModelMapper {
+public interface SysNoticeModelConvert {
     @Mapping(target = "targetUserIds", ignore = true)
     SysNoticeAdminVO toNoticeAdminVO(SysNotice notice);
 

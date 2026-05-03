@@ -9,7 +9,7 @@ import org.mapstruct.Mapping;
  * 经验体系 MapStruct 映射器。
  */
 @Mapper(componentModel = "spring")
-public interface ExperienceModelMapper {
+public interface ExperienceModelConvert {
 
     @Mapping(target = "id", ignore = true)
     ExperienceLogVO toLogVO(UserExperienceLog log);

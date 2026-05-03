@@ -7,7 +7,7 @@ import com.cybzacg.blogbackend.domain.auth.SysRoleMenu;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRoleRepository;
-import com.cybzacg.blogbackend.module.auth.rbac.convert.RbacAdminModelMapper;
+import com.cybzacg.blogbackend.module.auth.rbac.convert.RbacAdminModelConvert;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysRoleAdminVO;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysRolePageQuery;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysRoleSaveRequest;
@@ -43,7 +43,7 @@ class SysRoleAdminServiceImplTest {
     @Mock
     private SysMenuRepository sysMenuRepository;
     @Mock
-    private RbacAdminModelMapper rbacAdminModelMapper;
+    private RbacAdminModelConvert rbacAdminModelConvert;
     @Mock
     private RbacAssociationFactory rbacAssociationFactory;
 
@@ -56,7 +56,7 @@ class SysRoleAdminServiceImplTest {
                 sysRoleMenuRepository,
                 sysUserRoleRepository,
                 sysMenuRepository,
-                rbacAdminModelMapper,
+                rbacAdminModelConvert,
                 rbacAssociationFactory
         );
     }
@@ -78,7 +78,7 @@ class SysRoleAdminServiceImplTest {
         when(sysRoleMenuRepository.findMenuIdsByRoleId(1L)).thenReturn(List.of(10L, 20L));
         SysRoleAdminVO vo = new SysRoleAdminVO();
         vo.setId(1L);
-        when(rbacAdminModelMapper.toRoleVO(role, List.of(10L, 20L))).thenReturn(vo);
+        when(rbacAdminModelConvert.toRoleVO(role, List.of(10L, 20L))).thenReturn(vo);
 
         PageResult<SysRoleAdminVO> result = sysRoleAdminService.pageRoles(query);
 
@@ -96,10 +96,10 @@ class SysRoleAdminServiceImplTest {
         when(sysRoleRepository.existsActiveByCode("EDITOR", null)).thenReturn(false);
 
         SysRole mappedRole = new SysRole();
-        when(rbacAdminModelMapper.toRole(request)).thenReturn(mappedRole);
+        when(rbacAdminModelConvert.toRole(request)).thenReturn(mappedRole);
         SysRoleAdminVO expectedVO = new SysRoleAdminVO();
         expectedVO.setName("editor");
-        when(rbacAdminModelMapper.toRoleVO(mappedRole, List.of())).thenReturn(expectedVO);
+        when(rbacAdminModelConvert.toRoleVO(mappedRole, List.of())).thenReturn(expectedVO);
 
         SysRoleAdminVO result = sysRoleAdminService.createRole(request);
 
@@ -123,7 +123,7 @@ class SysRoleAdminServiceImplTest {
         when(sysRoleMenuRepository.findMenuIdsByRoleId(1L)).thenReturn(List.of(10L));
         SysRoleAdminVO expectedVO = new SysRoleAdminVO();
         expectedVO.setId(1L);
-        when(rbacAdminModelMapper.toRoleVO(role, List.of(10L))).thenReturn(expectedVO);
+        when(rbacAdminModelConvert.toRoleVO(role, List.of(10L))).thenReturn(expectedVO);
 
         SysRoleAdminVO result = sysRoleAdminService.updateRole(1L, request);
 

@@ -24,7 +24,7 @@ import com.cybzacg.blogbackend.module.chat.member.model.admin.ChatAdminMemberMut
 import com.cybzacg.blogbackend.module.chat.message.model.admin.ChatAdminMessageDetailVO;
 import com.cybzacg.blogbackend.module.content.comment.repository.SysCommentRepository;
 import com.cybzacg.blogbackend.module.content.comment.service.CommentAdminService;
-import com.cybzacg.blogbackend.module.report.convert.ReportModelMapper;
+import com.cybzacg.blogbackend.module.report.convert.ReportModelConvert;
 import com.cybzacg.blogbackend.module.report.model.admin.ReportAdminPageQuery;
 import com.cybzacg.blogbackend.module.report.model.admin.ReportAdminVO;
 import com.cybzacg.blogbackend.module.report.model.admin.ReportHandleRequest;
@@ -60,7 +60,7 @@ public class ReportAdminServiceImpl implements ReportAdminService {
     private final SysUserRepository sysUserRepository;
     private final SysAuditLogService sysAuditLogService;
     private final SuperAdminVerifier superAdminVerifier;
-    private final ReportModelMapper reportModelMapper;
+    private final ReportModelConvert reportModelConvert;
     private final ArticleAdminService articleAdminService;
     private final CommentAdminService commentAdminService;
     private final ChatAdminService chatAdminService;
@@ -79,7 +79,7 @@ public class ReportAdminServiceImpl implements ReportAdminService {
                 query.getCurrent(), query.getSize());
 
         List<ReportAdminVO> records = page.getRecords().stream()
-                .map(reportModelMapper::toAdminVO)
+                .map(reportModelConvert::toAdminVO)
                 .toList();
 
         fillUserInfo(records);
@@ -89,7 +89,7 @@ public class ReportAdminServiceImpl implements ReportAdminService {
     @Override
     public ReportAdminVO getReportDetail(Long reportId) {
         SysReportRecord record = getReport(reportId);
-        ReportAdminVO vo = reportModelMapper.toAdminVO(record);
+        ReportAdminVO vo = reportModelConvert.toAdminVO(record);
         fillUserInfo(List.of(vo));
         return vo;
     }
@@ -210,7 +210,7 @@ public class ReportAdminServiceImpl implements ReportAdminService {
         getReport(reportId);
         List<SysReportHandleLog> logs = sysReportHandleLogRepository.listByReportId(reportId);
         List<ReportHandleLogVO> vos = logs.stream()
-                .map(reportModelMapper::toHandleLogVO)
+                .map(reportModelConvert::toHandleLogVO)
                 .toList();
 
         // 填充操作人用户名

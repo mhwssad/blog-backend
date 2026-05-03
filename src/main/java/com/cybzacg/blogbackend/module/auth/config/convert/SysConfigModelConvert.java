@@ -8,6 +8,6 @@ import org.mapstruct.Mapper;
  * 系统配置对象转换器。
  */
 @Mapper(componentModel = "spring")
-public interface SysConfigModelMapper {
+public interface SysConfigModelConvert {
     SysConfigAdminVO toConfigVO(SysConfig config);
 }

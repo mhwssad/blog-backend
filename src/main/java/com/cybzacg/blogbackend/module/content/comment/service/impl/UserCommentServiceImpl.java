@@ -13,7 +13,7 @@ import com.cybzacg.blogbackend.module.content.comment.model.user.CommentSaveRequ
 import com.cybzacg.blogbackend.module.content.comment.repository.SysCommentRepository;
 import com.cybzacg.blogbackend.module.content.comment.service.UserCommentService;
 import com.cybzacg.blogbackend.module.content.interaction.repository.SysInteractionRepository;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
@@ -36,7 +36,7 @@ public class UserCommentServiceImpl implements UserCommentService {
     private final SysCommentRepository sysCommentRepository;
     private final SysInteractionRepository sysInteractionRepository;
     private final ArticleContentFacadeService articleContentFacadeService;
-    private final ContentModelMapper contentModelMapper;
+    private final ContentModelConvert contentModelConvert;
     private final ApplicationEventPublisher eventPublisher;
     private final NotificationDeliveryService notificationDeliveryService;
 
@@ -56,7 +56,7 @@ public class UserCommentServiceImpl implements UserCommentService {
         if (exists) {
             return;
         }
-        SysInteraction interaction = contentModelMapper.toInteraction(userId, commentId, "comment", "like");
+        SysInteraction interaction = contentModelConvert.toInteraction(userId, commentId, "comment", "like");
         sysInteractionRepository.save(interaction);
         sysCommentRepository.incrementLikeCount(commentId, 1);
     }
@@ -91,7 +91,7 @@ public class UserCommentServiceImpl implements UserCommentService {
         ExceptionThrowerCore.throwBusinessIf(!"article".equals(request.getTargetType()), ResultErrorCode.ILLEGAL_ARGUMENT, "当前仅支持文章评论");
         BlogArticle article = articleContentFacadeService.requireInteractableArticle(request.getTargetId(), userId, "评论");
 
-        SysComment comment = contentModelMapper.toComment(request);
+        SysComment comment = contentModelConvert.toComment(request);
         comment.setTargetType("article");
         comment.setUserId(userId);
         comment.setRootId(request.getRootId() == null ? 0L : request.getRootId());

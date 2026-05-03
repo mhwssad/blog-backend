@@ -27,7 +27,7 @@ import java.util.List;
  * 内容模块对象转换器，涵盖分类、标签、评论、收藏、互动及足迹的映射。
  */
 @Mapper(componentModel = "spring", imports = StrUtils.class, unmappedTargetPolicy = ReportingPolicy.IGNORE)
-public interface ContentModelMapper {
+public interface ContentModelConvert {
     CategoryAdminVO toCategoryAdminVO(SysCategory category);
 
     CategoryTreeVO toCategoryTreeVO(SysCategory category);
@@ -60,105 +60,60 @@ public interface ContentModelMapper {
     @Mapping(target = "targetUrl", source = "url")
     UserFootprintVO toUserFootprintVO(SysUserFootprint footprint);
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "parentId", source = "parentId")
     @Mapping(target = "name", expression = "java(StrUtils.trim(request.getName()))")
     @Mapping(target = "code", expression = "java(StrUtils.trim(request.getCode()))")
     @Mapping(target = "type", expression = "java(StrUtils.trim(request.getType()))")
-    @Mapping(target = "ancestors", ignore = true)
-    @Mapping(target = "level", ignore = true)
-    @Mapping(target = "sortOrder", source = "sortOrder")
     @Mapping(target = "icon", expression = "java(StrUtils.normalize(request.getIcon()))")
     @Mapping(target = "description", expression = "java(StrUtils.normalize(request.getDescription()))")
-    @Mapping(target = "status", source = "status")
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
     SysCategory toCategory(CategorySaveRequest request);
 
     @InheritConfiguration(name = "toCategory")
     void updateCategory(CategorySaveRequest request, @MappingTarget SysCategory category);
 
-    @Mapping(target = "id", ignore = true)
     @Mapping(target = "name", expression = "java(StrUtils.trim(request.getName()))")
     @Mapping(target = "color", expression = "java(StrUtils.normalize(request.getColor()))")
-    @Mapping(target = "createdAt", ignore = true)
     SysTag toTag(TagSaveRequest request);
 
     @InheritConfiguration(name = "toTag")
     void updateTag(TagSaveRequest request, @MappingTarget SysTag tag);
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "userId", ignore = true)
     @Mapping(target = "folderName", expression = "java(StrUtils.trim(request.getFolderName()))")
     @Mapping(target = "folderType", ignore = true)
     @Mapping(target = "description", expression = "java(StrUtils.normalize(request.getDescription()))")
     @Mapping(target = "isPublic", ignore = true)
     @Mapping(target = "isDefault", ignore = true)
     @Mapping(target = "sortOrder", ignore = true)
-    @Mapping(target = "collectionCount", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
     SysCollectionFolder toCollectionFolder(CollectionFolderSaveRequest request);
 
     @InheritConfiguration(name = "toCollectionFolder")
     void updateCollectionFolder(CollectionFolderSaveRequest request, @MappingTarget SysCollectionFolder folder);
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "userId", source = "userId")
     @Mapping(target = "folderName", constant = "默认收藏夹")
-    @Mapping(target = "folderType", source = "folderType")
     @Mapping(target = "description", constant = "系统自动创建的默认收藏夹")
     @Mapping(target = "isPublic", constant = "0")
     @Mapping(target = "isDefault", constant = "1")
     @Mapping(target = "sortOrder", constant = "0")
     @Mapping(target = "collectionCount", constant = "0")
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
     SysCollectionFolder toDefaultCollectionFolder(Long userId, String folderType);
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "userId", source = "userId")
-    @Mapping(target = "folderId", source = "folderId")
     @Mapping(target = "targetId", source = "article.id")
     @Mapping(target = "targetType", constant = "article")
     @Mapping(target = "remark", expression = "java(StrUtils.normalize(request.getRemark()))")
     @Mapping(target = "targetTitle", source = "article.title")
     @Mapping(target = "targetUrl", expression = "java(article == null ? null : \"/article/\" + article.getId())")
-    @Mapping(target = "createdAt", ignore = true)
     SysCollection toCollection(CollectionSaveRequest request, Long userId, Long folderId, BlogArticle article);
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "targetId", source = "targetId")
     @Mapping(target = "targetType", expression = "java(StrUtils.trim(request.getTargetType()))")
     @Mapping(target = "content", expression = "java(StrUtils.trim(request.getContent()))")
     @Mapping(target = "images", expression = "java(toJson(request.getImages()))")
-    @Mapping(target = "userId", ignore = true)
-    @Mapping(target = "rootId", source = "rootId")
-    @Mapping(target = "parentId", source = "parentId")
-    @Mapping(target = "likeCount", ignore = true)
-    @Mapping(target = "replyCount", ignore = true)
-    @Mapping(target = "status", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
     SysComment toComment(CommentSaveRequest request);
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "userId", source = "userId")
-    @Mapping(target = "targetId", source = "targetId")
-    @Mapping(target = "targetType", source = "targetType")
-    @Mapping(target = "actionType", source = "actionType")
-    @Mapping(target = "createdAt", ignore = true)
     SysInteraction toInteraction(Long userId, Long targetId, String targetType, String actionType);
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "userId", source = "userId")
     @Mapping(target = "targetId", source = "article.id")
     @Mapping(target = "targetType", constant = "article")
     @Mapping(target = "title", source = "article.title")
     @Mapping(target = "url", expression = "java(article == null ? null : \"/article/\" + article.getId())")
-    @Mapping(target = "ipAddress", source = "ipAddress")
-    @Mapping(target = "userAgent", source = "userAgent")
-    @Mapping(target = "visitedAt", source = "visitedAt")
     SysUserFootprint toArticleFootprint(Long userId, BlogArticle article, String ipAddress, String userAgent, LocalDateTime visitedAt);
 
     default List<String> toStringList(String json) {

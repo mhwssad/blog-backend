@@ -11,7 +11,7 @@ import com.cybzacg.blogbackend.domain.file.FileBusinessInfo;
 import com.cybzacg.blogbackend.domain.file.FileInfo;
 import com.cybzacg.blogbackend.enums.article.ArticleVisibilityScopeEnum;
 import com.cybzacg.blogbackend.enums.experience.ExperienceSourceTypeEnum;
-import com.cybzacg.blogbackend.module.article.convert.ArticleModelMapper;
+import com.cybzacg.blogbackend.module.article.convert.ArticleModelConvert;
 import com.cybzacg.blogbackend.module.article.model.admin.*;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleAccessRepository;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleCategoryRepository;
@@ -71,7 +71,7 @@ public class ArticleAdminCrudServiceImpl implements ArticleAdminCrudService {
     private final SysUserRepository sysUserRepository;
     private final SysConfigService sysConfigService;
     private final AuthorPermissionService authorPermissionService;
-    private final ArticleModelMapper articleModelMapper;
+    private final ArticleModelConvert articleModelConvert;
     private final ArticleAccessControlService articleAccessControlService;
     private final ArticleAccessManageService articleAccessManageService;
     private final ArticleSeriesService articleSeriesService;
@@ -82,12 +82,7 @@ public class ArticleAdminCrudServiceImpl implements ArticleAdminCrudService {
     public PageResult<ArticleAdminVO> pageArticles(ArticleAdminPageQuery query) {
         Set<Long> filteredArticleIds = resolveArticleIdsByRelations(query);
         if (filteredArticleIds != null && filteredArticleIds.isEmpty()) {
-            return PageResult.<ArticleAdminVO>builder()
-                    .total(0L)
-                    .current(query.getCurrent())
-                    .size(query.getSize())
-                    .records(List.of())
-                    .build();
+            return PageResult.empty(query.getCurrent(), query.getSize());
         }
 
         Page<BlogArticle> page = blogArticleRepository.pageAdminArticles(query, filteredArticleIds);
@@ -97,7 +92,7 @@ public class ArticleAdminCrudServiceImpl implements ArticleAdminCrudService {
                 .collect(Collectors.toSet()));
 
         List<ArticleAdminVO> records = page.getRecords().stream()
-                .map(articleModelMapper::toAdminVO)
+                .map(articleModelConvert::toAdminVO)
                 .peek(vo -> vo.setAuthorName(authorNameMap.get(vo.getAuthorId())))
                 .toList();
         return PageResult.of(page, records);
@@ -114,7 +109,7 @@ public class ArticleAdminCrudServiceImpl implements ArticleAdminCrudService {
     public ArticleDetailVO createArticle(ArticleSaveRequest request) {
         validateSaveRequest(request);
         validateAuthorArticleQuota(request.getAuthorId());
-        BlogArticle article = articleModelMapper.toArticle(request);
+        BlogArticle article = articleModelConvert.toArticle(request);
         applyArticleFields(article, request, true);
         initializeCounters(article);
         blogArticleRepository.save(article);
@@ -191,12 +186,12 @@ public class ArticleAdminCrudServiceImpl implements ArticleAdminCrudService {
     // ==================== private helpers ====================
 
     ArticleDetailVO buildArticleDetail(BlogArticle article) {
-        ArticleDetailVO detailVO = articleModelMapper.toDetailVO(article);
+        ArticleDetailVO detailVO = articleModelConvert.toDetailVO(article);
         detailVO.setAuthorName(loadAuthorName(article.getAuthorId()));
         detailVO.setCategoryIds(listCategoryIds(article.getId()));
         detailVO.setTagIds(listTagIds(article.getId()));
         detailVO.setAccessList(articleAccessControlService.listArticleAccesses(article.getId()).stream()
-                .map(articleModelMapper::toAccessItem)
+                .map(articleModelConvert::toAccessItem)
                 .toList());
         detailVO.setSeriesList(articleSeriesService.listVisibleSeriesSummariesByArticleId(article.getId(), article.getAuthorId()));
         return detailVO;
@@ -205,7 +200,7 @@ public class ArticleAdminCrudServiceImpl implements ArticleAdminCrudService {
     private void applyArticleFields(BlogArticle article, ArticleSaveRequest request, boolean creating) {
         LocalDateTime existingPublishTime = article.getPublishTime();
         Integer existingReviewStatus = article.getReviewStatus();
-        articleModelMapper.updateArticle(request, article);
+        articleModelConvert.updateArticle(request, article);
         article.setIsTop(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(article.getIsTop(), 0));
         article.setIsRecommend(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(article.getIsRecommend(), 0));
         article.setIsOriginal(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(article.getIsOriginal(), 1));
@@ -353,7 +348,7 @@ public class ArticleAdminCrudServiceImpl implements ArticleAdminCrudService {
         }
         List<BlogArticleCategory> relations = new ArrayList<>();
         for (int i = 0; i < categoryIds.size(); i++) {
-            relations.add(articleModelMapper.toArticleCategory(articleId, categoryIds.get(i), i + 1));
+            relations.add(articleModelConvert.toArticleCategory(articleId, categoryIds.get(i), i + 1));
         }
         blogArticleCategoryRepository.saveBatch(relations);
     }
@@ -365,7 +360,7 @@ public class ArticleAdminCrudServiceImpl implements ArticleAdminCrudService {
         }
         List<SysTagRelation> relations = new ArrayList<>();
         for (Long tagId : tagIds) {
-            relations.add(articleModelMapper.toTagRelation(tagId, articleId, TARGET_TYPE_ARTICLE));
+            relations.add(articleModelConvert.toTagRelation(tagId, articleId, TARGET_TYPE_ARTICLE));
         }
         sysTagRelationRepository.saveBatch(relations);
     }

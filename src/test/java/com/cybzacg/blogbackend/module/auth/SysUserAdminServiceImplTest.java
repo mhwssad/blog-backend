@@ -13,7 +13,7 @@ import com.cybzacg.blogbackend.module.auth.account.service.impl.SysUserAdminServ
 import com.cybzacg.blogbackend.module.auth.account.token.TokenManager;
 import com.cybzacg.blogbackend.module.auth.audit.service.SysAuditLogService;
 import com.cybzacg.blogbackend.module.auth.notice.service.UserNotificationPreferenceService;
-import com.cybzacg.blogbackend.module.auth.rbac.convert.RbacAdminModelMapper;
+import com.cybzacg.blogbackend.module.auth.rbac.convert.RbacAdminModelConvert;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysUserAdminVO;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysUserPageQuery;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysUserSaveRequest;
@@ -49,7 +49,7 @@ class SysUserAdminServiceImplTest {
     @Mock
     private PasswordEncoder passwordEncoder;
     @Mock
-    private RbacAdminModelMapper rbacAdminModelMapper;
+    private RbacAdminModelConvert rbacAdminModelConvert;
     @Mock
     private RbacAssociationFactory rbacAssociationFactory;
     @Mock
@@ -72,7 +72,7 @@ class SysUserAdminServiceImplTest {
                 sysRoleRepository,
                 sysUserRoleRepository,
                 passwordEncoder,
-                rbacAdminModelMapper,
+                rbacAdminModelConvert,
                 rbacAssociationFactory,
                 userNotificationPreferenceService,
                 superAdminVerifier,
@@ -100,7 +100,7 @@ class SysUserAdminServiceImplTest {
 
         SysUserAdminVO vo = new SysUserAdminVO();
         vo.setId(1L);
-        when(rbacAdminModelMapper.toUserVO(user, List.of(1L, 2L))).thenReturn(vo);
+        when(rbacAdminModelConvert.toUserVO(user, List.of(1L, 2L))).thenReturn(vo);
 
         PageResult<SysUserAdminVO> result = sysUserAdminService.pageUsers(query);
 
@@ -122,7 +122,7 @@ class SysUserAdminServiceImplTest {
         SysUserAdminVO expectedVO = new SysUserAdminVO();
         expectedVO.setId(1L);
         expectedVO.setRoleIds(List.of(1L, 2L));
-        when(rbacAdminModelMapper.toUserVO(user, List.of(1L, 2L))).thenReturn(expectedVO);
+        when(rbacAdminModelConvert.toUserVO(user, List.of(1L, 2L))).thenReturn(expectedVO);
 
         SysUserAdminVO result = sysUserAdminService.getUser(1L);
 
@@ -139,7 +139,7 @@ class SysUserAdminServiceImplTest {
         request.setPhone("13800138000");
 
         SysUser mappedUser = new SysUser();
-        when(rbacAdminModelMapper.toUser(request)).thenReturn(mappedUser);
+        when(rbacAdminModelConvert.toUser(request)).thenReturn(mappedUser);
         when(passwordEncoder.encode("Abc12345")).thenReturn("encoded_pwd");
         when(sysUserRepository.existsActiveByUsername("newuser", null)).thenReturn(false);
         when(sysUserRepository.existsActiveByEmail("test@example.com", null)).thenReturn(false);
@@ -147,7 +147,7 @@ class SysUserAdminServiceImplTest {
 
         SysUserAdminVO expectedVO = new SysUserAdminVO();
         expectedVO.setUsername("newuser");
-        when(rbacAdminModelMapper.toUserVO(mappedUser, List.of())).thenReturn(expectedVO);
+        when(rbacAdminModelConvert.toUserVO(mappedUser, List.of())).thenReturn(expectedVO);
 
         SysUserAdminVO result = sysUserAdminService.createUser(request);
 
@@ -188,7 +188,7 @@ class SysUserAdminServiceImplTest {
 
         SysUserAdminVO expectedVO = new SysUserAdminVO();
         expectedVO.setId(1L);
-        when(rbacAdminModelMapper.toUserVO(existingUser, List.of(2L))).thenReturn(expectedVO);
+        when(rbacAdminModelConvert.toUserVO(existingUser, List.of(2L))).thenReturn(expectedVO);
 
         SysUserAdminVO result = sysUserAdminService.updateUser(1L, request);
 

@@ -6,7 +6,7 @@ import com.cybzacg.blogbackend.domain.auth.SysUser;
 import com.cybzacg.blogbackend.domain.system.SysAuditLog;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.auth.audit.convert.SysAuditLogModelMapper;
+import com.cybzacg.blogbackend.module.auth.audit.convert.SysAuditLogModelConvert;
 import com.cybzacg.blogbackend.module.auth.audit.model.admin.SysAuditLogAdminVO;
 import com.cybzacg.blogbackend.module.auth.audit.model.admin.SysAuditLogPageQuery;
 import com.cybzacg.blogbackend.module.auth.audit.model.common.SysAuditLogCreateRequest;
@@ -30,12 +30,12 @@ import java.util.stream.Collectors;
 public class SysAuditLogServiceImpl implements SysAuditLogService {
     private final SysAuditLogRepository sysAuditLogRepository;
     private final SysUserRepository sysUserRepository;
-    private final SysAuditLogModelMapper sysAuditLogModelMapper;
+    private final SysAuditLogModelConvert sysAuditLogModelConvert;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void record(SysAuditLogCreateRequest request) {
-        SysAuditLog entity = sysAuditLogModelMapper.toEntity(request);
+        SysAuditLog entity = sysAuditLogModelConvert.toEntity(request);
         sysAuditLogRepository.save(entity);
     }
 
@@ -45,7 +45,7 @@ public class SysAuditLogServiceImpl implements SysAuditLogService {
         Map<Long, String> usernameMap = buildUsernameMap(page.getRecords());
         List<SysAuditLogAdminVO> records = page.getRecords().stream()
                 .map(entity -> {
-                    SysAuditLogAdminVO vo = sysAuditLogModelMapper.toVO(entity);
+                    SysAuditLogAdminVO vo = sysAuditLogModelConvert.toVO(entity);
                     vo.setOperatorUsername(usernameMap.get(entity.getOperatorUserId()));
                     vo.setTargetUsername(usernameMap.get(entity.getTargetUserId()));
                     return vo;
@@ -59,7 +59,7 @@ public class SysAuditLogServiceImpl implements SysAuditLogService {
         SysAuditLog entity = sysAuditLogRepository.getById(id);
         ExceptionThrowerCore.throwBusinessIfNull(entity, ResultErrorCode.AUDIT_LOG_NOT_FOUND);
         Map<Long, String> usernameMap = buildUsernameMap(List.of(entity));
-        SysAuditLogAdminVO vo = sysAuditLogModelMapper.toVO(entity);
+        SysAuditLogAdminVO vo = sysAuditLogModelConvert.toVO(entity);
         vo.setOperatorUsername(usernameMap.get(entity.getOperatorUserId()));
         vo.setTargetUsername(usernameMap.get(entity.getTargetUserId()));
         return vo;

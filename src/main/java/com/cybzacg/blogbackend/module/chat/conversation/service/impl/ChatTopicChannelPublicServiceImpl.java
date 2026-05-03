@@ -39,8 +39,7 @@ public class ChatTopicChannelPublicServiceImpl implements ChatTopicChannelPublic
         }
         long total = chatConversationRepository.count(countWrapper);
         if (total == 0L) {
-            return PageResult.<ChatConversationVO>builder()
-                    .total(0L).current(currentVal).size(sizeVal).records(List.of()).build();
+            return PageResult.empty(currentVal, sizeVal);
         }
 
         LambdaQueryWrapper<ChatConversation> queryWrapper = new LambdaQueryWrapper<ChatConversation>()
@@ -75,8 +74,7 @@ public class ChatTopicChannelPublicServiceImpl implements ChatTopicChannelPublic
             return vo;
         }).toList();
 
-        return PageResult.<ChatConversationVO>builder()
-                .total(total).current(currentVal).size(sizeVal).records(records).build();
+        return PageResult.of(total, currentVal, sizeVal, records);
     }
 
     @Override

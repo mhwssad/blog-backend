@@ -15,7 +15,7 @@ import com.cybzacg.blogbackend.module.auth.audit.service.SysAuditLogService;
 import com.cybzacg.blogbackend.module.chat.governance.service.ChatAdminService;
 import com.cybzacg.blogbackend.module.content.comment.repository.SysCommentRepository;
 import com.cybzacg.blogbackend.module.content.comment.service.CommentAdminService;
-import com.cybzacg.blogbackend.module.report.convert.ReportModelMapper;
+import com.cybzacg.blogbackend.module.report.convert.ReportModelConvert;
 import com.cybzacg.blogbackend.module.report.model.admin.ReportHandleRequest;
 import com.cybzacg.blogbackend.module.report.model.common.ReportHandleLogVO;
 import com.cybzacg.blogbackend.module.report.repository.SysReportHandleLogRepository;
@@ -50,7 +50,7 @@ class ReportAdminServiceImplTest {
     @Mock
     private SuperAdminVerifier superAdminVerifier;
     @Mock
-    private ReportModelMapper reportModelMapper;
+    private ReportModelConvert reportModelConvert;
     @Mock
     private ArticleAdminService articleAdminService;
     @Mock
@@ -74,7 +74,7 @@ class ReportAdminServiceImplTest {
                 sysUserRepository,
                 sysAuditLogService,
                 superAdminVerifier,
-                reportModelMapper,
+                reportModelConvert,
                 articleAdminService,
                 commentAdminService,
                 chatAdminService,
@@ -219,8 +219,8 @@ class ReportAdminServiceImplTest {
 
         ReportHandleLogVO vo1 = buildHandleLogVO(1L, 0, 1, "claim", 99L);
         ReportHandleLogVO vo2 = buildHandleLogVO(2L, 1, 2, "approve", 99L);
-        when(reportModelMapper.toHandleLogVO(log1)).thenReturn(vo1);
-        when(reportModelMapper.toHandleLogVO(log2)).thenReturn(vo2);
+        when(reportModelConvert.toHandleLogVO(log1)).thenReturn(vo1);
+        when(reportModelConvert.toHandleLogVO(log2)).thenReturn(vo2);
 
         SysUser operator = new SysUser();
         operator.setId(99L);

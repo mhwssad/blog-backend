@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.content.taxonomy;
 import com.cybzacg.blogbackend.domain.content.SysTag;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelMapper;
+import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.admin.TagSaveRequest;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.admin.TagVO;
 import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysTagRelationRepository;
@@ -28,13 +28,13 @@ class TagAdminServiceImplTest {
     @Mock
     private SysTagRelationRepository sysTagRelationRepository;
     @Mock
-    private ContentModelMapper contentModelMapper;
+    private ContentModelConvert contentModelConvert;
 
     private TagAdminServiceImpl tagAdminService;
 
     @BeforeEach
     void setUp() {
-        tagAdminService = new TagAdminServiceImpl(sysTagRepository, sysTagRelationRepository, contentModelMapper);
+        tagAdminService = new TagAdminServiceImpl(sysTagRepository, sysTagRelationRepository, contentModelConvert);
     }
 
     @Test
@@ -45,8 +45,8 @@ class TagAdminServiceImplTest {
         TagVO secondVo = tagVO(1L, "Spring", "#0f0");
 
         when(sysTagRepository.findAllOrderByIdDesc()).thenReturn(List.of(first, second));
-        when(contentModelMapper.toTagVO(first)).thenReturn(firstVo);
-        when(contentModelMapper.toTagVO(second)).thenReturn(secondVo);
+        when(contentModelConvert.toTagVO(first)).thenReturn(firstVo);
+        when(contentModelConvert.toTagVO(second)).thenReturn(secondVo);
 
         List<TagVO> result = tagAdminService.listTags();
 
@@ -59,7 +59,7 @@ class TagAdminServiceImplTest {
         SysTag tag = tag(1L, "Java", "#f00");
         TagVO vo = tagVO(1L, "Java", "#f00");
         when(sysTagRepository.getById(1L)).thenReturn(tag);
-        when(contentModelMapper.toTagVO(tag)).thenReturn(vo);
+        when(contentModelConvert.toTagVO(tag)).thenReturn(vo);
 
         TagVO result = tagAdminService.getTag(1L);
 
@@ -76,12 +76,12 @@ class TagAdminServiceImplTest {
         TagVO vo = tagVO(10L, "Java", "#f00");
 
         when(sysTagRepository.existsByNameExcludingId("Java", null)).thenReturn(false);
-        when(contentModelMapper.toTag(request)).thenReturn(tag);
+        when(contentModelConvert.toTag(request)).thenReturn(tag);
         when(sysTagRepository.save(tag)).thenAnswer(invocation -> {
             tag.setId(10L);
             return true;
         });
-        when(contentModelMapper.toTagVO(tag)).thenReturn(vo);
+        when(contentModelConvert.toTagVO(tag)).thenReturn(vo);
 
         TagVO result = tagAdminService.createTag(request);
 
@@ -120,8 +120,8 @@ class TagAdminServiceImplTest {
             actualTag.setName(actualRequest.getName().trim());
             actualTag.setColor(actualRequest.getColor());
             return null;
-        }).when(contentModelMapper).updateTag(request, existing);
-        when(contentModelMapper.toTagVO(existing)).thenReturn(vo);
+        }).when(contentModelConvert).updateTag(request, existing);
+        when(contentModelConvert.toTagVO(existing)).thenReturn(vo);
 
         TagVO result = tagAdminService.updateTag(3L, request);
 

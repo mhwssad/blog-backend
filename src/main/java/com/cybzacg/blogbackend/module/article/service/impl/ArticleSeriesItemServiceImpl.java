@@ -4,7 +4,7 @@ import com.cybzacg.blogbackend.domain.article.BlogArticle;
 import com.cybzacg.blogbackend.domain.article.BlogArticleSeries;
 import com.cybzacg.blogbackend.domain.article.BlogArticleSeriesItem;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.article.convert.ArticleSeriesModelMapper;
+import com.cybzacg.blogbackend.module.article.convert.ArticleSeriesModelConvert;
 import com.cybzacg.blogbackend.module.article.model.common.ArticleSeriesArticleVO;
 import com.cybzacg.blogbackend.module.article.model.user.ArticleSeriesArticleRequest;
 import com.cybzacg.blogbackend.module.article.model.user.ArticleSeriesSortRequest;
@@ -36,7 +36,7 @@ public class ArticleSeriesItemServiceImpl implements ArticleSeriesItemService {
     private final BlogArticleSeriesItemRepository blogArticleSeriesItemRepository;
     private final BlogArticleRepository blogArticleRepository;
     private final ArticleAccessControlService articleAccessControlService;
-    private final ArticleSeriesModelMapper articleSeriesModelMapper;
+    private final ArticleSeriesModelConvert articleSeriesModelConvert;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -126,7 +126,7 @@ public class ArticleSeriesItemServiceImpl implements ArticleSeriesItemService {
     }
 
     private UserArticleSeriesDetailVO buildUserSeriesDetail(BlogArticleSeries series) {
-        UserArticleSeriesDetailVO detailVO = articleSeriesModelMapper.toUserSeriesDetailVO(series);
+        UserArticleSeriesDetailVO detailVO = articleSeriesModelConvert.toUserSeriesDetailVO(series);
         detailVO.setArticles(loadSeriesArticles(series.getId()));
         detailVO.setArticleCount(detailVO.getArticles().size());
         return detailVO;
@@ -148,7 +148,7 @@ public class ArticleSeriesItemServiceImpl implements ArticleSeriesItemService {
             if (article == null) {
                 continue;
             }
-            ArticleSeriesArticleVO articleVO = articleSeriesModelMapper.toSeriesArticleVO(article);
+            ArticleSeriesArticleVO articleVO = articleSeriesModelConvert.toSeriesArticleVO(article);
             articleVO.setSeqNo(item.getSeqNo());
             articles.add(articleVO);
         }

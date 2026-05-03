@@ -17,7 +17,7 @@ import com.cybzacg.blogbackend.module.chat.member.repository.ChatChannelCreateAp
 import com.cybzacg.blogbackend.module.chat.member.repository.ChatConversationMemberRepository;
 import com.cybzacg.blogbackend.module.chat.member.service.ChatChannelApplicationAdminService;
 import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
-import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelMapper;
+import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelConvert;
 import com.cybzacg.blogbackend.utils.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -41,7 +41,7 @@ public class ChatChannelApplicationAdminServiceImpl implements ChatChannelApplic
     private final ChatConversationRepository chatConversationRepository;
     private final ChatConversationMemberRepository chatConversationMemberRepository;
     private final SysUserRepository sysUserRepository;
-    private final ChatModelMapper chatModelMapper;
+    private final ChatModelConvert chatModelConvert;
 
     /**
      * {@inheritDoc}
@@ -164,7 +164,7 @@ public class ChatChannelApplicationAdminServiceImpl implements ChatChannelApplic
     }
 
     private ChatChannelApplicationAdminVO toAdminVO(ChatChannelCreateApplication application, Map<Long, SysUser> userMap) {
-        ChatChannelApplicationAdminVO vo = chatModelMapper.toChannelApplicationAdminVO(application);
+        ChatChannelApplicationAdminVO vo = chatModelConvert.toChannelApplicationAdminVO(application);
         ChatChannelApplicationStatusEnum status = ChatChannelApplicationStatusEnum.fromValue(application.getApplyStatus());
         vo.setApplyStatusLabel(status == null ? null : status.getLabel());
         SysUser applicant = userMap.get(application.getApplicantUserId());

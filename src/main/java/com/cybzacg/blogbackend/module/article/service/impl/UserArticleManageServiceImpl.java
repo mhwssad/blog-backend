@@ -6,7 +6,7 @@ import com.cybzacg.blogbackend.domain.article.BlogArticle;
 import com.cybzacg.blogbackend.domain.article.BlogArticleCategory;
 import com.cybzacg.blogbackend.domain.auth.SysUser;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.article.convert.ArticleModelMapper;
+import com.cybzacg.blogbackend.module.article.convert.ArticleModelConvert;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleAccessItem;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleAdminPageQuery;
 import com.cybzacg.blogbackend.module.article.model.user.UserArticleDetailVO;
@@ -50,7 +50,7 @@ public class UserArticleManageServiceImpl implements UserArticleManageService {
     private final ArticleAccessControlService articleAccessControlService;
     private final ArticleAccessManageService articleAccessManageService;
     private final ArticleSeriesService articleSeriesService;
-    private final ArticleModelMapper articleModelMapper;
+    private final ArticleModelConvert articleModelConvert;
 
     /**
      * {@inheritDoc}
@@ -61,12 +61,7 @@ public class UserArticleManageServiceImpl implements UserArticleManageService {
         UserArticlePageQuery safeQuery = normalizeQuery(query);
         Set<Long> filteredArticleIds = resolveArticleIdsByRelations(safeQuery);
         if (filteredArticleIds != null && filteredArticleIds.isEmpty()) {
-            return PageResult.<UserArticleVO>builder()
-                    .total(0L)
-                    .current(safeQuery.getCurrent())
-                    .size(safeQuery.getSize())
-                    .records(List.of())
-                    .build();
+            return PageResult.empty(safeQuery.getCurrent(), safeQuery.getSize());
         }
 
         ArticleAdminPageQuery articleQuery = new ArticleAdminPageQuery();
@@ -80,7 +75,7 @@ public class UserArticleManageServiceImpl implements UserArticleManageService {
 
         Page<BlogArticle> page = blogArticleRepository.pageAdminArticles(articleQuery, filteredArticleIds);
         List<UserArticleVO> records = page.getRecords().stream()
-                .map(articleModelMapper::toUserVO)
+                .map(articleModelConvert::toUserVO)
                 .toList();
         return PageResult.of(page, records);
     }
@@ -92,12 +87,12 @@ public class UserArticleManageServiceImpl implements UserArticleManageService {
     public UserArticleDetailVO getMyArticle(Long id) {
         Long userId = SecurityUtils.requireUserId();
         BlogArticle article = requireOwnedArticle(id, userId);
-        UserArticleDetailVO detailVO = articleModelMapper.toUserDetailVO(article);
+        UserArticleDetailVO detailVO = articleModelConvert.toUserDetailVO(article);
         detailVO.setAuthorName(loadAuthorName(article.getAuthorId()));
         detailVO.setCategoryIds(listCategoryIds(article.getId()));
         detailVO.setTagIds(sysTagRelationRepository.listTagIdsByTargetTypeAndTargetId(TARGET_TYPE_ARTICLE, article.getId()));
         detailVO.setAccessList(articleAccessControlService.listArticleAccesses(article.getId()).stream()
-                .map(articleModelMapper::toAccessItem)
+                .map(articleModelConvert::toAccessItem)
                 .toList());
         detailVO.setSeriesList(articleSeriesService.listVisibleSeriesSummariesByArticleId(article.getId(), userId));
         return detailVO;

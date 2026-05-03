@@ -20,7 +20,7 @@ import com.cybzacg.blogbackend.module.chat.message.model.admin.*;
 import com.cybzacg.blogbackend.module.chat.message.repository.ChatMessageRecipientRepository;
 import com.cybzacg.blogbackend.module.chat.message.repository.ChatMessageRepository;
 import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
-import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelMapper;
+import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelConvert;
 import com.cybzacg.blogbackend.module.chat.shared.model.common.ChatReplyMessageVO;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatAdminConversationListItem;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatAdminMessageItem;
@@ -48,7 +48,7 @@ public class ChatAdminQueryServiceImpl implements ChatAdminQueryService {
     private final ChatConversationMemberRepository chatConversationMemberRepository;
     private final ChatMessageRecipientRepository chatMessageRecipientRepository;
     private final SysUserRepository sysUserRepository;
-    private final ChatModelMapper chatModelMapper;
+    private final ChatModelConvert chatModelConvert;
     private final ChatPayloadHelper chatPayloadHelper;
     private final ChatMemberHelper chatMemberHelper;
 
@@ -58,14 +58,11 @@ public class ChatAdminQueryServiceImpl implements ChatAdminQueryService {
         long size = PaginationUtils.normalizeSize(query.getSize(), 10L, 100L);
         long total = Objects.requireNonNullElse(chatConversationRepository.countAdminConversationPage(query), 0L);
         if (total == 0L) {
-            return PageResult.<ChatAdminConversationVO>builder()
-                    .total(0L).current(current).size(size).records(List.of()).build();
+            return PageResult.empty(current, size);
         }
         long offset = (current - 1) * size;
         List<ChatAdminConversationListItem> items = chatConversationRepository.selectAdminConversationPage(query, offset, size);
-        return PageResult.<ChatAdminConversationVO>builder()
-                .total(total).current(current).size(size)
-                .records(buildConversationRecords(items)).build();
+        return PageResult.of(total, current, size, buildConversationRecords(items));
     }
 
     @Override
@@ -89,16 +86,14 @@ public class ChatAdminQueryServiceImpl implements ChatAdminQueryService {
         long size = PaginationUtils.normalizeSize(query.getSize(), 20L, 100L);
         long total = Objects.requireNonNullElse(chatMessageRepository.countAdminMessagePage(conversationId, query), 0L);
         if (total == 0L) {
-            return PageResult.<ChatAdminMessageVO>builder()
-                    .total(0L).current(current).size(size).records(List.of()).build();
+            return PageResult.empty(current, size);
         }
         long offset = (current - 1) * size;
         List<ChatAdminMessageItem> items = chatMessageRepository.selectAdminMessagePage(conversationId, query, offset, size);
         Map<Long, SysUser> userMap = loadUsers(items.stream().map(ChatAdminMessageItem::getSenderId).collect(LinkedHashSet::new, Set::add, Set::addAll));
         Map<Long, ChatReplyMessageVO> replySnapshots = loadAdminReplySnapshots(conversationId, collectReplyMessageIds(items));
         List<ChatAdminMessageVO> records = items.stream().map(item -> buildMessageVO(item, userMap, replySnapshots)).toList();
-        return PageResult.<ChatAdminMessageVO>builder()
-                .total(total).current(current).size(size).records(records).build();
+        return PageResult.of(total, current, size, records);
     }
 
     @Override
@@ -148,8 +143,7 @@ public class ChatAdminQueryServiceImpl implements ChatAdminQueryService {
         List<ChatAdminMessageReceiptVO> records = page.getRecords().stream()
                 .map(recipient -> buildReceiptVO(recipient, userMap))
                 .toList();
-        return PageResult.<ChatAdminMessageReceiptVO>builder()
-                .total(page.getTotal()).current(current).size(size).records(records).build();
+        return PageResult.of(page.getTotal(), current, size, records);
     }
 
     // ==================== 私有辅助方法 ====================
@@ -182,13 +176,13 @@ public class ChatAdminQueryServiceImpl implements ChatAdminQueryService {
     }
 
     private ChatAdminConversationVO buildConversationVO(ChatAdminConversationListItem item, List<ChatConversationMember> members, Map<Long, SysUser> userMap) {
-        ChatAdminConversationVO vo = chatModelMapper.toAdminConversationVO(item);
+        ChatAdminConversationVO vo = chatModelConvert.toAdminConversationVO(item);
         vo.setMemberCount(Objects.requireNonNullElse(item.getMemberCount(), 0L));
         SysUser owner = userMap.get(item.getOwnerId());
         vo.setOwnerUsername(owner != null ? owner.getUsername() : null);
         vo.setOwnerNickname(owner != null ? owner.getNickname() : null);
         if (item.getLastMessageId() != null) {
-            ChatConversationLastMessageVO lastMessage = chatModelMapper.toConversationLastMessageVO(item);
+            ChatConversationLastMessageVO lastMessage = chatModelConvert.toConversationLastMessageVO(item);
             SysUser sender = userMap.get(item.getLastMessageSenderId());
             lastMessage.setSenderNickname(UserDisplayNameUtils.resolveDisplayName(sender, item.getLastMessageSenderId()));
             vo.setLastMessage(lastMessage);
@@ -200,7 +194,7 @@ public class ChatAdminQueryServiceImpl implements ChatAdminQueryService {
     }
 
     private ChatAdminMessageVO buildMessageVO(ChatAdminMessageItem item, Map<Long, SysUser> userMap, Map<Long, ChatReplyMessageVO> replySnapshots) {
-        ChatAdminMessageVO vo = chatModelMapper.toAdminMessageVO(item);
+        ChatAdminMessageVO vo = chatModelConvert.toAdminMessageVO(item);
         SysUser sender = userMap.get(item.getSenderId());
         vo.setSenderUsername(sender != null ? sender.getUsername() : null);
         vo.setSenderNickname(UserDisplayNameUtils.resolveDisplayName(sender, item.getSenderId()));
@@ -242,7 +236,7 @@ public class ChatAdminQueryServiceImpl implements ChatAdminQueryService {
                         .thenComparing(ChatConversationMember::getJoinedAt, Comparator.nullsLast(LocalDateTime::compareTo))
                         .thenComparing(ChatConversationMember::getUserId))
                 .forEach(member -> {
-                    ChatMemberVO vo = chatModelMapper.toMemberVO(member);
+                    ChatMemberVO vo = chatModelConvert.toMemberVO(member);
                     SysUser user = userMap.get(member.getUserId());
                     vo.setUserId(member.getUserId());
                     vo.setUsername(user != null ? user.getUsername() : null);

@@ -1,18 +1,17 @@
 package com.cybzacg.blogbackend.module.auth.rbac.model.admin;
 
+import com.cybzacg.blogbackend.core.web.PageQuery;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "用户分页查询条件")
-public class SysUserPageQuery {
-    @Schema(description = "页码", example = "1")
-    private Long current = 1L;
+public class SysUserPageQuery extends PageQuery {
 
-    @Schema(description = "每页条数", example = "10")
-    private Long size = 10L;
-
-    @Schema(description = "用户名")
+    @Schema(description = "用户")
     private String username;
 
     @Schema(description = "昵称")
@@ -21,7 +20,7 @@ public class SysUserPageQuery {
     @Schema(description = "邮箱")
     private String email;
 
-    @Schema(description = "手机号")
+    @Schema(description = "手机")
     private String phone;
 
     @Schema(description = "状态")

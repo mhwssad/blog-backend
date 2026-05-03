@@ -2,7 +2,7 @@ package com.cybzacg.blogbackend.module.follow.service.impl;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.follow.convert.FollowModelMapper;
+import com.cybzacg.blogbackend.module.follow.convert.FollowModelConvert;
 import com.cybzacg.blogbackend.module.follow.model.admin.FollowAdminPageQuery;
 import com.cybzacg.blogbackend.module.follow.model.admin.FollowAdminRelationVO;
 import com.cybzacg.blogbackend.module.follow.model.admin.FollowRelationCleanRequest;
@@ -27,7 +27,7 @@ public class FollowAdminServiceImpl implements FollowAdminService {
     private static final long MAX_PAGE_SIZE = 100L;
 
     private final SysUserFollowRepository sysUserFollowRepository;
-    private final FollowModelMapper followModelMapper;
+    private final FollowModelConvert followModelConvert;
 
     /**
      * 按关注/粉丝维度分页查询后台关注关系列表。
@@ -38,24 +38,14 @@ public class FollowAdminServiceImpl implements FollowAdminService {
         long size = PaginationUtils.normalizeSize(query == null ? null : query.getSize(), DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
         long total = CollectionUtils.defaultLong(sysUserFollowRepository.countAdminRelationPage(query));
         if (total == 0L) {
-            return PageResult.<FollowAdminRelationVO>builder()
-                    .total(0L)
-                    .current(current)
-                    .size(size)
-                    .records(List.of())
-                    .build();
+            return PageResult.empty(current, size);
         }
         long offset = (current - 1) * size;
         List<FollowAdminRelationVO> records = sysUserFollowRepository.selectAdminRelationPage(query, offset, size)
                 .stream()
-                .map(followModelMapper::toFollowAdminRelationVO)
+                .map(followModelConvert::toFollowAdminRelationVO)
                 .toList();
-        return PageResult.<FollowAdminRelationVO>builder()
-                .total(total)
-                .current(current)
-                .size(size)
-                .records(records)
-                .build();
+        return PageResult.of(total, current, size, records);
     }
 
     /**

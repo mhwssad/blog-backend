@@ -1,19 +1,17 @@
 package com.cybzacg.blogbackend.module.follow.model.admin;
 
+import com.cybzacg.blogbackend.core.web.PageQuery;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
- * 关注关系后台分页查询条件。
- */
+ * 关注关系后台分页查询条件�? */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "关注关系后台分页查询条件")
-public class FollowAdminPageQuery {
-    @Schema(description = "页码")
-    private Long current = 1L;
-
-    @Schema(description = "每页条数")
-    private Long size = 10L;
+public class FollowAdminPageQuery extends PageQuery {
 
     @Schema(description = "关注者用户ID")
     private Long followerId;
