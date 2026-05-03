@@ -62,7 +62,7 @@ Authorization: Bearer <accessToken>
 | `title` | String | 否 | 会话标题 |
 | `sceneType` | String | 否 | 会话场景，默认 `general` |
 
-- 响应：`AiSessionVO`
+- 响应：`Result<AiSessionVO>`
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
@@ -162,6 +162,28 @@ Authorization: Bearer <accessToken>
 | `channelName` | String | 渠道名称 |
 | `modelName` | String | 模型名称 |
 
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "id": 1,
+    "title": "Java 学习助手",
+    "channelConfigId": 1,
+    "sceneType": "general",
+    "status": 1,
+    "lastMessageAt": "2026-04-15 14:05:00",
+    "createdAt": "2026-04-15 14:00:00",
+    "updatedAt": "2026-04-15 14:05:00",
+    "channelName": "DeepSeek 对话渠道",
+    "modelName": "deepseek-chat"
+  }
+}
+```
+
 ### 3.5 分页查询会话消息
 
 - 请求：`GET /api/user/ai/sessions/{id}/messages`
@@ -244,7 +266,7 @@ Authorization: Bearer <accessToken>
 | `requestSceneType` | String | 否 | 请求场景类型，默认 `general` |
 | `requestTargetId` | Long | 否 | 关联目标ID |
 
-- 响应：`AiMessageVO`
+- 响应：`Result<AiMessageVO>`
 
 - 响应示例：
 
@@ -330,10 +352,9 @@ Authorization: Bearer <accessToken>
 | `current` | Long | 否 | 页码，默认 `1` |
 | `size` | Long | 否 | 每页条数，默认 `10` |
 
-- 响应：`PageResult<AiChannelConfigVO>`
+- 响应：`Result<PageResult<AiChannelConfigVO>>`
 
 | 字段 | 类型 | 说明 |
-| --- | --- | --- |
 | `id` | Long | 渠道ID |
 | `channelCode` | String | 渠道编码 |
 | `channelName` | String | 渠道名称 |
@@ -394,7 +415,43 @@ Authorization: Bearer <accessToken>
 
 - 请求：`GET /api/sys/ai/channels/{id}`
 - 鉴权：`ai:channel-config:query`
-- 响应：`AiChannelConfigVO`
+- 路径参数：
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | Long | 渠道配置ID |
+
+- 响应：`Result<AiChannelConfigVO>`（字段同分页查询中的记录）
+
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "id": 1,
+    "channelCode": "deepseek-chat",
+    "channelName": "DeepSeek 对话渠道",
+    "provider": "deepseek",
+    "modelName": "deepseek-chat",
+    "apiBaseUrl": "https://api.deepseek.com/v1",
+    "apiKeyEncrypted": "******",
+    "dailyQuota": 10000,
+    "userDailyQuota": 50,
+    "maxContextTokens": 32000,
+    "dataScopeJson": null,
+    "systemPromptTemplate": "你是一个友好的AI助手，请用中文回答用户问题。",
+    "status": 1,
+    "isDefault": 1,
+    "createdBy": 1,
+    "updatedBy": 1,
+    "createdAt": "2026-03-01 10:00:00",
+    "updatedAt": "2026-04-10 15:00:00"
+  }
+}
+```
 
 #### 4.1.4 创建渠道配置
 
@@ -419,26 +476,50 @@ Authorization: Bearer <accessToken>
 | `isDefault` | Integer | 否 | 是否默认渠道：0-否/1-是 |
 | `mfaTicket` | String | 否 | 二次验证票据（修改高风险字段时必填） |
 
+- 响应：`Result<AiChannelConfigVO>`（字段同渠道配置详情）
+
 #### 4.1.5 更新渠道配置
 
 - 请求：`PUT /api/sys/ai/channels/{id}`
 - 鉴权：`ai:channel-config:update`
+- 路径参数：
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | Long | 渠道配置ID |
+
 - 请求体：`AiChannelConfigSaveRequest`（字段同创建渠道配置）
+- 响应：`Result<AiChannelConfigVO>`（字段同渠道配置详情）
 
 #### 4.1.6 更新渠道状态
 
 - 请求：`PUT /api/sys/ai/channels/{id}/status`
 - 鉴权：`ai:channel-config:update`
+- 路径参数：
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | Long | 渠道配置ID |
+
 - 请求体：`AiChannelStatusRequest`
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `status` | Integer | 是 | 状态：0-停用/1-启用 |
 
+- 响应：`Result<Void>`（空）
+
 #### 4.1.7 删除渠道配置
 
 - 请求：`DELETE /api/sys/ai/channels/{id}`
 - 鉴权：`ai:channel-config:delete`
+- 路径参数：
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | Long | 渠道配置ID |
+
+- 响应：`Result<Void>`（空）
 
 ### 4.2 后台 AI 会话管理
 
@@ -465,7 +546,7 @@ Authorization: Bearer <accessToken>
 | `current` | Long | 否 | 页码，默认 `1` |
 | `size` | Long | 否 | 每页条数，默认 `20` |
 
-- 响应：`PageResult<AiSessionAdminVO>`
+- 响应：`Result<PageResult<AiSessionAdminVO>>`
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
@@ -482,11 +563,72 @@ Authorization: Bearer <accessToken>
 | `createdAt` | DateTime | 创建时间 |
 | `updatedAt` | DateTime | 更新时间 |
 
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 1,
+    "current": 1,
+    "size": 20,
+    "records": [
+      {
+        "id": 1,
+        "userId": 2,
+        "username": "zhangsan",
+        "nickname": "张三",
+        "channelConfigId": 1,
+        "channelName": "DeepSeek 对话渠道",
+        "title": "Java 学习助手",
+        "sceneType": "general",
+        "status": 1,
+        "lastMessageAt": "2026-04-15 14:05:00",
+        "createdAt": "2026-04-15 14:00:00",
+        "updatedAt": "2026-04-15 14:05:00"
+      }
+    ]
+  }
+}
+```
+
 #### 4.2.3 查询会话详情
 
 - 请求：`GET /api/sys/ai/sessions/{id}`
 - 鉴权：`ai:session:query`
-- 响应：`AiSessionAdminVO`（同分页查询）
+- 路径参数：
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | Long | 会话ID |
+
+- 响应：`Result<AiSessionAdminVO>`（字段同分页查询中的记录）
+
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "id": 1,
+    "userId": 2,
+    "username": "zhangsan",
+    "nickname": "张三",
+    "channelConfigId": 1,
+    "channelName": "DeepSeek 对话渠道",
+    "title": "Java 学习助手",
+    "sceneType": "general",
+    "status": 1,
+    "lastMessageAt": "2026-04-15 14:05:00",
+    "createdAt": "2026-04-15 14:00:00",
+    "updatedAt": "2026-04-15 14:05:00"
+  }
+}
+```
 
 ### 4.3 后台 AI 调用统计
 
@@ -513,7 +655,7 @@ Authorization: Bearer <accessToken>
 | `current` | Long | 否 | 页码，默认 `1` |
 | `size` | Long | 否 | 每页条数，默认 `20` |
 
-- 响应：`PageResult<AiUsageLogVO>`
+- 响应：`Result<PageResult<AiUsageLogVO>>`
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
@@ -566,7 +708,7 @@ Authorization: Bearer <accessToken>
 - 请求：`GET /api/sys/ai/usage-logs/stats`
 - 鉴权：`ai:usage-stats:query`
 - 查询参数：（同分页查询使用日志）
-- 响应：`AiUsageStatsVO`
+- 响应：`Result<AiUsageStatsVO>`
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
@@ -575,6 +717,23 @@ Authorization: Bearer <accessToken>
 | `failedCalls` | long | 失败调用次数 |
 | `totalTokens` | long | 总token数 |
 | `totalQuotaCost` | long | 总额度消耗 |
+
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "totalCalls": 256,
+    "successCalls": 240,
+    "failedCalls": 16,
+    "totalTokens": 128000,
+    "totalQuotaCost": 256
+  }
+}
+```
 
 ## 5. 枚举值说明
 
