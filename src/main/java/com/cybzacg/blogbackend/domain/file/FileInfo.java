@@ -87,7 +87,7 @@ public class FileInfo {
      */
     private String remark;
     /**
-     * 状态：0-正常，1-已删除
+     * 文件状态：0-已删除，1-正常，2-审核中，3-违规下架
      */
     private Integer status;
     /**

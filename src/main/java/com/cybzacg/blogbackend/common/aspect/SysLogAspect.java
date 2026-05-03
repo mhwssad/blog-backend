@@ -392,13 +392,13 @@ public class SysLogAspect {
             return;
         }
         if (node.isObject()) {
-            Iterator<Map.Entry<String, com.fasterxml.jackson.databind.JsonNode>> fields = node.fields();
-            while (fields.hasNext()) {
-                Map.Entry<String, com.fasterxml.jackson.databind.JsonNode> entry = fields.next();
-                if (isSensitiveField(entry.getKey())) {
-                    ((com.fasterxml.jackson.databind.node.ObjectNode) node).put(entry.getKey(), "***");
+            Iterator<String> fieldNames = node.fieldNames();
+            while (fieldNames.hasNext()) {
+                String fieldName = fieldNames.next();
+                if (isSensitiveField(fieldName)) {
+                    ((com.fasterxml.jackson.databind.node.ObjectNode) node).put(fieldName, "***");
                 } else {
-                    redactSensitiveFields(entry.getValue());
+                    redactSensitiveFields(node.get(fieldName));
                 }
             }
             return;
