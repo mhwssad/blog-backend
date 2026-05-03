@@ -3,6 +3,7 @@ package com.cybzacg.blogbackend.module.auth;
 import com.cybzacg.blogbackend.common.constant.AuthConstants;
 import com.cybzacg.blogbackend.common.constant.ConfigConstants;
 import com.cybzacg.blogbackend.common.constant.MenuConstants;
+import com.cybzacg.blogbackend.common.email.EmailService;
 import com.cybzacg.blogbackend.common.redis.RedisKeyUtils;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
 import com.cybzacg.blogbackend.domain.auth.SysMenu;
@@ -29,10 +30,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.autoconfigure.mail.MailProperties;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
@@ -66,9 +64,7 @@ class AuthServiceImplTest {
     @Mock
     private RedisOperator redisOperator;
     @Mock
-    private JavaMailSender javaMailSender;
-    @Mock
-    private MailProperties mailProperties;
+    private EmailService emailService;
     @Mock
     private PasswordEncoder passwordEncoder;
     @Mock
@@ -89,8 +85,7 @@ class AuthServiceImplTest {
                 sysConfigRepository,
                 authModelConvert,
                 redisOperator,
-                javaMailSender,
-                mailProperties,
+                emailService,
                 passwordEncoder,
                 userNotificationPreferenceService,
                 eventPublisher
@@ -328,19 +323,18 @@ class AuthServiceImplTest {
                 eq(RedisKeyUtils.build(AuthConstants.EMAIL_LOGIN_CODE_RATE_PREFIX, "demo@example.com")),
                 eq("1"),
                 eq(AuthConstants.EMAIL_LOGIN_CODE_RATE_TTL))).thenReturn(true);
-        when(mailProperties.getUsername()).thenReturn("noreply@example.com");
 
         authService.sendEmailLoginCode(request);
 
-        ArgumentCaptor<SimpleMailMessage> mailCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
-        verify(javaMailSender).send(mailCaptor.capture());
-        SimpleMailMessage message = mailCaptor.getValue();
-        assertEquals("noreply@example.com", message.getFrom());
-        assertEquals(AuthConstants.EMAIL_LOGIN_SUBJECT, message.getSubject());
-        assertEquals("demo@example.com", message.getTo()[0]);
-        assertNotNull(message.getText());
-        assertTrue(message.getText().startsWith("您的登录验证码为："));
-        String code = message.getText().replace("您的登录验证码为：", "").replace("，5分钟内有效。", "");
+        ArgumentCaptor<String> textCaptor = ArgumentCaptor.forClass(String.class);
+        verify(emailService).sendTextEmail(
+                eq("demo@example.com"),
+                eq(AuthConstants.EMAIL_LOGIN_SUBJECT),
+                textCaptor.capture());
+        String text = textCaptor.getValue();
+        assertNotNull(text);
+        assertTrue(text.startsWith("您的登录验证码为："));
+        String code = text.replace("您的登录验证码为：", "").replace("，5分钟内有效。", "");
         assertTrue(code.matches("\\d{6}"));
 
         verify(redisOperator).set(

@@ -1,6 +1,7 @@
 package com.cybzacg.blogbackend.module.auth.account.service.impl;
 
 import com.cybzacg.blogbackend.common.constant.AuthConstants;
+import com.cybzacg.blogbackend.common.email.EmailService;
 import com.cybzacg.blogbackend.common.redis.RedisKeyUtils;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
@@ -8,9 +9,6 @@ import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.account.service.TwoFactorService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.mail.MailProperties;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -29,8 +27,7 @@ import java.util.UUID;
 public class TwoFactorServiceImpl implements TwoFactorService {
     private final SysUserRepository sysUserRepository;
     private final RedisOperator redisOperator;
-    private final JavaMailSender javaMailSender;
-    private final MailProperties mailProperties;
+    private final EmailService emailService;
     private final SecureRandom secureRandom = new SecureRandom();
 
     @Override
@@ -44,16 +41,7 @@ public class TwoFactorServiceImpl implements TwoFactorService {
                 ResultErrorCode.MFA_EMAIL_CODE_RATE_LIMITED);
 
         String code = generateCode();
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(resolveMailFrom());
-            message.setTo(email);
-            message.setSubject(AuthConstants.MFA_EMAIL_SUBJECT);
-            message.setText(buildContent(code));
-            javaMailSender.send(message);
-        } catch (Exception ex) {
-            ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.MFA_EMAIL_CODE_SEND_FAILED, ex);
-        }
+        emailService.sendTextEmail(email, AuthConstants.MFA_EMAIL_SUBJECT, buildContent(code));
 
         redisOperator.set(mfaCodeKey(userId), code, AuthConstants.MFA_EMAIL_CODE_TTL);
     }
@@ -90,12 +78,6 @@ public class TwoFactorServiceImpl implements TwoFactorService {
     private String generateCode() {
         int number = secureRandom.nextInt(900000) + 100000;
         return String.valueOf(number);
-    }
-
-    private String resolveMailFrom() {
-        String from = mailProperties.getUsername();
-        ExceptionThrowerCore.throwBusinessIfBlank(from, ResultErrorCode.MFA_EMAIL_CODE_SEND_FAILED);
-        return from;
     }
 
     private String buildContent(String code) {

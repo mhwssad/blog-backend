@@ -3,6 +3,7 @@ package com.cybzacg.blogbackend.module.auth.account.service.impl;
 import com.cybzacg.blogbackend.common.constant.AuthConstants;
 import com.cybzacg.blogbackend.common.constant.ConfigConstants;
 import com.cybzacg.blogbackend.common.constant.MenuConstants;
+import com.cybzacg.blogbackend.common.email.EmailService;
 import com.cybzacg.blogbackend.common.redis.RedisKeyUtils;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
 import com.cybzacg.blogbackend.domain.auth.SysMenu;
@@ -26,11 +27,8 @@ import com.cybzacg.blogbackend.utils.PasswordUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.mail.MailProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.LockedException;
@@ -69,8 +67,7 @@ public class AuthServiceImpl implements AuthService {
     private final SysConfigRepository sysConfigRepository;
     private final AuthModelConvert authModelConvert;
     private final RedisOperator redisOperator;
-    private final JavaMailSender javaMailSender;
-    private final MailProperties mailProperties;
+    private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
     private final UserNotificationPreferenceService userNotificationPreferenceService;
     private final ApplicationEventPublisher eventPublisher;
@@ -177,16 +174,7 @@ public class AuthServiceImpl implements AuthService {
                 ResultErrorCode.EMAIL_CAPTCHA_RATE_LIMITED);
 
         String code = generateEmailCode();
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(resolveMailFrom());
-            message.setTo(email);
-            message.setSubject(AuthConstants.EMAIL_LOGIN_SUBJECT);
-            message.setText(buildEmailCodeContent(code));
-            javaMailSender.send(message);
-        } catch (Exception ex) {
-            ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.EMAIL_CAPTCHA_SEND_FAILED, ex);
-        }
+        emailService.sendTextEmail(email, AuthConstants.EMAIL_LOGIN_SUBJECT, buildEmailCodeContent(code));
 
         redisOperator.set(emailLoginCodeKey(email), code, AuthConstants.EMAIL_LOGIN_CODE_TTL);
     }
@@ -312,12 +300,6 @@ public class AuthServiceImpl implements AuthService {
     private String generateEmailCode() {
         int number = secureRandom.nextInt(900000) + 100000;
         return String.valueOf(number);
-    }
-
-    private String resolveMailFrom() {
-        String from = mailProperties.getUsername();
-        ExceptionThrowerCore.throwBusinessIfBlank(from, ResultErrorCode.EMAIL_CAPTCHA_SEND_FAILED);
-        return from;
     }
 
     private String buildEmailCodeContent(String code) {
