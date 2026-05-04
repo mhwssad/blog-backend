@@ -326,6 +326,92 @@ CREATE TABLE `ai_usage_log`
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='AI 使用日志表';
 
+-- ============================================
+-- AI 知识源配置表
+-- 管理员可启用/禁用各类知识源，配置同步间隔
+-- ============================================
+DROP TABLE IF EXISTS `ai_knowledge_source_config`;
+CREATE TABLE `ai_knowledge_source_config`
+(
+    `id`               bigint       NOT NULL AUTO_INCREMENT COMMENT '配置ID',
+    `source_type`      varchar(32)  NOT NULL COMMENT '知识源类型：public_article/author_profile/forum_post/admin_entry',
+    `enabled`          tinyint      DEFAULT 1 NOT NULL COMMENT '是否启用：0-禁用，1-启用',
+    `sync_interval`    int          DEFAULT 3600 COMMENT '同步间隔（秒），默认1小时',
+    `last_synced_at`   datetime     NULL COMMENT '最近一次同步完成时间',
+    `last_sync_status` varchar(16)  NULL COMMENT '最近同步状态：success/failed',
+    `config_json`      json         NULL COMMENT '扩展配置JSON（预留）',
+    `updated_by`       bigint       NULL COMMENT '更新人ID',
+    `remark`           varchar(512) NULL COMMENT '备注',
+    `created_at`       datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    `updated_at`       datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    UNIQUE KEY `uk_ai_knowledge_source_type` (`source_type`) COMMENT '知识源类型唯一'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='AI 知识源配置表';
+
+-- ============================================
+-- AI 知识条目表
+-- 存放从各知识源同步提取后的结构化条目
+-- ============================================
+DROP TABLE IF EXISTS `ai_knowledge_entry`;
+CREATE TABLE `ai_knowledge_entry`
+(
+    `id`                bigint       NOT NULL AUTO_INCREMENT COMMENT '条目ID',
+    `source_type`       varchar(32)  NOT NULL COMMENT '来源类型：public_article/author_profile/forum_post/admin_entry',
+    `source_id`         bigint       NOT NULL COMMENT '来源对象ID（文章ID/帖子ID/用户ID等）',
+    `title`             varchar(256) NOT NULL COMMENT '标题',
+    `summary`           text         NULL COMMENT '摘要',
+    `content_snapshot`  longtext     NULL COMMENT '内容快照（用于向量化和检索）',
+    `source_url`        varchar(512) NULL COMMENT '来源页面URL（预留）',
+    `author_id`         bigint       NULL COMMENT '原始作者ID',
+    `status`            tinyint      DEFAULT 1 NOT NULL COMMENT '状态：0-禁用，1-正常，2-过期，3-已删除',
+    `version`           int          DEFAULT 1 NOT NULL COMMENT '版本号（源内容变更时递增）',
+    `chunk_count`       int          DEFAULT 0 NOT NULL COMMENT '分块数量',
+    `source_updated_at` datetime     NULL COMMENT '源内容最后更新时间（用于增量同步判断）',
+    `synced_at`         datetime     NULL COMMENT '最近一次同步时间',
+    `tag_json`          json         NULL COMMENT '标签JSON数组（预留）',
+    `extra_json`        json         NULL COMMENT '扩展字段JSON（预留）',
+    `created_at`        datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    `updated_at`        datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    UNIQUE KEY `uk_ai_knowledge_entry_source` (`source_type`, `source_id`) COMMENT '同源同对象唯一',
+    KEY `idx_ai_knowledge_entry_type_status` (`source_type`, `status`, `updated_at` DESC) COMMENT '按类型和状态查询',
+    KEY `idx_ai_knowledge_entry_author` (`author_id`, `status`) COMMENT '按作者查询',
+    KEY `idx_ai_knowledge_entry_synced` (`synced_at`) COMMENT '按同步时间查询'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='AI 知识条目表';
+
+-- ============================================
+-- AI 知识同步任务表
+-- 记录每次知识源同步任务的执行状态
+-- ============================================
+DROP TABLE IF EXISTS `ai_knowledge_sync_task`;
+CREATE TABLE `ai_knowledge_sync_task`
+(
+    `id`              bigint        NOT NULL AUTO_INCREMENT COMMENT '任务ID',
+    `task_type`       varchar(32)   NOT NULL COMMENT '任务类型：full_sync/incremental_sync/single_entry',
+    `source_type`     varchar(32)   NOT NULL COMMENT '知识源类型：public_article/author_profile/forum_post/admin_entry',
+    `status`          tinyint       DEFAULT 0 NOT NULL COMMENT '状态：0-待执行，1-执行中，2-已完成，3-失败',
+    `total_count`     int           DEFAULT 0 NOT NULL COMMENT '总条目数',
+    `success_count`   int           DEFAULT 0 NOT NULL COMMENT '成功条目数',
+    `fail_count`      int           DEFAULT 0 NOT NULL COMMENT '失败条目数',
+    `skip_count`      int           DEFAULT 0 NOT NULL COMMENT '跳过条目数',
+    `error_message`   varchar(1024) NULL COMMENT '错误信息',
+    `retry_count`     int           DEFAULT 0 NOT NULL COMMENT '已重试次数',
+    `max_retry`       int           DEFAULT 3 NOT NULL COMMENT '最大重试次数',
+    `started_at`      datetime      NULL COMMENT '开始执行时间',
+    `completed_at`    datetime      NULL COMMENT '执行完成时间',
+    `triggered_by`    varchar(32)   DEFAULT 'system' NOT NULL COMMENT '触发方式：system/admin/manual',
+    `operator_id`     bigint        NULL COMMENT '操作人ID（admin/manual触发时）',
+    `remark`          varchar(512)  NULL COMMENT '备注',
+    `created_at`      datetime      DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    `updated_at`      datetime      DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    KEY `idx_ai_sync_task_type_status` (`source_type`, `status`, `created_at` DESC) COMMENT '按类型和状态查询',
+    KEY `idx_ai_sync_task_created` (`created_at` DESC) COMMENT '按创建时间排序'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='AI 知识同步任务表';
+
 DROP TABLE IF EXISTS `sys_report_record`;
 CREATE TABLE `sys_report_record`
 (
