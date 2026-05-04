@@ -64,7 +64,6 @@ src/main/java/com/cybzacg/blogbackend
 - `src/main/resources/mysql/06_follow.sql`：粉丝关注关系表结构（关注、取关、粉丝列表、关注列表、互关判断）。
 - `src/main/resources/mysql/07_user_experience.sql`：用户等级经验表结构。
 - `src/main/java/com/cybzacg/blogbackend/config/WebSocketConfig.java`：WebSocket 入口配置，当前默认端点为 `/ws/chat`。
-- `docs/tasks/chat-implementation.md`：聊天模块实现说明。
 - `docs/api文档/chat-api.md`：聊天 HTTP 接口与 WebSocket 协议文档。
 
 ## 本地依赖

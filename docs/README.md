@@ -34,8 +34,6 @@
 - `tasks/03-migration-user-service-todo.md`：外部博客迁移与用户自服务任务清单。
 - `tasks/04-governance-notification-enhancement-todo.md`：治理、通知与后台运营增强任务清单。
 - `tasks/05-performance-test-quality-todo.md`：性能、测试与代码质量补强任务清单。
-- `tasks/chat-implementation.md`：聊天模块当前实现边界、关键语义和后续维护约束。
-- `tasks/follow-module-todo.md`：关注模块后续评估项。
 
 ## 4. 使用约定
 
