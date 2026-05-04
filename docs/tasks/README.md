@@ -23,15 +23,13 @@
 | [03-migration-user-service-todo.md](03-migration-user-service-todo.md)                           | 外部博客迁移与用户自服务 | 待开始              | P1     |
 | [04-governance-notification-enhancement-todo.md](04-governance-notification-enhancement-todo.md) | 治理、通知和后台运营增强 | 待开始              | P1     |
 | [05-performance-test-quality-todo.md](05-performance-test-quality-todo.md)                       | 性能、测试和代码质量补强 | 待开始              | P2     |
-| [06-mysql-to-postgresql-migration-todo.md](06-mysql-to-postgresql-migration-todo.md)             | MySQL 迁移 PostgreSQL    | 计划中              | P0     |
 
 ## 3. 推荐执行顺序
 
 1. 优先推进 [01-forum-module-todo.md](01-forum-module-todo.md)，把社区沉淀能力补上，并承接第一期频道挂接基础。
 2. 并行设计 [02-ai-rag-agents-todo.md](02-ai-rag-agents-todo.md)，但先完成知识源边界和数据权限，再进入 RAG / agents 实现。
-3. 如果确认 RAG 后续使用 `pgvector`，优先执行 [06-mysql-to-postgresql-migration-todo.md](06-mysql-to-postgresql-migration-todo.md)，先完成 PostgreSQL profile、脚本和核心链路验证。
-4. 根据前端联调需要推进 [03-migration-user-service-todo.md](03-migration-user-service-todo.md) 中的用户自服务接口；外部博客迁移在博客结构稳定后推进。
-5. 治理通知增强和性能测试质量任务按风险穿插，不与主功能混在同一提交。
+3. 根据前端联调需要推进 [03-migration-user-service-todo.md](03-migration-user-service-todo.md) 中的用户自服务接口；外部博客迁移在博客结构稳定后推进。
+4. 治理通知增强和性能测试质量任务按风险穿插，不与主功能混在同一提交。
 
 ## 4. 二期完成标准
 
@@ -47,6 +45,5 @@
 - 论坛 P0 API 文档已新增 `docs/api文档/forum-api.md`，并已挂入 API 导航。
 - 论坛 P0 服务级测试已覆盖公开查询、用户行为和频道分享校验。
 - AI 知识库 P0 知识源边界已完成：知识源类型枚举、3 张表结构（ai_knowledge_source_config / ai_knowledge_entry / ai_knowledge_sync_task）、后台配置管理、条目管理和同步任务管理接口。
-- 已新增 MySQL 迁移 PostgreSQL 计划：`06-mysql-to-postgresql-migration-todo.md`。
 - RAG 检索增强暂缓，优先推进 `02-ai-rag-agents-todo.md` 的 P1 Agents 实现。RAG 不阻塞 agents、治理通知、迁移等其他二期任务。
 - 下一步推进 agents 定义与任务执行，同步可根据前端联调需要推进 `03-migration-user-service-todo.md` 用户自服务接口。
