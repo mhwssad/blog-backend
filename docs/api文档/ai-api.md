@@ -12,6 +12,9 @@
 - 用户配额管理（每日限额）
 - 后台会话查询与统计
 - AI 调用日志与使用统计
+- 知识源配置管理（启停、同步间隔）
+- 知识条目管理（查询、状态变更）
+- 知识同步任务管理（触发、重试、查询）
 
 ## 2. 鉴权要求
 
@@ -735,6 +738,147 @@ Authorization: Bearer <accessToken>
 }
 ```
 
+### 4.4 后台 AI 知识源配置
+
+#### 4.4.1 接口总览
+
+| 接口 | 方法 | 路径 | 说明 |
+| --- | --- | --- | --- |
+| 查询所有知识源配置 | GET | `/api/sys/ai/knowledge/source-config` | 列出全部配置 |
+| 查询配置详情 | GET | `/api/sys/ai/knowledge/source-config/{id}` | 单条详情 |
+| 更新配置 | PUT | `/api/sys/ai/knowledge/source-config/{id}` | 修改同步间隔等 |
+| 切换启停 | PUT | `/api/sys/ai/knowledge/source-config/{id}/toggle?enabled=0/1` | 启停切换 |
+
+#### 4.4.2 查询所有知识源配置
+
+- 请求：`GET /api/sys/ai/knowledge/source-config`
+- 鉴权：`ai:knowledge:query`
+- 响应：`Result<List<AiKnowledgeSourceConfigVO>>`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | Long | 配置ID |
+| `sourceType` | String | 知识源类型编码 |
+| `enabled` | Integer | 0-禁用/1-启用 |
+| `syncInterval` | Integer | 同步间隔（秒） |
+| `lastSyncedAt` | DateTime | 最近同步时间 |
+| `lastSyncStatus` | String | 最近同步状态 |
+| `configJson` | String | 扩展配置JSON |
+| `updatedBy` | Long | 更新人 |
+| `remark` | String | 备注 |
+| `createdAt` | DateTime | 创建时间 |
+| `updatedAt` | DateTime | 更新时间 |
+
+#### 4.4.3 更新配置
+
+- 请求：`PUT /api/sys/ai/knowledge/source-config/{id}`
+- 鉴权：`ai:knowledge:update`
+- 请求体：
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `syncInterval` | Integer | 是 | 同步间隔（秒） |
+| `configJson` | String | 否 | 扩展配置 |
+| `remark` | String | 否 | 备注 |
+
+- 响应：`Result<AiKnowledgeSourceConfigVO>`
+
+#### 4.4.4 切换启停
+
+- 请求：`PUT /api/sys/ai/knowledge/source-config/{id}/toggle?enabled=0`
+- 鉴权：`ai:knowledge:update`
+- 响应：`Result<Void>`
+
+### 4.5 后台 AI 知识条目管理
+
+#### 4.5.1 接口总览
+
+| 接口 | 方法 | 路径 | 说明 |
+| --- | --- | --- | --- |
+| 分页查询知识条目 | GET | `/api/sys/ai/knowledge/entries` | 支持筛选 |
+| 查询条目详情 | GET | `/api/sys/ai/knowledge/entries/{id}` | 单条详情 |
+| 更新条目状态 | PUT | `/api/sys/ai/knowledge/entries/{id}/status?status=` | 状态变更 |
+| 触发同步任务 | POST | `/api/sys/ai/knowledge/entries/sync` | 新建同步 |
+| 分页查询同步任务 | GET | `/api/sys/ai/knowledge/entries/sync/tasks` | 任务列表 |
+| 查询同步任务详情 | GET | `/api/sys/ai/knowledge/entries/sync/tasks/{taskId}` | 单条详情 |
+| 重试同步任务 | POST | `/api/sys/ai/knowledge/entries/sync/tasks/{taskId}/retry` | 重试失败任务 |
+
+#### 4.5.2 分页查询知识条目
+
+- 请求：`GET /api/sys/ai/knowledge/entries`
+- 鉴权：`ai:knowledge:query`
+- 查询参数：
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `sourceType` | String | 否 | 知识源类型 |
+| `status` | Integer | 否 | 状态：0-禁用/1-正常/2-过期/3-已删除 |
+| `keyword` | String | 否 | 标题关键词 |
+| `current` | Long | 否 | 页码，默认 `1` |
+| `size` | Long | 否 | 每页条数，默认 `20` |
+
+- 响应：`Result<PageResult<AiKnowledgeEntryVO>>`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | Long | 条目ID |
+| `sourceType` | String | 来源类型 |
+| `sourceId` | Long | 来源对象ID |
+| `title` | String | 标题 |
+| `summary` | String | 摘要 |
+| `sourceUrl` | String | 来源URL |
+| `authorId` | Long | 作者ID |
+| `status` | Integer | 状态 |
+| `version` | Integer | 版本号 |
+| `chunkCount` | Integer | 分块数量 |
+| `sourceUpdatedAt` | DateTime | 源内容更新时间 |
+| `syncedAt` | DateTime | 同步时间 |
+| `tagJson` | String | 标签JSON |
+| `createdAt` | DateTime | 创建时间 |
+| `updatedAt` | DateTime | 更新时间 |
+
+#### 4.5.3 触发同步任务
+
+- 请求：`POST /api/sys/ai/knowledge/entries/sync`
+- 鉴权：`ai:knowledge:sync`
+- 请求体：
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `sourceType` | String | 是 | 知识源类型 |
+| `taskType` | String | 否 | 任务类型，默认 `full_sync` |
+| `remark` | String | 否 | 备注 |
+
+- 响应：`Result<AiKnowledgeSyncTaskVO>`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | Long | 任务ID |
+| `taskType` | String | 任务类型 |
+| `sourceType` | String | 知识源类型 |
+| `status` | Integer | 状态：0-待执行/1-执行中/2-已完成/3-失败 |
+| `totalCount` | Integer | 总条目数 |
+| `successCount` | Integer | 成功数 |
+| `failCount` | Integer | 失败数 |
+| `skipCount` | Integer | 跳过数 |
+| `errorMessage` | String | 错误信息 |
+| `retryCount` | Integer | 已重试次数 |
+| `maxRetry` | Integer | 最大重试次数 |
+| `startedAt` | DateTime | 开始时间 |
+| `completedAt` | DateTime | 完成时间 |
+| `triggeredBy` | String | 触发方式 |
+| `operatorId` | Long | 操作人ID |
+| `createdAt` | DateTime | 创建时间 |
+
+#### 4.5.4 异常场景
+
+| 场景 | 错误码 | 说明 |
+| --- | --- | --- |
+| 知识源配置不存在 | 72001 | 配置ID无效 |
+| 无效的知识源类型 | 72002 | sourceType 不在枚举范围 |
+| 同步任务正在执行 | 72007 | 同一来源类型已有运行中任务 |
+| 同步任务重试超限 | 72009 | retryCount >= maxRetry |
+
 ## 5. 枚举值说明
 
 ### 5.1 渠道状态 (AiChannelStatusEnum)
@@ -760,6 +904,38 @@ Authorization: Bearer <accessToken>
 | `system` | 系统消息 |
 
 ### 5.4 默认渠道标识
+
+| 值 | 说明 |
+| --- | --- |
+| `0` | 非默认 |
+| `1` | 默认渠道 |
+
+### 5.5 知识源类型 (AiKnowledgeSourceTypeEnum)
+
+| 编码 | 说明 |
+| --- | --- |
+| `public_article` | 公开文章 |
+| `author_profile` | 作者公开资料 |
+| `forum_post` | 论坛帖子 |
+| `admin_entry` | 管理员维护知识条目 |
+
+### 5.6 知识条目状态
+
+| 值 | 说明 |
+| --- | --- |
+| `0` | 禁用 |
+| `1` | 正常 |
+| `2` | 过期 |
+| `3` | 已删除 |
+
+### 5.7 同步任务状态
+
+| 值 | 说明 |
+| --- | --- |
+| `0` | 待执行 |
+| `1` | 执行中 |
+| `2` | 已完成 |
+| `3` | 失败 |
 
 | 值 | 说明 |
 | --- | --- |
