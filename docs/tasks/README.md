@@ -19,7 +19,7 @@
 | 文件                                                                                             | 主题                     | 当前状态            | 优先级 |
 | ------------------------------------------------------------------------------------------------ | ------------------------ | ------------------- | ------ |
 | [01-forum-module-todo.md](01-forum-module-todo.md)                                               | 论坛正式模块             | P0 已完成           | P0     |
-| [02-ai-rag-agents-todo.md](02-ai-rag-agents-todo.md)                                             | 知识库 / RAG / agents    | P0 知识源边界已完成 | P0     |
+| [02-ai-rag-agents-todo.md](02-ai-rag-agents-todo.md)                                             | 知识库 / RAG / agents    | P1 Agents 已完成    | P0     |
 | [03-migration-user-service-todo.md](03-migration-user-service-todo.md)                           | 外部博客迁移与用户自服务 | 待开始              | P1     |
 | [04-governance-notification-enhancement-todo.md](04-governance-notification-enhancement-todo.md) | 治理、通知和后台运营增强 | 待开始              | P1     |
 | [05-performance-test-quality-todo.md](05-performance-test-quality-todo.md)                       | 性能、测试和代码质量补强 | 待开始              | P2     |
@@ -46,4 +46,5 @@
 - 论坛 P0 服务级测试已覆盖公开查询、用户行为和频道分享校验。
 - AI 知识库 P0 知识源边界已完成：知识源类型枚举、3 张表结构（ai_knowledge_source_config / ai_knowledge_entry / ai_knowledge_sync_task）、后台配置管理、条目管理和同步任务管理接口。
 - RAG 检索增强暂缓，优先推进 `02-ai-rag-agents-todo.md` 的 P1 Agents 实现。RAG 不阻塞 agents、治理通知、迁移等其他二期任务。
-- 下一步推进 agents 定义与任务执行，同步可根据前端联调需要推进 `03-migration-user-service-todo.md` 用户自服务接口。
+- AI Agents P1 已完成：3 张表结构（ai_agent_definition / ai_agent_task / ai_agent_task_log）、Agent 定义后台管理、用户任务发起/查询/取消、后台任务管理、任务执行流程（额度校验→模型调用→日志记录→通知投递）。
+- 下一步可根据前端联调需要推进 `03-migration-user-service-todo.md` 用户自服务接口或 `04-governance-notification-enhancement-todo.md` 治理通知增强。

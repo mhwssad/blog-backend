@@ -15,6 +15,9 @@
 - 知识源配置管理（启停、同步间隔）
 - 知识条目管理（查询、状态变更）
 - 知识同步任务管理（触发、重试、查询）
+- Agent 定义后台管理（创建、编辑、启停、删除）
+- Agent 任务用户侧（发起、查询、取消）
+- Agent 任务后台管理（分页查询、详情）
 
 ## 2. 鉴权要求
 
@@ -52,6 +55,10 @@ Authorization: Bearer <accessToken>
 | 发送消息 | POST | `/api/user/ai/sessions/{id}/messages` | 发送用户消息 |
 | 关闭会话 | DELETE | `/api/user/ai/sessions/{id}` | 删除会话 |
 | 查询我的AI配额 | GET | `/api/user/ai/sessions/quota` | 获取当前配额 |
+| 发起 Agent 任务 | POST | `/api/user/ai/agents/tasks` | 发起 agent 任务 |
+| 查询我的 Agent 任务 | GET | `/api/user/ai/agents/tasks` | 分页查询任务 |
+| 查询 Agent 任务详情 | GET | `/api/user/ai/agents/tasks/{id}` | 获取任务详情 |
+| 取消 Agent 任务 | PUT | `/api/user/ai/agents/tasks/{id}/cancel` | 取消待执行任务 |
 
 ### 3.2 创建AI会话
 
@@ -879,6 +886,142 @@ Authorization: Bearer <accessToken>
 | 同步任务正在执行 | 72007 | 同一来源类型已有运行中任务 |
 | 同步任务重试超限 | 72009 | retryCount >= maxRetry |
 
+### 4.6 后台 AI Agent 定义管理
+
+> 权限要求：`ai:agent:query` / `ai:agent:create` / `ai:agent:update` / `ai:agent:delete`
+
+#### 4.6.1 接口总览
+
+| 接口 | 方法 | 路径 | 说明 |
+| --- | --- | --- | --- |
+| 分页查询 Agent 定义 | GET | `/api/sys/ai/agents/definitions` | 分页查询 |
+| 查询 Agent 定义详情 | GET | `/api/sys/ai/agents/definitions/{id}` | 获取详情 |
+| 创建 Agent 定义 | POST | `/api/sys/ai/agents/definitions` | 创建定义 |
+| 更新 Agent 定义 | PUT | `/api/sys/ai/agents/definitions/{id}` | 更新定义 |
+| 切换 Agent 启停 | PUT | `/api/sys/ai/agents/definitions/{id}/toggle?enabled=0\|1` | 启停切换 |
+| 删除 Agent 定义 | DELETE | `/api/sys/ai/agents/definitions/{id}` | 删除定义 |
+
+#### 4.6.2 分页查询 Agent 定义
+
+```http
+GET /api/sys/ai/agents/definitions?page=1&size=10&keyword=&enabled=
+```
+
+**请求参数：**
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| page | int | 否 | 页码，默认1 |
+| size | int | 否 | 每页条数，默认10 |
+| keyword | string | 否 | 名称关键词 |
+| enabled | int | 否 | 0-停用，1-启用 |
+
+**响应：**
+
+```json
+{
+  "code": 200,
+  "data": {
+    "total": 1,
+    "records": [
+      {
+        "id": 1,
+        "name": "文章摘要生成器",
+        "description": "为文章生成精炼摘要",
+        "systemPrompt": "你是一个专业的文章摘要生成器...",
+        "channelConfigId": 1,
+        "dataScopeJson": "[\"PUBLIC_ARTICLES\"]",
+        "enabled": 1,
+        "maxTurns": 1,
+        "createdBy": 1,
+        "updatedBy": 1,
+        "createdAt": "2026-05-04T21:00:00",
+        "updatedAt": "2026-05-04T21:00:00"
+      }
+    ]
+  }
+}
+```
+
+#### 4.6.3 创建 Agent 定义
+
+```http
+POST /api/sys/ai/agents/definitions
+Content-Type: application/json
+```
+
+```json
+{
+  "name": "文章摘要生成器",
+  "description": "为文章生成精炼摘要",
+  "systemPrompt": "你是一个专业的文章摘要生成器...",
+  "channelConfigId": 1,
+  "dataScopeJson": "[\"PUBLIC_ARTICLES\"]",
+  "maxTurns": 1
+}
+```
+
+#### 4.6.4 异常场景
+
+| 场景 | 错误码 | 说明 |
+| --- | --- | --- |
+| Agent 不存在 | 73001 | ID 无效 |
+| Agent 已停用 | 73002 | 用户发起任务时 agent 未启用 |
+| Agent 名称重复 | 73003 | 同名 agent 已存在 |
+
+### 4.7 后台 AI Agent 任务管理
+
+> 权限要求：`ai:agent:query`
+
+#### 4.7.1 接口总览
+
+| 接口 | 方法 | 路径 | 说明 |
+| --- | --- | --- | --- |
+| 分页查询 Agent 任务 | GET | `/api/sys/ai/agents/tasks` | 分页查询 |
+| 查询 Agent 任务详情 | GET | `/api/sys/ai/agents/tasks/{id}` | 获取详情 |
+
+#### 4.7.2 分页查询 Agent 任务
+
+```http
+GET /api/sys/ai/agents/tasks?page=1&size=10&agentId=&status=
+```
+
+**请求参数：**
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| page | int | 否 | 页码，默认1 |
+| size | int | 否 | 每页条数，默认10 |
+| agentId | long | 否 | 按 Agent 定义 ID 筛选 |
+| status | int | 否 | 0-待执行 1-执行中 2-已完成 3-失败 4-已取消 |
+
+**响应：**
+
+```json
+{
+  "code": 200,
+  "data": {
+    "total": 1,
+    "records": [
+      {
+        "id": 1,
+        "userId": 100,
+        "agentId": 1,
+        "agentName": "文章摘要生成器",
+        "status": 2,
+        "inputContent": "请为这篇文章生成摘要",
+        "outputContent": "这篇文章主要讲述了...",
+        "errorMessage": null,
+        "tokenCount": 256,
+        "startedAt": "2026-05-04T21:00:01",
+        "completedAt": "2026-05-04T21:00:05",
+        "createdAt": "2026-05-04T21:00:00"
+      }
+    ]
+  }
+}
+```
+
 ## 5. 枚举值说明
 
 ### 5.1 渠道状态 (AiChannelStatusEnum)
@@ -936,6 +1079,16 @@ Authorization: Bearer <accessToken>
 | `1` | 执行中 |
 | `2` | 已完成 |
 | `3` | 失败 |
+
+### 5.8 Agent 任务状态 (AiAgentTaskStatusEnum)
+
+| 值 | 说明 |
+| --- | --- |
+| `0` | 待执行 |
+| `1` | 执行中 |
+| `2` | 已完成 |
+| `3` | 失败 |
+| `4` | 已取消 |
 
 | 值 | 说明 |
 | --- | --- |
