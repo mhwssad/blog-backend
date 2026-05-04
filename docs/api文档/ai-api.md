@@ -60,6 +60,8 @@ Authorization: Bearer <accessToken>
 | 查询 Agent 任务详情 | GET | `/api/user/ai/agents/tasks/{id}` | 获取任务详情 |
 | 取消 Agent 任务 | PUT | `/api/user/ai/agents/tasks/{id}/cancel` | 取消待执行任务 |
 
+> **Agent 任务通知行为**：发起任务后，系统在任务执行完成（成功或失败）时向用户投递通知。通知遵守用户 `ai_task_done` 偏好开关，携带跳转元数据（`businessType=ai_agent_task`、`businessId`、`actionPath=/ai/agents/tasks/{taskId}`），前端可据此跳转到任务详情页。
+
 ### 3.2 创建AI会话
 
 - 请求：`POST /api/user/ai/sessions`

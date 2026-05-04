@@ -16,7 +16,7 @@
 | 后台文章、分类、标签、评论、互动、足迹管理 | `content-api.md` | `后台内容管理接口` |
 | 博客首页、文章列表、文章详情、分类/标签筛选             | `content-api.md` | `前台页面接口`                                      |
 | 评论、点赞、收藏、足迹等登录后行为                  | `content-api.md` | `登录后用户行为接口`                                   |
-| 论坛版块、帖子、回复、帖子点赞收藏与频道分享              | `forum-api.md`   | `公开论坛接口`、`用户论坛接口`                           |
+| 论坛版块、帖子、回复、帖子点赞收藏与频道分享              | `forum-api.md`   | `公开论坛接口`、`用户论坛接口`、`后台论坛版块管理`                           |
 | 个人主页关注、粉丝列表、互关状态、公开查看              | `follow-api.md`  | `登录后用户接口`、`公开访客接口`                            |
 | 后台文章、分类、标签、评论、互动、足迹管理              | `content-api.md` | `后台内容管理接口`                                    |
 | 用户头像上传、文章附件上传、评论图片上传               | `file-api.md`    | `用户上传接入流程`、`用户文件接口`                           |
@@ -32,7 +32,7 @@
 |--------------------|-----------------------------------|--------------------------------------------------------------------------------------------------------------------------|
 | `auth-api.md`      | 登录注册、后台权限框架、系统管理、用户通知中心           | `/api/auth/**`、`/api/sys/**` 中的认证/系统管理接口、`/api/user/notices/**`                                                          |
 | `content-api.md`   | 前台内容页、登录后内容行为、后台内容管理              | `/api/articles/**`、`/api/categories/**`、`/api/tags/**`、`/api/comments/**`、`/api/user/**` 中的内容行为接口、`/api/sys/**` 中的内容管理接口 |
-| `forum-api.md`     | 论坛公开浏览、用户发帖回帖、论坛互动与帖子频道分享       | `/api/forum/**`、`/api/user/forum/**`、`/api/user/chat/forum-links/**` |
+| `forum-api.md`     | 论坛公开浏览、用户发帖回帖、论坛互动、帖子频道分享与后台版块管理       | `/api/forum/**`、`/api/user/forum/**`、`/api/user/chat/forum-links/**`、`/api/sys/forum/**` |
 | `file-api.md`      | 上传流程、我的文件、后台文件库                   | `/api/user/files/**`、`/api/sys/files/**`                                                                                 |
 | `chat-api.md`      | 聊天 HTTP 接口、后台聊天管理、大厅/主题频道管理、公开频道访客接口与 WebSocket 实时协议 | `/api/user/chat/**`、`/api/sys/chats/**`、`/api/public/chat/**`、`/ws/chat`                                                                       |
 | `websocket-api.md` | WebSocket 连接、认证、心跳、收发消息与推送事件      | `/ws/chat`                                                                                                               |
@@ -344,11 +344,11 @@ Authorization: Bearer <accessToken>
 | `chat`    | `chat-api.md`      | 会话列表、后台聊天管理、大厅/主题频道管理、消息发送、群管理与 WebSocket 实时推送 |
 | `chat`    | `websocket-api.md` | WebSocket 连接、认证、心跳、收发消息与推送事件         |
 | `follow`  | `follow-api.md`    | 关注、取关、粉丝列表、互关判断、公开查看、后台治理            |
-| `forum`   | `forum-api.md`     | 论坛版块、帖子、回复、用户互动与帖子频道分享                 |
+| `forum`   | `forum-api.md`     | 论坛版块、帖子、回复、用户互动、帖子频道分享与后台版块管理                 |
 | `experience` | `auth-api.md`  | 用户等级、经验体系、后台经验配置管理                      |
 | `ai`      | `ai-api.md`        | AI对话、渠道配置、会话管理、使用统计                     |
 | `report`  | `report-api.md`    | 举报提交、举报记录、后台处理与日志                      |
-| `dashboard` | `dashboard-api.md` | 后台数据看板：核心概览、内容/社区/AI/治理统计              |
+| `dashboard` | `dashboard-api.md` | 后台数据看板：核心概览、内容/社区/AI/治理统计与运营统计导出              |
 
 ## 6. 推荐阅读顺序
 
@@ -367,6 +367,7 @@ Authorization: Bearer <accessToken>
 3. 按业务模块继续看：
     - 用户/角色/菜单/配置/通知/日志/经验体系：`auth-api.md`
     - 内容管理：`content-api.md`
+    - 论坛管理：`forum-api.md`
     - 关注关系管理：`follow-api.md`
     - 文件管理：`file-api.md`
     - 聊天管理：`chat-api.md`
@@ -383,4 +384,4 @@ Authorization: Bearer <accessToken>
 - 当前 `ai-api.md` 已覆盖 AI 模块的用户侧接口与后台管理接口。
 - 当前 `report-api.md` 已覆盖举报模块的用户侧接口与后台管理接口。
 - 当前 `dashboard-api.md` 已覆盖后台数据看模块的全部接口。
-- 当前 `forum-api.md` 已覆盖论坛 P0 的公开侧和用户侧接口，以及帖子频道分享入口。
+- 当前 `forum-api.md` 已覆盖论坛公开侧、用户侧接口、帖子频道分享入口，以及后台版块管理接口。
