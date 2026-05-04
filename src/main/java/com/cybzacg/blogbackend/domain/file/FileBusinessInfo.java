@@ -3,9 +3,8 @@ package com.cybzacg.blogbackend.domain.file;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.Data;
-
 import java.time.LocalDateTime;
+import lombok.Data;
 
 /**
  * 文件业务引用关系表。
@@ -13,11 +12,13 @@ import java.time.LocalDateTime;
 @Data
 @TableName("file_business_info")
 public class FileBusinessInfo {
+
     /**
      * 主键ID
      */
     @TableId(type = IdType.AUTO)
     private Long id;
+
     /**
      * 文件ID
      */
@@ -27,7 +28,7 @@ public class FileBusinessInfo {
      */
     private Long userId;
     /**
-     * 业务引用类型（avatar-头像，chat_attachment-聊天附件，article_cover-文章封面）
+     * 业务引用类型（avatar-头像，chat_message-聊天消息文件，article_attachment-文章附件，temp-临时文件）
      */
     private String referenceType;
     /**

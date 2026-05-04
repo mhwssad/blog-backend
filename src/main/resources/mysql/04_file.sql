@@ -36,7 +36,7 @@ CREATE TABLE file_info
     remark          VARCHAR(256) NULL COMMENT '备注',
 
     -- 状态与时间（毫秒级）
-    status          TINYINT DEFAULT 1 NOT NULL COMMENT '文件状态：0-已删除，1-正常，2-审核中，3-违规下架',
+    status          TINYINT DEFAULT 1 NOT NULL COMMENT '文件状态：0-已删除，1-正常，2-待物理删除，3-审核中，4-违规下架',
     created_at      DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3) NOT NULL COMMENT '创建时间',
     updated_at      DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3) NOT NULL ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
 
@@ -73,7 +73,7 @@ CREATE TABLE file_upload_task
     mime_type          VARCHAR(64) NULL COMMENT 'MIME类型',
 
     -- 业务引用字段（用于在分片/普通上传完成后创建引用记录）
-    reference_type     VARCHAR(32) NULL COMMENT '引用类型：avatar/article_attachment/comment_image/temp',
+    reference_type     VARCHAR(32) NULL COMMENT '引用类型：avatar/chat_message/article_attachment/temp',
     reference_id       BIGINT NULL COMMENT '引用记录ID',
     category           VARCHAR(32) NULL COMMENT '业务分类：avatar/attachment/comment/temp',
     is_public          TINYINT DEFAULT 0 NOT NULL COMMENT '业务可见性：0-私有，1-公开',
@@ -149,7 +149,7 @@ CREATE TABLE file_business_info
     id             BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '业务属性ID',
     file_id        BIGINT            NOT NULL COMMENT '文件ID',
     user_id        BIGINT NULL COMMENT '所属用户ID',
-    reference_type VARCHAR(32) NULL COMMENT '引用类型：avatar/article_attachment/comment_image/temp',
+    reference_type VARCHAR(32) NULL COMMENT '引用类型：avatar/chat_message/article_attachment/temp',
     reference_id   BIGINT NULL COMMENT '引用记录ID',
     source_ip      VARCHAR(45) NULL COMMENT '客户端IP（IPv4/IPv6，用于安全审计）',
 

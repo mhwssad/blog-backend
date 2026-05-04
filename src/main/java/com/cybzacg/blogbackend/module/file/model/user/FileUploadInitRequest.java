@@ -8,12 +8,19 @@ import lombok.Data;
 @Data
 @Schema(description = "初始化文件上传任务请求")
 public class FileUploadInitRequest {
+
     @NotBlank(message = "原始文件名不能为空")
-    @Schema(description = "原始文件名", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(
+        description = "原始文件名",
+        requiredMode = Schema.RequiredMode.REQUIRED
+    )
     private String originalName;
 
     @NotNull(message = "文件大小不能为空")
-    @Schema(description = "文件大小（字节）", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(
+        description = "文件大小（字节）",
+        requiredMode = Schema.RequiredMode.REQUIRED
+    )
     private Long fileSize;
 
     @Schema(description = "文件MD5")
@@ -22,7 +29,9 @@ public class FileUploadInitRequest {
     @Schema(description = "MIME类型")
     private String mimeType;
 
-    @Schema(description = "引用类型，如 avatar/article_attachment/comment_image/temp")
+    @Schema(
+        description = "引用类型：avatar/chat_message/article_attachment/temp"
+    )
     private String referenceType;
 
     @Schema(description = "引用对象ID")

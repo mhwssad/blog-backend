@@ -19,9 +19,6 @@ public class SysReportRecordRepositoryImpl
 {
 
     /**
-     * {@inheritDoc}
-     */
-    /**
      * 根据多条件分页查询举报记录。
      *
      * @param status          举报状态筛选（可选）

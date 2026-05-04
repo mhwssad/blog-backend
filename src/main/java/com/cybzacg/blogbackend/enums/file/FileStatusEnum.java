@@ -9,7 +9,9 @@ import lombok.Getter;
 public enum FileStatusEnum {
     DELETED(0, "已删除"),
     NORMAL(1, "正常"),
-    PHYSICAL_DELETE_PENDING(2, "待物理删除");
+    PHYSICAL_DELETE_PENDING(2, "待物理删除"),
+    REVIEWING(3, "审核中"),
+    VIOLATION(4, "违规下架");
 
     private final Integer value;
     private final String label;

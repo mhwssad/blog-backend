@@ -15,12 +15,11 @@ import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
 import com.cybzacg.blogbackend.module.file.repository.FileUploadTaskRepository;
 import com.cybzacg.blogbackend.module.file.service.FileAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 /**
  * 后台文件管理服务实现。
@@ -30,6 +29,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class FileAdminServiceImpl implements FileAdminService {
+
     private final FileInfoRepository fileInfoRepository;
     private final FileUploadTaskRepository fileUploadTaskRepository;
     private final FileChunkRepository fileChunkRepository;
@@ -43,7 +43,11 @@ public class FileAdminServiceImpl implements FileAdminService {
     @Override
     public PageResult<FileAdminVO> pageFiles(FileAdminPageQuery query) {
         var page = fileInfoRepository.pageAdminFiles(query); // 按管理维度分页查询
-        List<FileAdminVO> records = page.getRecords().stream().map(fileModelConvert::toFileAdminVO).toList();
+        List<FileAdminVO> records = page
+            .getRecords()
+            .stream()
+            .map(fileModelConvert::toFileAdminVO)
+            .toList();
         return PageResult.of(page, records);
     }
 
@@ -53,19 +57,24 @@ public class FileAdminServiceImpl implements FileAdminService {
     @Override
     public FileDetailVO getFile(Long id) {
         FileInfo file = fileInfoRepository.getById(id);
-        ExceptionThrowerCore.throwBusinessIfNull(file, FileResultCode.FILE_NOT_FOUND);
+        ExceptionThrowerCore.throwBusinessIfNull(
+            file,
+            FileResultCode.FILE_NOT_FOUND
+        );
         FileDetailVO detail = fileModelConvert.toFileDetailVO(file);
         // 补齐业务引用记录，供管理端评估文件是否可以清理
-        List<FileReferenceVO> references = fileBusinessInfoRepository.listByFileId(id)
-                .stream()
-                .map(fileModelConvert::toFileReferenceVO)
-                .toList();
+        List<FileReferenceVO> references = fileBusinessInfoRepository
+            .listByFileId(id)
+            .stream()
+            .map(fileModelConvert::toFileReferenceVO)
+            .toList();
         detail.setReferences(references);
         // 补齐最近上传任务，帮助定位是否存在未完成的分片上传
-        List<FileTaskAdminVO> tasks = fileUploadTaskRepository.listRecentByFileId(id, 20)
-                .stream()
-                .map(fileModelConvert::toFileTaskAdminVO)
-                .toList();
+        List<FileTaskAdminVO> tasks = fileUploadTaskRepository
+            .listRecentByFileId(id, 20)
+            .stream()
+            .map(fileModelConvert::toFileTaskAdminVO)
+            .toList();
         detail.setTasks(tasks);
         return detail;
     }
@@ -76,7 +85,11 @@ public class FileAdminServiceImpl implements FileAdminService {
     @Override
     public PageResult<FileTaskAdminVO> pageTasks(FileTaskPageQuery query) {
         var page = fileUploadTaskRepository.pageAdminTasks(query); // 按任务维度分页查询
-        List<FileTaskAdminVO> records = page.getRecords().stream().map(fileModelConvert::toFileTaskAdminVO).toList();
+        List<FileTaskAdminVO> records = page
+            .getRecords()
+            .stream()
+            .map(fileModelConvert::toFileTaskAdminVO)
+            .toList();
         return PageResult.of(page, records);
     }
 
@@ -87,15 +100,30 @@ public class FileAdminServiceImpl implements FileAdminService {
     @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, Integer status) {
         log.info("更新文件状态, fileId={}, newStatus={}", id, status);
-        ExceptionThrowerCore.throwBusinessIfNot(FileStatusEnum.contains(status), FileResultCode.FILE_STATUS_INVALID); // 状态值必须在枚举范围内
+        ExceptionThrowerCore.throwBusinessIfNot(
+            FileStatusEnum.contains(status),
+            FileResultCode.FILE_STATUS_INVALID
+        ); // 状态值必须在枚举范围内
         ExceptionThrowerCore.throwBusinessIf(
-                FileStatusEnum.DELETED.getValue().equals(status),
-                FileResultCode.FILE_STATUS_INVALID,
-                "文件删除请使用删除接口，状态更新接口不支持设置为已删除"
+            FileStatusEnum.DELETED.getValue().equals(status),
+            FileResultCode.FILE_STATUS_INVALID,
+            "文件删除请使用删除接口，状态更新接口不支持设置为已删除"
+        );
+        ExceptionThrowerCore.throwBusinessIf(
+            FileStatusEnum.PHYSICAL_DELETE_PENDING.getValue().equals(status),
+            FileResultCode.FILE_STATUS_INVALID,
+            "待物理删除状态由系统自动管理，不支持手动设置"
         );
         FileInfo file = fileInfoRepository.getById(id);
-        ExceptionThrowerCore.throwBusinessIfNull(file, FileResultCode.FILE_NOT_FOUND);
-        ExceptionThrowerCore.throwBusinessIf(FileStatusEnum.DELETED.getValue().equals(file.getStatus()), FileResultCode.FILE_STATUS_INVALID); // 不允许操作已删除文件
+        ExceptionThrowerCore.throwBusinessIfNull(
+            file,
+            FileResultCode.FILE_NOT_FOUND
+        );
+        ExceptionThrowerCore.throwBusinessIf(
+            FileStatusEnum.DELETED.getValue().equals(file.getStatus()),
+            FileResultCode.FILE_STATUS_INVALID,
+            "不允许操作已删除文件"
+        );
         file.setStatus(status);
         fileInfoRepository.updateById(file);
         log.info("文件状态更新成功, fileId={}, status={}", id, status);
@@ -120,36 +148,53 @@ public class FileAdminServiceImpl implements FileAdminService {
             for (FileUploadTask task : tasks) {
                 fileChunkRepository.deleteByUploadTaskId(task.getId());
                 try {
-                    StorageService storageService = storageManager.getStorageService(task.getStorageKey());
+                    StorageService storageService =
+                        storageManager.getStorageService(task.getStorageKey());
                     if (storageService != null) {
                         storageService.deleteTempFiles(task.getUploadId());
                     }
                 } catch (Exception ignored) {
-                    log.warn("清理上传任务临时文件失败, taskId={}", task.getId());
+                    log.warn(
+                        "清理上传任务临时文件失败, taskId={}",
+                        task.getId()
+                    );
                 }
             }
-            fileUploadTaskRepository.removeByIds(tasks.stream().map(FileUploadTask::getId).toList());
+            fileUploadTaskRepository.removeByIds(
+                tasks.stream().map(FileUploadTask::getId).toList()
+            );
         }
         // 物理文件删除失败时不回滚元数据删除，避免后台任务被外部存储异常长期阻塞。
         boolean physicalDeleted = true;
         try {
-            StorageService storageService = storageManager.getStorageService(file.getStorageKey());
+            StorageService storageService = storageManager.getStorageService(
+                file.getStorageKey()
+            );
             if (storageService != null) {
                 storageService.delete(file.getFilePath());
             }
         } catch (Exception e) {
             physicalDeleted = false;
-            log.warn("物理文件删除失败, fileId={}, path={}", id, file.getFilePath());
+            log.warn(
+                "物理文件删除失败, fileId={}, path={}",
+                id,
+                file.getFilePath()
+            );
         }
         file.setReferenceCount(0);
-        file.setStatus(physicalDeleted ? FileStatusEnum.DELETED.getValue() : FileStatusEnum.PHYSICAL_DELETE_PENDING.getValue());
+        file.setStatus(
+            physicalDeleted
+                ? FileStatusEnum.DELETED.getValue()
+                : FileStatusEnum.PHYSICAL_DELETE_PENDING.getValue()
+        );
         fileInfoRepository.updateById(file);
         if (physicalDeleted) {
             log.info("文件删除完成, fileId={}", id);
         } else {
-            log.info("文件元数据标记为待物理删除, fileId={}, 将由定时任务重试", id);
+            log.info(
+                "文件元数据标记为待物理删除, fileId={}, 将由定时任务重试",
+                id
+            );
         }
     }
-
 }
-

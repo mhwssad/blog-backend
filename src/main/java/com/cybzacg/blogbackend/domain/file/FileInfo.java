@@ -3,9 +3,8 @@ package com.cybzacg.blogbackend.domain.file;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.Data;
-
 import java.time.LocalDateTime;
+import lombok.Data;
 
 /**
  * 文件物理信息表。
@@ -13,11 +12,13 @@ import java.time.LocalDateTime;
 @Data
 @TableName("file_info")
 public class FileInfo {
+
     /**
      * 主键ID
      */
     @TableId(type = IdType.AUTO)
     private Long id;
+
     /**
      * 关联上传任务ID
      */
@@ -87,7 +88,7 @@ public class FileInfo {
      */
     private String remark;
     /**
-     * 文件状态：0-已删除，1-正常，2-审核中，3-违规下架
+     * 文件状态：0-已删除，1-正常，2-待物理删除，3-审核中，4-违规下架
      */
     private Integer status;
     /**

@@ -67,6 +67,41 @@ public class ReportAdminServiceImpl implements ReportAdminService {
     private final SysCommentRepository sysCommentRepository;
     private final SysUserAdminService sysUserAdminService;
 
+    @Override
+    public PageResult<ReportAdminVO> pageReports(ReportAdminPageQuery query) {
+        query.setCurrent(PaginationUtils.normalizeCurrent(query.getCurrent()));
+        query.setSize(
+            PaginationUtils.normalizeSize(query.getSize(), 10L, 100L)
+        );
+
+        Page<SysReportRecord> page = sysReportRecordRepository.pageByFilters(
+            query.getStatus(),
+            query.getReportTargetType(),
+            query.getReporterUserId(),
+            query.getReportedStart(),
+            query.getReportedEnd(),
+            query.getCurrent(),
+            query.getSize()
+        );
+
+        List<ReportAdminVO> records = page
+            .getRecords()
+            .stream()
+            .map(reportModelConvert::toAdminVO)
+            .toList();
+
+        fillUserInfo(records);
+        return PageResult.of(page, records);
+    }
+
+    @Override
+    public ReportAdminVO getReportDetail(Long reportId) {
+        SysReportRecord record = getReport(reportId);
+        ReportAdminVO vo = reportModelConvert.toAdminVO(record);
+        fillUserInfo(List.of(vo));
+        return vo;
+    }
+
     /**
      * 分页查询举报记录（管理端）。
      *
@@ -237,7 +272,7 @@ public class ReportAdminServiceImpl implements ReportAdminService {
         auditRequest.setUserAgent(ua);
         sysAuditLogService.record(auditRequest);
 
-        // 执行治理动作
+        // 执行治理动作，
         executeGovernanceAction(record, request, operatorId, ip, ua);
     }
 
