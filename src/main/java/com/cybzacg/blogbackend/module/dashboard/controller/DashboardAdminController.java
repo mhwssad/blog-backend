@@ -6,10 +6,18 @@ import com.cybzacg.blogbackend.module.dashboard.service.DashboardAdminService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 
 /**
  * 后台数据看板控制器。
@@ -54,5 +62,21 @@ public class DashboardAdminController {
     @PreAuthorize("@permission.hasPermission('sys:dashboard:query')")
     public Result<DashboardGovernanceVO> getGovernance(DashboardRangeQuery query) {
         return Result.success(dashboardAdminService.getGovernance(query));
+    }
+
+    @GetMapping("/export")
+    @Operation(summary = "导出运营看板统计")
+    @PreAuthorize("@permission.hasPermission('sys:dashboard:query')")
+    public ResponseEntity<byte[]> exportDashboard(DashboardRangeQuery query) {
+        byte[] content = dashboardAdminService.exportDashboard(query);
+        String fileName = "dashboard-" + LocalDate.now() + ".xlsx";
+        String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentDisposition(ContentDisposition.attachment()
+                .filename(encodedFileName, StandardCharsets.UTF_8)
+                .build());
+        headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        headers.setContentLength(content.length);
+        return ResponseEntity.ok().headers(headers).body(content);
     }
 }

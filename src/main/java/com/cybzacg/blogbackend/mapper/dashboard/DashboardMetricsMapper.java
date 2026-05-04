@@ -1,8 +1,12 @@
 package com.cybzacg.blogbackend.mapper.dashboard;
 
+import com.cybzacg.blogbackend.module.dashboard.model.admin.DashboardHotSectionVO;
+import com.cybzacg.blogbackend.module.dashboard.model.admin.DashboardPunishmentDistributionVO;
 import org.apache.ibatis.annotations.Param;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 后台数据看板指标 Mapper。
@@ -37,4 +41,24 @@ public interface DashboardMetricsMapper {
     Long countReports(@Param("startTime") LocalDateTime startTime,
                       @Param("endTime") LocalDateTime endTime,
                       @Param("status") Integer status);
+
+    Long countForumPosts(@Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime);
+
+    Long countForumReplies(@Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime);
+
+    List<DashboardHotSectionVO> listHotSections(@Param("startTime") LocalDateTime startTime,
+                                                @Param("endTime") LocalDateTime endTime,
+                                                @Param("limit") int limit);
+
+    Long countRagCalls(@Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime);
+
+    Long countAgentTasks(@Param("startTime") LocalDateTime startTime,
+                         @Param("endTime") LocalDateTime endTime,
+                         @Param("status") Integer status);
+
+    BigDecimal averageReportHandleDurationMinutes(@Param("startTime") LocalDateTime startTime,
+                                                  @Param("endTime") LocalDateTime endTime);
+
+    List<DashboardPunishmentDistributionVO> listPunishmentDistributions(@Param("startTime") LocalDateTime startTime,
+                                                                        @Param("endTime") LocalDateTime endTime);
 }

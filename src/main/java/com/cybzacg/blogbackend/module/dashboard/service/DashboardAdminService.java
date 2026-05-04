@@ -15,4 +15,6 @@ public interface DashboardAdminService {
     DashboardAiVO getAi(DashboardRangeQuery query);
 
     DashboardGovernanceVO getGovernance(DashboardRangeQuery query);
+
+    byte[] exportDashboard(DashboardRangeQuery query);
 }

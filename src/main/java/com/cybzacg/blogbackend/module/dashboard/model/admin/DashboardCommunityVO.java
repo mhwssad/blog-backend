@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * 后台社区统计指标。
  */
@@ -22,4 +24,13 @@ public class DashboardCommunityVO {
 
     @Schema(description = "群组数量")
     private Long groupCount;
+
+    @Schema(description = "论坛发帖数")
+    private Long forumPostCount;
+
+    @Schema(description = "论坛回复数")
+    private Long forumReplyCount;
+
+    @Schema(description = "热门版块 Top 5")
+    private List<DashboardHotSectionVO> hotSections;
 }

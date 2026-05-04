@@ -22,4 +22,16 @@ public class DashboardAiVO {
 
     @Schema(description = "AI 失败调用次数")
     private Long aiFailedCallCount;
+
+    @Schema(description = "RAG 调用次数")
+    private Long ragCallCount;
+
+    @Schema(description = "Agent 任务总数")
+    private Long agentTaskCount;
+
+    @Schema(description = "Agent 成功任务数")
+    private Long agentSuccessTaskCount;
+
+    @Schema(description = "Agent 失败任务数")
+    private Long agentFailedTaskCount;
 }
