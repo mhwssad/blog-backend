@@ -29,6 +29,15 @@ public class ForumReplyRepositoryImpl extends ServiceImpl<ForumReplyMapper, Foru
     }
 
     @Override
+    public List<ForumReply> listByPostId(Long postId) {
+        return list(new LambdaQueryWrapper<ForumReply>()
+                .eq(ForumReply::getPostId, postId)
+                .eq(ForumReply::getStatus, ForumReplyStatusEnum.NORMAL.getValue())
+                .orderByAsc(ForumReply::getFloorNo)
+                .orderByAsc(ForumReply::getId));
+    }
+
+    @Override
     public List<ForumReply> listRepliesByRootIds(List<Long> rootIds) {
         if (rootIds == null || rootIds.isEmpty()) {
             return List.of();
@@ -60,5 +69,13 @@ public class ForumReplyRepositoryImpl extends ServiceImpl<ForumReplyMapper, Foru
     @Override
     public void incrementReplyCount(Long id, int delta) {
         baseMapper.incrementReplyCount(id, delta);
+    }
+
+    @Override
+    public void softDeleteById(Long id) {
+        lambdaUpdate()
+                .eq(ForumReply::getId, id)
+                .set(ForumReply::getStatus, ForumReplyStatusEnum.DELETED.getValue())
+                .update();
     }
 }

@@ -18,7 +18,7 @@
 
 | 文件 | 主题 | 当前状态 | 优先级 |
 | --- | --- | --- | --- |
-| [01-forum-module-todo.md](01-forum-module-todo.md) | 论坛正式模块 | 待开始 | P0 |
+| [01-forum-module-todo.md](01-forum-module-todo.md) | 论坛正式模块 | P0 待联调 | P0 |
 | [02-ai-rag-agents-todo.md](02-ai-rag-agents-todo.md) | 知识库 / RAG / agents | 待开始 | P0 |
 | [03-migration-user-service-todo.md](03-migration-user-service-todo.md) | 外部博客迁移与用户自服务 | 待开始 | P1 |
 | [04-governance-notification-enhancement-todo.md](04-governance-notification-enhancement-todo.md) | 治理、通知和后台运营增强 | 待开始 | P1 |
@@ -38,3 +38,10 @@
 - 新增或修改 Service 方法已有服务级测试，关键权限入口有权限测试。
 - 数据结构变更已同步原始建表脚本和相关需求文档。
 - 任务状态已回写到本目录对应任务清单。
+
+## 5. 当前推进记录
+
+- 论坛 P0 已完成公开侧和用户侧主链路：版块、帖子、回复、点赞、收藏、频道分享。
+- 论坛 P0 API 文档已新增 `docs/api文档/forum-api.md`，并已挂入 API 导航。
+- 论坛 P0 服务级测试已覆盖公开查询、用户行为和频道分享校验。
+- 下一步按推荐顺序继续推进 `02-ai-rag-agents-todo.md` 的 P0 知识源边界设计，论坛后台治理、通知和举报接入保留在论坛 P1 与治理增强任务中。

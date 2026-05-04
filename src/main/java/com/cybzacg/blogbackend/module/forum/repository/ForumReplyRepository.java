@@ -12,6 +12,8 @@ import java.util.List;
 public interface ForumReplyRepository extends IService<ForumReply> {
     Page<ForumReply> pageRootReplies(Long postId, long current, long size);
 
+    List<ForumReply> listByPostId(Long postId);
+
     List<ForumReply> listRepliesByRootIds(List<Long> rootIds);
 
     long countByPostId(Long postId);
@@ -21,4 +23,6 @@ public interface ForumReplyRepository extends IService<ForumReply> {
     void incrementLikeCount(Long id, int delta);
 
     void incrementReplyCount(Long id, int delta);
+
+    void softDeleteById(Long id);
 }

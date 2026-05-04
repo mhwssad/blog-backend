@@ -4,14 +4,17 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.chat.ChatConversation;
 import com.cybzacg.blogbackend.domain.chat.ChatConversationMember;
+import com.cybzacg.blogbackend.domain.forum.ForumPost;
 import com.cybzacg.blogbackend.domain.forum.ForumPostChannelLink;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.enums.forum.ForumPostStatusEnum;
 import com.cybzacg.blogbackend.module.chat.conversation.model.user.ForumPostChannelLinkVO;
 import com.cybzacg.blogbackend.module.chat.conversation.repository.ChatConversationRepository;
 import com.cybzacg.blogbackend.module.chat.conversation.repository.ForumPostChannelLinkRepository;
 import com.cybzacg.blogbackend.module.chat.conversation.service.ForumPostChannelLinkService;
 import com.cybzacg.blogbackend.module.chat.member.repository.ChatConversationMemberRepository;
 import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
+import com.cybzacg.blogbackend.module.forum.repository.ForumPostRepository;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
 import lombok.RequiredArgsConstructor;
@@ -29,12 +32,17 @@ public class ForumPostChannelLinkServiceImpl implements ForumPostChannelLinkServ
     private final ForumPostChannelLinkRepository forumPostChannelLinkRepository;
     private final ChatConversationRepository chatConversationRepository;
     private final ChatConversationMemberRepository chatConversationMemberRepository;
+    private final ForumPostRepository forumPostRepository;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ForumPostChannelLinkVO sharePostToChannel(Long userId, Long forumPostId, Long conversationId) {
         ExceptionThrowerCore.throwBusinessIfNull(forumPostId, ResultErrorCode.ILLEGAL_ARGUMENT, "帖子ID不能为空");
         ExceptionThrowerCore.throwBusinessIfNull(conversationId, ResultErrorCode.ILLEGAL_ARGUMENT, "频道ID不能为空");
+        ForumPost post = forumPostRepository.getById(forumPostId);
+        ExceptionThrowerCore.throwBusinessIf(post == null
+                        || !Objects.equals(post.getStatus(), ForumPostStatusEnum.PUBLISHED.getValue()),
+                ResultErrorCode.ILLEGAL_ARGUMENT, "帖子不存在或不可分享");
 
         // 校验会话存在且状态正常
         ChatConversation conversation = chatConversationRepository.getById(conversationId);
@@ -71,6 +79,7 @@ public class ForumPostChannelLinkServiceImpl implements ForumPostChannelLinkServ
         link.setLinkedAt(LocalDateTime.now());
         try {
             forumPostChannelLinkRepository.save(link);
+            forumPostRepository.incrementShareCount(forumPostId, 1);
         } catch (DuplicateKeyException ex) {
             // 并发插入 - 获取已有记录
             link = findPostLink(forumPostId);
@@ -121,6 +130,7 @@ public class ForumPostChannelLinkServiceImpl implements ForumPostChannelLinkServ
         ExceptionThrowerCore.throwBusinessIfNull(link, ResultErrorCode.ILLEGAL_ARGUMENT, "帖子未关联任何频道");
         // 仅关联人或管理员可取消关联
         forumPostChannelLinkRepository.removeById(link.getId());
+        forumPostRepository.incrementShareCount(forumPostId, -1);
     }
 
     private ForumPostChannelLink findPostLink(Long forumPostId) {

@@ -13,6 +13,8 @@ import com.cybzacg.blogbackend.module.forum.repository.ForumPostRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+import java.util.Collection;
+
 /**
  * 论坛帖子 Repository 实现。
  */
@@ -20,12 +22,13 @@ import org.springframework.util.StringUtils;
 public class ForumPostRepositoryImpl extends ServiceImpl<ForumPostMapper, ForumPost>
         implements ForumPostRepository {
     @Override
-    public Page<ForumPost> pagePublicPosts(ForumPostPageQuery query, boolean loginUser) {
+    public Page<ForumPost> pagePublicPosts(ForumPostPageQuery query, boolean loginUser, Collection<Long> visibleSectionIds) {
         LambdaQueryWrapper<ForumPost> wrapper = new LambdaQueryWrapper<ForumPost>()
                 .eq(ForumPost::getStatus, ForumPostStatusEnum.PUBLISHED.getValue())
                 .le(ForumPost::getVisibilityScope, loginUser
                         ? ForumVisibilityScopeEnum.LOGIN_ONLY.getValue()
                         : ForumVisibilityScopeEnum.PUBLIC.getValue())
+                .in(visibleSectionIds != null && !visibleSectionIds.isEmpty(), ForumPost::getSectionId, visibleSectionIds)
                 .eq(query.getSectionId() != null, ForumPost::getSectionId, query.getSectionId())
                 .eq(query.getAuthorId() != null, ForumPost::getAuthorId, query.getAuthorId())
                 .ge(query.getCreatedAtStart() != null, ForumPost::getCreatedAt, query.getCreatedAtStart())
@@ -90,5 +93,13 @@ public class ForumPostRepositoryImpl extends ServiceImpl<ForumPostMapper, ForumP
     @Override
     public void incrementViewCount(Long id, int delta) {
         baseMapper.incrementViewCount(id, delta);
+    }
+
+    @Override
+    public void softDeleteById(Long id) {
+        lambdaUpdate()
+                .eq(ForumPost::getId, id)
+                .set(ForumPost::getStatus, ForumPostStatusEnum.DELETED.getValue())
+                .update();
     }
 }
