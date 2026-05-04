@@ -48,4 +48,5 @@
 - 论坛 P0 服务级测试已覆盖公开查询、用户行为和频道分享校验。
 - AI 知识库 P0 知识源边界已完成：知识源类型枚举、3 张表结构（ai_knowledge_source_config / ai_knowledge_entry / ai_knowledge_sync_task）、后台配置管理、条目管理和同步任务管理接口。
 - 已新增 MySQL 迁移 PostgreSQL 计划：`06-mysql-to-postgresql-migration-todo.md`。
-- 下一步建议先确认 PostgreSQL / pgvector 基础设施，再推进 `02-ai-rag-agents-todo.md` 的 P0 RAG 主链路（向量化、分段、检索）；论坛后台治理保留在论坛 P1 与治理增强任务中。
+- RAG 检索增强暂缓，优先推进 `02-ai-rag-agents-todo.md` 的 P1 Agents 实现。RAG 不阻塞 agents、治理通知、迁移等其他二期任务。
+- 下一步推进 agents 定义与任务执行，同步可根据前端联调需要推进 `03-migration-user-service-todo.md` 用户自服务接口。
