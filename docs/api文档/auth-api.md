@@ -641,6 +641,9 @@ Authorization: Bearer <accessToken>
 | `publishTime` | DateTime | 发布时间  |
 | `isRead`      | Integer  | 是否已读  |
 | `readTime`    | DateTime | 阅读时间  |
+| `businessType` | String  | 业务目标类型（如 `ai_agent_task`），无则不返回 |
+| `businessId`  | Long     | 业务目标 ID，无则不返回 |
+| `actionPath`  | String   | 前端跳转路径（如 `/ai/agents/tasks/42`），无则不返回 |
 
 ### 7.5 我的通知详情
 
