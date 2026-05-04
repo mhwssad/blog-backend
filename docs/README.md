@@ -28,12 +28,14 @@
 
 ## 3. 研发任务与专项文档
 
-- `tasks/README.md`：需求落地任务导航，包含作者 / 等级 / 权限、博客生命周期、聊天社区、AI、举报治理、通知看板和数据库对齐清单。
-- `tasks/08-source-structure-optimization-todo.md`：源码结构治理执行清单，跟踪边界收口、重型类拆分和子域化推进。
+- `tasks/README.md`：第二期任务导航，包含论坛、AI 增强、迁移与用户自服务、治理通知增强、性能测试质量补强。
+- `tasks/01-forum-module-todo.md`：论坛正式模块任务清单。
+- `tasks/02-ai-rag-agents-todo.md`：知识库 / RAG / agents 任务清单。
+- `tasks/03-migration-user-service-todo.md`：外部博客迁移与用户自服务任务清单。
+- `tasks/04-governance-notification-enhancement-todo.md`：治理、通知与后台运营增强任务清单。
+- `tasks/05-performance-test-quality-todo.md`：性能、测试与代码质量补强任务清单。
 - `tasks/chat-implementation.md`：聊天模块当前实现边界、关键语义和后续维护约束。
 - `tasks/follow-module-todo.md`：关注模块后续评估项。
-- `tasks/04-ai-module-todo.md`：AI 模块当前实现边界、关键语义和后续维护约束。
-- `tasks/05-governance-report-audit-todo.md`：举报治理模块当前实现边界、关键语义和后续维护约束。
 
 ## 4. 使用约定
 
