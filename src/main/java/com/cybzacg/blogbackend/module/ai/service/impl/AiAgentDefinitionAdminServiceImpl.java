@@ -13,11 +13,13 @@ import com.cybzacg.blogbackend.module.ai.model.admin.AiAgentDefinitionVO;
 import com.cybzacg.blogbackend.module.ai.repository.AiAgentDefinitionRepository;
 import com.cybzacg.blogbackend.module.ai.service.AiAgentDefinitionAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
+import com.cybzacg.blogbackend.utils.PaginationUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -33,7 +35,9 @@ public class AiAgentDefinitionAdminServiceImpl implements AiAgentDefinitionAdmin
 
     @Override
     public PageResult<AiAgentDefinitionVO> pageDefinitions(AiAgentDefinitionPageQuery query) {
-        Page<AiAgentDefinition> page = new Page<>(query.getPage(), query.getSize());
+        long current = PaginationUtils.normalizeCurrent(query.getCurrent());
+        long size = PaginationUtils.normalizeSize(query.getSize(), 20L, 100L);
+        Page<AiAgentDefinition> page = new Page<>(current, size);
         LambdaQueryWrapper<AiAgentDefinition> wrapper = new LambdaQueryWrapper<AiAgentDefinition>()
                 .like(Optional.ofNullable(query.getKeyword()).isPresent(),
                         AiAgentDefinition::getName, query.getKeyword())
@@ -41,8 +45,10 @@ public class AiAgentDefinitionAdminServiceImpl implements AiAgentDefinitionAdmin
                         AiAgentDefinition::getEnabled, query.getEnabled())
                 .orderByDesc(AiAgentDefinition::getId);
         Page<AiAgentDefinition> result = aiAgentDefinitionRepository.page(page, wrapper);
-        return PageResult.of(result.getTotal(), result.getRecords().stream()
-                .map(aiModelConvert::toAgentDefinitionVO).toList());
+        List<AiAgentDefinitionVO> voList = result.getRecords().stream()
+                .map(aiModelConvert::toAgentDefinitionVO)
+                .toList();
+        return PageResult.of(result, voList);
     }
 
     @Override

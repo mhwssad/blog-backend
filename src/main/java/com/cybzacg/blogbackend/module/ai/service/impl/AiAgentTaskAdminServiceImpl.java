@@ -12,6 +12,7 @@ import com.cybzacg.blogbackend.module.ai.repository.AiAgentDefinitionRepository;
 import com.cybzacg.blogbackend.module.ai.repository.AiAgentTaskRepository;
 import com.cybzacg.blogbackend.module.ai.service.AiAgentTaskAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
+import com.cybzacg.blogbackend.utils.PaginationUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +31,9 @@ public class AiAgentTaskAdminServiceImpl implements AiAgentTaskAdminService {
 
     @Override
     public PageResult<AiAgentTaskAdminVO> pageTasks(AiAgentTaskAdminPageQuery query) {
-        Page<AiAgentTask> page = new Page<>(query.getPage(), query.getSize());
+        long current = PaginationUtils.normalizeCurrent(query.getCurrent());
+        long size = PaginationUtils.normalizeSize(query.getSize(), 20L, 100L);
+        Page<AiAgentTask> page = new Page<>(current, size);
         Page<AiAgentTask> result = aiAgentTaskRepository.pageByAgentIdAndStatus(
                 page, query.getAgentId(), query.getStatus());
 
@@ -43,7 +46,7 @@ public class AiAgentTaskAdminServiceImpl implements AiAgentTaskAdminService {
             return vo;
         }).toList();
 
-        return PageResult.of(result.getTotal(), voList);
+        return PageResult.of(result, voList);
     }
 
     @Override

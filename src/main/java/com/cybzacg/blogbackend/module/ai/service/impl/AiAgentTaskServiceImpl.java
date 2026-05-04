@@ -24,6 +24,7 @@ import com.cybzacg.blogbackend.module.ai.service.AiQuotaService;
 import com.cybzacg.blogbackend.module.ai.service.AiUsageLogService;
 import com.cybzacg.blogbackend.module.auth.notice.service.NotificationDeliveryService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
+import com.cybzacg.blogbackend.utils.PaginationUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -78,7 +79,9 @@ public class AiAgentTaskServiceImpl implements AiAgentTaskService {
 
     @Override
     public PageResult<AiAgentTaskVO> pageMyTasks(Long userId, AiAgentTaskPageQuery query) {
-        Page<AiAgentTask> page = new Page<>(query.getPage(), query.getSize());
+        long current = PaginationUtils.normalizeCurrent(query.getCurrent());
+        long size = PaginationUtils.normalizeSize(query.getSize(), 20L, 100L);
+        Page<AiAgentTask> page = new Page<>(current, size);
         Page<AiAgentTask> result = aiAgentTaskRepository.pageByUserIdAndStatus(page, userId, query.getStatus());
 
         List<AiAgentTaskVO> voList = result.getRecords().stream().map(task -> {
@@ -90,7 +93,7 @@ public class AiAgentTaskServiceImpl implements AiAgentTaskService {
             return vo;
         }).toList();
 
-        return PageResult.of(result.getTotal(), voList);
+        return PageResult.of(result, voList);
     }
 
     @Override
