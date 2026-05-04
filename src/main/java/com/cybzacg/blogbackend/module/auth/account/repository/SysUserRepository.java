@@ -80,4 +80,14 @@ public interface SysUserRepository extends IService<SysUser> {
      * @return 影响行数
      */
     int updateLevel(Long userId, int level);
+
+    /**
+     * 判断昵称是否已被其他未删除用户占用（排除指定 ID）。
+     */
+    boolean existsActiveByNickname(String nickname, Long excludeId);
+
+    /**
+     * 按关键词搜索用户（匹配 username 或 nickname）。
+     */
+    Page<SysUser> searchByKeyword(String keyword, long current, long size);
 }

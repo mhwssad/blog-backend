@@ -175,4 +175,20 @@ public class SysUserRepositoryImpl extends ServiceImpl<SysUserMapper, SysUser>
     public int updateLevel(Long userId, int level) {
         return baseMapper.updateLevel(userId, level);
     }
+
+    @Override
+    public boolean existsActiveByNickname(String nickname, Long excludeId) {
+        return existsActiveByUniqueField(SysUser::getNickname, nickname, excludeId);
+    }
+
+    @Override
+    public Page<SysUser> searchByKeyword(String keyword, long current, long size) {
+        return page(new Page<>(current, size), new LambdaQueryWrapper<SysUser>()
+                .and(w -> w.like(SysUser::getUsername, keyword)
+                        .or()
+                        .like(SysUser::getNickname, keyword))
+                .eq(SysUser::getDeletedFlag, 0)
+                .eq(SysUser::getStatus, 1)
+                .orderByDesc(SysUser::getId));
+    }
 }
