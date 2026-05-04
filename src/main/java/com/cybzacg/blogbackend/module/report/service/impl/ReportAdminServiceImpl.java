@@ -20,7 +20,7 @@ import com.cybzacg.blogbackend.module.auth.account.service.SysUserAdminService;
 import com.cybzacg.blogbackend.module.auth.audit.model.common.SysAuditLogCreateRequest;
 import com.cybzacg.blogbackend.module.auth.audit.service.SysAuditLogService;
 import com.cybzacg.blogbackend.module.chat.governance.service.ChatAdminService;
-import com.cybzacg.blogbackend.module.chat.member.model.admin.ChatAdminMemberMuteUpdateRequest;
+import com.cybzacg.blogbackend.module.chat.governance.service.ChatMuteGovernanceService;
 import com.cybzacg.blogbackend.module.chat.message.model.admin.ChatAdminMessageDetailVO;
 import com.cybzacg.blogbackend.module.content.comment.repository.SysCommentRepository;
 import com.cybzacg.blogbackend.module.content.comment.service.CommentAdminService;
@@ -63,6 +63,7 @@ public class ReportAdminServiceImpl implements ReportAdminService {
     private final ArticleAdminService articleAdminService;
     private final CommentAdminService commentAdminService;
     private final ChatAdminService chatAdminService;
+    private final ChatMuteGovernanceService chatMuteGovernanceService;
     private final BlogArticleRepository blogArticleRepository;
     private final SysCommentRepository sysCommentRepository;
     private final SysUserAdminService sysUserAdminService;
@@ -432,27 +433,14 @@ public class ReportAdminServiceImpl implements ReportAdminService {
                     );
                     return;
                 }
-                LocalDateTime muteUntil = LocalDateTime.now().plusDays(1);
-                ChatAdminMemberMuteUpdateRequest muteRequest =
-                    new ChatAdminMemberMuteUpdateRequest();
-                muteRequest.setMuteUntil(muteUntil);
-                if (
-                    targetType == ReportTargetTypeEnum.CHAT_MESSAGE &&
-                    request.getConversationId() != null
-                ) {
-                    chatAdminService.updateMemberMute(
-                        request.getConversationId(),
-                        reportedUserId,
-                        muteRequest
-                    );
-                } else {
-                    log.info(
-                        "举报对象类型({})不支持聊天禁言，仅记录处罚 [reportId={}, targetUserId={}]",
-                        targetType,
-                        record.getId(),
-                        reportedUserId
-                    );
-                }
+                String muteScope = request.getMuteScope() != null ? request.getMuteScope() : "global";
+                LocalDateTime muteUntil = request.getMuteUntil() != null
+                        ? request.getMuteUntil()
+                        : LocalDateTime.now().plusDays(1);
+                chatMuteGovernanceService.createMuteFromReport(
+                        reportedUserId, muteScope, request.getConversationId(),
+                        "举报处罚 id=" + record.getId(), record.getId(),
+                        operatorId, muteUntil);
             }
             case "ban_user" -> {
                 Long reportedUserId = resolveReportedUserId(

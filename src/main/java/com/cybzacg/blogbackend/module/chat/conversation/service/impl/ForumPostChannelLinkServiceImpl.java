@@ -12,6 +12,7 @@ import com.cybzacg.blogbackend.module.chat.conversation.model.user.ForumPostChan
 import com.cybzacg.blogbackend.module.chat.conversation.repository.ChatConversationRepository;
 import com.cybzacg.blogbackend.module.chat.conversation.repository.ForumPostChannelLinkRepository;
 import com.cybzacg.blogbackend.module.chat.conversation.service.ForumPostChannelLinkService;
+import com.cybzacg.blogbackend.module.chat.governance.service.ChatMuteGovernanceService;
 import com.cybzacg.blogbackend.module.chat.member.repository.ChatConversationMemberRepository;
 import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.forum.repository.ForumPostRepository;
@@ -33,6 +34,7 @@ public class ForumPostChannelLinkServiceImpl implements ForumPostChannelLinkServ
     private final ChatConversationRepository chatConversationRepository;
     private final ChatConversationMemberRepository chatConversationMemberRepository;
     private final ForumPostRepository forumPostRepository;
+    private final ChatMuteGovernanceService chatMuteGovernanceService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -56,9 +58,15 @@ public class ForumPostChannelLinkServiceImpl implements ForumPostChannelLinkServ
                         || !Objects.equals(member.getStatus(), ChatConstants.MEMBER_STATUS_NORMAL),
                 ResultErrorCode.FORBIDDEN, "当前用户不在该频道中");
 
-        // 校验禁言状态
+        // 校验禁言状态（兼容旧 muteUntil 字段 + 统一禁言记录）
         boolean muted = member.getMuteUntil() != null && member.getMuteUntil().isAfter(LocalDateTime.now());
-        ExceptionThrowerCore.throwBusinessIf(muted, ResultErrorCode.FORBIDDEN, "当前用户已被禁言");
+        if (!muted) {
+            String scope = resolveMuteScope(conversation);
+            if (scope != null) {
+                muted = chatMuteGovernanceService.isUserMuted(userId, conversationId, scope);
+            }
+        }
+        ExceptionThrowerCore.throwBusinessIf(muted, ResultErrorCode.CHAT_USER_MUTED);
 
         // 检查帖子是否已关联频道（阶段一：一个帖子只能关联一个频道）
         ForumPostChannelLink existing = findPostLink(forumPostId);
@@ -150,5 +158,17 @@ public class ForumPostChannelLinkServiceImpl implements ForumPostChannelLinkServ
         vo.setLinkedBy(link.getLinkedBy());
         vo.setLinkedAt(link.getLinkedAt());
         return vo;
+    }
+
+    private String resolveMuteScope(ChatConversation conversation) {
+        if (conversation == null) return null;
+        String sceneType = conversation.getSceneType();
+        if (sceneType == null) return null;
+        return switch (sceneType) {
+            case ChatConstants.SCENE_TYPE_HALL_CHANNEL, ChatConstants.SCENE_TYPE_GLOBAL_CHANNEL -> "lobby";
+            case ChatConstants.SCENE_TYPE_TOPIC_CHANNEL -> "topic_channel";
+            case ChatConstants.SCENE_TYPE_USER_GROUP -> "group";
+            default -> null;
+        };
     }
 }

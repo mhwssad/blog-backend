@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 /**
  * 管理员处理举报请求。
  */
@@ -25,4 +27,10 @@ public class ReportHandleRequest {
 
     @Schema(description = "会话ID（举报聊天消息时必填）")
     private Long conversationId;
+
+    @Schema(description = "禁言范围：global/lobby/topic_channel/group（resultType=mute_user 时使用）")
+    private String muteScope;
+
+    @Schema(description = "禁言截止时间（resultType=mute_user 时使用，NULL 表示永久）")
+    private LocalDateTime muteUntil;
 }

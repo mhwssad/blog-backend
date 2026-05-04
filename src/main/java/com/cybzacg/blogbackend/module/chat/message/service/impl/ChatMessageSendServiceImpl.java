@@ -9,6 +9,7 @@ import com.cybzacg.blogbackend.enums.experience.ExperienceSourceTypeEnum;
 import com.cybzacg.blogbackend.module.auth.experience.event.XpAwardEvent;
 import com.cybzacg.blogbackend.module.auth.experience.service.UserExperienceService;
 import com.cybzacg.blogbackend.module.chat.attachment.service.ChatAttachmentAsyncProcessingService;
+import com.cybzacg.blogbackend.module.chat.governance.service.ChatMuteGovernanceService;
 import com.cybzacg.blogbackend.module.chat.governance.service.ChatMetricsService;
 import com.cybzacg.blogbackend.module.chat.member.service.ChatWebSocketSessionRegistry;
 import com.cybzacg.blogbackend.module.chat.message.model.user.ChatMessageVO;
@@ -52,6 +53,7 @@ public class ChatMessageSendServiceImpl implements ChatMessageSendService {
     private final ChatAttachmentAsyncProcessingService chatAttachmentAsyncProcessingService;
     private final ChatMessageGovernanceService chatMessageGovernanceService;
     private final ChatMetricsService chatMetricsService;
+    private final ChatMuteGovernanceService chatMuteGovernanceService;
     private final ChatNotificationService chatNotificationService;
     private final ApplicationEventPublisher eventPublisher;
     private final UserExperienceService userExperienceService;
@@ -64,7 +66,7 @@ public class ChatMessageSendServiceImpl implements ChatMessageSendService {
             chatMessageGovernanceService.validateTextMessage(userId, request.getContent());
             ChatConversation conversation = resolveSendConversation(userId, request);
             ChatServiceSupport.ConversationAccessContext context = s.requireConversationAccess(userId, conversation.getId());
-            validateMemberCanSend(context.selfMember());
+            validateMemberCanSend(userId, context.selfMember(), context.conversation());
             validateConversationSpeakPermission(userId, context.conversation());
             validateSlowMode(userId, context.conversation());
             List<ChatConversationMember> activeMembers = context.activeMembers();
@@ -125,14 +127,14 @@ public class ChatMessageSendServiceImpl implements ChatMessageSendService {
             chatMessageGovernanceService.validateAttachmentMessage(userId);
             ChatConversation conversation = resolveSendConversation(userId, request.getConversationId(), request.getTargetUserId());
             ChatServiceSupport.ConversationAccessContext context = s.requireConversationAccess(userId, conversation.getId());
-            validateMemberCanSend(context.selfMember());
+            validateMemberCanSend(userId, context.selfMember(), context.conversation());
             validateConversationSpeakPermission(userId, context.conversation());
             validateSlowMode(userId, context.conversation());
             List<ChatConversationMember> activeMembers = context.activeMembers();
             ChatMessageHistoryItem existing = s.findExistingMessage(userId, request.getClientMessageId(), conversation.getId());
             if (existing != null) {
                 ChatMessageVO existingMessage = s.buildMessageVO(userId, existing, s.loadUsers(Set.of(existing.getSenderId())));
-                chatMetricsService.recordSend(existing.getMessageType(), "success");
+                chatMetricsService.recordSend(existingMessage.getMessageType(), "success");
                 return existingMessage;
             }
 
@@ -236,11 +238,36 @@ public class ChatMessageSendServiceImpl implements ChatMessageSendService {
         ExceptionThrowerCore.throwBusinessIf(request.getConversationId() == null && request.getTargetUserId() == null, ResultErrorCode.ILLEGAL_ARGUMENT, "会话ID和目标用户ID不能同时为空");
     }
 
-    private void validateMemberCanSend(ChatConversationMember selfMember) {
+    private void validateMemberCanSend(Long userId, ChatConversationMember selfMember, ChatConversation conversation) {
+        // 兼容旧禁言：成员级 muteUntil 字段
         LocalDateTime muteUntil = selfMember == null ? null : selfMember.getMuteUntil();
         ExceptionThrowerCore.throwBusinessIf(muteUntil != null && muteUntil.isAfter(LocalDateTime.now()),
                 ResultErrorCode.FORBIDDEN,
                 "当前用户已被禁言，暂时不能发送消息");
+
+        // 统一禁言记录检查
+        String scope = resolveMuteScope(conversation);
+        if (scope != null) {
+            ExceptionThrowerCore.throwBusinessIf(
+                    chatMuteGovernanceService.isUserMuted(userId, conversation.getId(), scope),
+                    ResultErrorCode.CHAT_USER_MUTED);
+        }
+    }
+
+    /**
+     * 根据会话 sceneType 映射到禁言 scope。
+     * 单聊不禁言，返回 null。
+     */
+    private String resolveMuteScope(ChatConversation conversation) {
+        if (conversation == null) return null;
+        String sceneType = conversation.getSceneType();
+        if (sceneType == null) return null;
+        return switch (sceneType) {
+            case ChatConstants.SCENE_TYPE_HALL_CHANNEL, ChatConstants.SCENE_TYPE_GLOBAL_CHANNEL -> "lobby";
+            case ChatConstants.SCENE_TYPE_TOPIC_CHANNEL -> "topic_channel";
+            case ChatConstants.SCENE_TYPE_USER_GROUP -> "group";
+            default -> null;
+        };
     }
 
     private void validateSlowMode(Long userId, ChatConversation conversation) {
