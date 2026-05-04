@@ -15,6 +15,9 @@ public final class RedisConstants {
     public static final String AI_QUOTA_USER_DAILY_PREFIX = "ai:quota:user";
     public static final String AI_QUOTA_PLATFORM_DAILY_PREFIX = "ai:quota:platform";
 
+    public static final String AI_KNOWLEDGE_SYNC_LOCK_PREFIX = "ai:knowledge:sync:lock";
+    public static final String AI_KNOWLEDGE_SOURCE_CONFIG_CACHE_PREFIX = "ai:knowledge:source-config";
+
     private RedisConstants() {
     }
 }
