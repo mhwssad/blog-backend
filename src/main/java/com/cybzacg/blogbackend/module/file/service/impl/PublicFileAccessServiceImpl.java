@@ -73,10 +73,11 @@ public class PublicFileAccessServiceImpl implements PublicFileAccessService {
 
         // 解析对象名用于存储下载
         String objectName = resolveObjectName(fileInfo);
-        try (InputStream inputStream = storageManager.download(objectName)) {
-            byte[] content = inputStream.readAllBytes();
+        try {
+            InputStream inputStream = storageManager.download(objectName);
+            ExceptionThrowerCore.throwBusinessIfNull(inputStream, ResultErrorCode.IO_ERROR, "文件读取失败");
             String fileName = fileInfo.getOriginalName() != null ? fileInfo.getOriginalName() : fileInfo.getFileName();
-            return new FileContentVO(content, fileName, fileInfo.getMimeType());
+            return new FileContentVO(inputStream, fileName, fileInfo.getMimeType(), fileInfo.getFileSize());
         } catch (Exception e) {
             log.error("文件读取失败: fileId={}, objectName={}", fileId, objectName, e);
             ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.IO_ERROR, "文件读取失败");

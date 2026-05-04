@@ -162,10 +162,18 @@ public class ChatPushServiceImpl implements ChatPushService {
                     continue;
                 }
                 try {
-                    session.sendMessage(message);
+                    sendToSession(session, message);
                 } catch (Exception ex) {
                     log.warn("push websocket message failed: type={}, userId={}, sessionId={}", type, userId, session.getId(), ex);
                 }
+            }
+        }
+    }
+
+    private void sendToSession(WebSocketSession session, TextMessage message) throws Exception {
+        synchronized (session) {
+            if (session.isOpen()) {
+                session.sendMessage(message);
             }
         }
     }

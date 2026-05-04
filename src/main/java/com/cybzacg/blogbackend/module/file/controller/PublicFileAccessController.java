@@ -14,7 +14,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
@@ -33,7 +35,7 @@ public class PublicFileAccessController {
 
     @GetMapping("/{fileId}")
     @Operation(summary = "代理访问文件")
-    public ResponseEntity<byte[]> getFile(@PathVariable Long fileId) {
+    public ResponseEntity<StreamingResponseBody> getFile(@PathVariable Long fileId) {
         FileContentVO content = publicFileAccessService.getFileContent(fileId);
 
         HttpHeaders headers = new HttpHeaders();
@@ -45,7 +47,18 @@ public class PublicFileAccessController {
         if (content.getMimeType() != null && !content.getMimeType().isBlank()) {
             headers.setContentType(MediaType.parseMediaType(content.getMimeType()));
         }
+        if (content.getContentLength() != null && content.getContentLength() >= 0) {
+            headers.setContentLength(content.getContentLength());
+        }
 
-        return ResponseEntity.ok().headers(headers).body(content.getContent());
+        StreamingResponseBody responseBody = outputStream -> {
+            try (var inputStream = content.getContent()) {
+                inputStream.transferTo(outputStream);
+            } catch (IOException e) {
+                log.error("文件流式响应失败: fileId={}", fileId, e);
+                throw e;
+            }
+        };
+        return ResponseEntity.ok().headers(headers).body(responseBody);
     }
 }
