@@ -11,6 +11,9 @@ blog_backend;
 -- 聊天会话主表
 -- ----------------------------
 DROP TABLE IF EXISTS forum_post_channel_link;
+DROP TABLE IF EXISTS forum_reply;
+DROP TABLE IF EXISTS forum_post;
+DROP TABLE IF EXISTS forum_section;
 DROP TABLE IF EXISTS chat_group_invite_link;
 DROP TABLE IF EXISTS chat_group_join_application;
 DROP TABLE IF EXISTS chat_channel_create_application;
@@ -258,6 +261,76 @@ CREATE TABLE chat_group_invite_link
     UNIQUE KEY uk_invite_token (invite_token) COMMENT '邀请链接令牌唯一',
     INDEX idx_conversation_status (conversation_id, status, created_at DESC) COMMENT '按群查看邀请链接'
 ) COMMENT '群聊邀请链接表'
+    ENGINE = InnoDB
+    DEFAULT CHARSET = utf8mb4
+    COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE forum_section
+(
+    id                BIGINT AUTO_INCREMENT COMMENT '版块ID' PRIMARY KEY,
+    name              VARCHAR(64)                         NOT NULL COMMENT '版块名称',
+    description       VARCHAR(512)                        NULL COMMENT '版块简介',
+    sort_order        INT       DEFAULT 0                 NOT NULL COMMENT '排序值，越小越靠前',
+    visibility_scope  TINYINT   DEFAULT 0                 NOT NULL COMMENT '可见范围：0-公开，1-登录可见',
+    post_level_limit  INT       DEFAULT 1                 NOT NULL COMMENT '发帖最低等级',
+    status            TINYINT   DEFAULT 1                 NOT NULL COMMENT '状态：0-禁用，1-启用',
+    created_at        DATETIME  DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    updated_at        DATETIME  DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+    UNIQUE KEY uk_forum_section_name (name) COMMENT '版块名称唯一',
+    INDEX idx_status_sort (status, sort_order, id) COMMENT '公开版块排序查询'
+) COMMENT '论坛版块表'
+    ENGINE = InnoDB
+    DEFAULT CHARSET = utf8mb4
+    COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE forum_post
+(
+    id                BIGINT AUTO_INCREMENT COMMENT '帖子ID' PRIMARY KEY,
+    section_id        BIGINT                              NOT NULL COMMENT '版块ID',
+    author_id         BIGINT                              NOT NULL COMMENT '作者用户ID',
+    title             VARCHAR(128)                        NOT NULL COMMENT '帖子标题',
+    content           LONGTEXT                            NULL COMMENT '帖子内容',
+    status            TINYINT   DEFAULT 0                 NOT NULL COMMENT '状态：0-草稿，1-已发布，2-审核中，3-已拒绝，4-已删除',
+    visibility_scope  TINYINT   DEFAULT 0                 NOT NULL COMMENT '可见范围：0-公开，1-登录可见',
+    is_top            TINYINT   DEFAULT 0                 NOT NULL COMMENT '是否置顶：0-否，1-是',
+    is_essence        TINYINT   DEFAULT 0                 NOT NULL COMMENT '是否精华：0-否，1-是',
+    view_count        INT       DEFAULT 0                 NOT NULL COMMENT '浏览数',
+    like_count        INT       DEFAULT 0                 NOT NULL COMMENT '点赞数',
+    reply_count       INT       DEFAULT 0                 NOT NULL COMMENT '回复数',
+    collect_count     INT       DEFAULT 0                 NOT NULL COMMENT '收藏数',
+    share_count       INT       DEFAULT 0                 NOT NULL COMMENT '分享数',
+    published_at      DATETIME                            NULL COMMENT '发布时间',
+    created_at        DATETIME  DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    updated_at        DATETIME  DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+    INDEX idx_section_status_top (section_id, status, is_top DESC, published_at DESC, id DESC) COMMENT '版块帖子列表',
+    INDEX idx_author_status (author_id, status, updated_at DESC) COMMENT '用户帖子列表',
+    INDEX idx_status_visibility (status, visibility_scope, published_at DESC) COMMENT '公开可见帖子查询'
+) COMMENT '论坛帖子表'
+    ENGINE = InnoDB
+    DEFAULT CHARSET = utf8mb4
+    COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE forum_reply
+(
+    id            BIGINT AUTO_INCREMENT COMMENT '回复ID' PRIMARY KEY,
+    post_id       BIGINT                              NOT NULL COMMENT '帖子ID',
+    parent_id     BIGINT    DEFAULT 0                 NOT NULL COMMENT '父回复ID，顶级回复为0',
+    root_id       BIGINT    DEFAULT 0                 NOT NULL COMMENT '根回复ID，顶级回复为0',
+    user_id       BIGINT                              NOT NULL COMMENT '回复用户ID',
+    content       TEXT                                NOT NULL COMMENT '回复内容',
+    status        TINYINT   DEFAULT 1                 NOT NULL COMMENT '状态：1-正常，2-隐藏，3-删除，4-审核中',
+    floor_no      INT       DEFAULT 0                 NOT NULL COMMENT '楼层号',
+    like_count    INT       DEFAULT 0                 NOT NULL COMMENT '点赞数',
+    reply_count   INT       DEFAULT 0                 NOT NULL COMMENT '回复数',
+    created_at    DATETIME  DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    updated_at    DATETIME  DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+    INDEX idx_post_floor (post_id, floor_no, id) COMMENT '帖子回复楼层查询',
+    INDEX idx_root_status (root_id, status, floor_no, id) COMMENT '根回复下子回复查询',
+    INDEX idx_user_status (user_id, status, created_at DESC) COMMENT '用户回复查询'
+) COMMENT '论坛回复表'
     ENGINE = InnoDB
     DEFAULT CHARSET = utf8mb4
     COLLATE = utf8mb4_unicode_ci;
