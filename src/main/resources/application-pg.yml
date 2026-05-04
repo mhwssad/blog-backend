@@ -1,0 +1,111 @@
+server:
+  port: 8080
+
+cors:
+  allowed-origins:
+    - "*"
+
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/blog_backend
+    username: postgres
+    password: 123456
+
+  data:
+    redis:
+      database: 12
+      host: localhost
+      port: 6379
+      password: 123456
+      timeout: 10s
+      lettuce:
+        pool:
+          max-active: 8
+          max-wait: -1
+          max-idle: 8
+          min-idle: 0
+  cache:
+    enabled: false
+    type: redis
+    redis:
+      time-to-live: 3600000
+      cache-null-values: true
+    caffeine:
+      spec: initialCapacity=50,maximumSize=1000,expireAfterWrite=600s
+  mail:
+    host: smtp.youlai.tech
+    port: 587
+    username: your-email@example.com
+    password: 123456
+    properties:
+      smtp:
+        auth: true
+        starttls:
+          enable: true
+    from: youlaitech@163.com
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+storage:
+  storage-type: local
+  storage:
+    - key: local-default
+      type: local
+      base-url:
+      bucket-name: target/storage
+  manager:
+    strategy: DEFAULT
+    enable-health-check: false
+    enable-load-balancing: false
+
+file-upload:
+  chunk-size: 5242880
+  chunk-size-threshold: 6291456
+  task-expire-days: 2
+  max-file-size: 104857600
+  temp-dir-prefix: temp
+  enable-md5-check: true
+
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  global-config:
+    db-config:
+      id-type: none
+      logic-delete-field: isDeleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  configuration:
+    map-underscore-to-camel-case: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: alpha
+    tags-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: "系统管理"
+      paths-to-match: "/**"
+      packages-to-scan:
+        - com.cybzacg.blogbackend.module
+  default-flat-param-object: true
+
+knife4j:
+  enable: true
+  production: false
+  setting:
+    language: zh_cn
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env,loggers,heapdump,threaddump
+  endpoint:
+    health:
+      show-details: always
