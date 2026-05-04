@@ -25,7 +25,9 @@ public class UserReportController {
 
     @PostMapping
     @Operation(summary = "提交举报")
-    public Result<ReportVO> submitReport(@Valid @RequestBody ReportCreateRequest request) {
+    public Result<ReportVO> submitReport(
+        @Valid @RequestBody ReportCreateRequest request
+    ) {
         Long userId = SecurityUtils.requireUserId();
         return Result.success(reportService.submitReport(userId, request));
     }
@@ -33,11 +35,14 @@ public class UserReportController {
     @GetMapping
     @Operation(summary = "查询我的举报记录")
     public Result<PageResult<ReportVO>> listMyReports(
-            @RequestParam(required = false) String targetType,
-            @RequestParam(defaultValue = "1") Long current,
-            @RequestParam(defaultValue = "10") Long size) {
+        @RequestParam(required = false) String targetType,
+        @RequestParam(defaultValue = "1") Long current,
+        @RequestParam(defaultValue = "10") Long size
+    ) {
         Long userId = SecurityUtils.requireUserId();
-        return Result.success(reportService.listMyReports(userId, targetType, current, size));
+        return Result.success(
+            reportService.listMyReports(userId, targetType, current, size)
+        );
     }
 
     @GetMapping("/{id}")
