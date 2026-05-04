@@ -18,6 +18,21 @@ public final class AiConstants {
     /** 单次用户输入最大字符数 */
     public static final int MAX_INPUT_LENGTH = 2000;
 
+    /** 知识同步默认间隔（秒） */
+    public static final int DEFAULT_KNOWLEDGE_SYNC_INTERVAL = 3600;
+    /** 知识同步默认最大重试次数 */
+    public static final int DEFAULT_KNOWLEDGE_MAX_RETRY = 3;
+
+    /** 知识同步任务类型 */
+    public static final String SYNC_TASK_TYPE_FULL = "full_sync";
+    public static final String SYNC_TASK_TYPE_INCREMENTAL = "incremental_sync";
+    public static final String SYNC_TASK_TYPE_SINGLE = "single_entry";
+
+    /** 知识同步触发方式 */
+    public static final String SYNC_TRIGGER_SYSTEM = "system";
+    public static final String SYNC_TRIGGER_ADMIN = "admin";
+    public static final String SYNC_TRIGGER_MANUAL = "manual";
+
     private AiConstants() {
     }
 }

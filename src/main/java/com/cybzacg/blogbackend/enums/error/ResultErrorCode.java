@@ -119,7 +119,20 @@ public enum ResultErrorCode implements ResultCode {
     REPORT_DUPLICATE_RATE_LIMITED(71003, "举报过于频繁，请稍后再试"),
     REPORT_TARGET_NOT_FOUND(71004, "举报对象不存在"),
     REPORT_TARGET_TYPE_INVALID(71005, "举报对象类型无效"),
-    REPORT_RESULT_TYPE_INVALID(71006, "处理结果类型无效");
+    REPORT_RESULT_TYPE_INVALID(71006, "处理结果类型无效"),
+
+    // ========== AI 知识库模块 ==========
+
+    AI_KNOWLEDGE_SOURCE_CONFIG_NOT_FOUND(72001, "知识源配置不存在"),
+    AI_KNOWLEDGE_SOURCE_TYPE_INVALID(72002, "无效的知识源类型"),
+    AI_KNOWLEDGE_SOURCE_DISABLED(72003, "该知识源已禁用"),
+    AI_KNOWLEDGE_ENTRY_NOT_FOUND(72004, "知识条目不存在"),
+    AI_KNOWLEDGE_ENTRY_STATUS_INVALID(72005, "知识条目状态无效"),
+    AI_KNOWLEDGE_SYNC_TASK_NOT_FOUND(72006, "同步任务不存在"),
+    AI_KNOWLEDGE_SYNC_ALREADY_RUNNING(72007, "同步任务正在执行中，请勿重复触发"),
+    AI_KNOWLEDGE_SYNC_TASK_FAILED(72008, "同步任务执行失败"),
+    AI_KNOWLEDGE_SYNC_RETRY_EXCEEDED(72009, "同步任务重试次数已达上限"),
+    AI_KNOWLEDGE_ENTRY_DUPLICATE(72010, "知识条目已存在");
 
     private final Integer code;
     private final String message;
