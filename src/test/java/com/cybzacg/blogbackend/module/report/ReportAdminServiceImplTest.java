@@ -12,7 +12,10 @@ import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.account.service.SuperAdminVerifier;
 import com.cybzacg.blogbackend.module.auth.account.service.SysUserAdminService;
 import com.cybzacg.blogbackend.module.auth.audit.service.SysAuditLogService;
+import com.cybzacg.blogbackend.module.auth.notice.service.NotificationDeliveryService;
+import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
 import com.cybzacg.blogbackend.module.chat.governance.service.ChatAdminService;
+import com.cybzacg.blogbackend.module.chat.governance.service.ChatMuteGovernanceService;
 import com.cybzacg.blogbackend.module.content.comment.repository.SysCommentRepository;
 import com.cybzacg.blogbackend.module.content.comment.service.CommentAdminService;
 import com.cybzacg.blogbackend.module.report.convert.ReportModelConvert;
@@ -58,11 +61,15 @@ class ReportAdminServiceImplTest {
     @Mock
     private ChatAdminService chatAdminService;
     @Mock
+    private ChatMuteGovernanceService chatMuteGovernanceService;
+    @Mock
     private BlogArticleRepository blogArticleRepository;
     @Mock
     private SysCommentRepository sysCommentRepository;
     @Mock
     private SysUserAdminService sysUserAdminService;
+    @Mock
+    private NotificationDeliveryService notificationDeliveryService;
 
     private ReportAdminServiceImpl reportAdminService;
 
@@ -78,9 +85,11 @@ class ReportAdminServiceImplTest {
                 articleAdminService,
                 commentAdminService,
                 chatAdminService,
+                chatMuteGovernanceService,
                 blogArticleRepository,
                 sysCommentRepository,
-                sysUserAdminService
+                sysUserAdminService,
+                notificationDeliveryService
         );
     }
 
@@ -189,6 +198,86 @@ class ReportAdminServiceImplTest {
         assertEquals("证据不足", record.getRemark());
         assertNotNull(record.getHandledAt());
         verify(sysReportRecordRepository).updateById(record);
+    }
+
+    // ==================== notification tests ====================
+
+    @Test
+    void handleReportShouldNotifyReporter() {
+        SysReportRecord record = buildRecordWithStatus(1L, 0);
+        record.setReportTargetType("article");
+        record.setReportTargetId(100L);
+        ReportHandleRequest request = buildHandleRequest("delete_content", "content_delete", "违规");
+
+        when(sysReportRecordRepository.getById(1L)).thenReturn(record);
+        when(sysReportRecordRepository.updateById(any())).thenReturn(true);
+        when(sysReportHandleLogRepository.save(any())).thenReturn(true);
+
+        reportAdminService.handleReport(1L, 99L, request, "127.0.0.1", "test-ua");
+
+        verify(notificationDeliveryService).deliverAfterCommit(
+                eq(10L),
+                eq(NotificationTypeEnum.REPORT_RESULT),
+                eq("你的举报已处理"),
+                eq("你举报的文章已被删除。"),
+                isNull());
+    }
+
+    @Test
+    void handleReportWithRecordOnlyShouldNotifyReporter() {
+        SysReportRecord record = buildRecordWithStatus(1L, 0);
+        record.setReportTargetType("comment");
+        record.setReportTargetId(200L);
+        ReportHandleRequest request = buildHandleRequest("record_only", "none", null);
+
+        when(sysReportRecordRepository.getById(1L)).thenReturn(record);
+        when(sysReportRecordRepository.updateById(any())).thenReturn(true);
+        when(sysReportHandleLogRepository.save(any())).thenReturn(true);
+
+        reportAdminService.handleReport(1L, 99L, request, "127.0.0.1", "test-ua");
+
+        verify(notificationDeliveryService).deliverAfterCommit(
+                eq(10L),
+                eq(NotificationTypeEnum.REPORT_RESULT),
+                eq("你的举报已处理"),
+                eq("你举报的评论已经审核处理。"),
+                isNull());
+    }
+
+    @Test
+    void rejectReportShouldNotifyReporter() {
+        SysReportRecord record = buildRecordWithStatus(1L, 0);
+        record.setReportTargetType("article");
+        when(sysReportRecordRepository.getById(1L)).thenReturn(record);
+        when(sysReportRecordRepository.updateById(any())).thenReturn(true);
+        when(sysReportHandleLogRepository.save(any())).thenReturn(true);
+
+        reportAdminService.rejectReport(1L, 99L, "证据不足", "127.0.0.1", "test-ua");
+
+        verify(notificationDeliveryService).deliverAfterCommit(
+                eq(10L),
+                eq(NotificationTypeEnum.REPORT_RESULT),
+                eq("你的举报已驳回"),
+                argThat(content -> content.contains("未违反社区规范")),
+                isNull());
+    }
+
+    @Test
+    void rejectReportWithRemarkShouldIncludeRemarkInNotification() {
+        SysReportRecord record = buildRecordWithStatus(1L, 0);
+        record.setReportTargetType("chat_message");
+        when(sysReportRecordRepository.getById(1L)).thenReturn(record);
+        when(sysReportRecordRepository.updateById(any())).thenReturn(true);
+        when(sysReportHandleLogRepository.save(any())).thenReturn(true);
+
+        reportAdminService.rejectReport(1L, 99L, "无法确认违规", "127.0.0.1", "test-ua");
+
+        verify(notificationDeliveryService).deliverAfterCommit(
+                eq(10L),
+                eq(NotificationTypeEnum.REPORT_RESULT),
+                eq("你的举报已驳回"),
+                argThat(content -> content.contains("无法确认违规")),
+                isNull());
     }
 
     // ==================== overrideClaim ====================
