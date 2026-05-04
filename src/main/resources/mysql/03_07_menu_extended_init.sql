@@ -1,7 +1,7 @@
 USE blog_backend;
 
 -- 扩展功能菜单初始化脚本 (ID 范围: 1800-1929)
--- 包含：系列文章、频道申请、AI 管理、举报管理、高风险审计
+-- 包含：系列文章、频道申请、论坛管理、AI 管理、举报管理、高风险审计
 -- 前置依赖：无（菜单数据独立）
 
 START TRANSACTION;
@@ -45,6 +45,21 @@ VALUES (1820, 1700, '0,1700', '入群申请', 'M', 'ContentGroupJoin', '/admin/g
         NULL, NOW(), NOW(), NULL),
        (1822, 1820, '0,1700,1820', '入群申请审核', 'B', NULL, NULL, NULL, 'content:group-join:review', 0, 0, 1, 2, NULL,
         NULL, NOW(), NOW(), NULL);
+
+-- 论坛管理（内容管理 1700 下）
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1830, 1700, '0,1700', '论坛管理', 'M', 'ContentForum', '/admin/forum/sections', 'admin/forum/ForumSections', NULL,
+        0, 1, 1, 14, 'chat-line-round', NULL, NOW(), NOW(), NULL),
+       (1831, 1830, '0,1700,1830', '论坛查询', 'B', NULL, NULL, NULL, 'content:forum:query', 0, 0, 1, 1, NULL, NULL,
+        NOW(), NOW(), NULL),
+       (1832, 1830, '0,1700,1830', '论坛新增', 'B', NULL, NULL, NULL, 'content:forum:create', 0, 0, 1, 2, NULL, NULL,
+        NOW(), NOW(), NULL),
+       (1833, 1830, '0,1700,1830', '论坛修改', 'B', NULL, NULL, NULL, 'content:forum:update', 0, 0, 1, 3, NULL, NULL,
+        NOW(), NOW(), NULL),
+       (1834, 1830, '0,1700,1830', '论坛删除', 'B', NULL, NULL, NULL, 'content:forum:delete', 0, 0, 1, 4, NULL, NULL,
+        NOW(), NOW(), NULL);
 
 -- AI 管理目录
 INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,

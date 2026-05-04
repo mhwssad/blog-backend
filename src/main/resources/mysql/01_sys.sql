@@ -171,6 +171,9 @@ CREATE TABLE `sys_notice`
     `update_by`       bigint COMMENT '更新人ID',
     `update_time`     datetime COMMENT '更新时间',
     `is_deleted`      tinyint(1) DEFAULT '0' COMMENT '是否删除（0: 未删除, 1: 已删除）',
+    `business_type`   varchar(32) COMMENT '业务目标类型，例如 ai_agent_task',
+    `business_id`     bigint COMMENT '业务目标 ID',
+    `action_path`     varchar(255) COMMENT '前端跳转路径',
     PRIMARY KEY (`id`) USING BTREE,
     KEY `idx_notice_admin_page` (`is_deleted`, `create_time`, `id`) COMMENT '后台通知列表索引',
     KEY `idx_notice_publish_scope_time` (`is_deleted`, `publish_status`, `target_type`, `publish_time`, `id`) COMMENT '用户收件箱索引'
