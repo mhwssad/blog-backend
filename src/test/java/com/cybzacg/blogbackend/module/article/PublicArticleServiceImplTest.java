@@ -144,18 +144,14 @@ class PublicArticleServiceImplTest {
     }
 
     /**
-     * 分类过滤通过 resolveArticleIdsByRelations 完成。
-     * 只有分类关联的文章 ID 会被传给 repository，repository 返回匹配结果。
+     * 分类过滤由 repository SQL 完成。
+     * Service 不再预先拉取分类关联 ID，repository 返回匹配结果。
      */
     @Test
     void pageArticlesShouldFilterByCategory() {
         PublicArticlePageQuery query = new PublicArticlePageQuery();
         query.setCategoryId(10L);
 
-        stubCategoryArticleIds(List.of(
-                categoryRelation(2L, 10L, 1),
-                categoryRelation(3L, 10L, 2)
-        ));
         // 预筛选+预排序：分类下只有 id=3(tick=3) 和 id=2(tick=2)
         stubPublishedArticles(query, List.of(
                 article(3L, "A3", "s3", 3, 103L),
@@ -171,18 +167,18 @@ class PublicArticleServiceImplTest {
 
             assertEquals(2L, result.getTotal());
             assertIterableEquals(List.of(3L, 2L), result.getRecords().stream().map(PublicArticleCardVO::getId).toList());
+            verifyNoInteractions(blogArticleCategoryRepository);
         }
     }
 
     /**
-     * 标签过滤通过 resolveArticleIdsByRelations 完成。
+     * 标签过滤由 repository SQL 完成。
      */
     @Test
     void pageArticlesShouldFilterByTag() {
         PublicArticlePageQuery query = new PublicArticlePageQuery();
         query.setTagId(20L);
 
-        stubTagArticleIds(List.of(2L, 4L));
         // 预筛选+预排序：标签下只有 id=4(tick=4) 和 id=2(tick=2)
         stubPublishedArticles(query, List.of(
                 article(4L, "A4", "s4", 4, 104L),
@@ -198,11 +194,12 @@ class PublicArticleServiceImplTest {
 
             assertEquals(2L, result.getTotal());
             assertIterableEquals(List.of(4L, 2L), result.getRecords().stream().map(PublicArticleCardVO::getId).toList());
+            verify(sysTagRelationRepository, never()).listTargetIdsByTargetTypeAndTagId(anyString(), anyLong());
         }
     }
 
     /**
-     * 分类 + 标签取交集。
+     * 分类 + 标签组合过滤由 repository SQL 完成。
      */
     @Test
     void pageArticlesShouldFilterByCategoryAndTagIntersection() {
@@ -210,11 +207,6 @@ class PublicArticleServiceImplTest {
         query.setCategoryId(10L);
         query.setTagId(20L);
 
-        stubCategoryArticleIds(List.of(
-                categoryRelation(2L, 10L, 1),
-                categoryRelation(3L, 10L, 2)
-        ));
-        stubTagArticleIds(List.of(3L, 4L));
         // 交集只有 id=3
         stubPublishedArticles(query, List.of(
                 article(3L, "A3", "s3", 3, 103L)
@@ -226,6 +218,8 @@ class PublicArticleServiceImplTest {
 
             assertEquals(1L, result.getTotal());
             assertIterableEquals(List.of(3L), result.getRecords().stream().map(PublicArticleCardVO::getId).toList());
+            verifyNoInteractions(blogArticleCategoryRepository);
+            verify(sysTagRelationRepository, never()).listTargetIdsByTargetTypeAndTagId(anyString(), anyLong());
         }
     }
 
@@ -617,14 +611,6 @@ class PublicArticleServiceImplTest {
         Page<BlogArticle> page = new Page<>(current, size, articles.size());
         page.setRecords(articles);
         when(blogArticleRepository.pagePublishedArticles(eq(query), nullable(Set.class))).thenReturn(page);
-    }
-
-    private void stubCategoryArticleIds(List<BlogArticleCategory> relations) {
-        when(blogArticleCategoryRepository.listArticleIdsByCategoryId(anyLong())).thenReturn(relations);
-    }
-
-    private void stubTagArticleIds(List<Long> articleIds) {
-        when(sysTagRelationRepository.listTargetIdsByTargetTypeAndTagId(anyString(), anyLong())).thenReturn(articleIds);
     }
 
     private void stubCategoryRelationsForDetail(List<BlogArticleCategory> relations) {

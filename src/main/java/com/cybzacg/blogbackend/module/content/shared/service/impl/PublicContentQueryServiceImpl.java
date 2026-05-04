@@ -1,5 +1,7 @@
 package com.cybzacg.blogbackend.module.content.shared.service.impl;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.auth.SysUser;
 import com.cybzacg.blogbackend.domain.content.SysCategory;
 import com.cybzacg.blogbackend.domain.content.SysComment;
@@ -18,6 +20,7 @@ import com.cybzacg.blogbackend.module.content.taxonomy.model.publics.PublicTagVO
 import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysCategoryRepository;
 import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysTagRepository;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
+import com.cybzacg.blogbackend.utils.PaginationUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +40,8 @@ public class PublicContentQueryServiceImpl implements PublicContentQueryService 
     private static final String ARTICLE_TYPE = "article";
     private static final String COMMENT_TYPE = "comment";
     private static final String LIKE_ACTION = "like";
+    private static final long DEFAULT_COMMENT_PAGE_SIZE = 10L;
+    private static final long MAX_COMMENT_PAGE_SIZE = 100L;
 
     private final SysCategoryRepository sysCategoryRepository;
     private final SysTagRepository sysTagRepository;
@@ -89,9 +94,11 @@ public class PublicContentQueryServiceImpl implements PublicContentQueryService 
      * 使用“根评论 + 回复”两段查询装配评论树，避免在高评论量场景下整表拉取同目标的所有记录。
      */
     @Override
-    public List<PublicCommentVO> listComments(PublicCommentQuery query) {
+    public PageResult<PublicCommentVO> listComments(PublicCommentQuery query) {
         ExceptionThrowerCore.throwBusinessIf(!ARTICLE_TYPE.equals(query.getTargetType()),
                 ResultErrorCode.ILLEGAL_ARGUMENT, "当前仅支持文章评论查询");
+        long current = PaginationUtils.normalizeCurrent(query.getCurrent());
+        long size = PaginationUtils.normalizeSize(query.getSize(), DEFAULT_COMMENT_PAGE_SIZE, MAX_COMMENT_PAGE_SIZE);
         Long currentUserId = SecurityUtils.getUserId();
         articleContentFacadeService.requireAccessibleArticle(
                 query.getTargetId(),
@@ -99,9 +106,11 @@ public class PublicContentQueryServiceImpl implements PublicContentQueryService 
                 ResultErrorCode.NO_HANDLER_FOUND,
                 "文章不存在");
 
-        List<SysComment> roots = sysCommentRepository.selectRootCommentsByTarget(query.getTargetId(), query.getTargetType());
+        Page<SysComment> rootPage = sysCommentRepository.pageRootCommentsByTarget(
+                query.getTargetId(), query.getTargetType(), current, size);
+        List<SysComment> roots = rootPage.getRecords();
         if (roots.isEmpty()) {
-            return List.of();
+            return PageResult.of(rootPage, List.of());
         }
 
         List<Long> rootIds = roots.stream().map(SysComment::getId).toList();
@@ -148,7 +157,7 @@ public class PublicContentQueryServiceImpl implements PublicContentQueryService 
                 result.add(replyVo);
             }
         }
-        return result;
+        return PageResult.of(rootPage, result);
     }
 
     private Map<Long, SysUser> loadUserMap(Collection<Long> userIds) {

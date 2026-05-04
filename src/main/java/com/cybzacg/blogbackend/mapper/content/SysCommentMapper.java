@@ -7,9 +7,6 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 
 public interface SysCommentMapper extends BaseMapper<SysComment> {
-    List<SysComment> selectRootCommentsByTarget(@Param("targetId") Long targetId,
-                                                @Param("targetType") String targetType);
-
     List<SysComment> selectRepliesByRootIds(@Param("rootIds") List<Long> rootIds);
 
     int incrementLikeCount(@Param("id") Long id, @Param("delta") int delta);

@@ -29,13 +29,15 @@ public interface SysCommentRepository extends IService<SysComment> {
     List<SysComment> findByTargetTypeAndTargetId(String targetType, Long targetId);
 
     /**
-     * 查询指定目标下的根评论。
+     * 分页查询指定目标下的根评论。
      *
      * @param targetId   目标 ID
      * @param targetType 目标类型
-     * @return 根评论列表
+     * @param current    页码
+     * @param size       每页数量
+     * @return 根评论分页结果
      */
-    List<SysComment> selectRootCommentsByTarget(Long targetId, String targetType);
+    Page<SysComment> pageRootCommentsByTarget(Long targetId, String targetType, long current, long size);
 
     /**
      * 按根评论 ID 批量查询回复。

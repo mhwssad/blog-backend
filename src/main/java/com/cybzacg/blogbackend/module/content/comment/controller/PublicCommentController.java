@@ -1,5 +1,6 @@
 package com.cybzacg.blogbackend.module.content.comment.controller;
 
+import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.core.web.Result;
 import com.cybzacg.blogbackend.module.content.comment.model.publics.PublicCommentQuery;
 import com.cybzacg.blogbackend.module.content.comment.model.publics.PublicCommentVO;
@@ -12,8 +13,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 /**
  * 前台评论控制器。
@@ -30,7 +29,7 @@ public class PublicCommentController {
 
     @GetMapping
     @Operation(summary = "查询评论树")
-    public Result<List<PublicCommentVO>> listComments(@Valid PublicCommentQuery query) {
+    public Result<PageResult<PublicCommentVO>> listComments(@Valid PublicCommentQuery query) {
         return Result.success(publicContentQueryService.listComments(query));
     }
 }

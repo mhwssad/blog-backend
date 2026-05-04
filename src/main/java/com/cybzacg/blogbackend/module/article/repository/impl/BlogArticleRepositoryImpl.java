@@ -66,6 +66,12 @@ public class BlogArticleRepositoryImpl extends ServiceImpl<BlogArticleMapper, Bl
                         .or()
                         .like("summary", query.getKeyword()))
                 .and(filteredArticleIds != null, w -> w.in("id", filteredArticleIds))
+                .exists(query.getCategoryId() != null,
+                        "select 1 from blog_article_category bac where bac.article_id = blog_article.id and bac.category_id = {0}",
+                        query.getCategoryId())
+                .exists(query.getTagId() != null,
+                        "select 1 from sys_tag_relation str where str.target_id = blog_article.id and str.target_type = 'article' and str.tag_id = {0}",
+                        query.getTagId())
                 .and(w -> w.isNull("scheduled_publish_time")
                         .or()
                         .le("scheduled_publish_time", LocalDateTime.now()));

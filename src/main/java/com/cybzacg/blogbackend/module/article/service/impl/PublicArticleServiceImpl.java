@@ -66,13 +66,8 @@ public class PublicArticleServiceImpl implements PublicArticleService {
      */
     @Override
     public PageResult<PublicArticleCardVO> pageArticles(PublicArticlePageQuery query) {
-        Set<Long> filteredIds = resolveArticleIdsByRelations(query);
-        if (filteredIds != null && filteredIds.isEmpty()) {
-            return PageResult.empty(query.getCurrent(), query.getSize());
-        }
-
         com.baomidou.mybatisplus.extension.plugins.pagination.Page<BlogArticle> page =
-                blogArticleRepository.pagePublishedArticles(query, filteredIds);
+                blogArticleRepository.pagePublishedArticles(query, null);
         Map<Long, String> authorNameMap = loadAuthorNames(page.getRecords().stream()
                 .map(BlogArticle::getAuthorId)
                 .collect(Collectors.toSet()));
@@ -105,28 +100,6 @@ public class PublicArticleServiceImpl implements PublicArticleService {
         detailVO.setSeriesList(articleSeriesService.listVisibleSeriesSummariesByArticleId(article.getId(), userId));
         userFootprintService.recordArticleFootprint(article.getId());
         return detailVO;
-    }
-
-    /**
-     * 根据分类和标签条件反查文章 ID，供前台分页过滤复用。
-     */
-    private Set<Long> resolveArticleIdsByRelations(PublicArticlePageQuery query) {
-        Set<Long> ids = null;
-        if (query.getCategoryId() != null) {
-            ids = blogArticleCategoryRepository.listArticleIdsByCategoryId(query.getCategoryId())
-                    .stream()
-                    .map(BlogArticleCategory::getArticleId)
-                    .collect(Collectors.toCollection(LinkedHashSet::new));
-        }
-        if (query.getTagId() != null) {
-            Set<Long> tagIds = new LinkedHashSet<>(sysTagRelationRepository.listTargetIdsByTargetTypeAndTagId(TARGET_TYPE_ARTICLE, query.getTagId()));
-            if (ids == null) {
-                ids = tagIds;
-            } else {
-                ids.retainAll(tagIds);
-            }
-        }
-        return ids;
     }
 
     /**
@@ -220,7 +193,5 @@ public class PublicArticleServiceImpl implements PublicArticleService {
     }
 
 }
-
-
 
 

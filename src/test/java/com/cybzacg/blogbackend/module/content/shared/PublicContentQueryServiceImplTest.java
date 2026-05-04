@@ -1,5 +1,7 @@
 package com.cybzacg.blogbackend.module.content.shared;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.auth.SysUser;
 import com.cybzacg.blogbackend.domain.content.SysCategory;
 import com.cybzacg.blogbackend.domain.content.SysComment;
@@ -129,7 +131,9 @@ class PublicContentQueryServiceImplTest {
         SysInteraction like = new SysInteraction();
         like.setTargetId(20L);
 
-        when(sysCommentRepository.selectRootCommentsByTarget(100L, "article")).thenReturn(List.of(root));
+        Page<SysComment> rootPage = new Page<>(1, 10, 1);
+        rootPage.setRecords(List.of(root));
+        when(sysCommentRepository.pageRootCommentsByTarget(100L, "article", 1L, 10L)).thenReturn(rootPage);
         when(sysCommentRepository.selectRepliesByRootIds(List.of(20L))).thenReturn(List.of(reply));
         when(sysUserRepository.listByIds(anyCollection())).thenReturn(List.of(rootUser, replyUser));
         when(contentModelConvert.toPublicCommentVO(root)).thenReturn(rootVo);
@@ -138,15 +142,18 @@ class PublicContentQueryServiceImplTest {
                 .thenReturn(List.of(like));
 
         try (MockedStatic<?> securityUtils = SecurityTestUtils.mockUserId(7L)) {
-            List<PublicCommentVO> result = publicContentQueryService.listComments(query);
+            PageResult<PublicCommentVO> result = publicContentQueryService.listComments(query);
 
-            assertEquals(1, result.size());
-            assertEquals(Long.valueOf(20L), result.get(0).getId());
-            assertEquals("Tom", result.get(0).getUserNickname());
-            assertTrue(result.get(0).getLiked());
-            assertEquals(1, result.get(0).getChildren().size());
-            assertEquals("Jerry", result.get(0).getChildren().get(0).getUserNickname());
-            assertFalse(result.get(0).getChildren().get(0).getLiked());
+            assertEquals(1L, result.getTotal());
+            assertEquals(1L, result.getCurrent());
+            assertEquals(10L, result.getSize());
+            assertEquals(1, result.getRecords().size());
+            assertEquals(Long.valueOf(20L), result.getRecords().get(0).getId());
+            assertEquals("Tom", result.getRecords().get(0).getUserNickname());
+            assertTrue(result.getRecords().get(0).getLiked());
+            assertEquals(1, result.getRecords().get(0).getChildren().size());
+            assertEquals("Jerry", result.getRecords().get(0).getChildren().get(0).getUserNickname());
+            assertFalse(result.getRecords().get(0).getChildren().get(0).getLiked());
         }
     }
 
@@ -156,11 +163,14 @@ class PublicContentQueryServiceImplTest {
         query.setTargetType("article");
         query.setTargetId(100L);
 
-        when(sysCommentRepository.selectRootCommentsByTarget(100L, "article")).thenReturn(List.of());
+        Page<SysComment> rootPage = new Page<>(1, 10, 0);
+        rootPage.setRecords(List.of());
+        when(sysCommentRepository.pageRootCommentsByTarget(100L, "article", 1L, 10L)).thenReturn(rootPage);
 
-        List<PublicCommentVO> result = publicContentQueryService.listComments(query);
+        PageResult<PublicCommentVO> result = publicContentQueryService.listComments(query);
 
-        assertTrue(result.isEmpty());
+        assertEquals(0L, result.getTotal());
+        assertTrue(result.getRecords().isEmpty());
         verify(sysCommentRepository, never()).selectRepliesByRootIds(org.mockito.ArgumentMatchers.any());
         verify(sysUserRepository, never()).listByIds(anyCollection());
         verifyNoInteractions(sysInteractionRepository);

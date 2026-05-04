@@ -48,8 +48,15 @@ public class SysCommentRepositoryImpl extends ServiceImpl<SysCommentMapper, SysC
      * {@inheritDoc}
      */
     @Override
-    public List<SysComment> selectRootCommentsByTarget(Long targetId, String targetType) {
-        return baseMapper.selectRootCommentsByTarget(targetId, targetType);
+    public Page<SysComment> pageRootCommentsByTarget(Long targetId, String targetType, long current, long size) {
+        return page(new Page<>(current, size), new LambdaQueryWrapper<SysComment>()
+                .eq(SysComment::getTargetId, targetId)
+                .eq(SysComment::getTargetType, targetType)
+                .eq(SysComment::getRootId, 0L)
+                .eq(SysComment::getParentId, 0L)
+                .eq(SysComment::getStatus, 1)
+                .orderByAsc(SysComment::getCreatedAt)
+                .orderByAsc(SysComment::getId));
     }
 
     /**

@@ -29,18 +29,6 @@
         updated_at
     </sql>
 
-    <select id="selectRootCommentsByTarget" resultMap="BaseResultMap">
-        select
-        <include refid="Base_Column_List"/>
-        from sys_comment
-        where target_id = #{targetId}
-        and target_type = #{targetType}
-        and root_id = 0
-        and parent_id = 0
-        and status = 1
-        order by created_at asc, id asc
-    </select>
-
     <select id="selectRepliesByRootIds" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>
