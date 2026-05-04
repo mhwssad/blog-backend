@@ -108,6 +108,7 @@ public class UserNotificationPreferenceServiceImpl implements UserNotificationPr
         setting.setChannelAnnouncementEnabled(ENABLED);
         setting.setSystemNoticeEnabled(ENABLED);
         setting.setAiTaskNoticeEnabled(ENABLED);
+        setting.setReportResultNoticeEnabled(ENABLED);
         return setting;
     }
 

@@ -16,7 +16,8 @@ public enum NotificationTypeEnum {
     GROUP_MENTION("group_mention", "群聊有人@我"),
     CHANNEL_ANNOUNCEMENT("channel_announcement", "频道公告"),
     SYSTEM_ANNOUNCEMENT("system_announcement", "系统公告"),
-    AI_TASK_DONE("ai_task_done", "AI任务完成");
+    AI_TASK_DONE("ai_task_done", "AI任务完成"),
+    REPORT_RESULT("report_result", "举报处理结果");
 
     private final String code;
     private final String label;
@@ -56,6 +57,7 @@ public enum NotificationTypeEnum {
             case CHANNEL_ANNOUNCEMENT -> !Integer.valueOf(0).equals(setting.getChannelAnnouncementEnabled());
             case SYSTEM_ANNOUNCEMENT -> !Integer.valueOf(0).equals(setting.getSystemNoticeEnabled());
             case AI_TASK_DONE -> !Integer.valueOf(0).equals(setting.getAiTaskNoticeEnabled());
+            case REPORT_RESULT -> !Integer.valueOf(0).equals(setting.getReportResultNoticeEnabled());
         };
     }
 
@@ -71,6 +73,7 @@ public enum NotificationTypeEnum {
             case CHANNEL_ANNOUNCEMENT -> setting.setChannelAnnouncementEnabled(value);
             case SYSTEM_ANNOUNCEMENT -> setting.setSystemNoticeEnabled(value);
             case AI_TASK_DONE -> setting.setAiTaskNoticeEnabled(value);
+            case REPORT_RESULT -> setting.setReportResultNoticeEnabled(value);
         }
     }
 }

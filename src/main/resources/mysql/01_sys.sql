@@ -234,6 +234,7 @@ CREATE TABLE `sys_user_notification_setting`
     `channel_announcement_enabled` tinyint DEFAULT 1 COMMENT '频道公告通知开关',
     `system_notice_enabled`        tinyint DEFAULT 1 COMMENT '系统公告通知开关',
     `ai_task_notice_enabled`       tinyint DEFAULT 1 COMMENT 'AI任务完成通知开关',
+    `report_result_notice_enabled` tinyint DEFAULT 1 COMMENT '举报处理结果通知开关',
     `created_at`                   datetime DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
     `updated_at`                   datetime DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`) USING BTREE,

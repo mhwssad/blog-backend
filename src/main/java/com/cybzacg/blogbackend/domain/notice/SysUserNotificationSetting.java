@@ -72,6 +72,11 @@ public class SysUserNotificationSetting {
     private Integer aiTaskNoticeEnabled;
 
     /**
+     * 举报处理结果通知开关
+     */
+    private Integer reportResultNoticeEnabled;
+
+    /**
      * 创建时间
      */
     private LocalDateTime createdAt;
