@@ -1,13 +1,13 @@
 # blog-backend
 
-`blog-backend` 是一个基于 Spring Boot 4、Spring Security、MyBatis-Plus、MySQL、Redis 的博客后端项目，当前仓库已落地认证鉴权、RBAC 后台管理、通知中心、内容域接口、文件上传管理、聊天社区和超级管理员安全能力。
+`blog-backend` 是一个基于 Spring Boot 3.5、Spring Security、MyBatis-Plus、MySQL、Redis 的博客后端项目，当前仓库已落地认证鉴权、RBAC 后台管理、通知中心、内容域、文件上传、聊天社区、关注、AI、举报治理、数据看板和论坛 P0 能力。
 
 文档入口优先看 [docs/README.md](docs/README.md)。
 项目结构与代码落位约束见 [docs/项目结构规范.md](docs/项目结构规范.md)。
 
 ## 项目情况
 
-- 技术栈：Java 17、Spring Boot 4.0.3、Spring Security、MyBatis-Plus、Druid、Redis、Caffeine、Knife4j/OpenAPI、MapStruct、Lombok。
+- 技术栈：Java 17、Spring Boot 3.5.3、Spring Security、MyBatis-Plus、Druid、Redis/Redisson、Caffeine、Knife4j/OpenAPI、MapStruct、Lombok。
 - 当前默认环境：`dev`，启动端口 `8000`。
 - 当前已落地的业务主线：
     - 认证与会话：账号登录、注册、邮箱验证码登录、刷新令牌、退出登录、超级管理员 2FA 验证、账号接管。
@@ -17,8 +17,14 @@
     - 内容域：文章、分类、标签、评论、收藏、互动、足迹接口。
     - 文件域：用户上传、秒传/分片上传、文件后台管理。
     - 聊天社区：单聊/群聊/全站群聊/大厅频道/主题频道、WebSocket 实时推送、邀请链接、入群申请、群治理。
+    - 关注关系：关注、取关、粉丝/关注列表、互关状态、公开查看与后台治理。
+    - AI 域：基础问答、会话记录、渠道配置、额度控制、调用统计和数据读取范围控制。
+    - 举报与治理：举报提交、后台处理、处理日志、会话级禁言、账号封禁和审计日志。
+    - 数据看板：后台核心概览、内容 / 社区 / AI / 治理基础统计。
+    - 论坛域：论坛 P0 已完成公开侧与用户侧主链路，包含版块、帖子、回复、点赞、收藏和频道分享。
 - 当前阶段重点：
-    - 第二期从论坛正式模块、AI 知识库 / RAG / agents、外部博客迁移、用户自服务接口中按优先级推进。
+    - 论坛 P0 已进入待联调，下一步按推荐顺序推进 AI 知识库 / RAG / agents 的 P0 知识源边界。
+    - 后续继续推进外部博客迁移、用户自服务接口、论坛后台治理、通知举报联动。
     - 治理通知增强、性能测试和代码质量补强按风险穿插执行。
 
 ## 架构概览
@@ -39,7 +45,11 @@ src/main/java/com/cybzacg/blogbackend
 │  ├─ content       分类/标签/评论/收藏/互动/足迹
 │  ├─ file          文件上传与后台管理
 │  ├─ chat          聊天会话、消息与实时推送
-│  └─ follow        用户关注关系与后台治理
+│  ├─ follow        用户关注关系与后台治理
+│  ├─ ai            AI 对话、渠道、额度与统计
+│  ├─ report        举报处理与治理联动
+│  ├─ dashboard     后台数据看板
+│  └─ forum         论坛版块、帖子、回复与频道挂接
 └─ utils            通用工具类
 ```
 
@@ -56,11 +66,11 @@ src/main/java/com/cybzacg/blogbackend
 - `src/main/resources/application.yml`：基础配置，默认激活 `dev`。
 - `src/main/resources/application-dev.yml`：本地开发环境配置。
 - `src/main/resources/application-prod.yml`：生产环境示例配置。
-- `src/main/resources/mysql/1.sys.sql`：系统基础表结构。
+- `src/main/resources/mysql/01_sys.sql`：系统基础表结构，包含认证、通知、AI、举报等基础表。
 - `src/main/resources/mysql/02_article.sql`：文章内容域表结构。
 - `src/main/resources/mysql/03_permission_init.sql`：权限与菜单初始化脚本。
 - `src/main/resources/mysql/04_file.sql`：文件域表结构。
-- `src/main/resources/mysql/05_chat.sql`：聊天域表结构（单聊 / 群聊 / 全站群 / 大厅 / 主题频道、消息、接收状态、已读游标、申请与邀请链接）。
+- `src/main/resources/mysql/05_chat.sql`：聊天域与论坛基础表结构（单聊 / 群聊 / 全站群 / 大厅 / 主题频道、消息、接收状态、已读游标、申请与邀请链接、论坛版块 / 帖子 / 回复 / 帖子频道挂接）。
 - `src/main/resources/mysql/06_follow.sql`：粉丝关注关系表结构（关注、取关、粉丝列表、关注列表、互关判断）。
 - `src/main/resources/mysql/07_user_experience.sql`：用户等级经验表结构。
 - `src/main/java/com/cybzacg/blogbackend/config/WebSocketConfig.java`：WebSocket 入口配置，当前默认端点为 `/ws/chat`。
@@ -85,8 +95,9 @@ src/main/java/com/cybzacg/blogbackend
 首次启动前，至少要完成：
 
 1. 创建数据库 `blog_backend`。
-2. 空库按顺序执行 `1.sys.sql`、`02_article.sql`、`04_file.sql`、`05_chat.sql`、`06_follow.sql`、`07_user_experience.sql`、`03_permission_init.sql`。
-3. 根据本机环境修改 `application-dev.yml` 中的数据库、Redis、邮件配置。
+2. 空库按顺序执行 `01_sys.sql`、`02_article.sql`、`04_file.sql`、`05_chat.sql`、`06_follow.sql`、`07_user_experience.sql`、`03_permission_init.sql`。
+3. `03_permission_init.sql` 是初始化入口说明，实际会按顺序拆到 `03_01_*` 到 `03_09_*` 子脚本；如果手工执行，按文件编号顺序执行即可。
+4. 根据本机环境修改 `application-dev.yml` 中的数据库、Redis、邮件配置。
 
 ## 怎么样编译
 
@@ -124,6 +135,7 @@ mvn -q -DskipTests compile
 - `article` 模块控制器与访问控制测试
 - `content` 模块安全与服务测试
 - `file` 模块控制器、权限与服务测试（已覆盖秒传收口、普通上传、分片校验、后台删除与权限边界）
+- `forum` 模块服务级测试（公开查询、用户行为、帖子频道分享校验）
 
 运行命令：
 
@@ -161,6 +173,10 @@ mvn test
 - 聊天 / WebSocket 接口说明：`docs/api文档/chat-api.md`
 - WebSocket 实时通信协议：`docs/api文档/websocket-api.md`
 - 关注关系接口说明：`docs/api文档/follow-api.md`
+- 论坛接口说明：`docs/api文档/forum-api.md`
+- AI 接口说明：`docs/api文档/ai-api.md`
+- 举报接口说明：`docs/api文档/report-api.md`
+- 后台数据看板接口说明：`docs/api文档/dashboard-api.md`
 - 前端联调文档：`docs/前端/`
 - 任务执行清单：`docs/tasks/README.md`
 - Swagger / Knife4j：
