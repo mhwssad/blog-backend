@@ -18,8 +18,8 @@
 
 | 文件 | 主题 | 当前状态 | 优先级 |
 | --- | --- | --- | --- |
-| [01-forum-module-todo.md](01-forum-module-todo.md) | 论坛正式模块 | P0 待联调 | P0 |
-| [02-ai-rag-agents-todo.md](02-ai-rag-agents-todo.md) | 知识库 / RAG / agents | 待开始 | P0 |
+| [01-forum-module-todo.md](01-forum-module-todo.md) | 论坛正式模块 | P0 已完成 | P0 |
+| [02-ai-rag-agents-todo.md](02-ai-rag-agents-todo.md) | 知识库 / RAG / agents | P0 知识源边界已完成 | P0 |
 | [03-migration-user-service-todo.md](03-migration-user-service-todo.md) | 外部博客迁移与用户自服务 | 待开始 | P1 |
 | [04-governance-notification-enhancement-todo.md](04-governance-notification-enhancement-todo.md) | 治理、通知和后台运营增强 | 待开始 | P1 |
 | [05-performance-test-quality-todo.md](05-performance-test-quality-todo.md) | 性能、测试和代码质量补强 | 待开始 | P2 |
@@ -44,4 +44,5 @@
 - 论坛 P0 已完成公开侧和用户侧主链路：版块、帖子、回复、点赞、收藏、频道分享。
 - 论坛 P0 API 文档已新增 `docs/api文档/forum-api.md`，并已挂入 API 导航。
 - 论坛 P0 服务级测试已覆盖公开查询、用户行为和频道分享校验。
-- 下一步按推荐顺序继续推进 `02-ai-rag-agents-todo.md` 的 P0 知识源边界设计，论坛后台治理、通知和举报接入保留在论坛 P1 与治理增强任务中。
+- AI 知识库 P0 知识源边界已完成：知识源类型枚举、3 张表结构（ai_knowledge_source_config / ai_knowledge_entry / ai_knowledge_sync_task）、后台配置管理、条目管理和同步任务管理接口。
+- 下一步推进 `02-ai-rag-agents-todo.md` 的 P0 RAG 主链路（向量化、分段、检索），论坛后台治理保留在论坛 P1 与治理增强任务中。
