@@ -33,6 +33,9 @@ public final class AiConstants {
     public static final String SYNC_TRIGGER_ADMIN = "admin";
     public static final String SYNC_TRIGGER_MANUAL = "manual";
 
+    /** Agent 默认最大对话轮次 */
+    public static final int DEFAULT_AGENT_MAX_TURNS = 1;
+
     private AiConstants() {
     }
 }

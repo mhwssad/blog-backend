@@ -132,7 +132,16 @@ public enum ResultErrorCode implements ResultCode {
     AI_KNOWLEDGE_SYNC_ALREADY_RUNNING(72007, "同步任务正在执行中，请勿重复触发"),
     AI_KNOWLEDGE_SYNC_TASK_FAILED(72008, "同步任务执行失败"),
     AI_KNOWLEDGE_SYNC_RETRY_EXCEEDED(72009, "同步任务重试次数已达上限"),
-    AI_KNOWLEDGE_ENTRY_DUPLICATE(72010, "知识条目已存在");
+    AI_KNOWLEDGE_ENTRY_DUPLICATE(72010, "知识条目已存在"),
+
+    // ========== AI Agent 模块 ==========
+
+    AI_AGENT_NOT_FOUND(73001, "Agent 不存在"),
+    AI_AGENT_DISABLED(73002, "Agent 已停用"),
+    AI_AGENT_NAME_DUPLICATE(73003, "Agent 名称已存在"),
+    AI_AGENT_TASK_NOT_FOUND(73004, "Agent 任务不存在"),
+    AI_AGENT_TASK_NOT_OWNER(73005, "无权操作此 Agent 任务"),
+    AI_AGENT_TASK_NOT_COMPLETABLE(73006, "Agent 任务状态不允许此操作");
 
     private final Integer code;
     private final String message;
