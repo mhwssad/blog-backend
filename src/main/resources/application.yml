@@ -28,6 +28,9 @@ security:
     - /api/users/*/follows
     - /api/users/*/fans
     - /api/users/*/author-profile
+    - /api/auth/password-reset/code
+    - /api/auth/password-reset
+    - /api/users/search
     - /api/categories/tree
     - /api/tags
     - /api/comments
