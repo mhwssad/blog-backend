@@ -18,7 +18,9 @@ import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.account.service.SuperAdminVerifier;
 import com.cybzacg.blogbackend.module.auth.account.service.SysUserAdminService;
 import com.cybzacg.blogbackend.module.auth.audit.model.common.SysAuditLogCreateRequest;
+import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
 import com.cybzacg.blogbackend.module.auth.audit.service.SysAuditLogService;
+import com.cybzacg.blogbackend.module.auth.notice.service.NotificationDeliveryService;
 import com.cybzacg.blogbackend.module.chat.governance.service.ChatAdminService;
 import com.cybzacg.blogbackend.module.chat.governance.service.ChatMuteGovernanceService;
 import com.cybzacg.blogbackend.module.chat.message.model.admin.ChatAdminMessageDetailVO;
@@ -67,6 +69,7 @@ public class ReportAdminServiceImpl implements ReportAdminService {
     private final BlogArticleRepository blogArticleRepository;
     private final SysCommentRepository sysCommentRepository;
     private final SysUserAdminService sysUserAdminService;
+    private final NotificationDeliveryService notificationDeliveryService;
 
     /**
      * 分页查询举报记录（管理端）。
@@ -240,6 +243,8 @@ public class ReportAdminServiceImpl implements ReportAdminService {
 
         // 执行治理动作，
         executeGovernanceAction(record, request, operatorId, ip, ua);
+
+        notifyReporterHandled(record, request);
     }
 
     /**
@@ -293,6 +298,8 @@ public class ReportAdminServiceImpl implements ReportAdminService {
             operatorId,
             remark
         );
+
+        notifyReporterRejected(record, remark);
     }
 
     @Override
@@ -528,6 +535,59 @@ public class ReportAdminServiceImpl implements ReportAdminService {
         log.setOperatorUserId(operatorId);
         log.setActionRemark(remark);
         sysReportHandleLogRepository.save(log);
+    }
+
+    /**
+     * 通知举报人处理结果。内容不包含处理人信息。
+     */
+    private void notifyReporterHandled(SysReportRecord record, ReportHandleRequest request) {
+        String targetLabel = resolveTargetTypeLabel(record.getReportTargetType());
+        String title = "你的举报已处理";
+        String content = buildHandledContent(targetLabel, request.getResultType());
+        notificationDeliveryService.deliverAfterCommit(
+                record.getReporterUserId(), NotificationTypeEnum.REPORT_RESULT,
+                title, content, null);
+    }
+
+    /**
+     * 通知举报人举报已被驳回。
+     */
+    private void notifyReporterRejected(SysReportRecord record, String remark) {
+        String targetLabel = resolveTargetTypeLabel(record.getReportTargetType());
+        String title = "你的举报已驳回";
+        String content = "你举报的" + targetLabel + "经审核未违反社区规范。"
+                + (remark != null ? "处理说明：" + truncate(remark, 100) : "");
+        notificationDeliveryService.deliverAfterCommit(
+                record.getReporterUserId(), NotificationTypeEnum.REPORT_RESULT,
+                title, content, null);
+    }
+
+    private String buildHandledContent(String targetLabel, String resultType) {
+        if (resultType == null) {
+            return "你举报的" + targetLabel + "已经审核处理。";
+        }
+        return switch (resultType) {
+            case "delete_content" -> "你举报的" + targetLabel + "已被删除。";
+            case "revoke_message" -> "你举报的" + targetLabel + "已被撤回。";
+            case "mute_user" -> "你举报的" + targetLabel + "相关用户已被禁言。";
+            case "ban_user" -> "你举报的" + targetLabel + "相关用户已被封禁。";
+            default -> "你举报的" + targetLabel + "已经审核处理。";
+        };
+    }
+
+    private String resolveTargetTypeLabel(String targetType) {
+        if (targetType == null) return "内容";
+        return switch (targetType) {
+            case "article" -> "文章";
+            case "comment" -> "评论";
+            case "chat_message" -> "聊天消息";
+            default -> "内容";
+        };
+    }
+
+    private String truncate(String text, int maxLen) {
+        if (text == null) return "";
+        return text.length() <= maxLen ? text : text.substring(0, maxLen) + "...";
     }
 
     private void fillUserInfo(List<ReportAdminVO> records) {
