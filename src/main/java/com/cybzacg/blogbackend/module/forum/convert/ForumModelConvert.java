@@ -3,6 +3,8 @@ package com.cybzacg.blogbackend.module.forum.convert;
 import com.cybzacg.blogbackend.domain.forum.ForumPost;
 import com.cybzacg.blogbackend.domain.forum.ForumReply;
 import com.cybzacg.blogbackend.domain.forum.ForumSection;
+import com.cybzacg.blogbackend.module.forum.model.admin.ForumSectionAdminVO;
+import com.cybzacg.blogbackend.module.forum.model.admin.ForumSectionSaveRequest;
 import com.cybzacg.blogbackend.module.forum.model.publics.ForumSectionVO;
 import com.cybzacg.blogbackend.module.forum.model.publics.PublicForumPostDetailVO;
 import com.cybzacg.blogbackend.module.forum.model.publics.PublicForumPostVO;
@@ -25,6 +27,15 @@ import org.mapstruct.*;
 )
 public interface ForumModelConvert {
     ForumSectionVO toSectionVO(ForumSection section);
+
+    ForumSectionAdminVO toSectionAdminVO(ForumSection section);
+
+    @Mapping(target = "name", expression = "java(StrUtils.trim(request.getName()))")
+    @Mapping(target = "description", expression = "java(StrUtils.trimToNull(request.getDescription()))")
+    ForumSection toSection(ForumSectionSaveRequest request);
+
+    @InheritConfiguration(name = "toSection")
+    void updateSection(ForumSectionSaveRequest request, @MappingTarget ForumSection section);
 
     PublicForumPostVO toPublicPostVO(ForumPost post);
 

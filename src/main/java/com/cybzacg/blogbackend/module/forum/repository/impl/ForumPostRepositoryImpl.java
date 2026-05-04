@@ -53,6 +53,12 @@ public class ForumPostRepositoryImpl extends ServiceImpl<ForumPostMapper, ForumP
                 .orderByDesc(ForumPost::getId));
     }
 
+    @Override
+    public boolean existsBySectionId(Long sectionId) {
+        return count(new LambdaQueryWrapper<ForumPost>()
+                .eq(ForumPost::getSectionId, sectionId)) > 0;
+    }
+
     private void applyPublicSort(LambdaQueryWrapper<ForumPost> wrapper, String sort) {
         String actualSort = sort == null ? "latest" : sort.trim().toLowerCase();
         if ("hot".equals(actualSort)) {

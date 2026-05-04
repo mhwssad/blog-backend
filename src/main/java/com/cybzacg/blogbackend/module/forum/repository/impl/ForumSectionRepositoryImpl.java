@@ -1,11 +1,14 @@
 package com.cybzacg.blogbackend.module.forum.repository.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.domain.forum.ForumSection;
 import com.cybzacg.blogbackend.mapper.forum.ForumSectionMapper;
+import com.cybzacg.blogbackend.module.forum.model.admin.ForumSectionPageQuery;
 import com.cybzacg.blogbackend.module.forum.repository.ForumSectionRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -22,5 +25,25 @@ public class ForumSectionRepositoryImpl extends ServiceImpl<ForumSectionMapper, 
                 .le(ForumSection::getVisibilityScope, visibilityScope)
                 .orderByAsc(ForumSection::getSortOrder)
                 .orderByAsc(ForumSection::getId));
+    }
+
+    @Override
+    public Page<ForumSection> pageAdminSections(ForumSectionPageQuery query) {
+        return page(new Page<>(query.getCurrent(), query.getSize()), new LambdaQueryWrapper<ForumSection>()
+                .eq(query.getStatus() != null, ForumSection::getStatus, query.getStatus())
+                .eq(query.getVisibilityScope() != null, ForumSection::getVisibilityScope, query.getVisibilityScope())
+                .and(StringUtils.hasText(query.getKeyword()), wrapper -> wrapper
+                        .like(ForumSection::getName, query.getKeyword())
+                        .or()
+                        .like(ForumSection::getDescription, query.getKeyword()))
+                .orderByAsc(ForumSection::getSortOrder)
+                .orderByAsc(ForumSection::getId));
+    }
+
+    @Override
+    public boolean existsByNameExcludingId(String name, Long excludedId) {
+        return count(new LambdaQueryWrapper<ForumSection>()
+                .eq(ForumSection::getName, name)
+                .ne(excludedId != null, ForumSection::getId, excludedId)) > 0;
     }
 }

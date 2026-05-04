@@ -16,6 +16,8 @@ public interface ForumPostRepository extends IService<ForumPost> {
 
     Page<ForumPost> pageUserPosts(Long authorId, UserForumPostPageQuery query);
 
+    boolean existsBySectionId(Long sectionId);
+
     void incrementLikeCount(Long id, int delta);
 
     void incrementReplyCount(Long id, int delta);

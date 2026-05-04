@@ -12,6 +12,7 @@ import com.cybzacg.blogbackend.module.chat.conversation.model.user.ForumPostChan
 import com.cybzacg.blogbackend.module.chat.conversation.repository.ChatConversationRepository;
 import com.cybzacg.blogbackend.module.chat.conversation.repository.ForumPostChannelLinkRepository;
 import com.cybzacg.blogbackend.module.chat.conversation.service.impl.ForumPostChannelLinkServiceImpl;
+import com.cybzacg.blogbackend.module.chat.governance.service.ChatMuteGovernanceService;
 import com.cybzacg.blogbackend.module.chat.member.repository.ChatConversationMemberRepository;
 import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.forum.repository.ForumPostRepository;
@@ -42,6 +43,8 @@ class ForumPostChannelLinkServiceImplTest {
     private ChatConversationMemberRepository chatConversationMemberRepository;
     @Mock
     private ForumPostRepository forumPostRepository;
+    @Mock
+    private ChatMuteGovernanceService chatMuteGovernanceService;
 
     private ForumPostChannelLinkServiceImpl forumPostChannelLinkService;
 
@@ -51,7 +54,8 @@ class ForumPostChannelLinkServiceImplTest {
                 forumPostChannelLinkRepository,
                 chatConversationRepository,
                 chatConversationMemberRepository,
-                forumPostRepository
+                forumPostRepository,
+                chatMuteGovernanceService
         );
     }
 

@@ -1,6 +1,6 @@
 # 论坛 API
 
-本文档覆盖二期论坛 P0 的公开查询接口、登录用户行为接口，以及帖子与频道挂接入口。
+本文档覆盖二期论坛 P0 的公开查询接口、登录用户行为接口、帖子与频道挂接入口，以及 P1 后台版块管理接口。
 
 ## 1. 路由分组
 
@@ -9,6 +9,7 @@
 | `/api/forum/**` | 论坛公开浏览 | 否，登录可见内容需要登录 |
 | `/api/user/forum/**` | 用户发帖、回帖、互动、分享 | 是 |
 | `/api/user/chat/forum-links/**` | 频道侧帖子挂接查询与取消 | 是 |
+| `/api/sys/forum/**` | 后台论坛治理 | 是，需后台权限 |
 
 ## 2. 公开论坛接口
 
@@ -173,7 +174,95 @@ Authorization: Bearer <accessToken>
 
 说明：`POST /api/user/chat/forum-links` 是频道侧旧入口，与 `/api/user/forum/posts/{postId}/channel-share` 共用同一条分享校验规则。
 
-## 5. 状态与枚举
+## 5. 后台论坛版块管理
+
+后台版块管理接口统一要求登录后台账号，并按接口校验 `content:forum:*` 权限。
+
+### 5.1 分页查询版块
+
+- 请求：`GET /api/sys/forum/sections`
+- 鉴权：`content:forum:query`
+- 查询参数：
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `current` | Long | 页码，默认 `1` |
+| `size` | Long | 每页数量，默认 `10`，最大 `100` |
+| `keyword` | String | 版块名称 / 简介关键字 |
+| `status` | Integer | `0` 禁用，`1` 启用 |
+| `visibilityScope` | Integer | `0` 公开，`1` 登录可见 |
+
+- 响应：`PageResult<ForumSectionAdminVO>`
+
+### 5.2 查询版块详情
+
+- 请求：`GET /api/sys/forum/sections/{id}`
+- 鉴权：`content:forum:query`
+- 响应：`ForumSectionAdminVO`
+
+### 5.3 新增版块
+
+- 请求：`POST /api/sys/forum/sections`
+- 鉴权：`content:forum:create`
+- 请求体：
+
+```json
+{
+  "name": "技术交流",
+  "description": "技术问题与经验分享",
+  "sortOrder": 10,
+  "visibilityScope": 0,
+  "postLevelLimit": 1,
+  "status": 1
+}
+```
+
+### 5.4 修改版块
+
+- 请求：`PUT /api/sys/forum/sections/{id}`
+- 鉴权：`content:forum:update`
+- 请求体同新增版块。
+
+### 5.5 修改版块状态
+
+- 请求：`PUT /api/sys/forum/sections/{id}/status`
+- 鉴权：`content:forum:update`
+- 请求体：
+
+```json
+{
+  "status": 0
+}
+```
+
+### 5.6 删除版块
+
+- 请求：`DELETE /api/sys/forum/sections/{id}`
+- 鉴权：`content:forum:delete`
+- 规则：仅允许删除无帖子版块；已存在帖子时应改用禁用状态。
+
+### 5.7 后台版块字段
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | Long | 版块 ID |
+| `name` | String | 版块名称，必填，最大 64，唯一 |
+| `description` | String | 版块简介，最大 512 |
+| `sortOrder` | Integer | 排序值，空值默认 `0` |
+| `visibilityScope` | Integer | `0` 公开，`1` 登录可见，空值默认 `0` |
+| `postLevelLimit` | Integer | 发帖最低等级，空值默认 `1`，最小 `1` |
+| `status` | Integer | `0` 禁用，`1` 启用，空值默认 `1` |
+| `createdAt` | DateTime | 创建时间 |
+| `updatedAt` | DateTime | 更新时间 |
+
+异常边界：
+
+- 版块不存在：返回业务失败，提示 `论坛版块不存在`。
+- 版块名称重复：返回 `60006`，提示 `版块名称已存在`。
+- 状态或可见范围非法：返回 `40011`。
+- 删除已有帖子版块：返回 `40011`，提示 `当前版块已存在帖子，无法删除`。
+
+## 6. 状态与枚举
 
 | 枚举 | 值 |
 | --- | --- |
@@ -182,3 +271,12 @@ Authorization: Bearer <accessToken>
 | 可见范围 | `0` 公开，`1` 登录可见 |
 | 互动目标类型 | `forum_post` |
 | 互动行为 | `like` |
+
+## 7. 后台权限
+
+| 权限 | 说明 |
+| --- | --- |
+| `content:forum:query` | 查询后台论坛版块 |
+| `content:forum:create` | 新增论坛版块 |
+| `content:forum:update` | 修改论坛版块或状态 |
+| `content:forum:delete` | 删除无帖子论坛版块 |
