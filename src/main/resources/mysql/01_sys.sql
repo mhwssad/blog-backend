@@ -10,6 +10,8 @@ CREATE TABLE `sys_user`
     `email`           varchar(128) COMMENT '邮箱',
     `phone`           varchar(20) COMMENT '手机号',
     `avatar`          varchar(500) COMMENT '头像URL',
+    `bio`             varchar(500) COMMENT '个人简介',
+    `website`         varchar(255) COMMENT '个人站点',
     `gender`          tinyint(1) DEFAULT 0 COMMENT '性别：0-未知，1-男，2-女, 3-保密',
     `birthday`        date COMMENT '生日',
     `status`          tinyint(1) DEFAULT 1 COMMENT '状态：0-禁用，1-启用',

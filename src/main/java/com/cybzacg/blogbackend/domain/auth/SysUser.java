@@ -53,6 +53,16 @@ public class SysUser {
     private String avatar;
 
     /**
+     * 个人简介
+     */
+    private String bio;
+
+    /**
+     * 个人站点
+     */
+    private String website;
+
+    /**
      * 性别：0-未知，1-男，2-女, 3-保密
      */
     private Integer gender;

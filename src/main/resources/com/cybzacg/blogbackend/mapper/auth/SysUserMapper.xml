@@ -12,6 +12,8 @@
         <result property="email" column="email" jdbcType="VARCHAR"/>
         <result property="phone" column="phone" jdbcType="VARCHAR"/>
         <result property="avatar" column="avatar" jdbcType="VARCHAR"/>
+        <result property="bio" column="bio" jdbcType="VARCHAR"/>
+        <result property="website" column="website" jdbcType="VARCHAR"/>
         <result property="gender" column="gender" jdbcType="TINYINT"/>
         <result property="birthday" column="birthday" jdbcType="DATE"/>
         <result property="status" column="status" jdbcType="TINYINT"/>
@@ -30,7 +32,7 @@
         id
         ,username,password,
         nickname,email,phone,
-        avatar,gender,birthday,
+        avatar,bio,website,gender,birthday,
         status,user_level,experience_points,level_updated_at,last_login_time,last_login_ip,
         created_at,updated_at,deleted_flag,
         remark

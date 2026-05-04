@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -21,6 +22,18 @@ public class AuthUserInfo {
 
     @Schema(description = "头像")
     private String avatar;
+
+    @Schema(description = "个人简介")
+    private String bio;
+
+    @Schema(description = "个人站点")
+    private String website;
+
+    @Schema(description = "性别：0-未知，1-男，2-女，3-保密")
+    private Integer gender;
+
+    @Schema(description = "生日")
+    private LocalDate birthday;
 
     @Schema(description = "邮箱")
     private String email;

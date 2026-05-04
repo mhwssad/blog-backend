@@ -39,6 +39,12 @@ public final class AuthConstants {
     public static final Duration TAKEOVER_TOKEN_TTL = Duration.ofMinutes(30);
     public static final String TOKEN_BLACKLIST_PREFIX = "auth:token-blacklist";
 
+    public static final String PASSWORD_RESET_CODE_PREFIX = "auth:password-reset:code";
+    public static final Duration PASSWORD_RESET_CODE_TTL = Duration.ofMinutes(5);
+    public static final String PASSWORD_RESET_CODE_RATE_PREFIX = "auth:password-reset:code:rate";
+    public static final Duration PASSWORD_RESET_CODE_RATE_TTL = Duration.ofSeconds(60);
+    public static final String PASSWORD_RESET_SUBJECT = "密码重置验证码";
+
     private AuthConstants() {
     }
 }

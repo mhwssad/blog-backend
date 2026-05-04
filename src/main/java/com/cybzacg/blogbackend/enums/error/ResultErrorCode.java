@@ -96,6 +96,11 @@ public enum ResultErrorCode implements ResultCode {
     MFA_EMAIL_CODE_RATE_LIMITED(40125, "2FA验证码发送过于频繁，请稍后再试"),
     SUPER_ADMIN_EMAIL_REQUIRED(40126, "超级管理员必须绑定邮箱"),
     NOT_SUPER_ADMIN(40304, "仅超级管理员可执行此操作"),
+
+    OLD_PASSWORD_MISMATCH(40130, "原密码错误"),
+    PASSWORD_SAME_AS_OLD(40131, "新密码不能与原密码相同"),
+    EMAIL_NOT_BOUND(40132, "该账号未绑定邮箱"),
+    NICKNAME_DUPLICATE(40133, "昵称已被占用"),
     CANNOT_MODIFY_SELF(40305, "不能修改自己的角色/状态"),
     AUDIT_LOG_NOT_FOUND(40402, "审计日志不存在"),
 
