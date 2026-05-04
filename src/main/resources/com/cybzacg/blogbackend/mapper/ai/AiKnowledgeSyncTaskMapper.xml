@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cybzacg.blogbackend.mapper.ai.AiKnowledgeSyncTaskMapper">
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.domain.ai.AiKnowledgeSyncTask">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="taskType" column="task_type" jdbcType="VARCHAR"/>
+        <result property="sourceType" column="source_type" jdbcType="VARCHAR"/>
+        <result property="status" column="status" jdbcType="TINYINT"/>
+        <result property="totalCount" column="total_count" jdbcType="INTEGER"/>
+        <result property="successCount" column="success_count" jdbcType="INTEGER"/>
+        <result property="failCount" column="fail_count" jdbcType="INTEGER"/>
+        <result property="skipCount" column="skip_count" jdbcType="INTEGER"/>
+        <result property="errorMessage" column="error_message" jdbcType="VARCHAR"/>
+        <result property="retryCount" column="retry_count" jdbcType="INTEGER"/>
+        <result property="maxRetry" column="max_retry" jdbcType="INTEGER"/>
+        <result property="startedAt" column="started_at" jdbcType="TIMESTAMP"/>
+        <result property="completedAt" column="completed_at" jdbcType="TIMESTAMP"/>
+        <result property="triggeredBy" column="triggered_by" jdbcType="VARCHAR"/>
+        <result property="operatorId" column="operator_id" jdbcType="BIGINT"/>
+        <result property="remark" column="remark" jdbcType="VARCHAR"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id, task_type, source_type, status, total_count, success_count, fail_count, skip_count,
+        error_message, retry_count, max_retry, started_at, completed_at, triggered_by,
+        operator_id, remark, created_at, updated_at
+    </sql>
+</mapper>
