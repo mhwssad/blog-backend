@@ -168,7 +168,20 @@ public class ChatMuteGovernanceServiceImpl implements ChatMuteGovernanceService 
 
     private ChatMuteRecordVO enrichRecordVO(ChatUserMuteRecord record) {
         ChatMuteRecordVO vo = muteModelConvert.toRecordVO(record);
-        // 用户名/昵称会在 batch 接口中填充
+
+        if (record.getUserId() != null) {
+            SysUser user = sysUserRepository.getById(record.getUserId());
+            if (user != null) {
+                vo.setUsername(user.getUsername());
+                vo.setNickname(user.getNickname());
+            }
+        }
+        if (record.getOperatorId() != null) {
+            SysUser operator = sysUserRepository.getById(record.getOperatorId());
+            if (operator != null) {
+                vo.setOperatorUsername(operator.getUsername());
+            }
+        }
         if (record.getConversationId() != null) {
             ChatConversation conversation = conversationRepository.getById(record.getConversationId());
             if (conversation != null) {
