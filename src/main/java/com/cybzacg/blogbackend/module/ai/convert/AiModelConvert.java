@@ -3,9 +3,16 @@ package com.cybzacg.blogbackend.module.ai.convert;
 import com.cybzacg.blogbackend.domain.ai.AiChannelConfig;
 import com.cybzacg.blogbackend.domain.ai.AiChatMessage;
 import com.cybzacg.blogbackend.domain.ai.AiChatSession;
+import com.cybzacg.blogbackend.domain.ai.AiKnowledgeEntry;
+import com.cybzacg.blogbackend.domain.ai.AiKnowledgeSourceConfig;
+import com.cybzacg.blogbackend.domain.ai.AiKnowledgeSyncTask;
 import com.cybzacg.blogbackend.domain.ai.AiUsageLog;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiChannelConfigSaveRequest;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiChannelConfigVO;
+import com.cybzacg.blogbackend.module.ai.model.admin.AiKnowledgeEntryVO;
+import com.cybzacg.blogbackend.module.ai.model.admin.AiKnowledgeSourceConfigSaveRequest;
+import com.cybzacg.blogbackend.module.ai.model.admin.AiKnowledgeSourceConfigVO;
+import com.cybzacg.blogbackend.module.ai.model.admin.AiKnowledgeSyncTaskVO;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiUsageLogVO;
 import com.cybzacg.blogbackend.module.ai.model.user.AiMessageVO;
 import com.cybzacg.blogbackend.module.ai.model.user.AiSessionDetailVO;
@@ -32,4 +39,14 @@ public interface AiModelConvert {
     void updateChannelConfig(AiChannelConfigSaveRequest request, @MappingTarget AiChannelConfig config);
 
     AiUsageLogVO toUsageLogVO(AiUsageLog log);
+
+    AiKnowledgeSourceConfigVO toKnowledgeSourceConfigVO(AiKnowledgeSourceConfig config);
+
+    @InheritConfiguration
+    void updateKnowledgeSourceConfig(AiKnowledgeSourceConfigSaveRequest request,
+                                     @MappingTarget AiKnowledgeSourceConfig config);
+
+    AiKnowledgeEntryVO toKnowledgeEntryVO(AiKnowledgeEntry entry);
+
+    AiKnowledgeSyncTaskVO toKnowledgeSyncTaskVO(AiKnowledgeSyncTask task);
 }
