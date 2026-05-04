@@ -126,6 +126,14 @@ public enum ResultErrorCode implements ResultCode {
     REPORT_TARGET_TYPE_INVALID(71005, "举报对象类型无效"),
     REPORT_RESULT_TYPE_INVALID(71006, "处理结果类型无效"),
 
+    // ========== 禁言治理模块 ==========
+
+    CHAT_MUTE_RECORD_NOT_FOUND(74001, "禁言记录不存在"),
+    CHAT_MUTE_SCOPE_INVALID(74002, "无效的禁言范围"),
+    CHAT_MUTE_CONVERSATION_REQUIRED(74003, "该禁言范围必须指定会话 ID"),
+    CHAT_MUTE_ALREADY_RELEASED(74004, "禁言记录已解除"),
+    CHAT_USER_MUTED(74005, "当前用户已被禁言，暂时不能发送消息"),
+
     // ========== AI 知识库模块 ==========
 
     AI_KNOWLEDGE_SOURCE_CONFIG_NOT_FOUND(72001, "知识源配置不存在"),

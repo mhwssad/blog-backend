@@ -351,3 +351,29 @@ CREATE TABLE forum_post_channel_link
     ENGINE = InnoDB
     DEFAULT CHARSET = utf8mb4
     COLLATE = utf8mb4_unicode_ci;
+
+-- ========== 统一禁言治理 ==========
+
+DROP TABLE IF EXISTS `chat_user_mute_record`;
+CREATE TABLE `chat_user_mute_record`
+(
+    `id`              bigint       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `user_id`         bigint       NOT NULL COMMENT '被禁言用户 ID',
+    `scope`           varchar(32)  NOT NULL COMMENT '禁言范围：global/lobby/topic_channel/group',
+    `conversation_id` bigint       COMMENT '关联会话 ID（lobby/topic_channel/group 时必填）',
+    `mute_until`      datetime     COMMENT '禁言截止时间（NULL 表示永久禁言）',
+    `status`          tinyint      DEFAULT 1 NOT NULL COMMENT '0-已解除 1-生效中',
+    `reason`          varchar(512) COMMENT '禁言原因',
+    `source_type`     varchar(32)  COMMENT '来源：admin/report/auto',
+    `report_id`       bigint       COMMENT '关联举报 ID',
+    `operator_id`     bigint       NOT NULL COMMENT '操作人 ID',
+    `released_by`     bigint       COMMENT '解除人 ID',
+    `released_at`     datetime     COMMENT '解除时间',
+    `created_at`      datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    `updated_at`      datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    INDEX `idx_mute_user_status` (`user_id`, `status`),
+    INDEX `idx_mute_conversation_status` (`conversation_id`, `status`),
+    INDEX `idx_mute_report` (`report_id`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='统一禁言记录表';
