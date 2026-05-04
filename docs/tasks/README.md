@@ -21,7 +21,7 @@
 | [01-forum-module-todo.md](01-forum-module-todo.md)                                               | 论坛正式模块             | P0 已完成           | P0     |
 | [02-ai-rag-agents-todo.md](02-ai-rag-agents-todo.md)                                             | 知识库 / RAG / agents    | P1 Agents 已完成    | P0     |
 | [03-migration-user-service-todo.md](03-migration-user-service-todo.md)                           | 外部博客迁移与用户自服务 | P0 用户自服务已完成 | P1     |
-| [04-governance-notification-enhancement-todo.md](04-governance-notification-enhancement-todo.md) | 治理、通知和后台运营增强 | P0 禁言体系已完成   | P1     |
+| [04-governance-notification-enhancement-todo.md](04-governance-notification-enhancement-todo.md) | 治理、通知和后台运营增强 | P0 举报通知已完成   | P1     |
 | [05-performance-test-quality-todo.md](05-performance-test-quality-todo.md)                       | 性能、测试和代码质量补强 | 待开始              | P2     |
 
 ## 3. 推荐执行顺序
@@ -50,3 +50,5 @@
 - 用户自服务 P0 已完成：个人资料查看/更新（新增 bio/website 字段）、修改密码（验证旧密码）、找回密码（邮箱验证码）、用户搜索（公开接口）。
 - 治理通知增强 P0 禁言体系已完成：统一禁言记录表、4 种范围（全站/大厅/主题频道/群聊）、发送拦截接入、举报联动（可选禁言范围和时长）、后台管理接口。
 - 下一步可推进 `04-governance-notification-enhancement-todo.md` 剩余的举报通知、AI/Agent 通知，或根据前端联调需要推进其他任务。
+- 治理通知增强 P0 举报通知已完成：举报处理（通过/驳回）后自动通知举报人，新增 `REPORT_RESULT` 通知类型和偏好开关，通知内容按结果类型区分模板且不泄露处理人信息。
+- 下一步可推进 `04-governance-notification-enhancement-todo.md` 剩余的 AI/Agent 通知、运营看板增强，或根据前端联调需要推进其他任务。
