@@ -21,7 +21,7 @@
 | [01-forum-module-todo.md](01-forum-module-todo.md)                                               | 论坛正式模块             | P0 已完成           | P0     |
 | [02-ai-rag-agents-todo.md](02-ai-rag-agents-todo.md)                                             | 知识库 / RAG / agents    | P1 Agents 已完成    | P0     |
 | [03-migration-user-service-todo.md](03-migration-user-service-todo.md)                           | 外部博客迁移与用户自服务 | P0 用户自服务已完成 | P1     |
-| [04-governance-notification-enhancement-todo.md](04-governance-notification-enhancement-todo.md) | 治理、通知和后台运营增强 | 待开始              | P1     |
+| [04-governance-notification-enhancement-todo.md](04-governance-notification-enhancement-todo.md) | 治理、通知和后台运营增强 | P0 禁言体系已完成   | P1     |
 | [05-performance-test-quality-todo.md](05-performance-test-quality-todo.md)                       | 性能、测试和代码质量补强 | 待开始              | P2     |
 
 ## 3. 推荐执行顺序
@@ -48,4 +48,5 @@
 - RAG 检索增强暂缓，优先推进 `02-ai-rag-agents-todo.md` 的 P1 Agents 实现。RAG 不阻塞 agents、治理通知、迁移等其他二期任务。
 - AI Agents P1 已完成：3 张表结构（ai_agent_definition / ai_agent_task / ai_agent_task_log）、Agent 定义后台管理、用户任务发起/查询/取消、后台任务管理、任务执行流程（额度校验→模型调用→日志记录→通知投递）。
 - 用户自服务 P0 已完成：个人资料查看/更新（新增 bio/website 字段）、修改密码（验证旧密码）、找回密码（邮箱验证码）、用户搜索（公开接口）。
-- 下一步可推进 `04-governance-notification-enhancement-todo.md` 治理通知增强或根据前端联调需要推进 `03-migration-user-service-todo.md` 剩余的外部博客迁移。
+- 治理通知增强 P0 禁言体系已完成：统一禁言记录表、4 种范围（全站/大厅/主题频道/群聊）、发送拦截接入、举报联动（可选禁言范围和时长）、后台管理接口。
+- 下一步可推进 `04-governance-notification-enhancement-todo.md` 剩余的举报通知、AI/Agent 通知，或根据前端联调需要推进其他任务。

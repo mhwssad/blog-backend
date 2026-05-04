@@ -315,6 +315,9 @@ Authorization: Bearer <accessToken>
 | `resultType` | String | 是 | 处理结果类型：delete_content/revoke_message/mute_user/ban_user/record_only |
 | `punishmentType` | String | 否 | 处罚类型 |
 | `remark` | String | 否 | 备注 |
+| `conversationId` | Long | 否 | 会话ID（举报聊天消息时必填） |
+| `muteScope` | String | 否 | 禁言范围：global/lobby/topic_channel/group（resultType=mute_user 时使用，默认 global） |
+| `muteUntil` | DateTime | 否 | 禁言截止时间（resultType=mute_user 时使用，默认 1 天，NULL 表示永久） |
 
 - 响应：空
 

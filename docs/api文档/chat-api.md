@@ -953,6 +953,9 @@ POST /api/user/chat/group-invite-links/{inviteToken}/join
 | 分页查询频道申请 | `GET`  | `/api/sys/chats/channel-applications`                                         | `content:channel-application:query` |
 | 查询频道申请详情 | `GET`  | `/api/sys/chats/channel-applications/{id}`                                    | `content:channel-application:query` |
 | 审核频道申请   | `PUT`  | `/api/sys/chats/channel-applications/{id}/review`                             | `content:channel-application:review` |
+| 创建禁言     | `POST` | `/api/sys/chats/mutes`                                                        | `content:chat:update` |
+| 分页查询禁言记录 | `GET`  | `/api/sys/chats/mutes`                                                        | `content:chat:query`  |
+| 解除禁言     | `PUT`  | `/api/sys/chats/mutes/{id}/release`                                           | `content:chat:update` |
 
 ### 5.2 会话与消息分页
 
@@ -1261,6 +1264,84 @@ PUT /api/sys/chats/channel-applications/{id}/review
 - `reviewStatus` 支持 `1-通过`、`2-拒绝`、`3-待补充`。
 - 只有待审核申请可以审核。
 - 审核通过后会自动创建 `topic_channel` 会话，默认成员可见、加入后发言、加入规则为 `approval`，申请人会成为频道 `owner`。
+
+### 5.11 后台禁言管理
+
+创建禁言：
+
+```json
+POST /api/sys/chats/mutes
+{
+  "userId": 123,
+  "scope": "lobby",
+  "conversationId": null,
+  "muteUntil": "2026-05-10 12:00:00",
+  "reason": "发送违规内容"
+}
+```
+
+请求字段：
+
+| 字段             | 类型        | 必填 | 说明                                                     |
+|----------------|-----------|----|--------------------------------------------------------|
+| `userId`       | Long      | 是 | 被禁言用户 ID                                                |
+| `scope`        | String    | 是 | 禁言范围：`global`(全站) / `lobby`(大厅) / `topic_channel`(主题频道) / `group`(群聊) |
+| `conversationId` | Long      | 否 | 关联会话 ID，`topic_channel` 和 `group` 范围时必填                  |
+| `muteUntil`    | DateTime  | 否 | 禁言截止时间，为空表示永久禁言                                         |
+| `reason`       | String    | 否 | 禁言原因                                                    |
+
+分页查询禁言记录：
+
+```http
+GET /api/sys/chats/mutes?current=1&size=10&userId=123&scope=lobby&status=1
+```
+
+查询参数：
+
+| 参数       | 类型     | 必填 | 说明                                  |
+|----------|--------|----|-------------------------------------|
+| `current` | Long   | 否 | 页码，默认 `1`                            |
+| `size`   | Long   | 否 | 每页条数，默认 `10`，最大 `100`                |
+| `userId` | Long   | 否 | 按被禁言用户 ID 筛选                          |
+| `scope`  | String | 否 | 按禁言范围筛选                               |
+| `status` | Integer | 否 | 按状态筛选：`0`-已解除，`1`-生效中                |
+
+响应字段 `ChatMuteRecordVO`：
+
+| 字段                | 类型        | 说明                          |
+|-------------------|-----------|-----------------------------|
+| `id`              | Long      | 记录 ID                       |
+| `userId`          | Long      | 被禁言用户 ID                     |
+| `username`        | String    | 被禁言用户名                       |
+| `nickname`        | String    | 被禁言用户昵称                      |
+| `scope`           | String    | 禁言范围                         |
+| `conversationId`  | Long      | 关联会话 ID                      |
+| `conversationName` | String    | 关联会话名称                       |
+| `muteUntil`       | DateTime  | 禁言截止时间（NULL 表示永久）             |
+| `status`          | Integer   | `0`-已解除 `1`-生效中              |
+| `reason`          | String    | 禁言原因                         |
+| `sourceType`      | String    | 来源：`admin`/`report`/`auto`   |
+| `reportId`        | Long      | 关联举报 ID                      |
+| `operatorId`      | Long      | 操作人 ID                       |
+| `operatorUsername` | String    | 操作人用户名                       |
+| `releasedBy`      | Long      | 解除人 ID                       |
+| `releasedAt`      | DateTime  | 解除时间                         |
+| `createdAt`       | DateTime  | 创建时间                         |
+
+解除禁言：
+
+```http
+PUT /api/sys/chats/mutes/{id}/release
+```
+
+说明：
+
+- 已解除的禁言记录再次调用会返回 `CHAT_MUTE_ALREADY_RELEASED` 错误。
+- `global` 范围禁言会拦截所有场景（大厅、频道、群聊）的消息发送。
+- `lobby` 范围禁言会拦截大厅和全站频道的消息发送。
+- `topic_channel` 和 `group` 范围禁言需指定 `conversationId`，只拦截对应会话的消息发送。
+- 发送拦截采用动态判断：禁言到期后下次发送时自动放行，无需手动解除。
+- 举报处理 `mute_user` 结果类型现已接入统一禁言，可在 `ReportHandleRequest` 中指定 `muteScope` 和 `muteUntil`。
 
 ## 6. 公开主题频道接口
 
