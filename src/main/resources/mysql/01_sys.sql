@@ -476,3 +476,62 @@ CREATE TABLE `sys_audit_log` (
     KEY `idx_audit_target_created` (`target_user_id`, `created_at` DESC),
     KEY `idx_audit_operation_type` (`operation_type`, `created_at` DESC)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='高风险审计日志表';
+
+-- ========== AI Agent 模块 ==========
+
+DROP TABLE IF EXISTS `ai_agent_definition`;
+CREATE TABLE `ai_agent_definition`
+(
+    `id`                bigint       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `name`              varchar(64)  NOT NULL COMMENT 'agent 名称',
+    `description`       varchar(512) COMMENT 'agent 描述',
+    `system_prompt`     text         NOT NULL COMMENT '系统提示词',
+    `channel_config_id` bigint       NOT NULL COMMENT '关联 AI 渠道配置 ID',
+    `data_scope_json`   json         COMMENT '数据读取范围配置（复用 AiDataScopeEnum）',
+    `enabled`           tinyint      DEFAULT 1 NOT NULL COMMENT '0-停用 1-启用',
+    `max_turns`         int          DEFAULT 1 NOT NULL COMMENT '最大对话轮次',
+    `extra_config_json` json         COMMENT '扩展配置（预留）',
+    `created_by`        bigint       COMMENT '创建人',
+    `updated_by`        bigint       COMMENT '更新人',
+    `created_at`        datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    `updated_at`        datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_agent_def_name` (`name`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='AI Agent 定义表';
+
+DROP TABLE IF EXISTS `ai_agent_task`;
+CREATE TABLE `ai_agent_task`
+(
+    `id`             bigint       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `user_id`        bigint       NOT NULL COMMENT '发起用户',
+    `agent_id`       bigint       NOT NULL COMMENT '关联 agent 定义 ID',
+    `status`         tinyint      DEFAULT 0 NOT NULL COMMENT '0-待执行 1-执行中 2-已完成 3-失败 4-已取消',
+    `input_content`  text         NOT NULL COMMENT '用户输入',
+    `output_content` text         COMMENT 'agent 输出',
+    `error_message`  varchar(1024) COMMENT '错误信息',
+    `token_count`    int          DEFAULT 0 COMMENT '消耗 token 数',
+    `started_at`     datetime     COMMENT '开始时间',
+    `completed_at`   datetime     COMMENT '完成时间',
+    `created_at`     datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    `updated_at`     datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_agent_task_user_status` (`user_id`, `status`),
+    KEY `idx_agent_task_agent_status` (`agent_id`, `status`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='AI Agent 任务表';
+
+DROP TABLE IF EXISTS `ai_agent_task_log`;
+CREATE TABLE `ai_agent_task_log`
+(
+    `id`         bigint  NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `task_id`    bigint  NOT NULL COMMENT '关联任务 ID',
+    `turn_index` int     NOT NULL COMMENT '轮次序号',
+    `role_type`  varchar(16) NOT NULL COMMENT 'user / assistant / system',
+    `content`    text    NOT NULL COMMENT '消息内容',
+    `token_count` int    DEFAULT 0 COMMENT 'token 数',
+    `created_at` datetime DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_agent_task_log_task_turn` (`task_id`, `turn_index`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='AI Agent 任务日志表';
