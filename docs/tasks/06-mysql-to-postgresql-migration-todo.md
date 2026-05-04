@@ -4,7 +4,7 @@
 
 ## 1. 当前状态
 
-**当前阶段：计划中。**
+**当前阶段：P0 基础接入中。**
 
 ```
 可复用基线:
@@ -13,7 +13,7 @@
   ✅ RAG 基础依赖已接入，后续可使用 PostgreSQL + pgvector 承接向量检索
 
 待建设:
-  ⏳ PostgreSQL 运行配置
+  ✅ PostgreSQL 运行配置已新增 `pg` profile
   ⏳ PostgreSQL 原始建表脚本
   ⏳ Mapper SQL 方言兼容
   ⏳ 数据迁移和回归验证流程
@@ -30,11 +30,11 @@
 
 ## 3. P0 基础接入
 
-- [ ] `pom.xml` 新增 `org.postgresql:postgresql` 运行时依赖。
-- [ ] 新增 `src/main/resources/application-pg.yml`。
-- [ ] 配置 PostgreSQL 数据源、Druid、MyBatis-Plus 和 Redis 保持现有口径。
+- [x] `pom.xml` 新增 `org.postgresql:postgresql` 运行时依赖。
+- [x] 新增 `src/main/resources/application-pg.yml`。
+- [x] 配置 PostgreSQL 数据源、Druid、MyBatis-Plus 和 Redis 保持现有口径。
 - [ ] 本地创建 `blog_backend` PostgreSQL 数据库。
-- [ ] 编译验证：`mvn -q -DskipTests compile`。
+- [x] 编译验证：`mvn -q -DskipTests compile`。
 - [ ] 使用 `pg` profile 启动应用并确认基础上下文可加载。
 
 ## 4. P0 脚本迁移
