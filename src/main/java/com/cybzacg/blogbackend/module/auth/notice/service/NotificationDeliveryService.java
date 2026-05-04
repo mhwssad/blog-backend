@@ -15,4 +15,16 @@ public interface NotificationDeliveryService {
                             String title,
                             String content,
                             Long publisherId);
+
+    /**
+     * 当前事务提交后向指定用户投递带跳转元数据的业务通知。
+     */
+    void deliverAfterCommit(Long targetUserId,
+                            NotificationTypeEnum notificationType,
+                            String title,
+                            String content,
+                            Long publisherId,
+                            String businessType,
+                            Long businessId,
+                            String actionPath);
 }

@@ -96,4 +96,19 @@ public class SysNotice {
      */
     private Integer isDeleted;
 
+    /**
+     * 业务目标类型，例如 ai_agent_task
+     */
+    private String businessType;
+
+    /**
+     * 业务目标 ID
+     */
+    private Long businessId;
+
+    /**
+     * 前端跳转路径
+     */
+    private String actionPath;
+
 }

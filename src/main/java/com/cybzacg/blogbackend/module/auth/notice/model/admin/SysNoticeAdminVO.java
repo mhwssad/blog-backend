@@ -35,4 +35,10 @@ public class SysNoticeAdminVO {
     private LocalDateTime createTime;
     @Schema(description = "更新时间")
     private LocalDateTime updateTime;
+    @Schema(description = "业务目标类型")
+    private String businessType;
+    @Schema(description = "业务目标ID")
+    private Long businessId;
+    @Schema(description = "前端跳转路径")
+    private String actionPath;
 }

@@ -24,4 +24,10 @@ public class UserNoticeVO {
     private Integer isRead;
     @Schema(description = "阅读时间")
     private LocalDateTime readTime;
+    @Schema(description = "业务目标类型")
+    private String businessType;
+    @Schema(description = "业务目标ID")
+    private Long businessId;
+    @Schema(description = "前端跳转路径")
+    private String actionPath;
 }

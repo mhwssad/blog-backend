@@ -4,7 +4,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.ai.AiAgentDefinition;
 import com.cybzacg.blogbackend.domain.ai.AiAgentTask;
+import com.cybzacg.blogbackend.domain.ai.AiChannelConfig;
+import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
 import com.cybzacg.blogbackend.module.ai.convert.AiModelConvert;
+import com.cybzacg.blogbackend.module.ai.model.data.AiModelCallResult;
+import com.cybzacg.blogbackend.module.ai.model.user.AiAgentTaskCreateRequest;
 import com.cybzacg.blogbackend.module.ai.model.user.AiAgentTaskPageQuery;
 import com.cybzacg.blogbackend.module.ai.model.user.AiAgentTaskVO;
 import com.cybzacg.blogbackend.module.ai.repository.AiAgentDefinitionRepository;
@@ -25,7 +29,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -118,5 +123,131 @@ class AiAgentTaskServiceImplTest {
         );
         assertEquals(2L, pageCaptor.getValue().getCurrent());
         assertEquals(100L, pageCaptor.getValue().getSize());
+    }
+
+    @Test
+    void createTaskShouldDeliverSuccessNotificationWithJumpData() {
+        Long userId = 1L;
+        AiAgentDefinition definition = new AiAgentDefinition();
+        definition.setId(10L);
+        definition.setName("writer-agent");
+        definition.setChannelConfigId(100L);
+        definition.setEnabled(1);
+
+        AiChannelConfig channelConfig = new AiChannelConfig();
+        channelConfig.setId(100L);
+
+        AiModelCallResult callResult = new AiModelCallResult();
+        callResult.setSuccess(true);
+        callResult.setContent("完成的内容");
+        callResult.setTotalTokens(50);
+
+        when(aiAgentDefinitionRepository.getById(10L)).thenReturn(definition);
+        when(aiChannelConfigRepository.getById(100L)).thenReturn(channelConfig);
+        when(aiModelClient.chat(any(), any(), any(), any())).thenReturn(callResult);
+        when(aiAgentTaskRepository.save(any(AiAgentTask.class))).thenAnswer(inv -> {
+            AiAgentTask t = inv.getArgument(0);
+            t.setId(42L);
+            return true;
+        });
+        when(aiModelConvert.toAgentTaskVO(any(AiAgentTask.class))).thenReturn(new AiAgentTaskVO());
+
+        AiAgentTaskCreateRequest request = new AiAgentTaskCreateRequest();
+        request.setAgentId(10L);
+        request.setInputContent("帮我写一篇文章");
+
+        service.createTask(userId, request);
+
+        verify(notificationDeliveryService).deliverAfterCommit(
+                eq(userId),
+                eq(NotificationTypeEnum.AI_TASK_DONE),
+                eq("Agent 任务完成"),
+                eq("writer-agent 任务已完成"),
+                isNull(),
+                eq("ai_agent_task"),
+                eq(42L),
+                eq("/ai/agents/tasks/42"));
+    }
+
+    @Test
+    void createTaskShouldDeliverFailureNotificationWhenModelFails() {
+        Long userId = 1L;
+        AiAgentDefinition definition = new AiAgentDefinition();
+        definition.setId(10L);
+        definition.setName("writer-agent");
+        definition.setChannelConfigId(100L);
+        definition.setEnabled(1);
+
+        AiChannelConfig channelConfig = new AiChannelConfig();
+        channelConfig.setId(100L);
+
+        AiModelCallResult callResult = new AiModelCallResult();
+        callResult.setSuccess(false);
+        callResult.setErrorMessage("模型调用超时");
+
+        when(aiAgentDefinitionRepository.getById(10L)).thenReturn(definition);
+        when(aiChannelConfigRepository.getById(100L)).thenReturn(channelConfig);
+        when(aiModelClient.chat(any(), any(), any(), any())).thenReturn(callResult);
+        when(aiAgentTaskRepository.save(any(AiAgentTask.class))).thenAnswer(inv -> {
+            AiAgentTask t = inv.getArgument(0);
+            t.setId(43L);
+            return true;
+        });
+        when(aiModelConvert.toAgentTaskVO(any(AiAgentTask.class))).thenReturn(new AiAgentTaskVO());
+
+        AiAgentTaskCreateRequest request = new AiAgentTaskCreateRequest();
+        request.setAgentId(10L);
+        request.setInputContent("帮我写一篇文章");
+
+        service.createTask(userId, request);
+
+        verify(notificationDeliveryService).deliverAfterCommit(
+                eq(userId),
+                eq(NotificationTypeEnum.AI_TASK_DONE),
+                eq("Agent 任务失败"),
+                eq("writer-agent 任务执行失败"),
+                isNull(),
+                eq("ai_agent_task"),
+                eq(43L),
+                eq("/ai/agents/tasks/43"));
+    }
+
+    @Test
+    void createTaskShouldDeliverFailureNotificationOnException() {
+        Long userId = 1L;
+        AiAgentDefinition definition = new AiAgentDefinition();
+        definition.setId(10L);
+        definition.setName("writer-agent");
+        definition.setChannelConfigId(100L);
+        definition.setEnabled(1);
+
+        AiChannelConfig channelConfig = new AiChannelConfig();
+        channelConfig.setId(100L);
+
+        when(aiAgentDefinitionRepository.getById(10L)).thenReturn(definition);
+        when(aiChannelConfigRepository.getById(100L)).thenReturn(channelConfig);
+        when(aiModelClient.chat(any(), any(), any(), any())).thenThrow(new RuntimeException("连接中断"));
+        when(aiAgentTaskRepository.save(any(AiAgentTask.class))).thenAnswer(inv -> {
+            AiAgentTask t = inv.getArgument(0);
+            t.setId(44L);
+            return true;
+        });
+        when(aiModelConvert.toAgentTaskVO(any(AiAgentTask.class))).thenReturn(new AiAgentTaskVO());
+
+        AiAgentTaskCreateRequest request = new AiAgentTaskCreateRequest();
+        request.setAgentId(10L);
+        request.setInputContent("帮我写一篇文章");
+
+        service.createTask(userId, request);
+
+        verify(notificationDeliveryService).deliverAfterCommit(
+                eq(userId),
+                eq(NotificationTypeEnum.AI_TASK_DONE),
+                eq("Agent 任务失败"),
+                eq("任务执行异常"),
+                isNull(),
+                eq("ai_agent_task"),
+                eq(44L),
+                eq("/ai/agents/tasks/44"));
     }
 }

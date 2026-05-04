@@ -148,24 +148,44 @@ public class AiAgentTaskServiceImpl implements AiAgentTaskService {
                 aiUsageLogService.logUsage(task.getUserId(), channelConfig.getId(),
                         null, "agent", result.getRequestTokens(),
                         result.getResponseTokens(), result.getTotalTokens(), 1, null);
+
+                notificationDeliveryService.deliverAfterCommit(
+                        task.getUserId(),
+                        NotificationTypeEnum.AI_TASK_DONE,
+                        "Agent 任务完成",
+                        definition.getName() + " 任务已完成",
+                        null,
+                        "ai_agent_task", task.getId(),
+                        "/ai/agents/tasks/" + task.getId());
             } else {
                 aiUsageLogService.logUsage(task.getUserId(), channelConfig.getId(),
                         null, "agent", result.getRequestTokens(),
                         result.getResponseTokens(), result.getTotalTokens(), 0, "agent_call_failed");
-            }
 
-            notificationDeliveryService.deliverAfterCommit(
-                    task.getUserId(),
-                    NotificationTypeEnum.AI_TASK_DONE,
-                    "Agent 任务完成",
-                    definition.getName() + " 任务已完成",
-                    null);
+                notificationDeliveryService.deliverAfterCommit(
+                        task.getUserId(),
+                        NotificationTypeEnum.AI_TASK_DONE,
+                        "Agent 任务失败",
+                        definition.getName() + " 任务执行失败",
+                        null,
+                        "ai_agent_task", task.getId(),
+                        "/ai/agents/tasks/" + task.getId());
+            }
         } catch (Exception e) {
             log.error("Agent 任务执行异常: taskId={}", task.getId(), e);
             task.setStatus(AiAgentTaskStatusEnum.FAILED.getValue());
             task.setErrorMessage(e.getMessage());
             task.setCompletedAt(LocalDateTime.now());
             aiAgentTaskRepository.updateById(task);
+
+            notificationDeliveryService.deliverAfterCommit(
+                    task.getUserId(),
+                    NotificationTypeEnum.AI_TASK_DONE,
+                    "Agent 任务失败",
+                    "任务执行异常",
+                    null,
+                    "ai_agent_task", task.getId(),
+                    "/ai/agents/tasks/" + task.getId());
         }
     }
 

@@ -41,10 +41,25 @@ public class NotificationDeliveryServiceImpl implements NotificationDeliveryServ
                                    String title,
                                    String content,
                                    Long publisherId) {
+        deliverAfterCommit(targetUserId, notificationType, title, content, publisherId, null, null, null);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void deliverAfterCommit(Long targetUserId,
+                                   NotificationTypeEnum notificationType,
+                                   String title,
+                                   String content,
+                                   Long publisherId,
+                                   String businessType,
+                                   Long businessId,
+                                   String actionPath) {
         if (targetUserId == null || notificationType == null || !StrUtils.hasText(title)) {
             return;
         }
-        Runnable action = () -> deliver(targetUserId, notificationType, title, content, publisherId);
+        Runnable action = () -> deliver(targetUserId, notificationType, title, content, publisherId, businessType, businessId, actionPath);
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
@@ -61,13 +76,16 @@ public class NotificationDeliveryServiceImpl implements NotificationDeliveryServ
                          NotificationTypeEnum notificationType,
                          String title,
                          String content,
-                         Long publisherId) {
+                         Long publisherId,
+                         String businessType,
+                         Long businessId,
+                         String actionPath) {
         try {
             if (!userNotificationPreferenceService.isNotificationEnabled(targetUserId, notificationType)) {
                 return;
             }
             LocalDateTime now = LocalDateTime.now();
-            SysNotice notice = buildNotice(targetUserId, title, content, publisherId, now);
+            SysNotice notice = buildNotice(targetUserId, title, content, publisherId, businessType, businessId, actionPath, now);
             sysNoticeRepository.save(notice);
             sysUserNoticeRepository.save(buildUserNotice(notice.getId(), targetUserId, now));
         } catch (RuntimeException ex) {
@@ -78,7 +96,8 @@ public class NotificationDeliveryServiceImpl implements NotificationDeliveryServ
         }
     }
 
-    private SysNotice buildNotice(Long targetUserId, String title, String content, Long publisherId, LocalDateTime now) {
+    private SysNotice buildNotice(Long targetUserId, String title, String content, Long publisherId,
+                                  String businessType, Long businessId, String actionPath, LocalDateTime now) {
         Long operatorId = publisherId == null ? SYSTEM_PUBLISHER_ID : publisherId;
         SysNotice notice = new SysNotice();
         notice.setTitle(StrUtils.trim(title));
@@ -95,6 +114,9 @@ public class NotificationDeliveryServiceImpl implements NotificationDeliveryServ
         notice.setUpdateBy(operatorId);
         notice.setUpdateTime(now);
         notice.setIsDeleted(0);
+        notice.setBusinessType(businessType);
+        notice.setBusinessId(businessId);
+        notice.setActionPath(actionPath);
         return notice;
     }
 
