@@ -43,6 +43,7 @@
 
         <jwt.version>0.12.6</jwt.version>
         <langchain4j.version>1.12.2</langchain4j.version>
+        <langchain4j-beta.version>1.12.2-beta22</langchain4j-beta.version>
 
     </properties>
 
@@ -98,6 +99,27 @@
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-open-ai</artifactId>
+        </dependency>
+
+        <!-- LangChain4j Easy RAG: 文档加载、切分、向量化和检索增强问答的便捷入口 -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-easy-rag</artifactId>
+            <version>${langchain4j-beta.version}</version>
+        </dependency>
+
+        <!-- LangChain4j Apache Tika 文档解析：为后续知识库导入 PDF/Markdown/HTML 等格式预留 -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-document-parser-apache-tika</artifactId>
+            <version>${langchain4j-beta.version}</version>
+        </dependency>
+
+        <!-- LangChain4j 本地 embedding 模型：二期 RAG 初期可先用内置模型验证切片和检索闭环 -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-embeddings-all-minilm-l6-v2-q</artifactId>
+            <version>${langchain4j-beta.version}</version>
         </dependency>
 
 
