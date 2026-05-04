@@ -65,12 +65,11 @@ public final class ApiKeyCryptoUtils {
                     .withoutPadding()
                     .encodeToString(buffer.array());
         } catch (GeneralSecurityException ex) {
-            ExceptionThrowerCore.throwBusinessEx(
+            return ExceptionThrowerCore.throwBusiness(
                 ResultErrorCode.SYSTEM_ERROR,
                 "API Key 加密失败",
                 ex
             );
-            return null;
         }
     }
 
@@ -118,19 +117,17 @@ public final class ApiKeyCryptoUtils {
             byte[] decrypted = cipher.doFinal(encrypted);
             return new String(decrypted, StandardCharsets.UTF_8);
         } catch (IllegalArgumentException ex) {
-            ExceptionThrowerCore.throwBusinessEx(
+            return ExceptionThrowerCore.throwBusiness(
                 ResultErrorCode.PARAM_FORMAT_INVALID,
                 "API Key 密文格式无效",
                 ex
             );
-            return null;
         } catch (GeneralSecurityException ex) {
-            ExceptionThrowerCore.throwBusinessEx(
+            return ExceptionThrowerCore.throwBusiness(
                 ResultErrorCode.SYSTEM_ERROR,
                 "API Key 解密失败",
                 ex
             );
-            return null;
         }
     }
 
@@ -164,12 +161,11 @@ public final class ApiKeyCryptoUtils {
             );
             return new SecretKeySpec(keyBytes, KEY_ALGORITHM);
         } catch (GeneralSecurityException ex) {
-            ExceptionThrowerCore.throwBusinessEx(
+            return ExceptionThrowerCore.throwBusiness(
                 ResultErrorCode.SYSTEM_ERROR,
                 "API Key 加密主密钥初始化失败",
                 ex
             );
-            return null;
         }
     }
 }

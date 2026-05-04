@@ -46,7 +46,24 @@ public class ExceptionThrowerCore {
         throw new BusinessException(resultCode);
     }
 
+    /**
+     * 抛出业务异常并声明返回值类型，适用于需要返回表达式但实际只会抛异常的分支。
+     */
+    public static <T> T throwBusiness(ResultCode resultCode) {
+        throw new BusinessException(resultCode);
+    }
+
     public static void throwBusinessEx(ResultCode resultCode, String message) {
+        if (resultCode == null) {
+            throw new BusinessException(500, message);
+        }
+        throw new BusinessException(resultCode.getCode(), message);
+    }
+
+    /**
+     * 抛出带自定义消息的业务异常并声明返回值类型。
+     */
+    public static <T> T throwBusiness(ResultCode resultCode, String message) {
         if (resultCode == null) {
             throw new BusinessException(500, message);
         }
@@ -60,7 +77,27 @@ public class ExceptionThrowerCore {
         throw new BusinessException(resultCode.getCode(), resultCode.getMessage(), throwable);
     }
 
+    /**
+     * 抛出带原因的业务异常并声明返回值类型。
+     */
+    public static <T> T throwBusiness(ResultCode resultCode, Throwable throwable) {
+        if (resultCode == null) {
+            throw new BusinessException("业务异常", throwable);
+        }
+        throw new BusinessException(resultCode.getCode(), resultCode.getMessage(), throwable);
+    }
+
     public static void throwBusinessEx(ResultCode resultCode, String message, Throwable throwable) {
+        if (resultCode == null) {
+            throw new BusinessException(500, message, throwable);
+        }
+        throw new BusinessException(resultCode.getCode(), message, throwable);
+    }
+
+    /**
+     * 抛出带自定义消息和原因的业务异常并声明返回值类型。
+     */
+    public static <T> T throwBusiness(ResultCode resultCode, String message, Throwable throwable) {
         if (resultCode == null) {
             throw new BusinessException(500, message, throwable);
         }
@@ -71,7 +108,21 @@ public class ExceptionThrowerCore {
         throw new BusinessException(code, message);
     }
 
+    /**
+     * 抛出自定义错误码业务异常并声明返回值类型。
+     */
+    public static <T> T throwBusiness(Integer code, String message) {
+        throw new BusinessException(code, message);
+    }
+
     public static void throwBusinessEx(Integer code, String message, Throwable throwable) {
+        throw new BusinessException(code, message, throwable);
+    }
+
+    /**
+     * 抛出自定义错误码和原因的业务异常并声明返回值类型。
+     */
+    public static <T> T throwBusiness(Integer code, String message, Throwable throwable) {
         throw new BusinessException(code, message, throwable);
     }
 
@@ -79,7 +130,21 @@ public class ExceptionThrowerCore {
         throw new BusinessException(message);
     }
 
+    /**
+     * 抛出业务异常并声明返回值类型。
+     */
+    public static <T> T throwBusiness(String message) {
+        throw new BusinessException(message);
+    }
+
     public static void throwBusinessEx(String message, Throwable throwable) {
+        throw new BusinessException(message, throwable);
+    }
+
+    /**
+     * 抛出带原因的业务异常并声明返回值类型。
+     */
+    public static <T> T throwBusiness(String message, Throwable throwable) {
         throw new BusinessException(message, throwable);
     }
 
