@@ -17,11 +17,13 @@ import com.cybzacg.blogbackend.module.ai.model.user.AiSessionVO;
 import com.cybzacg.blogbackend.module.ai.repository.AiChannelConfigRepository;
 import com.cybzacg.blogbackend.module.ai.repository.AiChatMessageRepository;
 import com.cybzacg.blogbackend.module.ai.repository.AiChatSessionRepository;
+import com.cybzacg.blogbackend.module.ai.repository.AiMessageAttachmentRepository;
 import com.cybzacg.blogbackend.module.ai.service.AiModelClient;
 import com.cybzacg.blogbackend.module.ai.service.AiQuotaService;
 import com.cybzacg.blogbackend.module.ai.service.AiRagService;
 import com.cybzacg.blogbackend.module.ai.service.AiUsageLogService;
 import com.cybzacg.blogbackend.module.ai.service.impl.AiChatServiceImpl;
+import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -60,6 +62,10 @@ class AiChatServiceImplTest {
     private AiUsageLogService aiUsageLogService;
     @Mock
     private AiModelConvert aiModelConvert;
+    @Mock
+    private AiMessageAttachmentRepository aiMessageAttachmentRepository;
+    @Mock
+    private FileInfoRepository fileInfoRepository;
 
     private AiChatServiceImpl aiChatService;
 
@@ -73,7 +79,9 @@ class AiChatServiceImplTest {
                 aiQuotaService,
                 aiRagService,
                 aiUsageLogService,
-                aiModelConvert
+                aiModelConvert,
+                aiMessageAttachmentRepository,
+                fileInfoRepository
         );
         lenient().when(aiRagService.retrieve(any(), any())).thenReturn(new com.cybzacg.blogbackend.module.ai.model.internal.AiRagRetrievalResult());
         lenient().when(aiRagService.enrichSystemPrompt(any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -131,7 +139,7 @@ class AiChatServiceImplTest {
         callResult.setRequestTokens(10);
         callResult.setResponseTokens(20);
         callResult.setTotalTokens(30);
-        when(aiModelClient.chat(any(), any(), any(), eq("Hello AI"))).thenReturn(callResult);
+        when(aiModelClient.chat(any(), any(), any(), eq("Hello AI"), any())).thenReturn(callResult);
         when(aiChatMessageRepository.listBySessionIdOrderById(eq(sessionId), anyInt()))
                 .thenReturn(Collections.emptyList());
         when(aiChatMessageRepository.save(any(AiChatMessage.class))).thenReturn(true);
@@ -163,7 +171,7 @@ class AiChatServiceImplTest {
 
         when(aiChatSessionRepository.findByIdAndUserId(sessionId, userId)).thenReturn(session);
         when(aiChannelConfigRepository.getById(10L)).thenReturn(config);
-        when(aiModelClient.chat(any(), any(), any(), eq("Hello AI")))
+        when(aiModelClient.chat(any(), any(), any(), eq("Hello AI"), any()))
                 .thenThrow(new RuntimeException("Model unavailable"));
         when(aiChatMessageRepository.listBySessionIdOrderById(eq(sessionId), anyInt()))
                 .thenReturn(Collections.emptyList());
