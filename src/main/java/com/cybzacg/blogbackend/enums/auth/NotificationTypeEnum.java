@@ -18,7 +18,9 @@ public enum NotificationTypeEnum {
     SYSTEM_ANNOUNCEMENT("system_announcement", "系统公告"),
     AI_TASK_DONE("ai_task_done", "AI任务完成"),
     REPORT_RESULT("report_result", "举报处理结果"),
-    FORUM_POST_ESSENCE("forum_post_essence", "论坛帖子设为精华");
+    FORUM_POST_ESSENCE("forum_post_essence", "论坛帖子设为精华"),
+    FORUM_REPLY_ME("forum_reply_me", "论坛回复我"),
+    FORUM_LIKE_ME("forum_like_me", "论坛点赞我");
 
     private final String code;
     private final String label;
@@ -60,6 +62,8 @@ public enum NotificationTypeEnum {
             case AI_TASK_DONE -> !Integer.valueOf(0).equals(setting.getAiTaskNoticeEnabled());
             case REPORT_RESULT -> !Integer.valueOf(0).equals(setting.getReportResultNoticeEnabled());
             case FORUM_POST_ESSENCE -> !Integer.valueOf(0).equals(setting.getForumEssenceNoticeEnabled());
+            case FORUM_REPLY_ME -> !Integer.valueOf(0).equals(setting.getForumReplyNoticeEnabled());
+            case FORUM_LIKE_ME -> !Integer.valueOf(0).equals(setting.getForumLikeNoticeEnabled());
         };
     }
 
@@ -77,6 +81,8 @@ public enum NotificationTypeEnum {
             case AI_TASK_DONE -> setting.setAiTaskNoticeEnabled(value);
             case REPORT_RESULT -> setting.setReportResultNoticeEnabled(value);
             case FORUM_POST_ESSENCE -> setting.setForumEssenceNoticeEnabled(value);
+            case FORUM_REPLY_ME -> setting.setForumReplyNoticeEnabled(value);
+            case FORUM_LIKE_ME -> setting.setForumLikeNoticeEnabled(value);
         }
     }
 }

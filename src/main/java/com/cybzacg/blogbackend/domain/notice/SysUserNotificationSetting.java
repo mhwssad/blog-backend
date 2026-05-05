@@ -82,6 +82,16 @@ public class SysUserNotificationSetting {
     private Integer forumEssenceNoticeEnabled;
 
     /**
+     * 论坛回复通知开关
+     */
+    private Integer forumReplyNoticeEnabled;
+
+    /**
+     * 论坛点赞通知开关
+     */
+    private Integer forumLikeNoticeEnabled;
+
+    /**
      * 创建时间
      */
     private LocalDateTime createdAt;

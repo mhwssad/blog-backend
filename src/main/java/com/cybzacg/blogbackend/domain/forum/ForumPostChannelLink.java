@@ -25,5 +25,7 @@ public class ForumPostChannelLink {
     private Long linkedBy;
     /** 关联时间 */
     private LocalDateTime linkedAt;
+    /** 状态：0-失效，1-正常 */
+    private Integer status;
     private LocalDateTime createdAt;
 }
