@@ -14,11 +14,14 @@ import com.cybzacg.blogbackend.module.chat.conversation.repository.ForumPostChan
 import com.cybzacg.blogbackend.module.chat.conversation.service.ForumPostChannelLinkService;
 import com.cybzacg.blogbackend.module.chat.governance.service.ChatMuteGovernanceService;
 import com.cybzacg.blogbackend.module.chat.member.repository.ChatConversationMemberRepository;
+import com.cybzacg.blogbackend.module.chat.message.model.user.ChatSendTextRequest;
+import com.cybzacg.blogbackend.module.chat.message.service.ChatMessageSendService;
 import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.forum.repository.ForumPostRepository;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +30,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ForumPostChannelLinkServiceImpl implements ForumPostChannelLinkService {
@@ -35,6 +39,7 @@ public class ForumPostChannelLinkServiceImpl implements ForumPostChannelLinkServ
     private final ChatConversationMemberRepository chatConversationMemberRepository;
     private final ForumPostRepository forumPostRepository;
     private final ChatMuteGovernanceService chatMuteGovernanceService;
+    private final ChatMessageSendService chatMessageSendService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -92,6 +97,9 @@ public class ForumPostChannelLinkServiceImpl implements ForumPostChannelLinkServ
             // 并发插入 - 获取已有记录
             link = findPostLink(forumPostId);
         }
+
+        // 向频道发送帖子分享摘要消息
+        sendShareSummaryMessage(userId, post, conversationId);
 
         return toVO(link, conversation.getName());
     }
@@ -170,5 +178,19 @@ public class ForumPostChannelLinkServiceImpl implements ForumPostChannelLinkServ
             case ChatConstants.SCENE_TYPE_USER_GROUP -> "group";
             default -> null;
         };
+    }
+
+    private void sendShareSummaryMessage(Long userId, ForumPost post, Long conversationId) {
+        String summary = "分享了帖子「" + post.getTitle() + "」";
+        ChatSendTextRequest request = new ChatSendTextRequest();
+        request.setConversationId(conversationId);
+        request.setContent(summary);
+        try {
+            chatMessageSendService.sendTextMessage(userId, request);
+        } catch (Exception ex) {
+            // 摘要消息非关键路径，失败不影响分享结果
+            log.warn("分享帖子到频道摘要消息发送失败 [postId={}, conversationId={}]: {}",
+                    post.getId(), conversationId, ex.getMessage());
+        }
     }
 }
