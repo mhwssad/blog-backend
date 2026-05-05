@@ -60,7 +60,8 @@ CREATE TABLE `sys_menu`
     `create_time` datetime    NULL COMMENT '创建时间',
     `update_time` datetime    NULL COMMENT '更新时间',
     `params`      json        NULL COMMENT '路由参数',
-    PRIMARY KEY (`id`) USING BTREE
+    PRIMARY KEY (`id`) USING BTREE,
+    KEY `idx_sys_menu_perm` (`perm`) COMMENT '权限标识查询索引'
 ) ENGINE = InnoDB
   CHARACTER SET = utf8mb4 COMMENT = '系统菜单表';
 
@@ -129,7 +130,10 @@ CREATE TABLE `sys_log`
     `create_by`        bigint COMMENT '创建人ID',
     `create_time`      datetime COMMENT '创建时间',
     PRIMARY KEY (`id`) USING BTREE,
-    KEY `idx_create_time` (`create_time`)
+    KEY `idx_create_time` (`create_time`),
+    KEY `idx_sys_log_create_by_time` (`create_by`, `create_time`) COMMENT '按操作人和时间查询日志',
+    KEY `idx_sys_log_method_time` (`request_method`, `create_time`) COMMENT '按请求方式和时间查询日志',
+    KEY `idx_sys_log_module_time` (`module`, `create_time`) COMMENT '按模块和时间查询日志'
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='系统操作日志表';
 
@@ -700,3 +704,18 @@ CREATE TABLE `ai_mcp_tool_snapshot`
     KEY `idx_ai_mcp_tool_snapshot_tool_code` (`tool_code`) COMMENT '同步工具编码查询'
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='AI MCP 工具快照表';
+
+DROP TABLE IF EXISTS `ai_message_attachment`;
+CREATE TABLE `ai_message_attachment`
+(
+    `id`         bigint       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `message_id` bigint       NOT NULL COMMENT '关联 ai_chat_message.id',
+    `file_id`    bigint       NOT NULL COMMENT '关联 file_info.id',
+    `file_type`  varchar(32)  NOT NULL COMMENT '文件类型：image/document/audio/video/other',
+    `mime_type`  varchar(128) NULL COMMENT '文件 MIME 类型',
+    `created_at` datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    INDEX `idx_message_id` (`message_id`),
+    UNIQUE INDEX `uk_message_file` (`message_id`, `file_id`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='AI 消息附件关联表';
