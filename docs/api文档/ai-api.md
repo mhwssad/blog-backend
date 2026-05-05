@@ -963,6 +963,9 @@ Content-Type: application/json
 }
 ```
 
+`dataScopeJson` 仅支持 `AiDataScopeEnum` 声明的数据范围 code 或枚举名数组，例如 `["public_articles"]`、`["PUBLIC_ARTICLES"]`、`["PROFILE"]`。
+若出现未知范围、非 JSON 数组或空数组，服务返回 `40011` 非法参数。
+
 #### 4.6.4 异常场景
 
 | 场景 | 错误码 | 说明 |
@@ -970,6 +973,7 @@ Content-Type: application/json
 | Agent 不存在 | 73001 | ID 无效 |
 | Agent 已停用 | 73002 | 用户发起任务时 agent 未启用 |
 | Agent 名称重复 | 73003 | 同名 agent 已存在 |
+| 数据范围非法 | 40011 | `dataScopeJson` 不是合法数组或包含未知范围 |
 
 ### 4.7 后台 AI Agent 任务管理
 

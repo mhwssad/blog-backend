@@ -2,8 +2,11 @@ package com.cybzacg.blogbackend.module.ai.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.ai.AiAgentDefinition;
+import com.cybzacg.blogbackend.enums.ai.AiDataScopeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.ai.constant.AiConstants;
 import com.cybzacg.blogbackend.module.ai.convert.AiModelConvert;
@@ -13,11 +16,13 @@ import com.cybzacg.blogbackend.module.ai.model.admin.AiAgentDefinitionVO;
 import com.cybzacg.blogbackend.module.ai.repository.AiAgentDefinitionRepository;
 import com.cybzacg.blogbackend.module.ai.service.AiAgentDefinitionAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
+import com.cybzacg.blogbackend.utils.JsonUtils;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -63,6 +68,7 @@ public class AiAgentDefinitionAdminServiceImpl implements AiAgentDefinitionAdmin
     @Transactional(rollbackFor = Exception.class)
     public AiAgentDefinitionVO createDefinition(AiAgentDefinitionSaveRequest request, Long operatorId) {
         validateNameUnique(request.getName(), null);
+        validateDataScopeJson(request.getDataScopeJson());
 
         AiAgentDefinition definition = aiModelConvert.toAgentDefinition(request);
         definition.setEnabled(1);
@@ -83,6 +89,7 @@ public class AiAgentDefinitionAdminServiceImpl implements AiAgentDefinitionAdmin
                 ResultErrorCode.AI_AGENT_NOT_FOUND);
 
         validateNameUnique(request.getName(), id);
+        validateDataScopeJson(request.getDataScopeJson());
 
         aiModelConvert.updateAgentDefinition(request, definition);
         definition.setUpdatedBy(operatorId);
@@ -125,6 +132,42 @@ public class AiAgentDefinitionAdminServiceImpl implements AiAgentDefinitionAdmin
         AiAgentDefinition existing = aiAgentDefinitionRepository.findByName(name);
         if (existing != null && !existing.getId().equals(excludeId)) {
             ExceptionThrowerCore.throwBusiness(ResultErrorCode.AI_AGENT_NAME_DUPLICATE);
+        }
+    }
+
+    /**
+     * 校验 Agent 数据读取范围，确保只使用 AI 统一数据范围枚举声明的能力。
+     */
+    private void validateDataScopeJson(String dataScopeJson) {
+        if (!StringUtils.hasText(dataScopeJson)) {
+            return;
+        }
+        List<String> scopes;
+        try {
+            scopes = JsonUtils.getObjectMapper().readValue(dataScopeJson, new TypeReference<>() {
+            });
+        } catch (JsonProcessingException e) {
+            ExceptionThrowerCore.throwBusiness(ResultErrorCode.ILLEGAL_ARGUMENT, "Agent 数据读取范围必须是字符串数组 JSON");
+            return;
+        }
+        ExceptionThrowerCore.throwBusinessIf(
+                scopes == null || scopes.stream().anyMatch(scope -> !isValidDataScope(scope)),
+                ResultErrorCode.ILLEGAL_ARGUMENT,
+                "Agent 数据读取范围包含未知配置");
+    }
+
+    private boolean isValidDataScope(String scope) {
+        if (!StringUtils.hasText(scope)) {
+            return false;
+        }
+        if (AiDataScopeEnum.fromCode(scope) != null) {
+            return true;
+        }
+        try {
+            AiDataScopeEnum.valueOf(scope);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
         }
     }
 }
