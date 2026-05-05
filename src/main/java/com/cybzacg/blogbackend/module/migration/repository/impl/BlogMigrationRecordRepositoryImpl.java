@@ -32,6 +32,8 @@ public class BlogMigrationRecordRepositoryImpl
     public BlogMigrationRecord findByIdempotentKey(String idempotentKey) {
         return getOne(new LambdaQueryWrapper<BlogMigrationRecord>()
                 .eq(BlogMigrationRecord::getIdempotentKey, idempotentKey)
+                .eq(BlogMigrationRecord::getStatus, com.cybzacg.blogbackend.enums.migration.BlogMigrationRecordStatusEnum.SUCCESS.getValue())
+                .isNotNull(BlogMigrationRecord::getTargetArticleId)
                 .last("limit 1"), false);
     }
 

@@ -22,6 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URLConnection;
 import java.security.MessageDigest;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -37,6 +38,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class BlogMigrationAttachmentImportServiceImpl implements BlogMigrationAttachmentImportService {
     private static final String FILE_CATEGORY_ATTACHMENT = "attachment";
+    private static final long MAX_ATTACHMENT_BYTES = 50L * 1024 * 1024;
+    private static final int CONNECTION_TIMEOUT_MS = 10_000;
+    private static final int READ_TIMEOUT_MS = 30_000;
 
     private final FileInfoRepository fileInfoRepository;
     private final StorageManager storageManager;
@@ -92,12 +96,17 @@ public class BlogMigrationAttachmentImportServiceImpl implements BlogMigrationAt
      * 从外部 URL 下载附件内容。v1 为同步迁移，后续如需限速或异步队列可替换本方法边界。
      */
     private byte[] downloadBytes(String url) throws Exception {
-        try (InputStream inputStream = URI.create(url).toURL().openStream();
+        URLConnection connection = URI.create(url).toURL().openConnection();
+        connection.setConnectTimeout(CONNECTION_TIMEOUT_MS);
+        connection.setReadTimeout(READ_TIMEOUT_MS);
+        try (InputStream inputStream = connection.getInputStream();
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             byte[] buffer = new byte[8192];
             int len;
             while ((len = inputStream.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, len);
+                ExceptionThrowerCore.throwBusinessIf(outputStream.size() > MAX_ATTACHMENT_BYTES,
+                        ResultErrorCode.MIGRATION_ATTACHMENT_DOWNLOAD_FAILED, "附件超出大小限制");
             }
             return outputStream.toByteArray();
         }

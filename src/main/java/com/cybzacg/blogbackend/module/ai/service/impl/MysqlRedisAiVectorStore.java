@@ -62,15 +62,23 @@ public class MysqlRedisAiVectorStore implements AiVectorStore {
     }
 
     private List<AiKnowledgeChunk> loadActiveChunks() {
-        List<AiKnowledgeChunk> cached = redisOperator.get(
-                RedisConstants.AI_RAG_ACTIVE_CHUNKS_CACHE_KEY,
-                new TypeReference<>() {
-                });
-        if (cached != null && !cached.isEmpty()) {
-            return cached;
+        try {
+            List<AiKnowledgeChunk> cached = redisOperator.get(
+                    RedisConstants.AI_RAG_ACTIVE_CHUNKS_CACHE_KEY,
+                    new TypeReference<>() {
+                    });
+            if (cached != null && !cached.isEmpty()) {
+                return cached;
+            }
+        } catch (RuntimeException ex) {
+            // Redis 缓存不可用时回源 MySQL，保证 RAG 仍可工作
         }
         List<AiKnowledgeChunk> chunks = aiKnowledgeChunkRepository.listActiveForSearch(DEFAULT_SEARCH_SCAN_LIMIT);
-        redisOperator.set(RedisConstants.AI_RAG_ACTIVE_CHUNKS_CACHE_KEY, chunks, ragProperties.getCacheTtl());
+        try {
+            redisOperator.set(RedisConstants.AI_RAG_ACTIVE_CHUNKS_CACHE_KEY, chunks, ragProperties.getCacheTtl());
+        } catch (RuntimeException ex) {
+            // 缓存写入失败不影响检索主链路
+        }
         return chunks;
     }
 
