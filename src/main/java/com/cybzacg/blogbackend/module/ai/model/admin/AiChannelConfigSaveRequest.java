@@ -41,6 +41,21 @@ public class AiChannelConfigSaveRequest {
     @Schema(description = "上下文长度上限，0表示不限制")
     private Integer maxContextTokens;
 
+    @Schema(description = "单次输入最大token预算，null表示不限")
+    private Integer maxInputTokens;
+
+    @Schema(description = "历史上下文最大token预算，null表示不限")
+    private Integer maxHistoryTokens;
+
+    @Schema(description = "RAG上下文最大token预算，null表示不限")
+    private Integer maxRagTokens;
+
+    @Schema(description = "附件最大token预算，null表示不限")
+    private Integer maxAttachmentTokens;
+
+    @Schema(description = "输出最大token预算，null表示不限")
+    private Integer maxOutputTokens;
+
     @Schema(description = "可读取数据范围配置JSON")
     private String dataScopeJson;
 
