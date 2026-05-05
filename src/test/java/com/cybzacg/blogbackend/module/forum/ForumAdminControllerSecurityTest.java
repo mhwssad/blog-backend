@@ -4,13 +4,19 @@ import com.cybzacg.blogbackend.core.security.SecurityPermissionChecker;
 import com.cybzacg.blogbackend.core.util.HttpServletResponseUtils;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.module.forum.controller.ForumPostAdminController;
+import com.cybzacg.blogbackend.module.forum.controller.ForumReplyAdminController;
 import com.cybzacg.blogbackend.module.forum.controller.ForumSectionAdminController;
 import com.cybzacg.blogbackend.module.forum.model.admin.ForumSectionAdminVO;
+import com.cybzacg.blogbackend.module.forum.service.ForumPostAdminService;
+import com.cybzacg.blogbackend.module.forum.service.ForumReplyAdminService;
 import com.cybzacg.blogbackend.module.forum.service.ForumSectionAdminService;
+import com.cybzacg.blogbackend.utils.SecurityUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
+import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,9 +39,11 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -53,12 +61,16 @@ class ForumAdminControllerSecurityTest {
     private WebApplicationContext webApplicationContext;
     @Autowired
     private ForumSectionAdminService forumSectionAdminService;
+    @Autowired
+    private ForumPostAdminService forumPostAdminService;
+    @Autowired
+    private ForumReplyAdminService forumReplyAdminService;
 
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
-        Mockito.reset(forumSectionAdminService);
+        Mockito.reset(forumSectionAdminService, forumPostAdminService, forumReplyAdminService);
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
                 .apply(springSecurity())
                 .build();
@@ -205,6 +217,204 @@ class ForumAdminControllerSecurityTest {
         verify(forumSectionAdminService, never()).deleteSection(10L);
     }
 
+    @Test
+    @WithMockUser(authorities = "content:forum:query")
+    void pagePostsShouldAllowAuthorizedUser() throws Exception {
+        when(forumPostAdminService.pagePosts(any())).thenReturn(PageResult.empty());
+
+        mockMvc.perform(get("/api/sys/forum/posts"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()));
+
+        verify(forumPostAdminService).pagePosts(any());
+    }
+
+    @Test
+    @WithMockUser(authorities = "content:forum:update")
+    void pagePostsShouldRejectUserWithoutQueryPermission() throws Exception {
+        mockMvc.perform(get("/api/sys/forum/posts"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(ResultErrorCode.FORBIDDEN.getCode()));
+
+        verify(forumPostAdminService, never()).pagePosts(any());
+    }
+
+    @Test
+    @WithMockUser(authorities = "content:forum:query")
+    void getPostShouldAllowAuthorizedUser() throws Exception {
+        mockMvc.perform(get("/api/sys/forum/posts/20"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()));
+
+        verify(forumPostAdminService).getPost(20L);
+    }
+
+    @Test
+    @WithMockUser(authorities = "content:forum:update")
+    void hidePostShouldAllowAuthorizedUser() throws Exception {
+        try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class, CALLS_REAL_METHODS)) {
+            securityUtils.when(SecurityUtils::requireUserId).thenReturn(99L);
+            mockMvc.perform(put("/api/sys/forum/posts/20/hide"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()));
+        }
+
+        verify(forumPostAdminService).hidePost(eq(20L), eq(99L), any(), any());
+    }
+
+    @Test
+    @WithMockUser(authorities = "content:forum:query")
+    void hidePostShouldRejectUserWithoutUpdatePermission() throws Exception {
+        mockMvc.perform(put("/api/sys/forum/posts/20/hide"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(ResultErrorCode.FORBIDDEN.getCode()));
+
+        verify(forumPostAdminService, never()).hidePost(eq(20L), any(), any(), any());
+    }
+
+    @Test
+    @WithMockUser(authorities = "content:forum:update")
+    void restorePostShouldAllowAuthorizedUser() throws Exception {
+        try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class, CALLS_REAL_METHODS)) {
+            securityUtils.when(SecurityUtils::requireUserId).thenReturn(99L);
+            mockMvc.perform(put("/api/sys/forum/posts/20/restore"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()));
+        }
+
+        verify(forumPostAdminService).restorePost(eq(20L), eq(99L), any(), any());
+    }
+
+    @Test
+    @WithMockUser(authorities = "content:forum:delete")
+    void deletePostShouldAllowAuthorizedUser() throws Exception {
+        try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class, CALLS_REAL_METHODS)) {
+            securityUtils.when(SecurityUtils::requireUserId).thenReturn(99L);
+            mockMvc.perform(delete("/api/sys/forum/posts/20"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()));
+        }
+
+        verify(forumPostAdminService).deletePost(eq(20L), eq(99L), any(), any());
+    }
+
+    @Test
+    @WithMockUser(authorities = "content:forum:query")
+    void deletePostShouldRejectUserWithoutDeletePermission() throws Exception {
+        mockMvc.perform(delete("/api/sys/forum/posts/20"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(ResultErrorCode.FORBIDDEN.getCode()));
+
+        verify(forumPostAdminService, never()).deletePost(eq(20L), any(), any(), any());
+    }
+
+    @Test
+    @WithMockUser(authorities = "content:forum:update")
+    void toggleTopShouldAllowAuthorizedUser() throws Exception {
+        try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class, CALLS_REAL_METHODS)) {
+            securityUtils.when(SecurityUtils::requireUserId).thenReturn(99L);
+            mockMvc.perform(put("/api/sys/forum/posts/20/top?enabled=true"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()));
+        }
+
+        verify(forumPostAdminService).toggleTop(eq(20L), eq(true), eq(99L), any(), any());
+    }
+
+    @Test
+    @WithMockUser(authorities = "content:forum:update")
+    void toggleEssenceShouldAllowAuthorizedUser() throws Exception {
+        try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class, CALLS_REAL_METHODS)) {
+            securityUtils.when(SecurityUtils::requireUserId).thenReturn(99L);
+            mockMvc.perform(put("/api/sys/forum/posts/20/essence?enabled=true"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()));
+        }
+
+        verify(forumPostAdminService).toggleEssence(eq(20L), eq(true), eq(99L), any(), any());
+    }
+
+    @Test
+    @WithMockUser(authorities = "content:forum:query")
+    void pageRepliesShouldAllowAuthorizedUser() throws Exception {
+        when(forumReplyAdminService.pageReplies(any())).thenReturn(PageResult.empty());
+
+        mockMvc.perform(get("/api/sys/forum/replies"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()));
+
+        verify(forumReplyAdminService).pageReplies(any());
+    }
+
+    @Test
+    @WithMockUser(authorities = "content:forum:update")
+    void pageRepliesShouldRejectUserWithoutQueryPermission() throws Exception {
+        mockMvc.perform(get("/api/sys/forum/replies"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(ResultErrorCode.FORBIDDEN.getCode()));
+
+        verify(forumReplyAdminService, never()).pageReplies(any());
+    }
+
+    @Test
+    @WithMockUser(authorities = "content:forum:update")
+    void hideReplyShouldAllowAuthorizedUser() throws Exception {
+        try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class, CALLS_REAL_METHODS)) {
+            securityUtils.when(SecurityUtils::requireUserId).thenReturn(99L);
+            mockMvc.perform(put("/api/sys/forum/replies/100/hide"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()));
+        }
+
+        verify(forumReplyAdminService).hideReply(eq(100L), eq(99L), any(), any());
+    }
+
+    @Test
+    @WithMockUser(authorities = "content:forum:query")
+    void hideReplyShouldRejectUserWithoutUpdatePermission() throws Exception {
+        mockMvc.perform(put("/api/sys/forum/replies/100/hide"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(ResultErrorCode.FORBIDDEN.getCode()));
+
+        verify(forumReplyAdminService, never()).hideReply(eq(100L), any(), any(), any());
+    }
+
+    @Test
+    @WithMockUser(authorities = "content:forum:update")
+    void restoreReplyShouldAllowAuthorizedUser() throws Exception {
+        try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class, CALLS_REAL_METHODS)) {
+            securityUtils.when(SecurityUtils::requireUserId).thenReturn(99L);
+            mockMvc.perform(put("/api/sys/forum/replies/100/restore"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()));
+        }
+
+        verify(forumReplyAdminService).restoreReply(eq(100L), eq(99L), any(), any());
+    }
+
+    @Test
+    @WithMockUser(authorities = "content:forum:delete")
+    void deleteReplyShouldAllowAuthorizedUser() throws Exception {
+        try (MockedStatic<SecurityUtils> securityUtils = mockStatic(SecurityUtils.class, CALLS_REAL_METHODS)) {
+            securityUtils.when(SecurityUtils::requireUserId).thenReturn(99L);
+            mockMvc.perform(delete("/api/sys/forum/replies/100"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()));
+        }
+
+        verify(forumReplyAdminService).deleteReply(eq(100L), eq(99L), any(), any());
+    }
+
+    @Test
+    @WithMockUser(authorities = "content:forum:query")
+    void deleteReplyShouldRejectUserWithoutDeletePermission() throws Exception {
+        mockMvc.perform(delete("/api/sys/forum/replies/100"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(ResultErrorCode.FORBIDDEN.getCode()));
+
+        verify(forumReplyAdminService, never()).deleteReply(eq(100L), any(), any(), any());
+    }
+
     @Configuration
     @EnableWebMvc
     @EnableWebSecurity
@@ -216,8 +426,28 @@ class ForumAdminControllerSecurityTest {
         }
 
         @Bean
+        ForumPostAdminService forumPostAdminService() {
+            return mock(ForumPostAdminService.class);
+        }
+
+        @Bean
+        ForumReplyAdminService forumReplyAdminService() {
+            return mock(ForumReplyAdminService.class);
+        }
+
+        @Bean
         ForumSectionAdminController forumSectionAdminController(ForumSectionAdminService forumSectionAdminService) {
             return new ForumSectionAdminController(forumSectionAdminService);
+        }
+
+        @Bean
+        ForumPostAdminController forumPostAdminController(ForumPostAdminService forumPostAdminService) {
+            return new ForumPostAdminController(forumPostAdminService);
+        }
+
+        @Bean
+        ForumReplyAdminController forumReplyAdminController(ForumReplyAdminService forumReplyAdminService) {
+            return new ForumReplyAdminController(forumReplyAdminService);
         }
 
         @Bean("permission")

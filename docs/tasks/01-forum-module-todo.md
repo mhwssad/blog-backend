@@ -4,7 +4,7 @@
 
 ## 1. 当前状态
 
-**当前阶段：P1 联动与通知已完成，后台版块测试已补强。**
+**当前阶段：P1 联动与通知已完成，测试补强已完成。**
 
 ```
 可复用基线:
@@ -18,7 +18,7 @@
   ✅ 后台帖子 / 回复治理
   ✅ 联动与通知
   ✅ 后台版块测试补强
-  ⏳ 后台帖子/回复治理测试补强
+  ✅ 后台帖子/回复治理测试补强
 ```
 
 ## 2. P0 基础数据模型
@@ -76,8 +76,8 @@
 - [x] 补齐后台版块分页、详情、新增、修改、状态、删除空版块服务级测试。
 - [x] 补齐有帖子版块删除失败测试。
 - [x] 补齐后台版块权限测试。
-- [ ] 补齐后台帖子 / 回复治理服务级测试。
-- [ ] 补齐后台帖子 / 回复治理权限测试。
+- [x] 补齐后台帖子 / 回复治理服务级测试。
+- [x] 补齐后台帖子 / 回复治理权限测试。
 - [x] 更新 `docs/api文档`。
 - [x] 如新增表结构，更新原始建表脚本。
 
@@ -96,6 +96,8 @@
 - 联动与通知已完成：回复帖子/回复通知作者（排除自己通知自己）、点赞通知作者、精华通知作者、分享帖子到频道生成摘要消息、后台隐藏/删除帖子时失效频道关联（恢复时重新激活）。
 - 后台版块测试已补强：新增 `ForumSectionAdminServiceImplTest` 覆盖分页规范化、详情、新增、修改、状态变更、删除空版块和有帖子删除失败；新增 `ForumAdminControllerSecurityTest` 覆盖 `content:forum:query/create/update/delete` 权限入口。
 - 已同步修复既有测试构造器依赖滞后问题：`UserForumServiceImplTest`、`ForumPostChannelLinkServiceImplTest`、`ReportAdminServiceImplTest`。
+- 后台帖子 / 回复治理测试已补强：新增 `ForumPostAdminServiceImplTest` 和 `ForumReplyAdminServiceImplTest`，覆盖分页富化、隐藏、恢复、删除、置顶、精华、通知、频道挂接失效、知识库事件和审计日志；扩展 `ForumAdminControllerSecurityTest` 覆盖帖子 / 回复后台治理权限入口。
+- 已执行：`mvn -q "-Dtest=PublicForumServiceImplTest,UserForumServiceImplTest,ForumPostChannelLinkServiceImplTest,ForumSectionAdminServiceImplTest,ForumPostAdminServiceImplTest,ForumReplyAdminServiceImplTest,ForumAdminControllerSecurityTest,ReportAdminServiceImplTest" test`。
 
 ## 9. 完成标志
 
