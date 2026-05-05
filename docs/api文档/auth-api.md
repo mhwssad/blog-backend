@@ -12,11 +12,12 @@
 
 | 路由前缀                   | 用途                  | 是否需要登录 |
 |------------------------|---------------------|--------|
-| `/api/auth/**`         | 登录、注册、刷新令牌、获取当前登录用户 | 部分需要   |
+| `/api/auth/**`         | 登录、注册、刷新令牌、获取当前登录用户、找回密码 | 部分需要   |
 | `/api/auth/takeover/**` | 账号接管认证接口           | 需要     |
-| `/api/users/**`        | 公开用户 / 作者主页摘要接口     | 否      |
+| `/api/users/**`        | 公开用户 / 作者主页摘要 / 用户搜索接口 | 否      |
 | `/api/admin/**`        | 超级管理员操作接口           | 需要     |
 | `/api/sys/**`          | 后台管理接口              | 需要     |
+| `/api/user/profile`    | 登录用户个人资料（查看/更新/修改密码） | 需要     |
 | `/api/user/author-applications/**` | 登录用户作者申请接口         | 需要     |
 | `/api/user/notification-settings/**` | 登录用户通知设置接口         | 需要     |
 | `/api/user/notices/**` | 登录用户通知中心            | 需要     |
@@ -646,7 +647,7 @@ Authorization: Bearer <accessToken>
 | 查看最近一次申请 | `GET /api/user/author-applications/latest` |
 | 查看申请记录 | `GET /api/user/author-applications` |
 
-### 6.2 提交作者申请
+### 8.2 提交作者申请
 
 - 请求：`POST /api/user/author-applications`
 - 鉴权：是
@@ -664,13 +665,13 @@ Authorization: Bearer <accessToken>
     - 最近一次申请为 `待补充` 时，重新提交会复用原申请并重置为 `待审核`。
     - 当前用户已有作者角色或最近一次申请已通过时，不允许重复申请。
 
-### 6.3 查看最近一次申请
+### 8.3 查看最近一次申请
 
 - 请求：`GET /api/user/author-applications/latest`
 - 鉴权：是
 - 响应：`UserAuthorApplicationVO`，无记录时 `data = null`
 
-### 6.4 查看我的申请记录
+### 8.4 查看我的申请记录
 
 - 请求：`GET /api/user/author-applications`
 - 鉴权：是
@@ -697,9 +698,9 @@ Authorization: Bearer <accessToken>
 | `submittedAt` | DateTime | 提交时间 |
 | `reviewedAt` | DateTime | 审核时间 |
 
-## 7. 登录用户通知中心
+## 9. 登录用户通知中心
 
-### 7.1 通知设置接口
+### 9.1 通知设置接口
 
 | 场景 | 接口 |
 | --- | --- |
@@ -774,7 +775,7 @@ Authorization: Bearer <accessToken>
     - 频道公告通知在主题频道公告内容变更且新公告非空时投递给频道活跃成员。
     - 用户关闭 `system_announcement` 后，全局系统公告不进入“我的通知”列表和未读数，也不能打开详情；定向业务通知仍按各自类型的投递开关处理。
 
-### 7.2 用户等级与经验值
+### 9.2 用户等级与经验值
 
 | 场景 | 接口 |
 | --- | --- |
@@ -801,7 +802,7 @@ Authorization: Bearer <accessToken>
     - 每日经验有上限配置，超出上限后当日不再累计。
     - 进度按当前经验占下一级所需经验的百分比计算。
 
-### 7.3 页面会用到哪些接口
+### 9.3 页面会用到哪些接口
 
 | 场景           | 接口                                   |
 |--------------|--------------------------------------|
@@ -811,7 +812,7 @@ Authorization: Bearer <accessToken>
 | 单条标记已读       | `POST /api/user/notices/{id}/read`   |
 | 全部标记已读       | `POST /api/user/notices/read-all`    |
 
-### 7.4 我的通知列表
+### 9.4 我的通知列表
 
 - 请求：`GET /api/user/notices`
 - 鉴权：是
@@ -840,36 +841,36 @@ Authorization: Bearer <accessToken>
 | `businessId`  | Long     | 业务目标 ID，无则不返回 |
 | `actionPath`  | String   | 前端跳转路径（如 `/ai/agents/tasks/42`），无则不返回 |
 
-### 7.5 我的通知详情
+### 9.5 我的通知详情
 
 - 请求：`GET /api/user/notices/{id}`
 - 鉴权：是
 - 路径参数：`id`
 - 前端注意：按当前实现，读取详情会顺带更新阅读状态。
 
-### 7.6 未读数量
+### 9.6 未读数量
 
 - 请求：`GET /api/user/notices/unread-count`
 - 鉴权：是
 - 响应：`Long`
 
-### 7.7 单条已读
+### 9.7 单条已读
 
 - 请求：`POST /api/user/notices/{id}/read`
 - 鉴权：是
 - 响应：`data = null`
 
-### 7.8 全部已读
+### 9.8 全部已读
 
 - 请求：`POST /api/user/notices/read-all`
 - 鉴权：是
 - 响应：`data = null`
 
-## 8. 后台系统管理接口
+## 10. 后台系统管理接口
 
 这一组接口主要对应后台管理台的系统模块。所有接口都要求登录，并且需要对应权限码。
 
-### 8.1 用户管理
+### 10.1 用户管理
 
 #### 接口速览
 
@@ -967,7 +968,7 @@ Authorization: Bearer <accessToken>
 }
 ```
 
-### 8.2 角色管理
+### 10.2 角色管理
 
 #### 接口速览
 
@@ -1040,7 +1041,7 @@ Authorization: Bearer <accessToken>
 }
 ```
 
-### 8.3 菜单管理
+### 10.3 菜单管理
 
 #### 接口速览
 
@@ -1101,7 +1102,7 @@ Authorization: Bearer <accessToken>
 | `redirect`   | String  | 否  | 跳转地址            |
 | `params`     | Object  | 否  | 路由参数            |
 
-### 8.4 系统配置管理
+### 10.4 系统配置管理
 
 #### 接口速览
 
@@ -1161,7 +1162,7 @@ Authorization: Bearer <accessToken>
 - 配置值 `<= 0` 时表示关闭登录失败锁定能力。
 - `auth.login-fail.lock-minutes`：登录失败达到阈值后的锁定时长（分钟），默认 `15`。
 
-### 8.5 后台通知管理
+### 10.5 后台通知管理
 
 #### 接口速览
 
@@ -1219,7 +1220,7 @@ Authorization: Bearer <accessToken>
 | `targetType`    | Integer    | 是  | `1` 全体，`2` 指定 |
 | `targetUserIds` | List<Long> | 否  | 指定用户时使用       |
 
-### 8.6 后台数据看板
+### 10.6 后台数据看板
 
 #### 接口速览
 
@@ -1274,7 +1275,7 @@ AI 统计响应字段：`aiCallCount`、`aiSuccessCallCount`、`aiFailedCallCoun
 
 治理统计响应字段：`reportCount`、`pendingReportCount`、`processingReportCount`、`handledReportCount`、`rejectedReportCount`。
 
-### 8.7 系统日志管理
+### 10.7 系统日志管理
 
 #### 接口速览
 
@@ -1341,7 +1342,7 @@ AI 统计响应字段：`aiCallCount`、`aiSuccessCallCount`、`aiFailedCallCoun
 
 - 响应：`Long`，表示清理数量
 
-### 8.8 作者申请后台管理
+### 10.8 作者申请后台管理
 
 #### 接口速览
 
@@ -1428,7 +1429,7 @@ AI 统计响应字段：`aiCallCount`、`aiSuccessCallCount`、`aiFailedCallCoun
 - 当文章数量达到上限时，统一在现有文章创建链路中拦截。
 - 若配置值为 `0`，表示该身份类型不限制文章总量。
 
-### 8.9 经验体系管理
+### 10.9 经验体系管理
 
 #### 接口速览
 
@@ -1508,7 +1509,7 @@ AI 统计响应字段：`aiCallCount`、`aiSuccessCallCount`、`aiFailedCallCoun
 }
 ```
 
-### 8.10 审计日志管理
+### 10.10 审计日志管理
 
 审计日志记录超级管理员的敏感操作（封禁/解封、等级调整、角色分配等），仅超级管理员可访问。
 
@@ -1555,7 +1556,7 @@ AI 统计响应字段：`aiCallCount`、`aiSuccessCallCount`、`aiFailedCallCoun
 | `remark` | String | 备注 |
 | `createdAt` | DateTime | 创建时间 |
 
-## 9. 权限标识速查
+## 11. 权限标识速查
 
 | 权限标识                      | 说明        |
 |---------------------------|-----------|
@@ -1601,11 +1602,11 @@ AI 统计响应字段：`aiCallCount`、`aiSuccessCallCount`、`aiFailedCallCoun
 | `sys:experience:adjust`   | 调整用户等级/经验  |
 | `sys:experience:config`   | 管理经验来源配置  |
 
-## 10. 超级管理员操作接口
+## 12. 超级管理员操作接口
 
 这一组接口是超级管理员专属操作，包含 2FA 二次验证、用户封禁/解封、等级与经验调整、账号接管、带审计的角色分配等。
 
-### 10.1 接口速览
+### 12.1 接口速览
 
 | 场景 | 方法 | 路径 | 权限 |
 | --- | --- | --- | --- |
@@ -1618,7 +1619,7 @@ AI 统计响应字段：`aiCallCount`、`aiSuccessCallCount`、`aiFailedCallCoun
 | 账号接管 | POST | `/api/admin/takeover` | `sys:user:takeover` |
 | 带审计的角色分配 | PUT | `/api/admin/users/{id}/roles` | `sys:user:assign-role` |
 
-### 10.2 2FA 二次验证
+### 12.2 2FA 二次验证
 
 #### 发送2FA验证码
 
@@ -1647,7 +1648,7 @@ AI 统计响应字段：`aiCallCount`、`aiSuccessCallCount`、`aiFailedCallCoun
 | `ticket` | String | 2FA 票据，用于后续敏感操作 |
 | `expiresIn` | Long | 票据有效期秒数，默认 30 分钟 |
 
-### 10.3 用户封禁与解封
+### 12.3 用户封禁与解封
 
 #### 封禁用户
 
@@ -1675,7 +1676,7 @@ AI 统计响应字段：`aiCallCount`、`aiSuccessCallCount`、`aiFailedCallCoun
 | `mfaTicket` | String | 是 | 2FA 校验通过的票据 |
 | `unbanReason` | String | 否 | 解封原因 |
 
-### 10.4 用户等级与经验调整
+### 12.4 用户等级与经验调整
 
 #### 调整用户等级
 
@@ -1699,7 +1700,7 @@ AI 统计响应字段：`aiCallCount`、`aiSuccessCallCount`、`aiFailedCallCoun
 | `experience` | Long | 是 | 目标经验值 |
 | `mfaTicket` | String | 是 | 2FA 校验通过的票据 |
 
-### 10.5 账号接管
+### 12.5 账号接管
 
 - 请求：`POST /api/admin/takeover`
 - 鉴权：是，需要 `mfaTicket`
@@ -1723,7 +1724,7 @@ AI 统计响应字段：`aiCallCount`、`aiSuccessCallCount`、`aiFailedCallCoun
     - 接管令牌一次性使用，使用后失效。
     - 所有敏感操作需要先通过 2FA 验证并提供 `mfaTicket`。
 
-### 10.6 带审计的角色分配
+### 12.6 带审计的角色分配
 
 - 请求：`PUT /api/admin/users/{id}/roles`
 - 鉴权：是，需要 `mfaTicket`
@@ -1738,9 +1739,9 @@ AI 统计响应字段：`aiCallCount`、`aiSuccessCallCount`、`aiFailedCallCoun
     - 该接口在普通角色分配基础上追加审计日志。
     - 需要有效的 `mfaTicket` 才能执行操作。
 
-## 11. 账号接管认证接口
+## 13. 账号接管认证接口
 
-### 11.1 使用接管令牌登录
+### 13.1 使用接管令牌登录
 
 - 请求：`POST /api/auth/takeover/login`
 - 鉴权：否
@@ -1753,7 +1754,7 @@ AI 统计响应字段：`aiCallCount`、`aiSuccessCallCount`、`aiFailedCallCoun
 
 - 响应：同 `AuthenticationToken`
 
-## 12. 常见联调问题
+## 14. 常见联调问题
 
 | 问题                          | 当前行为             |
 |-----------------------------|------------------|
