@@ -1,8 +1,10 @@
 # 认证与系统管理 API
 
-这份文档给前端使用，覆盖三类场景：
+这份文档给前端使用，覆盖以下场景：
 
 - 登录、注册、刷新令牌、退出登录
+- 个人资料查看/更新、修改密码、找回密码
+- 公开用户搜索
 - 后台管理台初始化所需的当前用户与菜单接口
 - 后台系统管理页面，以及登录用户的通知中心
 
@@ -29,7 +31,10 @@
 - `POST /api/auth/email-code`
 - `POST /api/auth/email-login`
 - `POST /api/auth/refresh`
+- `POST /api/auth/password-reset/code`
+- `POST /api/auth/password-reset`
 - `GET /api/users/{userId}/author-profile`
+- `GET /api/users/search`
 
 其余接口默认都要带：
 
