@@ -3,13 +3,17 @@ package com.cybzacg.blogbackend.module.dashboard.service.impl;
 import cn.idev.excel.FastExcel;
 import cn.idev.excel.ExcelWriter;
 import cn.idev.excel.write.metadata.WriteSheet;
+import com.cybzacg.blogbackend.common.constant.RedisConstants;
+import com.cybzacg.blogbackend.common.redis.RedisOperator;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.mapper.dashboard.DashboardMetricsMapper;
 import com.cybzacg.blogbackend.module.dashboard.model.admin.*;
 import com.cybzacg.blogbackend.module.dashboard.service.DashboardAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
+import com.cybzacg.blogbackend.utils.JsonUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -26,6 +30,7 @@ import java.util.Locale;
 /**
  * 后台数据看板服务实现。
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DashboardAdminServiceImpl implements DashboardAdminService {
@@ -36,13 +41,15 @@ public class DashboardAdminServiceImpl implements DashboardAdminService {
     private static final String RANGE_CUSTOM = "custom";
     private static final long MAX_CUSTOM_RANGE_DAYS = 366L;
     private static final int HOT_SECTION_LIMIT = 5;
+    private static final Duration CACHE_TTL = Duration.ofSeconds(60);
 
     private final DashboardMetricsMapper dashboardMetricsMapper;
+    private final RedisOperator redisOperator;
 
     @Override
     public DashboardOverviewVO getOverview(DashboardRangeQuery query) {
         DashboardRange range = resolveRange(query);
-        return DashboardOverviewVO.builder()
+        return cacheOrCompute("overview", range, DashboardOverviewVO.class, () -> DashboardOverviewVO.builder()
                 .range(range.toVO())
                 .registeredUserCount(count(dashboardMetricsMapper.countRegisteredUsers(range.startTime(), range.endTime())))
                 .activeUserCount(count(dashboardMetricsMapper.countActiveUsers(range.startTime(), range.endTime())))
@@ -54,26 +61,26 @@ public class DashboardAdminServiceImpl implements DashboardAdminService {
                 .aiCallCount(count(dashboardMetricsMapper.countAiCalls(range.startTime(), range.endTime(), null)))
                 .reportCount(count(dashboardMetricsMapper.countReports(range.startTime(), range.endTime(), null)))
                 .pendingReportCount(count(dashboardMetricsMapper.countReports(null, null, 0)))
-                .build();
+                .build());
     }
 
     @Override
     public DashboardContentVO getContent(DashboardRangeQuery query) {
         DashboardRange range = resolveRange(query);
-        return DashboardContentVO.builder()
+        return cacheOrCompute("content", range, DashboardContentVO.class, () -> DashboardContentVO.builder()
                 .range(range.toVO())
                 .articleCount(count(dashboardMetricsMapper.countArticles(range.startTime(), range.endTime())))
                 .pendingArticleReviewCount(count(dashboardMetricsMapper.countPendingArticleReviews()))
                 .commentCount(count(dashboardMetricsMapper.countComments(range.startTime(), range.endTime())))
                 .likeCount(count(dashboardMetricsMapper.countLikes(range.startTime(), range.endTime())))
                 .collectCount(count(dashboardMetricsMapper.countCollections(range.startTime(), range.endTime())))
-                .build();
+                .build());
     }
 
     @Override
     public DashboardCommunityVO getCommunity(DashboardRangeQuery query) {
         DashboardRange range = resolveRange(query);
-        return DashboardCommunityVO.builder()
+        return cacheOrCompute("community", range, DashboardCommunityVO.class, () -> DashboardCommunityVO.builder()
                 .range(range.toVO())
                 .chatMessageCount(count(dashboardMetricsMapper.countChatMessages(range.startTime(), range.endTime())))
                 .lobbyMessageCount(count(dashboardMetricsMapper.countLobbyMessages(range.startTime(), range.endTime())))
@@ -81,13 +88,13 @@ public class DashboardAdminServiceImpl implements DashboardAdminService {
                 .forumPostCount(count(dashboardMetricsMapper.countForumPosts(range.startTime(), range.endTime())))
                 .forumReplyCount(count(dashboardMetricsMapper.countForumReplies(range.startTime(), range.endTime())))
                 .hotSections(dashboardMetricsMapper.listHotSections(range.startTime(), range.endTime(), HOT_SECTION_LIMIT))
-                .build();
+                .build());
     }
 
     @Override
     public DashboardAiVO getAi(DashboardRangeQuery query) {
         DashboardRange range = resolveRange(query);
-        return DashboardAiVO.builder()
+        return cacheOrCompute("ai", range, DashboardAiVO.class, () -> DashboardAiVO.builder()
                 .range(range.toVO())
                 .aiCallCount(count(dashboardMetricsMapper.countAiCalls(range.startTime(), range.endTime(), null)))
                 .aiSuccessCallCount(count(dashboardMetricsMapper.countAiCalls(range.startTime(), range.endTime(), 1)))
@@ -96,13 +103,13 @@ public class DashboardAdminServiceImpl implements DashboardAdminService {
                 .agentTaskCount(count(dashboardMetricsMapper.countAgentTasks(range.startTime(), range.endTime(), null)))
                 .agentSuccessTaskCount(count(dashboardMetricsMapper.countAgentTasks(range.startTime(), range.endTime(), 2)))
                 .agentFailedTaskCount(count(dashboardMetricsMapper.countAgentTasks(range.startTime(), range.endTime(), 3)))
-                .build();
+                .build());
     }
 
     @Override
     public DashboardGovernanceVO getGovernance(DashboardRangeQuery query) {
         DashboardRange range = resolveRange(query);
-        return DashboardGovernanceVO.builder()
+        return cacheOrCompute("governance", range, DashboardGovernanceVO.class, () -> DashboardGovernanceVO.builder()
                 .range(range.toVO())
                 .reportCount(count(dashboardMetricsMapper.countReports(range.startTime(), range.endTime(), null)))
                 .pendingReportCount(count(dashboardMetricsMapper.countReports(null, null, 0)))
@@ -112,7 +119,7 @@ public class DashboardAdminServiceImpl implements DashboardAdminService {
                 .averageHandleDurationMinutes(defaultDecimal(
                         dashboardMetricsMapper.averageReportHandleDurationMinutes(range.startTime(), range.endTime())))
                 .punishmentDistributions(dashboardMetricsMapper.listPunishmentDistributions(range.startTime(), range.endTime()))
-                .build();
+                .build());
     }
 
     @Override
@@ -243,6 +250,33 @@ public class DashboardAdminServiceImpl implements DashboardAdminService {
 
     private List<Object> row(String name, Object value) {
         return List.of(name, value == null ? "" : value);
+    }
+
+    private <T> T cacheOrCompute(String type, DashboardRange range, Class<T> voClass, java.util.function.Supplier<T> supplier) {
+        String cacheKey = buildCacheKey(type, range);
+        try {
+            Object cached = redisOperator.get(cacheKey);
+            if (cached != null) {
+                return JsonUtils.fromJson(cached.toString(), voClass);
+            }
+        } catch (Exception ex) {
+            log.warn("看板缓存读取异常，回源查询: type={}", type, ex);
+        }
+        T result = supplier.get();
+        try {
+            redisOperator.set(cacheKey, JsonUtils.toJson(result), CACHE_TTL);
+        } catch (Exception ex) {
+            log.warn("看板缓存写入异常，不影响查询: type={}", type, ex);
+        }
+        return result;
+    }
+
+    private String buildCacheKey(String type, DashboardRange range) {
+        return RedisConstants.DASHBOARD_CACHE_PREFIX + RedisConstants.KEY_SEPARATOR
+                + type + RedisConstants.KEY_SEPARATOR
+                + range.rangeType()
+                + (range.startTime() != null ? RedisConstants.KEY_SEPARATOR + range.startTime() : "")
+                + (range.endTime() != null ? RedisConstants.KEY_SEPARATOR + range.endTime() : "");
     }
 
     private DashboardRange resolveRange(DashboardRangeQuery query) {

@@ -21,6 +21,8 @@ public final class RedisConstants {
     public static final String AI_RAG_SEARCH_CACHE_PREFIX = "ai:rag:search";
     public static final String AI_TOOL_EXECUTE_RATE_LIMIT_PREFIX = "ai:tool:execute:rate-limit";
 
+    public static final String DASHBOARD_CACHE_PREFIX = "dashboard";
+
     private RedisConstants() {
     }
 }

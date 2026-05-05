@@ -1,5 +1,6 @@
 package com.cybzacg.blogbackend.module.dashboard;
 
+import com.cybzacg.blogbackend.common.redis.RedisOperator;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.mapper.dashboard.DashboardMetricsMapper;
 import com.cybzacg.blogbackend.module.dashboard.model.admin.*;
@@ -25,12 +26,14 @@ import static org.mockito.Mockito.when;
 class DashboardAdminServiceImplTest {
     @Mock
     private DashboardMetricsMapper dashboardMetricsMapper;
+    @Mock
+    private RedisOperator redisOperator;
 
     private DashboardAdminServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        service = new DashboardAdminServiceImpl(dashboardMetricsMapper);
+        service = new DashboardAdminServiceImpl(dashboardMetricsMapper, redisOperator);
     }
 
     @Test
