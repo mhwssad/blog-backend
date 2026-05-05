@@ -14,6 +14,7 @@ import com.cybzacg.blogbackend.module.chat.conversation.repository.ForumPostChan
 import com.cybzacg.blogbackend.module.chat.conversation.service.impl.ForumPostChannelLinkServiceImpl;
 import com.cybzacg.blogbackend.module.chat.governance.service.ChatMuteGovernanceService;
 import com.cybzacg.blogbackend.module.chat.member.repository.ChatConversationMemberRepository;
+import com.cybzacg.blogbackend.module.chat.message.service.ChatMessageSendService;
 import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.forum.repository.ForumPostRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,6 +46,8 @@ class ForumPostChannelLinkServiceImplTest {
     private ForumPostRepository forumPostRepository;
     @Mock
     private ChatMuteGovernanceService chatMuteGovernanceService;
+    @Mock
+    private ChatMessageSendService chatMessageSendService;
 
     private ForumPostChannelLinkServiceImpl forumPostChannelLinkService;
 
@@ -55,7 +58,8 @@ class ForumPostChannelLinkServiceImplTest {
                 chatConversationRepository,
                 chatConversationMemberRepository,
                 forumPostRepository,
-                chatMuteGovernanceService
+                chatMuteGovernanceService,
+                chatMessageSendService
         );
     }
 
@@ -96,7 +100,7 @@ class ForumPostChannelLinkServiceImplTest {
         BusinessException exception = assertThrows(BusinessException.class,
                 () -> forumPostChannelLinkService.sharePostToChannel(7L, 20L, 99L));
 
-        assertEquals(ResultErrorCode.FORBIDDEN.getCode(), exception.getCode());
+        assertEquals(ResultErrorCode.CHAT_USER_MUTED.getCode(), exception.getCode());
         verify(forumPostChannelLinkRepository, never()).save(any(ForumPostChannelLink.class));
     }
 

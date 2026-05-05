@@ -18,6 +18,10 @@ import com.cybzacg.blogbackend.module.chat.governance.service.ChatAdminService;
 import com.cybzacg.blogbackend.module.chat.governance.service.ChatMuteGovernanceService;
 import com.cybzacg.blogbackend.module.content.comment.repository.SysCommentRepository;
 import com.cybzacg.blogbackend.module.content.comment.service.CommentAdminService;
+import com.cybzacg.blogbackend.module.forum.repository.ForumPostRepository;
+import com.cybzacg.blogbackend.module.forum.repository.ForumReplyRepository;
+import com.cybzacg.blogbackend.module.forum.service.ForumPostAdminService;
+import com.cybzacg.blogbackend.module.forum.service.ForumReplyAdminService;
 import com.cybzacg.blogbackend.module.report.convert.ReportModelConvert;
 import com.cybzacg.blogbackend.module.report.model.admin.ReportHandleRequest;
 import com.cybzacg.blogbackend.module.report.model.common.ReportHandleLogVO;
@@ -70,6 +74,14 @@ class ReportAdminServiceImplTest {
     private SysUserAdminService sysUserAdminService;
     @Mock
     private NotificationDeliveryService notificationDeliveryService;
+    @Mock
+    private ForumPostRepository forumPostRepository;
+    @Mock
+    private ForumReplyRepository forumReplyRepository;
+    @Mock
+    private ForumPostAdminService forumPostAdminService;
+    @Mock
+    private ForumReplyAdminService forumReplyAdminService;
 
     private ReportAdminServiceImpl reportAdminService;
 
@@ -89,7 +101,11 @@ class ReportAdminServiceImplTest {
                 blogArticleRepository,
                 sysCommentRepository,
                 sysUserAdminService,
-                notificationDeliveryService
+                notificationDeliveryService,
+                forumPostRepository,
+                forumReplyRepository,
+                forumPostAdminService,
+                forumReplyAdminService
         );
     }
 

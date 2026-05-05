@@ -12,6 +12,7 @@ import com.cybzacg.blogbackend.enums.forum.ForumReplyStatusEnum;
 import com.cybzacg.blogbackend.enums.forum.ForumVisibilityScopeEnum;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.experience.service.UserExperienceService;
+import com.cybzacg.blogbackend.module.auth.notice.service.NotificationDeliveryService;
 import com.cybzacg.blogbackend.module.chat.conversation.model.user.ForumPostChannelLinkVO;
 import com.cybzacg.blogbackend.module.chat.conversation.service.ForumPostChannelLinkService;
 import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionFolderRepository;
@@ -34,6 +35,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.List;
 
@@ -64,6 +66,10 @@ class UserForumServiceImplTest {
     private ForumPostChannelLinkService forumPostChannelLinkService;
     @Mock
     private ForumModelConvert forumModelConvert;
+    @Mock
+    private NotificationDeliveryService notificationDeliveryService;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     private UserForumServiceImpl userForumService;
 
@@ -78,7 +84,9 @@ class UserForumServiceImplTest {
                 sysCollectionFolderRepository,
                 userExperienceService,
                 forumPostChannelLinkService,
-                forumModelConvert
+                forumModelConvert,
+                notificationDeliveryService,
+                eventPublisher
         );
     }
 
