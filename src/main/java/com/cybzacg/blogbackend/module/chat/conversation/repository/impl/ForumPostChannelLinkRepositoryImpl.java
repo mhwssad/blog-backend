@@ -13,4 +13,12 @@ import org.springframework.stereotype.Repository;
 public class ForumPostChannelLinkRepositoryImpl
         extends ServiceImpl<ForumPostChannelLinkMapper, ForumPostChannelLink>
         implements ForumPostChannelLinkRepository {
+
+    @Override
+    public void updateStatusByForumPostId(Long forumPostId, Integer status) {
+        lambdaUpdate()
+                .eq(ForumPostChannelLink::getForumPostId, forumPostId)
+                .set(ForumPostChannelLink::getStatus, status)
+                .update();
+    }
 }

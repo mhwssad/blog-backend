@@ -13,6 +13,7 @@ import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.audit.model.common.SysAuditLogCreateRequest;
 import com.cybzacg.blogbackend.module.auth.audit.service.SysAuditLogService;
 import com.cybzacg.blogbackend.module.auth.notice.service.NotificationDeliveryService;
+import com.cybzacg.blogbackend.module.chat.conversation.repository.ForumPostChannelLinkRepository;
 import com.cybzacg.blogbackend.module.forum.convert.ForumModelConvert;
 import com.cybzacg.blogbackend.module.forum.model.admin.ForumPostAdminDetailVO;
 import com.cybzacg.blogbackend.module.forum.model.admin.ForumPostAdminPageQuery;
@@ -43,6 +44,10 @@ public class ForumPostAdminServiceImpl implements ForumPostAdminService {
     private final ForumModelConvert forumModelConvert;
     private final SysAuditLogService sysAuditLogService;
     private final NotificationDeliveryService notificationDeliveryService;
+    private final ForumPostChannelLinkRepository forumPostChannelLinkRepository;
+
+    private static final int LINK_STATUS_INVALID = 0;
+    private static final int LINK_STATUS_NORMAL = 1;
 
     @Override
     public PageResult<ForumPostAdminVO> pagePosts(ForumPostAdminPageQuery query) {
@@ -73,6 +78,7 @@ public class ForumPostAdminServiceImpl implements ForumPostAdminService {
                 ResultErrorCode.ILLEGAL_ARGUMENT, "帖子已删除，无法隐藏");
         String beforeState = "{\"status\":" + post.getStatus() + "}";
         forumPostRepository.updateStatusById(id, ForumPostStatusEnum.HIDDEN.getValue());
+        forumPostChannelLinkRepository.updateStatusByForumPostId(id, LINK_STATUS_INVALID);
         recordAudit(operatorId, post.getAuthorId(), SysAuditOperationType.HIDE_FORUM_POST,
                 id, beforeState, "{\"status\":" + ForumPostStatusEnum.HIDDEN.getValue() + "}", ip, ua);
     }
@@ -86,6 +92,7 @@ public class ForumPostAdminServiceImpl implements ForumPostAdminService {
                 ResultErrorCode.ILLEGAL_ARGUMENT, "仅隐藏状态的帖子可恢复");
         String beforeState = "{\"status\":" + post.getStatus() + "}";
         forumPostRepository.updateStatusById(id, ForumPostStatusEnum.PUBLISHED.getValue());
+        forumPostChannelLinkRepository.updateStatusByForumPostId(id, LINK_STATUS_NORMAL);
         recordAudit(operatorId, post.getAuthorId(), SysAuditOperationType.RESTORE_FORUM_POST,
                 id, beforeState, "{\"status\":" + ForumPostStatusEnum.PUBLISHED.getValue() + "}", ip, ua);
     }
@@ -99,6 +106,7 @@ public class ForumPostAdminServiceImpl implements ForumPostAdminService {
                 ResultErrorCode.ILLEGAL_ARGUMENT, "帖子已删除");
         String beforeState = "{\"status\":" + post.getStatus() + "}";
         forumPostRepository.updateStatusById(id, ForumPostStatusEnum.DELETED.getValue());
+        forumPostChannelLinkRepository.updateStatusByForumPostId(id, LINK_STATUS_INVALID);
         recordAudit(operatorId, post.getAuthorId(), SysAuditOperationType.DELETE_FORUM_POST,
                 id, beforeState, "{\"status\":" + ForumPostStatusEnum.DELETED.getValue() + "}", ip, ua);
     }
