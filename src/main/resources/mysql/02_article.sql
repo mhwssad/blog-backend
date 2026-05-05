@@ -322,3 +322,22 @@ CREATE TABLE blog_article_review_log
     ENGINE = InnoDB
     DEFAULT CHARSET = utf8mb4
     COLLATE = utf8mb4_unicode_ci;
+
+-- 友情链接
+DROP TABLE IF EXISTS blog_friend_link;
+CREATE TABLE blog_friend_link
+(
+    id          BIGINT AUTO_INCREMENT COMMENT '主键',
+    name        VARCHAR(64)  NOT NULL COMMENT '站点名称',
+    url         VARCHAR(512) NOT NULL COMMENT '站点地址',
+    icon_url    VARCHAR(512) NULL COMMENT '图标地址',
+    description VARCHAR(255) NULL COMMENT '站点描述',
+    sort_order  INT          NOT NULL DEFAULT 0 COMMENT '排序（越小越靠前）',
+    status      TINYINT      NOT NULL DEFAULT 1 COMMENT '状态：0-停用，1-启用',
+    created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (id)
+) COMMENT '友情链接表'
+    ENGINE = InnoDB
+    DEFAULT CHARSET = utf8mb4
+    COLLATE = utf8mb4_unicode_ci;

@@ -33,6 +33,7 @@ security:
     - /api/users/search
     - /api/categories/tree
     - /api/tags
+    - /api/public/friend-links
     - /api/comments
     - /doc.html
     - /swagger-ui/**

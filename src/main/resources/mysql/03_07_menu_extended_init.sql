@@ -196,4 +196,19 @@ VALUES (1920, 1000, '0,1000', '高风险审计', 'M', 'SysAudit', '/admin/audit'
        (1921, 1920, '0,1000,1920', '审计查询', 'B', NULL, NULL, NULL, 'sys:audit:query', 0, 0, 1, 1, NULL, NULL, NOW(),
         NOW(), NULL);
 
+-- 友情链接管理（内容管理 1700 下）
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1960, 1700, '0,1700', '友情链接', 'M', 'ContentFriendLink', '/admin/friend-links', 'admin/content/FriendLinks', NULL, 0, 1, 1, 16,
+        'link', NULL, NOW(), NOW(), NULL),
+       (1961, 1960, '0,1700,1960', '友情链接查询', 'B', NULL, NULL, NULL, 'content:friend-link:query', 0, 0, 1, 1, NULL, NULL,
+        NOW(), NOW(), NULL),
+       (1962, 1960, '0,1700,1960', '友情链接新增', 'B', NULL, NULL, NULL, 'content:friend-link:create', 0, 0, 1, 2, NULL, NULL,
+        NOW(), NOW(), NULL),
+       (1963, 1960, '0,1700,1960', '友情链接修改', 'B', NULL, NULL, NULL, 'content:friend-link:update', 0, 0, 1, 3, NULL, NULL,
+        NOW(), NOW(), NULL),
+       (1964, 1960, '0,1700,1960', '友情链接删除', 'B', NULL, NULL, NULL, 'content:friend-link:delete', 0, 0, 1, 4, NULL, NULL,
+        NOW(), NOW(), NULL);
+
 COMMIT;
