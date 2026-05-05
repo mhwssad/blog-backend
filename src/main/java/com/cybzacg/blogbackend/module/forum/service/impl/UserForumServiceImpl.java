@@ -13,6 +13,8 @@ import com.cybzacg.blogbackend.enums.forum.ForumPostStatusEnum;
 import com.cybzacg.blogbackend.enums.forum.ForumReplyStatusEnum;
 import com.cybzacg.blogbackend.enums.forum.ForumVisibilityScopeEnum;
 import com.cybzacg.blogbackend.module.auth.experience.service.UserExperienceService;
+import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
+import com.cybzacg.blogbackend.module.auth.notice.service.NotificationDeliveryService;
 import com.cybzacg.blogbackend.module.chat.conversation.model.user.ForumPostChannelLinkVO;
 import com.cybzacg.blogbackend.module.chat.conversation.service.ForumPostChannelLinkService;
 import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionFolderRepository;
@@ -51,6 +53,7 @@ public class UserForumServiceImpl implements UserForumService {
     private final UserExperienceService userExperienceService;
     private final ForumPostChannelLinkService forumPostChannelLinkService;
     private final ForumModelConvert forumModelConvert;
+    private final NotificationDeliveryService notificationDeliveryService;
 
     @Override
     public PageResult<UserForumPostVO> pageMyPosts(UserForumPostPageQuery query) {
@@ -151,6 +154,34 @@ public class UserForumServiceImpl implements UserForumService {
         }
         forumReplyRepository.save(reply);
         forumPostRepository.incrementReplyCount(post.getId(), 1);
+
+        // 通知帖子作者（非自己回自己的帖子）
+        if (post.getAuthorId() != null && !post.getAuthorId().equals(userId)) {
+            notificationDeliveryService.deliverAfterCommit(
+                    post.getAuthorId(),
+                    NotificationTypeEnum.FORUM_REPLY_ME,
+                    "你的帖子收到了回复",
+                    "你的帖子「" + post.getTitle() + "」收到了新回复",
+                    userId,
+                    "forum_post", post.getId(), "/forum/posts/" + post.getId()
+            );
+        }
+        // 通知父回复作者（非自己回自己、且非帖子作者的重复通知）
+        if (reply.getParentId() != null && reply.getParentId() > 0) {
+            ForumReply parentReply = forumReplyRepository.getById(reply.getParentId());
+            if (parentReply != null && parentReply.getUserId() != null
+                    && !parentReply.getUserId().equals(userId)
+                    && !parentReply.getUserId().equals(post.getAuthorId())) {
+                notificationDeliveryService.deliverAfterCommit(
+                        parentReply.getUserId(),
+                        NotificationTypeEnum.FORUM_REPLY_ME,
+                        "你的回复收到了回复",
+                        "你在帖子「" + post.getTitle() + "」中的回复收到了新回复",
+                        userId,
+                        "forum_post", post.getId(), "/forum/posts/" + post.getId()
+                );
+            }
+        }
     }
 
     @Override
@@ -183,7 +214,7 @@ public class UserForumServiceImpl implements UserForumService {
     @Transactional(rollbackFor = Exception.class)
     public void likePost(Long postId) {
         Long userId = SecurityUtils.requireUserId();
-        requireInteractablePost(postId, userId, "点赞");
+        ForumPost post = requireInteractablePost(postId, userId, "点赞");
         boolean exists = sysInteractionRepository.existsByUserIdAndTargetIdAndTargetTypeAndActionType(
                 userId, postId, ForumConstants.TARGET_TYPE_POST, ForumConstants.ACTION_TYPE_LIKE);
         if (exists) {
@@ -196,6 +227,18 @@ public class UserForumServiceImpl implements UserForumService {
         interaction.setActionType(ForumConstants.ACTION_TYPE_LIKE);
         sysInteractionRepository.save(interaction);
         forumPostRepository.incrementLikeCount(postId, 1);
+
+        // 通知帖子作者（非自己点赞自己的帖子）
+        if (post.getAuthorId() != null && !post.getAuthorId().equals(userId)) {
+            notificationDeliveryService.deliverAfterCommit(
+                    post.getAuthorId(),
+                    NotificationTypeEnum.FORUM_LIKE_ME,
+                    "你的帖子收到了点赞",
+                    "你的帖子「" + post.getTitle() + "」收到了点赞",
+                    userId,
+                    "forum_post", post.getId(), "/forum/posts/" + post.getId()
+            );
+        }
     }
 
     @Override
