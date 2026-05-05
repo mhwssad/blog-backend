@@ -25,16 +25,19 @@ import com.cybzacg.blogbackend.module.ai.service.AiQuotaService;
 import com.cybzacg.blogbackend.module.ai.service.AiRagService;
 import com.cybzacg.blogbackend.module.ai.service.AiUsageLogService;
 import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
+import com.cybzacg.blogbackend.utils.JsonUtils;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * AI 对话服务实现。
@@ -257,6 +260,95 @@ public class AiChatServiceImpl implements AiChatService {
         session.setStatus(AiChatSessionStatusEnum.CLOSED.getValue());
         session.setUpdatedAt(LocalDateTime.now());
         aiChatSessionRepository.updateById(session);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public SseEmitter streamMessage(Long sessionId, Long userId, AiMessageSendRequest request) {
+        // 校验会话归属与状态
+        AiChatSession session = verifySessionOwnership(sessionId, userId);
+        ExceptionThrowerCore.throwBusinessIf(
+                !AiChatSessionStatusEnum.NORMAL.getValue().equals(session.getStatus()),
+                ResultErrorCode.AI_SESSION_CLOSED);
+
+        AiChannelConfig config = ExceptionThrowerCore.requireNonNull(
+                aiChannelConfigRepository.getById(session.getChannelConfigId()),
+                ResultErrorCode.AI_CHANNEL_NOT_FOUND);
+        ExceptionThrowerCore.throwBusinessIf(
+                config.getStatus() == null || config.getStatus() != 1,
+                ResultErrorCode.AI_CHANNEL_DISABLED);
+
+        aiQuotaService.checkQuota(userId, config);
+
+        // 保存用户消息
+        AiChatMessage userMessage = new AiChatMessage();
+        userMessage.setSessionId(sessionId);
+        userMessage.setUserId(userId);
+        userMessage.setRoleType(AiConstants.ROLE_TYPE_USER);
+        userMessage.setContent(request.getContent());
+        userMessage.setRequestSceneType(request.getRequestSceneType());
+        userMessage.setRequestTargetId(request.getRequestTargetId());
+        userMessage.setResponseStatus(AiMessageResponseStatusEnum.SUCCESS.getValue());
+        aiChatMessageRepository.save(userMessage);
+
+        List<FileInfo> imageAttachments = resolveAttachments(userId, userMessage.getId(), request.getAttachmentFileIds());
+
+        List<AiChatMessage> contextMessages = aiChatMessageRepository
+                .listBySessionIdOrderById(sessionId, AiConstants.DEFAULT_MAX_CONTEXT_MESSAGES);
+
+        SseEmitter emitter = new SseEmitter(AiConstants.DEFAULT_TIMEOUT_SECONDS * 1000L);
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                AiRagRetrievalResult ragResult = aiRagService.retrieve(config, request.getContent());
+                String systemPrompt = aiRagService.enrichSystemPrompt(config.getSystemPromptTemplate(), ragResult);
+
+                String fullContent = aiModelClient.streamChat(config, systemPrompt, contextMessages,
+                        request.getContent(), imageAttachments,
+                        event -> {
+                            try {
+                                emitter.send(SseEmitter.event()
+                                        .name(event.getType())
+                                        .data(JsonUtils.toJson(event)));
+                            } catch (Exception e) {
+                                emitter.completeWithError(e);
+                            }
+                        });
+
+                // 流式完成后持久化助手消息
+                AiChatMessage assistantMessage = new AiChatMessage();
+                assistantMessage.setSessionId(sessionId);
+                assistantMessage.setUserId(userId);
+                assistantMessage.setRoleType(AiConstants.ROLE_TYPE_ASSISTANT);
+                assistantMessage.setContent(fullContent);
+                assistantMessage.setRequestSceneType(request.getRequestSceneType());
+                assistantMessage.setRequestTargetId(request.getRequestTargetId());
+                assistantMessage.setResponseStatus(AiMessageResponseStatusEnum.SUCCESS.getValue());
+                assistantMessage.setRagReferenceJson(ragResult.getReferenceJson());
+                aiChatMessageRepository.save(assistantMessage);
+
+                aiQuotaService.recordUsage(userId, config.getId());
+                aiUsageLogService.logUsage(userId, config.getId(), sessionId,
+                        request.getRequestSceneType(), 0, 0, 0,
+                        AiMessageResponseStatusEnum.SUCCESS.getValue(), null,
+                        ragResult.isEnabled() ? 1 : 0, ragResult.hitCount(),
+                        ragResult.getDurationMs(), ragResult.getReferenceJson());
+
+                session.setLastMessageAt(LocalDateTime.now());
+                aiChatSessionRepository.updateById(session);
+                emitter.complete();
+            } catch (Exception e) {
+                log.error("SSE 流式异常, sessionId={}, userId={}: {}", sessionId, userId, e.getMessage(), e);
+                emitter.completeWithError(e);
+            }
+        });
+
+        emitter.onTimeout(() -> log.warn("SSE 流式超时, sessionId={}", sessionId));
+        emitter.onError(e -> log.warn("SSE 连接异常, sessionId={}: {}", sessionId, e.getMessage()));
+
+        return emitter;
     }
 
     /**

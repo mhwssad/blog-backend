@@ -10,7 +10,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 
 /**
@@ -67,6 +69,15 @@ public class AiChatController {
             @Valid @RequestBody AiMessageSendRequest request) {
         Long userId = SecurityUtils.requireUserId();
         return Result.success(aiChatService.sendMessage(id, userId, request));
+    }
+
+    @PostMapping(value = "/{id}/messages/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @Operation(summary = "流式发送消息（SSE）")
+    public SseEmitter streamMessage(
+            @PathVariable Long id,
+            @Valid @RequestBody AiMessageSendRequest request) {
+        Long userId = SecurityUtils.requireUserId();
+        return aiChatService.streamMessage(id, userId, request);
     }
 
     @DeleteMapping("/{id}")
