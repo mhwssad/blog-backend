@@ -1,6 +1,7 @@
 package com.cybzacg.blogbackend.module.ai.service;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
+import com.cybzacg.blogbackend.module.ai.event.ContentChangeEvent;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiKnowledgeEntryPageQuery;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiKnowledgeEntryVO;
 
@@ -25,4 +26,9 @@ public interface AiKnowledgeEntryAdminService {
      * 更新知识条目状态。
      */
     void updateEntryStatus(Long id, Integer status, Long operatorId);
+
+    /**
+     * 处理内容变更事件，更新对应知识条目状态。
+     */
+    void onContentChange(ContentChangeEvent event);
 }

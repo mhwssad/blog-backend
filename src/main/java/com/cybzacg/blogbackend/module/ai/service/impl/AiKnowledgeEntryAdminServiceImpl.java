@@ -3,12 +3,17 @@ package com.cybzacg.blogbackend.module.ai.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.ai.AiKnowledgeEntry;
+import com.cybzacg.blogbackend.domain.ai.AiKnowledgeSourceConfig;
 import com.cybzacg.blogbackend.enums.ai.AiKnowledgeEntryStatusEnum;
+import com.cybzacg.blogbackend.enums.ai.AiKnowledgeSourceTypeEnum;
+import com.cybzacg.blogbackend.enums.ai.ContentChangeAction;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.ai.convert.AiModelConvert;
+import com.cybzacg.blogbackend.module.ai.event.ContentChangeEvent;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiKnowledgeEntryPageQuery;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiKnowledgeEntryVO;
 import com.cybzacg.blogbackend.module.ai.repository.AiKnowledgeEntryRepository;
+import com.cybzacg.blogbackend.module.ai.repository.AiKnowledgeSourceConfigRepository;
 import com.cybzacg.blogbackend.module.ai.service.AiKnowledgeEntryAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
@@ -28,6 +33,7 @@ import java.util.List;
 public class AiKnowledgeEntryAdminServiceImpl implements AiKnowledgeEntryAdminService {
 
     private final AiKnowledgeEntryRepository aiKnowledgeEntryRepository;
+    private final AiKnowledgeSourceConfigRepository aiKnowledgeSourceConfigRepository;
     private final AiModelConvert aiModelConvert;
 
     @Override
@@ -65,5 +71,50 @@ public class AiKnowledgeEntryAdminServiceImpl implements AiKnowledgeEntryAdminSe
 
         entry.setStatus(status);
         aiKnowledgeEntryRepository.updateById(entry);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void onContentChange(ContentChangeEvent event) {
+        if (AiKnowledgeSourceTypeEnum.fromCode(event.getSourceType()) == null) {
+            return;
+        }
+        AiKnowledgeSourceConfig config = aiKnowledgeSourceConfigRepository.findBySourceType(event.getSourceType());
+        if (config == null || !Integer.valueOf(1).equals(config.getEnabled())) {
+            return;
+        }
+
+        AiKnowledgeEntry entry = aiKnowledgeEntryRepository.findBySource(event.getSourceType(), event.getSourceId());
+        ContentChangeAction action = event.getAction();
+
+        switch (action) {
+            case PUBLISH, UPDATE, RESTORE -> {
+                if (entry == null) {
+                    entry = new AiKnowledgeEntry();
+                    entry.setSourceType(event.getSourceType());
+                    entry.setSourceId(event.getSourceId());
+                    entry.setAuthorId(event.getAuthorId());
+                    entry.setStatus(AiKnowledgeEntryStatusEnum.OUTDATED.getValue());
+                    entry.setVersion(0);
+                    entry.setChunkCount(0);
+                    aiKnowledgeEntryRepository.save(entry);
+                } else if (!AiKnowledgeEntryStatusEnum.DELETED.getValue().equals(entry.getStatus())) {
+                    entry.setStatus(AiKnowledgeEntryStatusEnum.OUTDATED.getValue());
+                    aiKnowledgeEntryRepository.updateById(entry);
+                }
+            }
+            case HIDE -> {
+                if (entry != null && !AiKnowledgeEntryStatusEnum.DELETED.getValue().equals(entry.getStatus())) {
+                    entry.setStatus(AiKnowledgeEntryStatusEnum.DISABLED.getValue());
+                    aiKnowledgeEntryRepository.updateById(entry);
+                }
+            }
+            case DELETE -> {
+                if (entry != null) {
+                    entry.setStatus(AiKnowledgeEntryStatusEnum.DELETED.getValue());
+                    aiKnowledgeEntryRepository.updateById(entry);
+                }
+            }
+        }
     }
 }
