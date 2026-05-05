@@ -33,6 +33,16 @@ public class AiChannelConfig {
     private Integer userDailyQuota;
     /** 上下文长度上限：0-不限制 */
     private Integer maxContextTokens;
+    /** 单次输入最大 token 预算（null=不限） */
+    private Integer maxInputTokens;
+    /** 历史上下文最大 token 预算（null=不限） */
+    private Integer maxHistoryTokens;
+    /** RAG 上下文最大 token 预算（null=不限） */
+    private Integer maxRagTokens;
+    /** 附件最大 token 预算（null=不限） */
+    private Integer maxAttachmentTokens;
+    /** 输出最大 token 预算（null=不限，覆盖默认 maxTokens） */
+    private Integer maxOutputTokens;
     /** 可读取数据范围配置JSON */
     private String dataScopeJson;
     /** 系统提示词模板 */

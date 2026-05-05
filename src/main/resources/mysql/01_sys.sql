@@ -719,3 +719,10 @@ CREATE TABLE `ai_message_attachment`
     UNIQUE INDEX `uk_message_file` (`message_id`, `file_id`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='AI 消息附件关联表';
+
+ALTER TABLE `ai_channel_config`
+    ADD COLUMN `max_input_tokens`      INT NULL DEFAULT NULL COMMENT '单次输入最大 token 预算（null=不限）' AFTER `max_context_tokens`,
+    ADD COLUMN `max_history_tokens`    INT NULL DEFAULT NULL COMMENT '历史上下文最大 token 预算（null=不限）' AFTER `max_input_tokens`,
+    ADD COLUMN `max_rag_tokens`        INT NULL DEFAULT NULL COMMENT 'RAG 上下文最大 token 预算（null=不限）' AFTER `max_history_tokens`,
+    ADD COLUMN `max_attachment_tokens` INT NULL DEFAULT NULL COMMENT '附件最大 token 预算（null=不限）' AFTER `max_rag_tokens`,
+    ADD COLUMN `max_output_tokens`     INT NULL DEFAULT NULL COMMENT '输出最大 token 预算（null=不限，覆盖默认 maxTokens）' AFTER `max_attachment_tokens`;
