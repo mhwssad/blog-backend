@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * AI消息发送请求。
  */
@@ -21,4 +23,8 @@ public class AiMessageSendRequest {
 
     @Schema(description = "关联目标ID")
     private Long requestTargetId;
+
+    @Size(max = 5, message = "单条消息最多5个附件")
+    @Schema(description = "附件文件ID列表（图片/文件）")
+    private List<Long> attachmentFileIds;
 }
