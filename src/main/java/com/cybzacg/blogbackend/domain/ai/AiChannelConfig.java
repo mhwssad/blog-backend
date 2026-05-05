@@ -19,14 +19,6 @@ public class AiChannelConfig {
     private String channelCode;
     /** 渠道名称 */
     private String channelName;
-    /** 提供方 */
-    private String provider;
-    /** 模型名称 */
-    private String modelName;
-    /** 接口基础地址 */
-    private String apiBaseUrl;
-    /** 加密后的 API Key */
-    private String apiKeyEncrypted;
     /** 全局每日额度：0-不限制 */
     private Integer dailyQuota;
     /** 单用户每日额度：0-不限制 */

@@ -18,20 +18,6 @@ public class AiChannelConfigSaveRequest {
     @Schema(description = "渠道名称", requiredMode = Schema.RequiredMode.REQUIRED)
     private String channelName;
 
-    @NotBlank(message = "提供方不能为空")
-    @Schema(description = "提供方", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String provider;
-
-    @NotBlank(message = "模型名称不能为空")
-    @Schema(description = "模型名称", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String modelName;
-
-    @Schema(description = "接口基础地址")
-    private String apiBaseUrl;
-
-    @Schema(description = "加密后的API Key")
-    private String apiKeyEncrypted;
-
     @Schema(description = "全局每日额度，0表示不限制")
     private Integer dailyQuota;
 

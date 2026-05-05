@@ -12,6 +12,8 @@ public final class RedisConstants {
     public static final String XP_DAILY_KEY_PREFIX = "xp:daily";
     public static final String XP_IDEMPOTENT_KEY_PREFIX = "xp:idempotent";
 
+    public static final String FOLLOW_COUNT_CACHE_PREFIX = "follow:count";
+
     public static final String AI_QUOTA_USER_DAILY_PREFIX = "ai:quota:user";
     public static final String AI_QUOTA_PLATFORM_DAILY_PREFIX = "ai:quota:platform";
 
@@ -20,6 +22,9 @@ public final class RedisConstants {
     public static final String AI_RAG_ACTIVE_CHUNKS_CACHE_KEY = "ai:rag:chunks:active";
     public static final String AI_RAG_SEARCH_CACHE_PREFIX = "ai:rag:search";
     public static final String AI_TOOL_EXECUTE_RATE_LIMIT_PREFIX = "ai:tool:execute:rate-limit";
+
+    public static final String AI_ACCOUNT_POOL_USAGE_PREFIX = "ai:account-pool:usage";
+    public static final String AI_ACCOUNT_POOL_RECOVER_LOCK = "ai:account-pool:recover:lock";
 
     public static final String DASHBOARD_CACHE_PREFIX = "dashboard";
 

@@ -726,3 +726,39 @@ ALTER TABLE `ai_channel_config`
     ADD COLUMN `max_rag_tokens`        INT NULL DEFAULT NULL COMMENT 'RAG 上下文最大 token 预算（null=不限）' AFTER `max_history_tokens`,
     ADD COLUMN `max_attachment_tokens` INT NULL DEFAULT NULL COMMENT '附件最大 token 预算（null=不限）' AFTER `max_rag_tokens`,
     ADD COLUMN `max_output_tokens`     INT NULL DEFAULT NULL COMMENT '输出最大 token 预算（null=不限，覆盖默认 maxTokens）' AFTER `max_attachment_tokens`;
+
+-- AI 渠道账号池表
+CREATE TABLE `ai_channel_account`
+(
+    `id`                     bigint       NOT NULL AUTO_INCREMENT COMMENT '账号ID',
+    `channel_config_id`      bigint       NOT NULL COMMENT '所属渠道配置ID',
+    `account_name`           varchar(128) NOT NULL COMMENT '账号名称（备注）',
+    `provider`               varchar(64)  NOT NULL COMMENT '提供方（deepseek/openai/zhipu等）',
+    `model_name`             varchar(128) NOT NULL COMMENT '模型名称',
+    `api_base_url`           varchar(512) NOT NULL COMMENT '接口基础地址',
+    `api_key_encrypted`      text         NOT NULL COMMENT 'API Key',
+    `weight`                 int          DEFAULT 1 NOT NULL COMMENT '权重',
+    `status`                 tinyint      DEFAULT 1 NOT NULL COMMENT '状态：0-停用，1-启用',
+    `daily_quota`            int          DEFAULT 0 NOT NULL COMMENT '每日额度：0-不限',
+    `consecutive_errors`     int          DEFAULT 0 NOT NULL COMMENT '连续错误次数',
+    `max_consecutive_errors` int          DEFAULT 5 NOT NULL COMMENT '最大连续错误次数',
+    `last_error_at`          datetime     NULL COMMENT '最近错误时间',
+    `last_error_message`     varchar(512) NULL COMMENT '最近错误信息',
+    `disabled_at`            datetime     NULL COMMENT '自动禁用时间',
+    `auto_recover_at`        datetime     NULL COMMENT '计划自动恢复时间',
+    `total_call_count`       bigint       DEFAULT 0 NOT NULL COMMENT '累计调用次数',
+    `last_used_at`           datetime     NULL COMMENT '最近使用时间',
+    `created_by`             bigint       NULL COMMENT '创建人ID',
+    `updated_by`             bigint       NULL COMMENT '更新人ID',
+    `created_at`             datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    `updated_at`             datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_channel_status` (`channel_config_id`, `status`, `weight`),
+    KEY `idx_auto_recover` (`status`, `auto_recover_at`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='AI 渠道账号池';
+
+ALTER TABLE `ai_channel_config`
+    DROP COLUMN `provider`,
+    DROP COLUMN `model_name`,
+    DROP COLUMN `api_base_url`,
+    DROP COLUMN `api_key_encrypted`;

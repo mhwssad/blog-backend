@@ -20,18 +20,6 @@ public class AiChannelConfigVO {
     @Schema(description = "渠道名称")
     private String channelName;
 
-    @Schema(description = "提供方")
-    private String provider;
-
-    @Schema(description = "模型名称")
-    private String modelName;
-
-    @Schema(description = "接口基础地址")
-    private String apiBaseUrl;
-
-    @Schema(description = "加密后的API Key")
-    private String apiKeyEncrypted;
-
     @Schema(description = "全局每日额度，0表示不限制")
     private Integer dailyQuota;
 

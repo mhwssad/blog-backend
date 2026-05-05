@@ -98,11 +98,6 @@ public class AiChannelConfigAdminServiceImpl implements AiChannelConfigAdminServ
             ExceptionThrowerCore.throwBusinessIfNotNull(existing, ResultErrorCode.AI_CHANNEL_CODE_DUPLICATE);
         }
 
-        // 如果 API Key 包含掩码标记，保留原始值
-        if (request.getApiKeyEncrypted() != null && request.getApiKeyEncrypted().contains("****")) {
-            request.setApiKeyEncrypted(config.getApiKeyEncrypted());
-        }
-
         // 审计高风险变更
         auditHighRiskChanges(config, request, operatorId);
 
@@ -152,20 +147,16 @@ public class AiChannelConfigAdminServiceImpl implements AiChannelConfigAdminServ
     }
 
     /**
-     * 将实体转换为 VO 并脱敏 API Key。
+     * 将实体转换为 VO。
      */
     private AiChannelConfigVO toMaskedVO(AiChannelConfig config) {
-        AiChannelConfigVO vo = aiModelConvert.toChannelConfigVO(config);
-        if (vo != null && vo.getApiKeyEncrypted() != null && vo.getApiKeyEncrypted().length() > 7) {
-            vo.setApiKeyEncrypted(maskApiKey(vo.getApiKeyEncrypted()));
-        }
-        return vo;
+        return aiModelConvert.toChannelConfigVO(config);
     }
 
     /**
      * API Key 脱敏：保留前 3 位和后 4 位。
      */
-    private String maskApiKey(String apiKey) {
+    static String maskApiKey(String apiKey) {
         if (apiKey == null || apiKey.length() <= 7) {
             return "****";
         }
@@ -176,15 +167,12 @@ public class AiChannelConfigAdminServiceImpl implements AiChannelConfigAdminServ
      * 对高风险字段变更记录审计日志。
      */
     private void auditHighRiskChanges(AiChannelConfig existing, AiChannelConfigSaveRequest request, Long operatorId) {
-        boolean apiKeyChanged = request.getApiKeyEncrypted() != null
-                && !request.getApiKeyEncrypted().contains("****")
-                && !request.getApiKeyEncrypted().equals(existing.getApiKeyEncrypted());
         boolean statusChanged = request.getStatus() != null
                 && !request.getStatus().equals(existing.getStatus());
         boolean dataScopePrivateChat = request.getDataScopeJson() != null
                 && AiDataScopeEnum.isHighRisk(request.getDataScopeJson());
 
-        if (apiKeyChanged || statusChanged || dataScopePrivateChat) {
+        if (statusChanged || dataScopePrivateChat) {
             superAdminVerifier.requireSuperAdmin(operatorId);
             ExceptionThrowerCore.throwBusinessIfNot(
                     twoFactorService.validateTicket(request.getMfaTicket(), operatorId),
@@ -196,8 +184,7 @@ public class AiChannelConfigAdminServiceImpl implements AiChannelConfigAdminServ
             auditRequest.setTargetTypeName("AiChannelConfig");
             auditRequest.setTargetId(existing.getId());
             auditRequest.setBeforeState(buildStateSummary(existing));
-            auditRequest.setAfterState("apiKeyChanged=" + apiKeyChanged
-                    + ",statusChanged=" + statusChanged
+            auditRequest.setAfterState("statusChanged=" + statusChanged
                     + ",privateChatEnabled=" + dataScopePrivateChat);
             sysAuditLogService.record(auditRequest);
         }

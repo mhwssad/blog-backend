@@ -126,7 +126,6 @@ public class AiChatServiceImpl implements AiChatService {
         AiSessionDetailVO detail = aiModelConvert.toSessionDetailVO(session);
         if (config != null) {
             detail.setChannelName(config.getChannelName());
-            detail.setModelName(config.getModelName());
         }
         return detail;
     }

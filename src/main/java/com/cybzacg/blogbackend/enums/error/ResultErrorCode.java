@@ -173,6 +173,11 @@ public enum ResultErrorCode implements ResultCode {
     AI_MCP_SERVER_DISABLED(73523, "MCP 服务已停用"),
     AI_MCP_DISCOVERY_FAILED(73524, "MCP 工具发现失败"),
 
+    // ========== AI 账号池模块 ==========
+    AI_ACCOUNT_NOT_FOUND(73601, "账号不存在"),
+    AI_ACCOUNT_KEY_DUPLICATE(73602, "该渠道下 API Key 已存在"),
+    AI_ACCOUNT_POOL_EMPTY(73603, "账号池无可用账号"),
+
     // ========== 外部博客迁移模块 ==========
 
     MIGRATION_TASK_NOT_FOUND(75001, "迁移任务不存在"),

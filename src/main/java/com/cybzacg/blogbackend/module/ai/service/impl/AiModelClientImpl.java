@@ -1,13 +1,17 @@
 package com.cybzacg.blogbackend.module.ai.service.impl;
 
 import com.cybzacg.blogbackend.config.LangChain4jConfig;
+import com.cybzacg.blogbackend.domain.ai.AiChannelAccount;
 import com.cybzacg.blogbackend.domain.ai.AiChannelConfig;
 import com.cybzacg.blogbackend.domain.ai.AiChatMessage;
 import com.cybzacg.blogbackend.domain.file.FileInfo;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.ai.constant.AiConstants;
 import com.cybzacg.blogbackend.module.ai.model.data.AiModelCallResult;
 import com.cybzacg.blogbackend.module.ai.model.data.AiStreamEvent;
+import com.cybzacg.blogbackend.module.ai.service.AiAccountPoolService;
 import com.cybzacg.blogbackend.module.ai.service.AiModelClient;
+import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ImageContent;
@@ -19,6 +23,7 @@ import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.output.TokenUsage;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -32,11 +37,14 @@ import java.util.function.Consumer;
 /**
  * AI 模型调用客户端实现。
  *
- * <p>职责：根据渠道配置动态构建模型实例，组装消息列表（含上下文裁剪），执行调用并封装结果。
+ * <p>从账号池选号构建模型实例，组装消息列表（含上下文裁剪），执行调用并上报健康状态。
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class AiModelClientImpl implements AiModelClient {
+
+    private final AiAccountPoolService aiAccountPoolService;
 
     @Override
     public AiModelCallResult chat(AiChannelConfig config, String systemPrompt,
@@ -48,16 +56,25 @@ public class AiModelClientImpl implements AiModelClient {
     public AiModelCallResult chat(AiChannelConfig config, String systemPrompt,
                                   List<AiChatMessage> contextMessages,
                                   String userQuestion, List<FileInfo> imageAttachments) {
+        AiChannelAccount account = aiAccountPoolService.selectAccount(config);
+        ExceptionThrowerCore.throwBusinessIfNull(account, ResultErrorCode.AI_ACCOUNT_POOL_EMPTY);
+
         try {
-            ChatModel model = LangChain4jConfig.buildModel(config);
+            ChatModel model = LangChain4jConfig.buildModel(
+                    account.getApiBaseUrl(), account.getApiKeyEncrypted(), account.getModelName());
             List<ChatMessage> messages = buildMessages(config, systemPrompt, contextMessages,
                     userQuestion, imageAttachments);
 
             ChatResponse response = model.chat(messages);
 
+            aiAccountPoolService.reportSuccess(account.getId());
             return mapResponse(response);
         } catch (Exception e) {
-            log.warn("AI 模型调用失败，渠道: {}, 错误: {}", config.getChannelCode(), e.getMessage());
+            if (account.getId() != null) {
+                aiAccountPoolService.reportFailure(account.getId(), e.getMessage());
+            }
+            log.warn("AI 模型调用失败，渠道: {}, 账号: {}, 错误: {}",
+                    config.getChannelCode(), account.getAccountName(), e.getMessage());
             AiModelCallResult failure = new AiModelCallResult();
             failure.setSuccess(false);
             failure.setErrorMessage(truncateErrorMessage(e.getMessage()));
@@ -202,12 +219,17 @@ public class AiModelClientImpl implements AiModelClient {
                              List<AiChatMessage> contextMessages,
                              String userQuestion, List<FileInfo> imageAttachments,
                              Consumer<AiStreamEvent> eventConsumer) {
-        StreamingChatModel streamingModel = LangChain4jConfig.buildStreamingModel(config);
+        AiChannelAccount account = aiAccountPoolService.selectAccount(config);
+        ExceptionThrowerCore.throwBusinessIfNull(account, ResultErrorCode.AI_ACCOUNT_POOL_EMPTY);
+
+        StreamingChatModel streamingModel = LangChain4jConfig.buildStreamingModel(
+                account.getApiBaseUrl(), account.getApiKeyEncrypted(), account.getModelName());
         List<ChatMessage> messages = buildMessages(config, systemPrompt, contextMessages,
                 userQuestion, imageAttachments);
 
         StringBuilder fullResponse = new StringBuilder();
         CompletableFuture<Void> streamDone = new CompletableFuture<>();
+        Long accountId = account.getId();
 
         streamingModel.chat(messages, new StreamingChatResponseHandler() {
             @Override
@@ -225,13 +247,20 @@ public class AiModelClientImpl implements AiModelClient {
                             usage.outputTokenCount() != null ? usage.outputTokenCount() : 0,
                             usage.totalTokenCount() != null ? usage.totalTokenCount() : 0));
                 }
+                if (accountId != null) {
+                    aiAccountPoolService.reportSuccess(accountId);
+                }
                 eventConsumer.accept(AiStreamEvent.done());
                 streamDone.complete(null);
             }
 
             @Override
             public void onError(Throwable error) {
-                log.warn("AI 流式调用失败，渠道: {}, 错误: {}", config.getChannelCode(), error.getMessage());
+                if (accountId != null) {
+                    aiAccountPoolService.reportFailure(accountId, error.getMessage());
+                }
+                log.warn("AI 流式调用失败，渠道: {}, 账号: {}, 错误: {}",
+                        config.getChannelCode(), account.getAccountName(), error.getMessage());
                 eventConsumer.accept(AiStreamEvent.error(error.getMessage()));
                 streamDone.completeExceptionally(error);
             }
