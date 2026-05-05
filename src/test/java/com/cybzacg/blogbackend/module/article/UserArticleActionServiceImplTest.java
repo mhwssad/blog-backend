@@ -69,10 +69,9 @@ class UserArticleActionServiceImplTest {
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(7L)) {
             userArticleActionService.likeArticle(1L);
 
-            assertEquals(3, article.getLikeCount());
             verify(articleAccessControlService).validateArticleAccess(article, 7L);
             verify(sysInteractionRepository).save(interaction);
-            verify(blogArticleRepository).updateById(article);
+            verify(blogArticleRepository).incrementLikeCount(1L, 1);
         }
     }
 
@@ -138,17 +137,14 @@ class UserArticleActionServiceImplTest {
 
     @Test
     void unlikeArticleShouldRemoveInteractionAndDecreaseCount() {
-        BlogArticle article = publishedArticle(1L, 3);
         SysInteraction interaction = interaction(100L, 7L, 1L);
-        when(blogArticleRepository.getById(1L)).thenReturn(article);
         when(sysInteractionRepository.findOneByUserIdAndTargetIdAndTargetTypeAndActionType(7L, 1L, "article", "like")).thenReturn(interaction);
 
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(7L)) {
             userArticleActionService.unlikeArticle(1L);
 
-            assertEquals(2, article.getLikeCount());
             verify(sysInteractionRepository).removeById(100L);
-            verify(blogArticleRepository).updateById(article);
+            verify(blogArticleRepository).incrementLikeCount(1L, -1);
         }
     }
 
@@ -166,17 +162,14 @@ class UserArticleActionServiceImplTest {
 
     @Test
     void unlikeArticleShouldNotDecreaseBelowZero() {
-        BlogArticle article = publishedArticle(1L, 0);
         SysInteraction interaction = interaction(100L, 7L, 1L);
-        when(blogArticleRepository.getById(1L)).thenReturn(article);
         when(sysInteractionRepository.findOneByUserIdAndTargetIdAndTargetTypeAndActionType(7L, 1L, "article", "like")).thenReturn(interaction);
 
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(7L)) {
             userArticleActionService.unlikeArticle(1L);
 
-            assertEquals(0, article.getLikeCount());
             verify(sysInteractionRepository).removeById(100L);
-            verify(blogArticleRepository).updateById(article);
+            verify(blogArticleRepository).incrementLikeCount(1L, -1);
         }
     }
 

@@ -18,6 +18,7 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.mock.web.MockMultipartFile;
 
 import java.util.List;
 
@@ -98,6 +99,45 @@ class UserFileServiceImplTest {
             assertEquals(8L, result.getTaskId());
             assertTrue(result.getQuickUpload());
             verify(fileUploadService).quickCheck(eq(7L), eq("upload-quick"));
+        }
+    }
+
+    @Test
+    void uploadChunkShouldDelegateToFileUploadService() {
+        UserTaskVO taskVO = new UserTaskVO();
+        taskVO.setTaskId(9L);
+        taskVO.setUploadId("upload-chunk");
+        taskVO.setChunkNumber(2);
+        taskVO.setUploadedChunks(2);
+        taskVO.setTotalChunks(3);
+        when(fileUploadService.uploadChunk(any(), any(), any(), any(), any())).thenReturn(taskVO);
+
+        MockMultipartFile chunk = new MockMultipartFile("file", "chunk.part", "application/octet-stream", "abc".getBytes());
+
+        try (MockedStatic<SecurityUtils> ignored = mockUser()) {
+            ChunkUploadVO result = userFileService.uploadChunk("upload-chunk", 2, chunk, "md5-2", "127.0.0.1");
+
+            assertEquals("upload-chunk", result.getUploadId());
+            assertEquals(2, result.getChunkNumber());
+            verify(fileUploadService).uploadChunk(eq(7L), eq("upload-chunk"), eq(2), any(), any());
+        }
+    }
+
+    @Test
+    void completeUploadShouldDelegateToFileUploadService() {
+        UserTaskVO taskVO = new UserTaskVO();
+        taskVO.setTaskId(10L);
+        taskVO.setUploadId("upload-chunk");
+        taskVO.setFileId(99L);
+        taskVO.setTaskStatus(2);
+        when(fileUploadService.completeUpload(any(), any())).thenReturn(taskVO);
+
+        try (MockedStatic<SecurityUtils> ignored = mockUser()) {
+            FileUploadResultVO result = userFileService.completeUpload("upload-chunk", "127.0.0.1");
+
+            assertEquals(10L, result.getTaskId());
+            assertEquals(99L, result.getFileId());
+            verify(fileUploadService).completeUpload(eq(7L), eq("upload-chunk"));
         }
     }
 

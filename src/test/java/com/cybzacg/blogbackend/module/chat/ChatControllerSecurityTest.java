@@ -331,7 +331,7 @@ class ChatControllerSecurityTest {
     }
 
     @Test
-    @WithMockUser(authorities = "content:chat:update")
+    @WithMockUser(authorities = "content:chat:update-status")
     void updateConversationStatusShouldAllowAuthorizedUser() throws Exception {
         mockMvc.perform(put("/api/sys/chats/conversations/1001/status")
                         .contentType(APPLICATION_JSON)

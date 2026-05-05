@@ -27,7 +27,7 @@ class ContentSecurityIntegrationTest {
 
     @Test
     void permissionSqlShouldKeepContentMenuIdsWithinReservedRange() throws IOException {
-        String sql = Files.readString(Path.of("src/main/resources/mysql/03_permission_init.sql"));
+        String sql = Files.readString(Path.of("src/main/resources/mysql/03_06_menu_content_init.sql"));
 
         assertTrue(sql.contains("content:article:query"));
         assertTrue(sql.contains("content:article:access"));

@@ -6,6 +6,7 @@ import com.cybzacg.blogbackend.module.chat.conversation.service.ChatConversation
 import com.cybzacg.blogbackend.module.chat.member.service.ChatChannelJoinService;
 import com.cybzacg.blogbackend.module.chat.member.service.ChatGroupManageService;
 import com.cybzacg.blogbackend.module.chat.message.model.user.ChatMessagePageQuery;
+import com.cybzacg.blogbackend.module.chat.message.model.user.ChatSendFileRequest;
 import com.cybzacg.blogbackend.module.chat.message.model.user.ChatSendTextRequest;
 import com.cybzacg.blogbackend.module.chat.message.service.ChatMessageLifecycleService;
 import com.cybzacg.blogbackend.module.chat.message.service.ChatMessageSendService;
@@ -91,6 +92,33 @@ class UserChatServiceImplTest {
         try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(1L)) {
             userChatService.sendTextMessage(request);
             verify(messageSendService).sendTextMessage(eq(1L), eq(request));
+        }
+    }
+
+    @Test
+    void sendFileMessageShouldDelegateToMessageSendService() {
+        ChatSendFileRequest request = new ChatSendFileRequest();
+        request.setConversationId(1L);
+        request.setBusinessId(88L);
+        try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(1L)) {
+            userChatService.sendFileMessage(request);
+            verify(messageSendService).sendFileMessage(eq(1L), eq(request));
+        }
+    }
+
+    @Test
+    void joinConversationShouldDelegateToChannelJoinService() {
+        try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(1L)) {
+            userChatService.joinConversation(100L);
+            verify(channelJoinService).joinConversation(eq(1L), eq(100L));
+        }
+    }
+
+    @Test
+    void leaveConversationShouldDelegateToChannelJoinService() {
+        try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(1L)) {
+            userChatService.leaveConversation(100L);
+            verify(channelJoinService).leaveConversation(eq(1L), eq(100L));
         }
     }
 }

@@ -170,14 +170,18 @@ class FileAdminServiceImplTest {
     }
 
     @Test
-    void pageFilesShouldRejectInvalidReferenceType() {
+    void pageFilesShouldDelegateInvalidReferenceTypeToRepositoryFiltering() {
         FileAdminPageQuery query = new FileAdminPageQuery();
         query.setReferenceType("invalid");
+        Page<FileInfo> page = new Page<>(1L, 10L);
+        page.setTotal(0L);
+        page.setRecords(List.of());
+        when(fileInfoRepository.pageAdminFiles(query)).thenReturn(page);
 
-        BusinessException exception = assertThrows(BusinessException.class, () -> fileAdminService.pageFiles(query));
+        PageResult<FileAdminVO> result = fileAdminService.pageFiles(query);
 
-        assertEquals(com.cybzacg.blogbackend.enums.error.ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), exception.getCode());
-        verify(fileInfoRepository, never()).pageAdminFiles(any());
+        assertEquals(0L, result.getTotal());
+        verify(fileInfoRepository).pageAdminFiles(query);
     }
 
     @Test
@@ -266,14 +270,18 @@ class FileAdminServiceImplTest {
     }
 
     @Test
-    void pageTasksShouldRejectInvalidTaskStatus() {
+    void pageTasksShouldDelegateInvalidTaskStatusToRepositoryFiltering() {
         FileTaskPageQuery query = new FileTaskPageQuery();
         query.setTaskStatus(99);
+        Page<FileUploadTask> page = new Page<>(1L, 10L);
+        page.setTotal(0L);
+        page.setRecords(List.of());
+        when(fileUploadTaskRepository.pageAdminTasks(query)).thenReturn(page);
 
-        BusinessException exception = assertThrows(BusinessException.class, () -> fileAdminService.pageTasks(query));
+        PageResult<FileTaskAdminVO> result = fileAdminService.pageTasks(query);
 
-        assertEquals(FileResultCode.UPLOAD_TASK_STATUS_INVALID.getCode(), exception.getCode());
-        verify(fileUploadTaskRepository, never()).pageAdminTasks(any());
+        assertEquals(0L, result.getTotal());
+        verify(fileUploadTaskRepository).pageAdminTasks(query);
     }
 
     @Test
@@ -343,7 +351,7 @@ class FileAdminServiceImplTest {
         verify(fileUploadTaskRepository).removeByIds(List.of(22L));
         verify(fileInfoRepository).updateById(file);
         assertEquals(Integer.valueOf(0), file.getReferenceCount());
-        assertEquals(FileStatusEnum.DELETED.getValue(), file.getStatus());
+        assertEquals(FileStatusEnum.PHYSICAL_DELETE_PENDING.getValue(), file.getStatus());
     }
 
     private FileInfo buildAdminFile(Long id) {

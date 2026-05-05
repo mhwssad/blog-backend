@@ -1,6 +1,9 @@
 package com.cybzacg.blogbackend.module.follow;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
+import com.cybzacg.blogbackend.common.constant.RedisConstants;
+import com.cybzacg.blogbackend.common.redis.RedisKeyUtils;
+import com.cybzacg.blogbackend.common.redis.RedisOperator;
 import com.cybzacg.blogbackend.domain.auth.SysUser;
 import com.cybzacg.blogbackend.domain.follow.SysUserFollow;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
@@ -19,6 +22,7 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -35,6 +39,8 @@ class UserFollowServiceImplTest {
     private FollowModelConvert followModelConvert;
     @Mock
     private FollowNoticeService followNoticeService;
+    @Mock
+    private RedisOperator redisOperator;
 
     private UserFollowServiceImpl userFollowService;
 
@@ -44,7 +50,8 @@ class UserFollowServiceImplTest {
                 sysUserFollowRepository,
                 sysUserRepository,
                 followModelConvert,
-                followNoticeService
+                followNoticeService,
+                redisOperator
         );
     }
 
@@ -67,6 +74,8 @@ class UserFollowServiceImplTest {
 
         verify(followModelConvert).toNewFollow(eq(7L), eq(12L), any());
         verify(sysUserFollowRepository).save(created);
+        verify(redisOperator).delete(RedisKeyUtils.build(RedisConstants.FOLLOW_COUNT_CACHE_PREFIX, 7L));
+        verify(redisOperator).delete(RedisKeyUtils.build(RedisConstants.FOLLOW_COUNT_CACHE_PREFIX, 12L));
         verify(sysUserFollowRepository, never()).updateById(any(SysUserFollow.class));
         verify(followNoticeService).notifyNewFollowerAfterCommit(12L, 7L);
     }
@@ -91,6 +100,8 @@ class UserFollowServiceImplTest {
         assertEquals(Integer.valueOf(1), relation.getFollowStatus());
         assertEquals("manual", relation.getSource());
         verify(sysUserFollowRepository).updateById(relation);
+        verify(redisOperator).delete(RedisKeyUtils.build(RedisConstants.FOLLOW_COUNT_CACHE_PREFIX, 7L));
+        verify(redisOperator).delete(RedisKeyUtils.build(RedisConstants.FOLLOW_COUNT_CACHE_PREFIX, 12L));
         verify(sysUserFollowRepository, never()).save(any(SysUserFollow.class));
         verify(followNoticeService).notifyNewFollowerAfterCommit(12L, 7L);
     }
@@ -135,6 +146,8 @@ class UserFollowServiceImplTest {
 
         assertEquals(Integer.valueOf(0), relation.getFollowStatus());
         verify(sysUserFollowRepository).updateById(relation);
+        verify(redisOperator).delete(RedisKeyUtils.build(RedisConstants.FOLLOW_COUNT_CACHE_PREFIX, 7L));
+        verify(redisOperator).delete(RedisKeyUtils.build(RedisConstants.FOLLOW_COUNT_CACHE_PREFIX, 12L));
     }
 
     @Test
@@ -187,6 +200,45 @@ class UserFollowServiceImplTest {
 
     @Test
     void getMyFollowCountShouldUseMapperCounts() {
+        String cacheKey = RedisKeyUtils.build(RedisConstants.FOLLOW_COUNT_CACHE_PREFIX, 7L);
+        when(redisOperator.get(cacheKey, UserFollowCountVO.class)).thenReturn(null);
+        when(sysUserFollowRepository.countActiveFollowing(7L)).thenReturn(3L);
+        when(sysUserFollowRepository.countActiveFans(7L)).thenReturn(5L);
+
+        UserFollowCountVO result;
+        try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(7L)) {
+            result = userFollowService.getMyFollowCount();
+        }
+
+        assertEquals(3L, result.getFollowingCount());
+        assertEquals(5L, result.getFanCount());
+        verify(redisOperator).set(eq(cacheKey), eq(result), any(Duration.class));
+    }
+
+    @Test
+    void getMyFollowCountShouldReturnCachedCountsWhenCacheHit() {
+        String cacheKey = RedisKeyUtils.build(RedisConstants.FOLLOW_COUNT_CACHE_PREFIX, 7L);
+        UserFollowCountVO cached = UserFollowCountVO.builder()
+                .followingCount(9L)
+                .fanCount(11L)
+                .build();
+        when(redisOperator.get(cacheKey, UserFollowCountVO.class)).thenReturn(cached);
+
+        UserFollowCountVO result;
+        try (MockedStatic<?> ignored = SecurityTestUtils.mockUserId(7L)) {
+            result = userFollowService.getMyFollowCount();
+        }
+
+        assertEquals(9L, result.getFollowingCount());
+        assertEquals(11L, result.getFanCount());
+        verify(sysUserFollowRepository, never()).countActiveFollowing(any());
+        verify(sysUserFollowRepository, never()).countActiveFans(any());
+    }
+
+    @Test
+    void getMyFollowCountShouldFallbackToRepositoryWhenRedisThrows() {
+        String cacheKey = RedisKeyUtils.build(RedisConstants.FOLLOW_COUNT_CACHE_PREFIX, 7L);
+        when(redisOperator.get(cacheKey, UserFollowCountVO.class)).thenThrow(new RuntimeException("redis down"));
         when(sysUserFollowRepository.countActiveFollowing(7L)).thenReturn(3L);
         when(sysUserFollowRepository.countActiveFans(7L)).thenReturn(5L);
 

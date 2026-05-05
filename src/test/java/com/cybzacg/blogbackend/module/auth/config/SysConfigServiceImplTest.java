@@ -12,8 +12,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Duration;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -59,7 +62,7 @@ class SysConfigServiceImplTest {
         String result = sysConfigService.getValueByKey(" site.title ");
 
         assertEquals("Blog", result);
-        verify(redisOperator).set(cacheKey, "Blog");
+        verify(redisOperator).set(cacheKey, "Blog", ConfigConstants.CACHE_TTL);
     }
 
     @Test

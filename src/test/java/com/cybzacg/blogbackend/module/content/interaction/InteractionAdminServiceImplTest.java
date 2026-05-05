@@ -95,12 +95,10 @@ class InteractionAdminServiceImplTest {
         comment.setLikeCount(3);
 
         when(sysInteractionRepository.getById(22L)).thenReturn(interaction);
-        when(sysCommentRepository.getById(200L)).thenReturn(comment);
 
         interactionAdminService.deleteInteraction(22L);
 
-        assertEquals(Integer.valueOf(2), comment.getLikeCount());
-        verify(sysCommentRepository).updateById(comment);
+        verify(sysCommentRepository).incrementLikeCount(200L, -1);
         verify(sysInteractionRepository).removeById(22L);
     }
 

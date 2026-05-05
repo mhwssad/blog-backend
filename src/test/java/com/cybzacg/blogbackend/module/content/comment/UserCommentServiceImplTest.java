@@ -88,7 +88,6 @@ class UserCommentServiceImplTest {
             comment.setId(101L);
             return true;
         });
-        when(sysCommentRepository.updateById(parent)).thenReturn(true);
 
         try (MockedStatic<?> securityUtils = SecurityTestUtils.mockUserId(7L)) {
             userCommentService.createComment(request);
@@ -101,9 +100,8 @@ class UserCommentServiceImplTest {
         assertEquals(Integer.valueOf(0), comment.getLikeCount());
         assertEquals(Integer.valueOf(0), comment.getReplyCount());
         assertEquals(Integer.valueOf(1), comment.getStatus());
-        assertEquals(Integer.valueOf(2), parent.getReplyCount());
         verify(sysCommentRepository).save(comment);
-        verify(sysCommentRepository).updateById(parent);
+        verify(sysCommentRepository).incrementReplyCount(100L, 1);
         verify(articleContentFacadeService).adjustCommentCount(10L, 1);
     }
 
@@ -151,21 +149,18 @@ class UserCommentServiceImplTest {
         child.setParentId(100L);
 
         when(sysCommentRepository.getById(100L)).thenReturn(comment);
-        when(sysCommentRepository.getById(50L)).thenReturn(parent);
         when(sysCommentRepository.findByTargetTypeAndTargetId("article", 10L)).thenReturn(List.of(parent, comment, child));
         when(sysCommentRepository.removeByIds(List.of(100L, 101L))).thenReturn(true);
         when(sysInteractionRepository.removeByTargetTypeAndTargetIds("comment", List.of(100L, 101L))).thenReturn(true);
-        when(sysCommentRepository.updateById(parent)).thenReturn(true);
 
         try (MockedStatic<?> securityUtils = SecurityTestUtils.mockUserId(7L)) {
             userCommentService.deleteComment(100L);
         }
 
-        assertEquals(Integer.valueOf(1), parent.getReplyCount());
         verify(sysCommentRepository).removeByIds(List.of(100L, 101L));
         verify(sysInteractionRepository).removeByTargetTypeAndTargetIds("comment", List.of(100L, 101L));
         verify(articleContentFacadeService).adjustCommentCount(10L, -2);
-        verify(sysCommentRepository).updateById(parent);
+        verify(sysCommentRepository).incrementReplyCount(50L, -1);
     }
 
     @Test
@@ -186,9 +181,8 @@ class UserCommentServiceImplTest {
             userCommentService.likeComment(100L);
         }
 
-        assertEquals(Integer.valueOf(3), comment.getLikeCount());
         verify(sysInteractionRepository).save(interaction);
-        verify(sysCommentRepository).updateById(comment);
+        verify(sysCommentRepository).incrementLikeCount(100L, 1);
     }
 
     @Test
@@ -226,9 +220,8 @@ class UserCommentServiceImplTest {
             userCommentService.unlikeComment(100L);
         }
 
-        assertEquals(Integer.valueOf(1), comment.getLikeCount());
         verify(sysInteractionRepository).removeById(200L);
-        verify(sysCommentRepository).updateById(comment);
+        verify(sysCommentRepository).incrementLikeCount(100L, -1);
     }
 
     @Test
