@@ -1,6 +1,8 @@
 package com.cybzacg.blogbackend.module.ai.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.ai.AiAgentDefinition;
 import com.cybzacg.blogbackend.domain.ai.AiAgentTask;
@@ -11,6 +13,7 @@ import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.ai.convert.AiModelConvert;
 import com.cybzacg.blogbackend.module.ai.model.data.AiModelCallResult;
+import com.cybzacg.blogbackend.module.ai.model.internal.AiToolExecutionContext;
 import com.cybzacg.blogbackend.module.ai.model.user.AiAgentTaskCreateRequest;
 import com.cybzacg.blogbackend.module.ai.model.user.AiAgentTaskPageQuery;
 import com.cybzacg.blogbackend.module.ai.model.user.AiAgentTaskVO;
@@ -21,10 +24,13 @@ import com.cybzacg.blogbackend.module.ai.repository.AiChannelConfigRepository;
 import com.cybzacg.blogbackend.module.ai.service.AiAgentTaskService;
 import com.cybzacg.blogbackend.module.ai.service.AiModelClient;
 import com.cybzacg.blogbackend.module.ai.service.AiQuotaService;
+import com.cybzacg.blogbackend.module.ai.service.AiToolExecutionService;
 import com.cybzacg.blogbackend.module.ai.service.AiUsageLogService;
 import com.cybzacg.blogbackend.module.auth.notice.service.NotificationDeliveryService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
+import com.cybzacg.blogbackend.utils.JsonUtils;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
+import com.cybzacg.blogbackend.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * AI Agent 任务用户侧服务实现。
@@ -50,6 +57,7 @@ public class AiAgentTaskServiceImpl implements AiAgentTaskService {
     private final AiChannelConfigRepository aiChannelConfigRepository;
     private final AiModelClient aiModelClient;
     private final AiQuotaService aiQuotaService;
+    private final AiToolExecutionService aiToolExecutionService;
     private final AiUsageLogService aiUsageLogService;
     private final NotificationDeliveryService notificationDeliveryService;
     private final AiModelConvert aiModelConvert;
@@ -61,6 +69,7 @@ public class AiAgentTaskServiceImpl implements AiAgentTaskService {
         AiChannelConfig channelConfig = getChannelConfig(definition);
 
         aiQuotaService.checkQuota(userId, channelConfig);
+        validateAgentToolWhitelist(definition, userId);
 
         AiAgentTask task = new AiAgentTask();
         task.setUserId(userId);
@@ -221,6 +230,42 @@ public class AiAgentTaskServiceImpl implements AiAgentTaskService {
         return ExceptionThrowerCore.requireNonNull(
                 aiChannelConfigRepository.getById(definition.getChannelConfigId()),
                 ResultErrorCode.AI_CHANNEL_NOT_FOUND);
+    }
+
+    /**
+     * Agent 执行前验证扩展配置中的工具白名单，v1 不允许模型调用未显式配置或未授权工具。
+     */
+    private void validateAgentToolWhitelist(AiAgentDefinition definition, Long userId) {
+        List<String> allowedToolCodes = parseAllowedToolCodes(definition.getExtraConfigJson());
+        if (allowedToolCodes.isEmpty()) {
+            return;
+        }
+        AiToolExecutionContext context = AiToolExecutionContext.builder()
+                .userId(userId)
+                .agentId(definition.getId())
+                .sceneType("agent")
+                .dataScope(definition.getDataScopeJson())
+                .authorities(SecurityUtils.getAuthoritySet())
+                .build();
+        allowedToolCodes.forEach(toolCode -> aiToolExecutionService.validateAuthorized(toolCode, context));
+    }
+
+    private List<String> parseAllowedToolCodes(String extraConfigJson) {
+        if (extraConfigJson == null || extraConfigJson.isBlank()) {
+            return List.of();
+        }
+        try {
+            Map<String, Object> config = JsonUtils.getObjectMapper().readValue(extraConfigJson, new TypeReference<>() {
+            });
+            Object allowed = config.get("allowedToolCodes");
+            if (allowed instanceof List<?> allowedList) {
+                return allowedList.stream().map(String::valueOf).filter(item -> !item.isBlank()).toList();
+            }
+            return List.of();
+        } catch (JsonProcessingException e) {
+            ExceptionThrowerCore.throwBusiness(ResultErrorCode.ILLEGAL_ARGUMENT, "Agent 扩展配置必须是 JSON 对象", e);
+            return List.of();
+        }
     }
 
     private AiAgentTask getAndValidateOwner(Long userId, Long taskId) {

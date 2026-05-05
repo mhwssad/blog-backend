@@ -544,3 +544,123 @@ CREATE TABLE `ai_agent_task_log`
     KEY `idx_agent_task_log_task_turn` (`task_id`, `turn_index`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='AI Agent 任务日志表';
+
+-- ========== AI 工具与 MCP 模块 ==========
+
+DROP TABLE IF EXISTS `ai_tool_definition`;
+CREATE TABLE `ai_tool_definition`
+(
+    `id`                 bigint       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `tool_code`          varchar(64)  NOT NULL COMMENT '工具编码',
+    `tool_name`          varchar(128) NOT NULL COMMENT '工具名称',
+    `source_type`        varchar(16)  NOT NULL COMMENT '来源类型 builtin/mcp',
+    `mcp_server_id`      bigint       NULL COMMENT 'MCP 服务ID',
+    `mcp_tool_name`      varchar(128) NULL COMMENT 'MCP 原始工具名',
+    `description`        varchar(512) NULL COMMENT '工具描述',
+    `parameters_schema`  json         NULL COMMENT '参数 Schema',
+    `result_schema`      json         NULL COMMENT '返回 Schema',
+    `risk_level`         varchar(16)  NOT NULL COMMENT '风险等级 low/medium/high',
+    `use_scenarios`      json         NULL COMMENT '适用场景 JSON 数组',
+    `enabled`            tinyint      DEFAULT 1 NOT NULL COMMENT '状态：0-停用，1-启用',
+    `created_by`         bigint       NULL COMMENT '创建人ID',
+    `updated_by`         bigint       NULL COMMENT '更新人ID',
+    `created_at`         datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    `updated_at`         datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    UNIQUE KEY `uk_ai_tool_definition_code` (`tool_code`) COMMENT '工具编码唯一',
+    KEY `idx_ai_tool_definition_source_enabled` (`source_type`, `enabled`, `id`) COMMENT '按来源和状态查询',
+    KEY `idx_ai_tool_definition_mcp_server` (`mcp_server_id`, `enabled`) COMMENT '按 MCP 服务查询'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='AI 工具定义表';
+
+DROP TABLE IF EXISTS `ai_tool_authorization`;
+CREATE TABLE `ai_tool_authorization`
+(
+    `id`                  bigint       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `tool_id`             bigint       NOT NULL COMMENT '工具ID',
+    `authorization_type`  varchar(32)  NOT NULL COMMENT '授权类型 agent/scene/permission/data_scope',
+    `authorization_key`   varchar(128) NOT NULL COMMENT '授权键',
+    `data_scope`          varchar(128) NULL COMMENT '数据范围',
+    `enabled`             tinyint      DEFAULT 1 NOT NULL COMMENT '状态：0-停用，1-启用',
+    `created_by`          bigint       NULL COMMENT '创建人ID',
+    `updated_by`          bigint       NULL COMMENT '更新人ID',
+    `created_at`          datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    `updated_at`          datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    KEY `idx_ai_tool_authorization_tool_type` (`tool_id`, `authorization_type`, `enabled`) COMMENT '按工具授权查询',
+    KEY `idx_ai_tool_authorization_key` (`authorization_type`, `authorization_key`) COMMENT '按授权键查询'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='AI 工具授权表';
+
+DROP TABLE IF EXISTS `ai_tool_call_log`;
+CREATE TABLE `ai_tool_call_log`
+(
+    `id`                 bigint        NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `user_id`            bigint        NULL COMMENT '用户ID',
+    `agent_id`           bigint        NULL COMMENT 'Agent ID',
+    `session_id`         bigint        NULL COMMENT '会话ID',
+    `task_id`            bigint        NULL COMMENT '任务ID',
+    `tool_id`            bigint        NOT NULL COMMENT '工具ID',
+    `tool_code`          varchar(64)   NOT NULL COMMENT '工具编码',
+    `tool_name`          varchar(128)  NOT NULL COMMENT '工具名称',
+    `request_scene_type` varchar(32)   NULL COMMENT '请求场景',
+    `request_summary`    varchar(1024) NULL COMMENT '入参摘要',
+    `response_summary`   varchar(1024) NULL COMMENT '结果摘要',
+    `success_status`     tinyint       DEFAULT 1 NOT NULL COMMENT '成功状态：0-失败，1-成功',
+    `elapsed_ms`         bigint        NULL COMMENT '耗时毫秒',
+    `error_message`      varchar(1024) NULL COMMENT '错误信息',
+    `created_at`         datetime      DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    KEY `idx_ai_tool_call_log_tool_created` (`tool_id`, `created_at` DESC) COMMENT '按工具查询调用记录',
+    KEY `idx_ai_tool_call_log_user_created` (`user_id`, `created_at` DESC) COMMENT '按用户查询调用记录',
+    KEY `idx_ai_tool_call_log_agent_created` (`agent_id`, `created_at` DESC) COMMENT '按 Agent 查询调用记录'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='AI 工具调用日志表';
+
+DROP TABLE IF EXISTS `ai_mcp_server_config`;
+CREATE TABLE `ai_mcp_server_config`
+(
+    `id`                  bigint       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `server_name`         varchar(128) NOT NULL COMMENT '服务名称',
+    `transport_type`      varchar(16)  NOT NULL COMMENT '传输类型 stdio/http',
+    `connection_config_json` json      NOT NULL COMMENT '连接配置 JSON',
+    `auth_config_json`     json         NULL COMMENT '鉴权配置 JSON',
+    `timeout_seconds`      int          DEFAULT 60 NOT NULL COMMENT '超时时间（秒）',
+    `enabled`              tinyint      DEFAULT 1 NOT NULL COMMENT '状态：0-停用，1-启用',
+    `last_health_status`   varchar(32)  NULL COMMENT '最近健康状态',
+    `last_discovered_at`   datetime     NULL COMMENT '最近发现时间',
+    `last_error_summary`   varchar(1024) NULL COMMENT '最近错误摘要',
+    `created_by`           bigint       NULL COMMENT '创建人ID',
+    `updated_by`           bigint       NULL COMMENT '更新人ID',
+    `created_at`           datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    `updated_at`           datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    UNIQUE KEY `uk_ai_mcp_server_config_name` (`server_name`) COMMENT '服务名称唯一',
+    KEY `idx_ai_mcp_server_config_enabled` (`enabled`, `id`) COMMENT '按启停状态查询'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='AI MCP 服务配置表';
+
+DROP TABLE IF EXISTS `ai_mcp_tool_snapshot`;
+CREATE TABLE `ai_mcp_tool_snapshot`
+(
+    `id`                   bigint       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `mcp_server_id`        bigint       NOT NULL COMMENT 'MCP 服务ID',
+    `mcp_tool_name`         varchar(128) NOT NULL COMMENT 'MCP 原始工具名',
+    `tool_code`             varchar(64)  NOT NULL COMMENT '同步生成的工具编码',
+    `tool_name`             varchar(128) NOT NULL COMMENT '同步生成的工具名称',
+    `description`           varchar(512) NULL COMMENT '描述',
+    `parameters_schema`     json         NULL COMMENT '参数 Schema',
+    `result_schema`         json         NULL COMMENT '返回 Schema',
+    `risk_level`            varchar(16)  NOT NULL COMMENT '风险等级',
+    `use_scenarios`         json         NULL COMMENT '适用场景',
+    `enabled`               tinyint      DEFAULT 1 NOT NULL COMMENT '状态：0-停用，1-启用',
+    `discovered_at`         datetime     NULL COMMENT '发现时间',
+    `raw_definition_json`   json         NULL COMMENT '原始定义 JSON',
+    `last_error_summary`    varchar(1024) NULL COMMENT '错误摘要',
+    `created_at`            datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    `updated_at`            datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    UNIQUE KEY `uk_ai_mcp_tool_snapshot_tool` (`mcp_server_id`, `mcp_tool_name`) COMMENT '同一服务下工具唯一',
+    KEY `idx_ai_mcp_tool_snapshot_tool_code` (`tool_code`) COMMENT '同步工具编码查询'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='AI MCP 工具快照表';

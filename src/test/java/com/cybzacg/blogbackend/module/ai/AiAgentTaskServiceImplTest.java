@@ -17,6 +17,7 @@ import com.cybzacg.blogbackend.module.ai.repository.AiAgentTaskRepository;
 import com.cybzacg.blogbackend.module.ai.repository.AiChannelConfigRepository;
 import com.cybzacg.blogbackend.module.ai.service.AiModelClient;
 import com.cybzacg.blogbackend.module.ai.service.AiQuotaService;
+import com.cybzacg.blogbackend.module.ai.service.AiToolExecutionService;
 import com.cybzacg.blogbackend.module.ai.service.AiUsageLogService;
 import com.cybzacg.blogbackend.module.ai.service.impl.AiAgentTaskServiceImpl;
 import com.cybzacg.blogbackend.module.auth.notice.service.NotificationDeliveryService;
@@ -53,6 +54,8 @@ class AiAgentTaskServiceImplTest {
     @Mock
     private AiQuotaService aiQuotaService;
     @Mock
+    private AiToolExecutionService aiToolExecutionService;
+    @Mock
     private AiUsageLogService aiUsageLogService;
     @Mock
     private NotificationDeliveryService notificationDeliveryService;
@@ -70,6 +73,7 @@ class AiAgentTaskServiceImplTest {
                 aiChannelConfigRepository,
                 aiModelClient,
                 aiQuotaService,
+                aiToolExecutionService,
                 aiUsageLogService,
                 notificationDeliveryService,
                 aiModelConvert

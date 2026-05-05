@@ -18,6 +18,8 @@
 - Agent 定义后台管理（创建、编辑、启停、删除）
 - Agent 任务用户侧（发起、查询、取消）
 - Agent 任务后台管理（分页查询、详情）
+- AI 工具定义、授权、执行测试和调用日志
+- MCP 服务配置、工具发现、连接健康检查和工具快照
 
 ## 2. 鉴权要求
 
@@ -41,6 +43,16 @@ Authorization: Bearer <accessToken>
 | `ai:channel-config:delete` | 删除渠道配置 |
 | `ai:session:query` | 查询用户会话 |
 | `ai:usage-stats:query` | 查询使用统计 |
+| `ai:tool:query` | 查询工具定义、授权和调用日志 |
+| `ai:tool:create` | 创建工具定义 |
+| `ai:tool:update` | 更新工具定义、启停和授权关系 |
+| `ai:tool:delete` | 删除工具定义 |
+| `ai:tool:execute` | 后台测试执行工具 |
+| `ai:mcp:query` | 查询 MCP 服务、工具快照和健康状态 |
+| `ai:mcp:create` | 创建 MCP 服务 |
+| `ai:mcp:update` | 更新 MCP 服务和启停 |
+| `ai:mcp:delete` | 删除 MCP 服务 |
+| `ai:mcp:discover` | 发现 MCP 工具 |
 
 ## 3. 用户侧接口
 
@@ -1027,6 +1039,146 @@ GET /api/sys/ai/agents/tasks?page=1&size=10&agentId=&status=
   }
 }
 ```
+
+### 4.8 后台 AI 工具与 MCP 管理
+
+#### 4.8.1 工具接口总览
+
+> 权限要求：`ai:tool:query/create/update/delete/execute`
+
+| 接口 | 方法 | 路径 | 说明 |
+| --- | --- | --- | --- |
+| 分页查询工具定义 | GET | `/api/sys/ai/tools` | 支持按编码、名称、来源、启停筛选 |
+| 查询工具详情 | GET | `/api/sys/ai/tools/{id}` | 获取工具定义 |
+| 创建工具定义 | POST | `/api/sys/ai/tools` | 创建内置或 MCP 工具定义 |
+| 更新工具定义 | PUT | `/api/sys/ai/tools/{id}` | 修改工具定义 |
+| 更新工具状态 | PUT | `/api/sys/ai/tools/{id}/status?enabled=0\|1` | 启停工具 |
+| 删除工具定义 | DELETE | `/api/sys/ai/tools/{id}` | v1 软删除为停用 |
+| 后台测试执行工具 | POST | `/api/sys/ai/tools/{id}/execute` | 走统一授权、参数校验和调用日志 |
+| 分页查询调用日志 | GET | `/api/sys/ai/tools/call-logs` | 查询工具调用记录 |
+| 分页查询授权 | GET | `/api/sys/ai/tools/authorizations` | 查询工具授权关系 |
+| 创建授权 | POST | `/api/sys/ai/tools/authorizations` | 新增授权关系 |
+| 更新授权 | PUT | `/api/sys/ai/tools/authorizations/{id}` | 修改授权关系 |
+| 删除授权 | DELETE | `/api/sys/ai/tools/authorizations/{id}` | 删除授权关系 |
+
+工具定义请求字段：
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `toolCode` | String | 是 | 工具编码，唯一 |
+| `toolName` | String | 是 | 工具名称 |
+| `sourceType` | String | 是 | `builtin` / `mcp` |
+| `mcpServerId` | Long | MCP 必填 | MCP 服务 ID |
+| `mcpToolName` | String | MCP 必填 | MCP 原始工具名 |
+| `parametersSchema` | String | 否 | JSON Object，v1 校验 required 字段 |
+| `resultSchema` | String | 否 | JSON Object |
+| `riskLevel` | String | 是 | `low` / `medium` / `high` |
+| `useScenarios` | String | 否 | JSON 数组，如 `["agent"]` |
+| `enabled` | Integer | 是 | 0-停用，1-启用 |
+
+授权关系请求字段：
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `toolId` | Long | 是 | 工具 ID |
+| `authorizationType` | String | 是 | `agent` / `scene` / `permission` / `data_scope` |
+| `authorizationKey` | String | 是 | Agent ID、场景编码、权限码或数据范围编码 |
+| `dataScope` | String | 否 | 额外数据范围说明 |
+| `enabled` | Integer | 是 | 0-停用，1-启用 |
+
+执行请求：
+
+```json
+{
+  "arguments": "{\"query\":\"java\"}",
+  "agentId": 1,
+  "sessionId": null,
+  "taskId": null,
+  "sceneType": "agent",
+  "dataScope": "public_articles"
+}
+```
+
+执行响应：`AiToolExecuteVO`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `success` | Boolean | 是否成功 |
+| `resultText` | String | 成功结果文本 |
+| `errorMessage` | String | 失败信息 |
+| `elapsedMs` | Long | 耗时毫秒 |
+| `callLogId` | Long | 调用日志 ID |
+
+关键边界：
+
+- 默认没有授权关系的工具不可调用，返回 `73507`。
+- MCP 工具执行前会校验工具启用、MCP 服务启用、参数 JSON 与 required 字段。
+- 调用日志会记录入参摘要、结果摘要、耗时和错误信息，摘要会脱敏敏感 key/token/password/secret。
+- 内置工具 v1 先提供注册、授权和审计框架；未绑定执行器时按调用失败记录日志。
+
+#### 4.8.2 MCP 服务接口总览
+
+> 权限要求：`ai:mcp:query/create/update/delete/discover`
+
+| 接口 | 方法 | 路径 | 说明 |
+| --- | --- | --- | --- |
+| 分页查询 MCP 服务 | GET | `/api/sys/ai/mcp-servers` | 支持按名称、传输、启停筛选 |
+| 查询 MCP 服务详情 | GET | `/api/sys/ai/mcp-servers/{id}` | 不返回鉴权配置明文 |
+| 创建 MCP 服务 | POST | `/api/sys/ai/mcp-servers` | 创建 stdio/http MCP 服务 |
+| 更新 MCP 服务 | PUT | `/api/sys/ai/mcp-servers/{id}` | 更新连接配置 |
+| 更新 MCP 状态 | PUT | `/api/sys/ai/mcp-servers/{id}/status?enabled=0\|1` | 启停服务 |
+| 删除 MCP 服务 | DELETE | `/api/sys/ai/mcp-servers/{id}` | v1 软删除为停用 |
+| 发现工具 | POST | `/api/sys/ai/mcp-servers/{id}/discover` | 拉取工具列表并同步快照/工具定义 |
+| 查询工具快照 | GET | `/api/sys/ai/mcp-servers/{id}/tools` | 查询该服务已发现工具 |
+| 健康检查 | GET | `/api/sys/ai/mcp-servers/{id}/health` | 检查连接状态并回写最近健康状态 |
+
+MCP 服务请求字段：
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `serverName` | String | 是 | 服务名称，唯一 |
+| `transportType` | String | 是 | `stdio` / `http` |
+| `connectionConfigJson` | String | 是 | 连接配置 JSON |
+| `authConfigJson` | String | 否 | 鉴权配置 JSON，仅入库不在 VO 明文返回 |
+| `timeoutSeconds` | Integer | 是 | 超时时间，必须大于 0 |
+| `enabled` | Integer | 是 | 0-停用，1-启用 |
+
+配置示例：
+
+```json
+{
+  "serverName": "local-filesystem",
+  "transportType": "stdio",
+  "connectionConfigJson": "{\"command\":[\"npx\",\"-y\",\"@modelcontextprotocol/server-filesystem\",\".\"]}",
+  "authConfigJson": null,
+  "timeoutSeconds": 30,
+  "enabled": 1
+}
+```
+
+```json
+{
+  "serverName": "remote-search",
+  "transportType": "http",
+  "connectionConfigJson": "{\"url\":\"https://example.com/mcp\"}",
+  "authConfigJson": "{\"bearerToken\":\"secret-token\"}",
+  "timeoutSeconds": 30,
+  "enabled": 1
+}
+```
+
+异常场景：
+
+| 场景 | 错误码 | 说明 |
+| --- | --- | --- |
+| 工具不存在 | 73501 | ID 或编码无效 |
+| 工具编码重复 | 73502 | `toolCode` 已存在 |
+| 工具未授权 | 73507 | 没有匹配授权关系 |
+| 工具已停用 | 73508 | 不允许调用 |
+| MCP 服务不存在 | 73521 | ID 无效 |
+| MCP 传输类型无效 | 73522 | 仅支持 `stdio` / `http` |
+| MCP 服务已停用 | 73523 | 不允许发现或调用 |
+| MCP 工具发现失败 | 73524 | 连接失败或远端返回异常 |
 
 ## 5. 枚举值说明
 

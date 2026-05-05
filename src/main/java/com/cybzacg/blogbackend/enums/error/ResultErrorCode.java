@@ -156,6 +156,23 @@ public enum ResultErrorCode implements ResultCode {
     AI_AGENT_TASK_NOT_OWNER(73005, "无权操作此 Agent 任务"),
     AI_AGENT_TASK_NOT_COMPLETABLE(73006, "Agent 任务状态不允许此操作"),
 
+    // ========== AI 工具与 MCP 模块 ==========
+
+    AI_TOOL_NOT_FOUND(73501, "AI 工具不存在"),
+    AI_TOOL_CODE_DUPLICATE(73502, "AI 工具编码已存在"),
+    AI_TOOL_STATUS_INVALID(73503, "AI 工具状态无效"),
+    AI_TOOL_SOURCE_INVALID(73504, "AI 工具来源类型无效"),
+    AI_TOOL_RISK_INVALID(73505, "AI 工具风险等级无效"),
+    AI_TOOL_SCHEMA_INVALID(73506, "AI 工具参数或返回 Schema 无效"),
+    AI_TOOL_UNAUTHORIZED(73507, "AI 工具未授权"),
+    AI_TOOL_DISABLED(73508, "AI 工具已停用"),
+    AI_TOOL_EXECUTION_FAILED(73509, "AI 工具调用失败"),
+    AI_TOOL_AUTHORIZATION_NOT_FOUND(73510, "AI 工具授权不存在"),
+    AI_MCP_SERVER_NOT_FOUND(73521, "MCP 服务不存在"),
+    AI_MCP_TRANSPORT_INVALID(73522, "MCP 传输类型无效"),
+    AI_MCP_SERVER_DISABLED(73523, "MCP 服务已停用"),
+    AI_MCP_DISCOVERY_FAILED(73524, "MCP 工具发现失败"),
+
     // ========== 外部博客迁移模块 ==========
 
     MIGRATION_TASK_NOT_FOUND(75001, "迁移任务不存在"),

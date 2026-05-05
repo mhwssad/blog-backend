@@ -19,7 +19,7 @@
 | 文件                                                                                             | 主题                                  | 当前状态                                        | 优先级 |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------- | ----------------------------------------------- | ------ |
 | [01-forum-module-todo.md](01-forum-module-todo.md)                                               | 论坛正式模块                          | P1 联动与通知已完成，测试补强已完成             | P0     |
-| [02-ai-rag-agents-todo.md](02-ai-rag-agents-todo.md)                                               | 知识库 / RAG / agents / 工具调用 / MCP | P1 知识库自动同步已完成                         | P0     |
+| [02-ai-rag-agents-todo.md](02-ai-rag-agents-todo.md)                                               | 知识库 / RAG / agents / 工具调用 / MCP | P2 工具调用与 MCP v1 闭环已完成，RAG 主链路待推进 | P0     |
 | [03-migration-user-service-todo.md](03-migration-user-service-todo.md)                           | 外部博客迁移与用户自服务              | P1 外部博客迁移主流程已完成                     | P1     |
 | [04-governance-notification-enhancement-todo.md](04-governance-notification-enhancement-todo.md) | 治理、通知和后台运营增强              | P1 运营看板增强已完成                           | P1     |
 | [05-performance-test-quality-todo.md](05-performance-test-quality-todo.md)                       | 性能、测试和代码质量补强              | 待开始                                          | P2     |
@@ -50,7 +50,7 @@
 - AI 知识库 P0 知识源边界已完成：知识源类型枚举、3 张表结构（ai_knowledge_source_config / ai_knowledge_entry / ai_knowledge_sync_task）、后台配置管理、条目管理和同步任务管理接口。
 - RAG 检索增强暂缓，优先推进 `02-ai-rag-agents-todo.md` 的 P1 Agents 实现。RAG 不阻塞 agents、治理通知、迁移等其他二期任务。
 - AI Agents P1 已完成：3 张表结构（ai_agent_definition / ai_agent_task / ai_agent_task_log）、Agent 定义后台管理、用户任务发起/查询/取消、后台任务管理、任务执行流程（额度校验→模型调用→日志记录→通知投递）。
-- AI 新增工具调用与 MCP 接入需求：后续需补齐工具定义、授权范围、调用执行、MCP 服务配置、工具发现、连接状态和调用审计，且不得绕过 AI 数据范围和后台治理边界。
+- AI 工具调用与 MCP v1 闭环已完成：新增工具定义、授权关系、调用日志、MCP 服务配置、stdio/http 客户端、工具发现、连接健康查询、后台接口和权限菜单；默认无授权不可调用，Agent 执行前校验 `extraConfigJson.allowedToolCodes`。
 - 用户自服务 P0 已完成：个人资料查看/更新（新增 bio/website 字段）、修改密码（验证旧密码）、找回密码（邮箱验证码）、用户搜索（公开接口）。
 - 用户自服务测试补强已推进：已补齐个人资料查看/更新服务级测试，覆盖联系方式脱敏、MapStruct 更新委托和用户不存在异常。
 - 外部博客迁移 P1 主流程已完成：新增迁移任务/记录/附件表结构、后台任务创建/预检/执行/查询/失败导出接口，附件下载入库后替换外部 URL，并复用后台文章创建链路导入文章；迁移服务级测试、权限测试和 API 文档已补齐。
@@ -67,4 +67,4 @@
 - AI P1 知识库自动同步已完成：公开文章和论坛帖子发布/更新时自动创建或标记知识条目为 OUTDATED，隐藏时标记为 DISABLED，删除时标记为 DELETED。通过 Spring Event 解耦内容模块与 AI 模块。
 - AI 私密内容不入库边界已补强：文章仅在公开可见且普通用户可访问时触发知识库同步事件，白名单和登录可见文章不进入知识同步，并已补服务级测试。
 - AI Agent 数据范围校验已补强：Agent 定义创建/更新只接受 `AiDataScopeEnum` 允许的数据范围数组，未知范围、空数组和非 JSON 数组会返回非法参数。
-- 下一步可推进论坛/AI 测试补强，或穿插其他二期任务。
+- 下一步可推进 AI RAG 向量化主链路、工具调用频控，或穿插其他二期任务。

@@ -101,6 +101,40 @@ VALUES (1880, 1850, '0,1850', '会话管理', 'M', 'AiSessionManage', '/admin/ai
        (1881, 1880, '0,1850,1880', '会话查询', 'B', NULL, NULL, NULL, 'ai:session:query', 0, 0, 1, 1, NULL, NULL, NOW(),
         NOW(), NULL);
 
+-- AI 工具管理
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1890, 1850, '0,1850', '工具管理', 'M', 'AiToolManage', '/admin/ai/tools', 'admin/ai/AiTools', NULL, 0, 1, 1, 4,
+        'operation', NULL, NOW(), NOW(), NULL),
+       (1891, 1890, '0,1850,1890', '工具查询', 'B', NULL, NULL, NULL, 'ai:tool:query', 0, 0, 1, 1, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1892, 1890, '0,1850,1890', '工具新增', 'B', NULL, NULL, NULL, 'ai:tool:create', 0, 0, 1, 2, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1893, 1890, '0,1850,1890', '工具修改', 'B', NULL, NULL, NULL, 'ai:tool:update', 0, 0, 1, 3, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1894, 1890, '0,1850,1890', '工具删除', 'B', NULL, NULL, NULL, 'ai:tool:delete', 0, 0, 1, 4, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1895, 1890, '0,1850,1890', '工具执行', 'B', NULL, NULL, NULL, 'ai:tool:execute', 0, 0, 1, 5, NULL, NULL, NOW(),
+        NOW(), NULL);
+
+-- AI MCP 服务
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1910, 1850, '0,1850', 'MCP 服务', 'M', 'AiMcpServers', '/admin/ai/mcp-servers', 'admin/ai/AiMcpServers', NULL, 0, 1,
+        1, 5, 'connection', NULL, NOW(), NOW(), NULL),
+       (1911, 1910, '0,1850,1910', 'MCP查询', 'B', NULL, NULL, NULL, 'ai:mcp:query', 0, 0, 1, 1, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1912, 1910, '0,1850,1910', 'MCP新增', 'B', NULL, NULL, NULL, 'ai:mcp:create', 0, 0, 1, 2, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1913, 1910, '0,1850,1910', 'MCP修改', 'B', NULL, NULL, NULL, 'ai:mcp:update', 0, 0, 1, 3, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1914, 1910, '0,1850,1910', 'MCP删除', 'B', NULL, NULL, NULL, 'ai:mcp:delete', 0, 0, 1, 4, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1915, 1910, '0,1850,1910', 'MCP发现', 'B', NULL, NULL, NULL, 'ai:mcp:discover', 0, 0, 1, 5, NULL, NULL, NOW(),
+        NOW(), NULL);
+
 -- 举报管理（系统管理 1000 下）
 INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
                         `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
