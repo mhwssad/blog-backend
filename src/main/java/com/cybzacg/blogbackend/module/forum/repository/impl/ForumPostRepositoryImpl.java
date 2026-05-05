@@ -7,6 +7,7 @@ import com.cybzacg.blogbackend.domain.forum.ForumPost;
 import com.cybzacg.blogbackend.enums.forum.ForumPostStatusEnum;
 import com.cybzacg.blogbackend.enums.forum.ForumVisibilityScopeEnum;
 import com.cybzacg.blogbackend.mapper.forum.ForumPostMapper;
+import com.cybzacg.blogbackend.module.forum.model.admin.ForumPostAdminPageQuery;
 import com.cybzacg.blogbackend.module.forum.model.publics.ForumPostPageQuery;
 import com.cybzacg.blogbackend.module.forum.model.user.UserForumPostPageQuery;
 import com.cybzacg.blogbackend.module.forum.repository.ForumPostRepository;
@@ -51,6 +52,26 @@ public class ForumPostRepositoryImpl extends ServiceImpl<ForumPostMapper, ForumP
                         .like(ForumPost::getContent, query.getKeyword()))
                 .orderByDesc(ForumPost::getUpdatedAt)
                 .orderByDesc(ForumPost::getId));
+    }
+
+    @Override
+    public Page<ForumPost> pageAdminPosts(ForumPostAdminPageQuery query) {
+        LambdaQueryWrapper<ForumPost> wrapper = new LambdaQueryWrapper<ForumPost>()
+                .eq(query.getSectionId() != null, ForumPost::getSectionId, query.getSectionId())
+                .eq(query.getAuthorId() != null, ForumPost::getAuthorId, query.getAuthorId())
+                .eq(query.getStatus() != null, ForumPost::getStatus, query.getStatus())
+                .eq(query.getIsTop() != null, ForumPost::getIsTop, query.getIsTop())
+                .eq(query.getIsEssence() != null, ForumPost::getIsEssence, query.getIsEssence())
+                .ge(query.getCreatedAtStart() != null, ForumPost::getCreatedAt, query.getCreatedAtStart())
+                .le(query.getCreatedAtEnd() != null, ForumPost::getCreatedAt, query.getCreatedAtEnd())
+                .and(StringUtils.hasText(query.getKeyword()), w -> w.like(ForumPost::getTitle, query.getKeyword())
+                        .or()
+                        .like(ForumPost::getContent, query.getKeyword()))
+                .orderByDesc(ForumPost::getIsTop)
+                .orderByDesc(ForumPost::getIsEssence)
+                .orderByDesc(ForumPost::getCreatedAt)
+                .orderByDesc(ForumPost::getId);
+        return page(new Page<>(query.getCurrent(), query.getSize()), wrapper);
     }
 
     @Override
@@ -106,6 +127,30 @@ public class ForumPostRepositoryImpl extends ServiceImpl<ForumPostMapper, ForumP
         lambdaUpdate()
                 .eq(ForumPost::getId, id)
                 .set(ForumPost::getStatus, ForumPostStatusEnum.DELETED.getValue())
+                .update();
+    }
+
+    @Override
+    public void updateStatusById(Long id, Integer status) {
+        lambdaUpdate()
+                .eq(ForumPost::getId, id)
+                .set(ForumPost::getStatus, status)
+                .update();
+    }
+
+    @Override
+    public void updateTopById(Long id, Integer isTop) {
+        lambdaUpdate()
+                .eq(ForumPost::getId, id)
+                .set(ForumPost::getIsTop, isTop)
+                .update();
+    }
+
+    @Override
+    public void updateEssenceById(Long id, Integer isEssence) {
+        lambdaUpdate()
+                .eq(ForumPost::getId, id)
+                .set(ForumPost::getIsEssence, isEssence)
                 .update();
     }
 }

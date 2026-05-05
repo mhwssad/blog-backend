@@ -2,6 +2,8 @@ package com.cybzacg.blogbackend.module.forum.repository;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.cybzacg.blogbackend.module.forum.model.admin.ForumReplyAdminPageQuery;
+
 import com.cybzacg.blogbackend.domain.forum.ForumReply;
 
 import java.util.List;
@@ -11,6 +13,8 @@ import java.util.List;
  */
 public interface ForumReplyRepository extends IService<ForumReply> {
     Page<ForumReply> pageRootReplies(Long postId, long current, long size);
+
+    Page<ForumReply> pageAdminReplies(ForumReplyAdminPageQuery query);
 
     List<ForumReply> listByPostId(Long postId);
 
@@ -25,4 +29,6 @@ public interface ForumReplyRepository extends IService<ForumReply> {
     void incrementReplyCount(Long id, int delta);
 
     void softDeleteById(Long id);
+
+    void updateStatusById(Long id, Integer status);
 }
