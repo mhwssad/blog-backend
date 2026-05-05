@@ -18,7 +18,7 @@
 
 | 文件                                                                                             | 主题                                  | 当前状态                                        | 优先级 |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------- | ----------------------------------------------- | ------ |
-| [01-forum-module-todo.md](01-forum-module-todo.md)                                               | 论坛正式模块                          | P1 后台帖子/回复治理已完成                      | P0     |
+| [01-forum-module-todo.md](01-forum-module-todo.md)                                               | 论坛正式模块                          | P1 联动与通知已完成，待补测试                   | P0     |
 | [02-ai-rag-agents-todo.md](02-ai-rag-agents-todo.md)                                             | 知识库 / RAG / agents / 工具调用 / MCP | P1 Agents 已完成，工具调用与 MCP 待规划         | P0     |
 | [03-migration-user-service-todo.md](03-migration-user-service-todo.md)                           | 外部博客迁移与用户自服务              | P0 用户自服务已完成                             | P1     |
 | [04-governance-notification-enhancement-todo.md](04-governance-notification-enhancement-todo.md) | 治理、通知和后台运营增强              | P1 运营看板增强已完成                           | P1     |
@@ -60,4 +60,4 @@
 - 治理通知增强 P1 运营看板增强已完成：社区统计增加论坛发帖数、回复数和热门版块，AI 统计增加 RAG 调用数和 Agent 任务数，治理统计增加举报处理耗时和处罚分布，并支持当前时间范围 Excel 导出。
 - 下一步可推进 `04-governance-notification-enhancement-todo.md` 剩余的禁言测试/API 文档补强，或穿插 `05-performance-test-quality-todo.md` 的质量任务。
 - 论坛 P1 后台帖子/回复治理已完成：帖子分页/详情/隐藏/恢复/删除/置顶/精华、回复分页/隐藏/恢复/删除，所有治理操作写入审计日志，精华操作通知作者。举报对象类型新增论坛帖子和回复。API 文档已同步更新。
-- 下一步可推进论坛 P1 联动通知（回复/点赞通知作者、频道分享摘要）、后台治理测试补强，或穿插其他二期任务。
+- 下一步可推进论坛后台治理测试补强，或穿插其他二期任务。

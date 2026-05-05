@@ -343,6 +343,7 @@ CREATE TABLE forum_post_channel_link
     link_type       VARCHAR(16) DEFAULT 'manual_share'    NOT NULL COMMENT '关联方式：manual_share',
     linked_by       BIGINT                                NOT NULL COMMENT '关联人ID',
     linked_at       DATETIME    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '关联时间',
+    status          TINYINT     DEFAULT 1                 NOT NULL COMMENT '关联状态：0-失效 1-正常',
     created_at      DATETIME    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
 
     UNIQUE KEY uk_forum_post (forum_post_id) COMMENT '一个帖子第一阶段只能挂一个频道',

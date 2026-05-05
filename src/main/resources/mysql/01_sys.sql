@@ -239,6 +239,8 @@ CREATE TABLE `sys_user_notification_setting`
     `ai_task_notice_enabled`       tinyint DEFAULT 1 COMMENT 'AI任务完成通知开关',
     `report_result_notice_enabled` tinyint DEFAULT 1 COMMENT '举报处理结果通知开关',
     `forum_essence_notice_enabled`  tinyint DEFAULT 1 COMMENT '论坛精华通知开关',
+    `forum_reply_notice_enabled`    tinyint DEFAULT 1 COMMENT '论坛回复通知开关',
+    `forum_like_notice_enabled`     tinyint DEFAULT 1 COMMENT '论坛点赞通知开关',
     `created_at`                   datetime DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
     `updated_at`                   datetime DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`) USING BTREE,
