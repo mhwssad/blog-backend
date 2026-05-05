@@ -12,23 +12,25 @@ public final class RedisKeyUtils {
     }
 
     /**
-     * 按冒号拼装 Redis Key，自动忽略 null 和空白片段。
+     * 按冒号拼装 Redis Key，自动忽略 null 和空白片段；没有有效片段时拒绝生成空 Key。
      */
     public static String build(Object... parts) {
         StringJoiner joiner = new StringJoiner(RedisConstants.KEY_SEPARATOR);
-        if (parts == null || parts.length == 0) {
-            return "";
-        }
-
-        for (Object part : parts) {
-            if (part == null) {
-                continue;
-            }
-            String value = String.valueOf(part).trim();
-            if (!value.isEmpty()) {
-                joiner.add(value);
+        if (parts != null) {
+            for (Object part : parts) {
+                if (part == null) {
+                    continue;
+                }
+                String value = String.valueOf(part).trim();
+                if (!value.isEmpty()) {
+                    joiner.add(value);
+                }
             }
         }
-        return joiner.toString();
+        String key = joiner.toString();
+        if (key.isEmpty()) {
+            throw new IllegalArgumentException("Redis Key 至少需要一个有效片段");
+        }
+        return key;
     }
 }

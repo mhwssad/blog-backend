@@ -17,6 +17,8 @@ public final class AuthConstants {
     public static final String REDIS_USER = "user";
     public static final String REDIS_USERNAME = "username";
     public static final String REDIS_SESSIONS = "sessions";
+    public static final String TOKEN_SCOPE_USER = REDIS_USER;
+    public static final String TOKEN_SCOPE_ACCOUNT = REDIS_USERNAME;
 
     public static final String EMAIL_LOGIN_CODE_PREFIX = "auth:email-login-code";
     public static final Duration EMAIL_LOGIN_CODE_TTL = Duration.ofMinutes(5);

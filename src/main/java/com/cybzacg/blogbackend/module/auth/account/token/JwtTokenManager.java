@@ -188,7 +188,7 @@ public class JwtTokenManager implements TokenManager {
                 .claims(claims)
                 .signWith(secretKey);
 
-        if (ttlSeconds != null && ttlSeconds >= 0) {
+        if (ttlSeconds != null && ttlSeconds > 0) {
             builder.expiration(Date.from(issuedAt.plusSeconds(ttlSeconds)));
         }
 
@@ -296,5 +296,3 @@ public class JwtTokenManager implements TokenManager {
         return null;
     }
 }
-
-

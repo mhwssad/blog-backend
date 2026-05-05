@@ -1,6 +1,9 @@
 package com.cybzacg.blogbackend.module.follow.service.impl;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
+import com.cybzacg.blogbackend.common.constant.RedisConstants;
+import com.cybzacg.blogbackend.common.redis.RedisKeyUtils;
+import com.cybzacg.blogbackend.common.redis.RedisOperator;
 import com.cybzacg.blogbackend.domain.auth.SysUser;
 import com.cybzacg.blogbackend.domain.follow.SysUserFollow;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
@@ -15,11 +18,13 @@ import com.cybzacg.blogbackend.utils.CollectionUtils;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -31,6 +36,7 @@ import java.util.Objects;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserFollowServiceImpl implements UserFollowService {
     private static final int FOLLOW_STATUS_ACTIVE = 1;
     private static final int FOLLOW_STATUS_INACTIVE = 0;
@@ -38,11 +44,13 @@ public class UserFollowServiceImpl implements UserFollowService {
     private static final int SPECIAL_FOLLOW_DISABLED = 0;
     private static final long DEFAULT_PAGE_SIZE = 10L;
     private static final long MAX_PAGE_SIZE = 100L;
+    private static final Duration FOLLOW_COUNT_CACHE_TTL = Duration.ofMinutes(5);
 
     private final SysUserFollowRepository sysUserFollowRepository;
     private final SysUserRepository sysUserRepository;
     private final FollowModelConvert followModelConvert;
     private final FollowNoticeService followNoticeService;
+    private final RedisOperator redisOperator;
 
     /**
      * 创建或恢复一条单向关注关系；若已关注则保持幂等。
@@ -59,10 +67,12 @@ public class UserFollowServiceImpl implements UserFollowService {
                 return;
             }
             reactivateFollowRelation(relation, now);
+            evictFollowCountCache(userId, targetUserId);
             followNoticeService.notifyNewFollowerAfterCommit(targetUserId, userId);
             return;
         }
         if (createFollowRelation(userId, targetUserId, now)) {
+            evictFollowCountCache(userId, targetUserId);
             followNoticeService.notifyNewFollowerAfterCommit(targetUserId, userId);
         }
     }
@@ -78,6 +88,7 @@ public class UserFollowServiceImpl implements UserFollowService {
         relation.setFollowStatus(FOLLOW_STATUS_INACTIVE);
         relation.setUnfollowTime(LocalDateTime.now());
         sysUserFollowRepository.updateById(relation);
+        evictFollowCountCache(userId, targetUserId);
     }
 
     /**
@@ -143,10 +154,17 @@ public class UserFollowServiceImpl implements UserFollowService {
     @Override
     public UserFollowCountVO getMyFollowCount() {
         Long userId = SecurityUtils.requireUserId();
-        return UserFollowCountVO.builder()
+        String cacheKey = followCountCacheKey(userId);
+        UserFollowCountVO cached = readFollowCountCache(cacheKey);
+        if (cached != null) {
+            return cached;
+        }
+        UserFollowCountVO result = UserFollowCountVO.builder()
                 .followingCount(CollectionUtils.defaultLong(sysUserFollowRepository.countActiveFollowing(userId)))
                 .fanCount(CollectionUtils.defaultLong(sysUserFollowRepository.countActiveFans(userId)))
                 .build();
+        writeFollowCountCache(cacheKey, result);
+        return result;
     }
 
     /**
@@ -264,6 +282,43 @@ public class UserFollowServiceImpl implements UserFollowService {
 
     private PageResult<UserFollowUserVO> emptyPageResult(long current, long size) {
         return PageResult.empty(current, size);
+    }
+
+    private UserFollowCountVO readFollowCountCache(String cacheKey) {
+        try {
+            return redisOperator.get(cacheKey, UserFollowCountVO.class);
+        } catch (RuntimeException ex) {
+            log.warn("读取关注计数缓存失败，回源数据库: key={}", cacheKey, ex);
+            return null;
+        }
+    }
+
+    private void writeFollowCountCache(String cacheKey, UserFollowCountVO result) {
+        try {
+            redisOperator.set(cacheKey, result, FOLLOW_COUNT_CACHE_TTL);
+        } catch (RuntimeException ex) {
+            log.warn("写入关注计数缓存失败，不影响查询: key={}", cacheKey, ex);
+        }
+    }
+
+    private void evictFollowCountCache(Long followerId, Long followingId) {
+        evictFollowCountCache(followerId);
+        evictFollowCountCache(followingId);
+    }
+
+    private void evictFollowCountCache(Long userId) {
+        if (userId == null) {
+            return;
+        }
+        try {
+            redisOperator.delete(followCountCacheKey(userId));
+        } catch (RuntimeException ex) {
+            log.warn("清理关注计数缓存失败，不影响关系变更: userId={}", userId, ex);
+        }
+    }
+
+    private String followCountCacheKey(Long userId) {
+        return RedisKeyUtils.build(RedisConstants.FOLLOW_COUNT_CACHE_PREFIX, userId);
     }
 
 }

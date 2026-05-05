@@ -1,10 +1,13 @@
 package com.cybzacg.blogbackend.common.constant;
 
+import java.time.Duration;
+
 /**
  * 系统配置项常量。<p>集中管理动态配置的缓存 Key、配置 Key 和默认值，便于统一维护。
  */
 public final class ConfigConstants {
     public static final String CACHE_KEY_PREFIX = "sys:config";
+    public static final Duration CACHE_TTL = Duration.ofMinutes(10);
     public static final String SECURITY_IP_RATE_LIMIT_PER_SECOND_NAME = "全局IP每秒请求限流阈值";
     public static final String SECURITY_IP_RATE_LIMIT_PER_SECOND_KEY = "security.ip.rate-limit.per-second";
     public static final int DEFAULT_SECURITY_IP_RATE_LIMIT_PER_SECOND = 20;

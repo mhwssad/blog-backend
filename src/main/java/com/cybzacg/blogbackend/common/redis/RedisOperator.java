@@ -2,6 +2,7 @@ package com.cybzacg.blogbackend.common.redis;
 
 import com.cybzacg.blogbackend.utils.JsonUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.BoundSetOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -19,6 +20,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class RedisOperator {
     private final RedisTemplate<String, Object> redisTemplate;
 
@@ -79,7 +81,9 @@ public class RedisOperator {
     /**
      * 设置 String 值，不设过期时间。
      */
+    @Deprecated(since = "2.0", forRemoval = false)
     public void set(String key, Object value) {
+        log.warn("Redis Key 写入未设置 TTL: key={}", key);
         redisTemplate.opsForValue().set(key, value);
     }
 

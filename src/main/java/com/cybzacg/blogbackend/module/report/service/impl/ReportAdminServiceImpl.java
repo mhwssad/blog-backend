@@ -598,13 +598,8 @@ public class ReportAdminServiceImpl implements ReportAdminService {
     }
 
     private String resolveTargetTypeLabel(String targetType) {
-        if (targetType == null) return "内容";
-        return switch (targetType) {
-            case "article" -> "文章";
-            case "comment" -> "评论";
-            case "chat_message" -> "聊天消息";
-            default -> "内容";
-        };
+        ReportTargetTypeEnum type = ReportTargetTypeEnum.fromCode(targetType);
+        return type != null ? type.getLabel() : "内容";
     }
 
     private String truncate(String text, int maxLen) {

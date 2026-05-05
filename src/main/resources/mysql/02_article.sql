@@ -28,6 +28,7 @@ CREATE TABLE blog_article
     updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     remark        VARCHAR(256)                       NULL COMMENT '备注',
     PRIMARY KEY (id),
+    INDEX idx_core_review_query (status, review_status, visibility_scope, access_level, publish_time DESC) COMMENT '核心审核与可见性查询',
     INDEX idx_author_status_publish (author_id, status, publish_time DESC) COMMENT '作者文章列表（含发布时间）',
     INDEX idx_core_query (status, is_top, is_recommend, publish_time DESC) COMMENT '核心列表查询：状态+置顶+推荐+发布时间',
     INDEX idx_access_level_status (access_level, status) COMMENT '按访问级别过滤'

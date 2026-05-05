@@ -28,6 +28,7 @@ import java.util.Map;
 public abstract class BaseExceptionHandler {
     protected static final Logger log = LoggerFactory.getLogger(BaseExceptionHandler.class);
     private static final String DEV_PROFILE = "dev";
+    protected static final String PRODUCTION_PROFILE = "production";
 
     @Value("${spring.profiles.active:dev}")
     protected String profile;
@@ -167,6 +168,20 @@ public abstract class BaseExceptionHandler {
      */
     protected Result<Object> buildErrorResult(ResultCode resultCode) {
         return buildErrorResult(resultCode, null);
+    }
+
+    /**
+     * 判断当前是否为生产环境，用于统一控制异常响应中的敏感详情。
+     */
+    protected boolean isProductionProfile() {
+        return PRODUCTION_PROFILE.equals(profile);
+    }
+
+    /**
+     * 非生产环境返回异常消息，生产环境隐藏底层细节。
+     */
+    protected String nonProductionMessage(Exception e) {
+        return isProductionProfile() ? null : e.getMessage();
     }
 
     /**

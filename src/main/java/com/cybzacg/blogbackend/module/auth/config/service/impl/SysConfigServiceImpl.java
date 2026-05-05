@@ -49,7 +49,7 @@ public class SysConfigServiceImpl implements SysConfigService {
         if (config == null) {
             return null;
         }
-        redisOperator.set(cacheKey, config.getConfigValue());
+        redisOperator.set(cacheKey, config.getConfigValue(), ConfigConstants.CACHE_TTL);
         return config.getConfigValue();
     }
 

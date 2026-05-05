@@ -408,9 +408,9 @@ public class AuthServiceImpl implements AuthService {
 
     private String loginFailScope(String account, Long userId) {
         if (userId != null) {
-            return RedisKeyUtils.build(AuthConstants.LOGIN_FAIL_SCOPE_USER, userId);
+            return RedisKeyUtils.build(AuthConstants.TOKEN_SCOPE_USER, userId);
         }
-        return RedisKeyUtils.build(AuthConstants.LOGIN_FAIL_SCOPE_ACCOUNT, StrUtils.trim(account));
+        return RedisKeyUtils.build(AuthConstants.TOKEN_SCOPE_ACCOUNT, StrUtils.trim(account));
     }
 }
 

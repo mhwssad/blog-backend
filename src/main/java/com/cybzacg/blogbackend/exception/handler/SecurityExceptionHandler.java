@@ -35,8 +35,7 @@ public class SecurityExceptionHandler extends BaseExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public Result<Object> handleAccessDenied(AccessDeniedException e) {
         log.warn("访问拒绝异常 [TraceID: {}] - {}", getTraceId(), e.getMessage());
-        return buildErrorResult(ResultErrorCode.FORBIDDEN,
-                "production".equals(profile) ? null : e.getMessage());
+        return buildSecurityError(ResultErrorCode.FORBIDDEN, e);
     }
 
     /**
@@ -50,40 +49,31 @@ public class SecurityExceptionHandler extends BaseExceptionHandler {
         log.warn("认证失败异常 [TraceID: {}] - {}", getTraceId(), e.getMessage());
 
         if (e instanceof BadCredentialsException) {
-            return buildErrorResult(ResultErrorCode.INVALID_CREDENTIALS,
-                    "production".equals(profile) ? null : e.getMessage());
+            return buildSecurityError(ResultErrorCode.INVALID_CREDENTIALS, e);
         }
         if (e instanceof InsufficientAuthenticationException) {
-            return buildErrorResult(ResultErrorCode.LOGIN_REQUIRED,
-                    "production".equals(profile) ? null : e.getMessage());
+            return buildSecurityError(ResultErrorCode.LOGIN_REQUIRED, e);
         }
         if (e instanceof AccountExpiredException) {
-            return buildErrorResult(ResultErrorCode.ACCOUNT_EXPIRED,
-                    "production".equals(profile) ? null : e.getMessage());
+            return buildSecurityError(ResultErrorCode.ACCOUNT_EXPIRED, e);
         }
         if (e instanceof LockedException) {
-            return buildErrorResult(ResultErrorCode.ACCOUNT_LOCKED,
-                    "production".equals(profile) ? null : e.getMessage());
+            return buildSecurityError(ResultErrorCode.ACCOUNT_LOCKED, e);
         }
         if (e instanceof DisabledException) {
-            return buildErrorResult(ResultErrorCode.ACCOUNT_DISABLED,
-                    "production".equals(profile) ? null : e.getMessage());
+            return buildSecurityError(ResultErrorCode.ACCOUNT_DISABLED, e);
         }
         if (e instanceof CredentialsExpiredException) {
-            return buildErrorResult(ResultErrorCode.CREDENTIALS_EXPIRED,
-                    "production".equals(profile) ? null : e.getMessage());
+            return buildSecurityError(ResultErrorCode.CREDENTIALS_EXPIRED, e);
         }
         if (e instanceof RememberMeAuthenticationException) {
-            return buildErrorResult(ResultErrorCode.REMEMBER_ME_AUTH_FAILED,
-                    "production".equals(profile) ? null : e.getMessage());
+            return buildSecurityError(ResultErrorCode.REMEMBER_ME_AUTH_FAILED, e);
         }
         if (e instanceof SessionAuthenticationException) {
-            return buildErrorResult(ResultErrorCode.SESSION_EXPIRED,
-                    "production".equals(profile) ? null : e.getMessage());
+            return buildSecurityError(ResultErrorCode.SESSION_EXPIRED, e);
         }
 
-        return buildErrorResult(ResultErrorCode.AUTH_FAILED,
-                "production".equals(profile) ? null : e.getMessage());
+        return buildSecurityError(ResultErrorCode.AUTH_FAILED, e);
     }
 
     /**
@@ -95,8 +85,7 @@ public class SecurityExceptionHandler extends BaseExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public Result<Object> handleBadCredentials(BadCredentialsException e) {
         log.warn("用户名或密码错误 [TraceID: {}] - {}", getTraceId(), e.getMessage());
-        return buildErrorResult(ResultErrorCode.INVALID_CREDENTIALS,
-                "production".equals(profile) ? null : e.getMessage());
+        return buildSecurityError(ResultErrorCode.INVALID_CREDENTIALS, e);
     }
 
     /**
@@ -109,7 +98,7 @@ public class SecurityExceptionHandler extends BaseExceptionHandler {
     public Result<Object> handleUsernameNotFound(UsernameNotFoundException e) {
         log.warn("用户名不存在异常 [TraceID: {}] - {}", getTraceId(), e.getMessage());
 
-        if ("production".equals(profile)) {
+        if (isProductionProfile()) {
             return buildErrorResult(ResultErrorCode.INVALID_CREDENTIALS);
         }
         return buildErrorResult(ResultErrorCode.USER_NOT_FOUND, e.getMessage());
@@ -132,8 +121,7 @@ public class SecurityExceptionHandler extends BaseExceptionHandler {
             resultCode = ResultErrorCode.CSRF_TOKEN_INVALID;
         }
 
-        return buildErrorResult(resultCode,
-                "production".equals(profile) ? null : e.getMessage());
+        return buildSecurityError(resultCode, e);
     }
 
     /**
@@ -152,7 +140,10 @@ public class SecurityExceptionHandler extends BaseExceptionHandler {
             log.error("安全警告：检测到Cookie盗用尝试 [TraceID: {}]", getTraceId());
         }
 
-        return buildErrorResult(resultCode,
-                "production".equals(profile) ? null : e.getMessage());
+        return buildSecurityError(resultCode, e);
+    }
+
+    private Result<Object> buildSecurityError(ResultErrorCode resultCode, Exception e) {
+        return buildErrorResult(resultCode, nonProductionMessage(e));
     }
 }

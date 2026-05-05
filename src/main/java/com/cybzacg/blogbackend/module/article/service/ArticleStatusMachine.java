@@ -15,10 +15,16 @@ import java.time.LocalDateTime;
  */
 @Component
 public class ArticleStatusMachine {
+    private static final int STATUS_DRAFT = 0;
+    private static final int STATUS_PUBLISHED = 1;
+    private static final int STATUS_OFFLINE = 2;
+    private static final int ACCESS_LEVEL_PUBLIC = 0;
+    private static final int ACCESS_LEVEL_WHITELIST = 4;
+
     public Integer normalizeStatus(Integer status) {
         int actualStatus = CollectionUtils.defaultInt(status);
         ExceptionThrowerCore.throwBusinessIf(
-                actualStatus < 0 || actualStatus > 2,
+                actualStatus < STATUS_DRAFT || actualStatus > STATUS_OFFLINE,
                 ResultErrorCode.ILLEGAL_ARGUMENT,
                 "文章状态非法");
         return actualStatus;
@@ -56,12 +62,12 @@ public class ArticleStatusMachine {
         normalizeVisibilityScope(visibilityScope);
         int actualAccessLevel = CollectionUtils.defaultInt(accessLevel);
         ExceptionThrowerCore.throwBusinessIf(
-                actualAccessLevel < 0 || actualAccessLevel > 4,
+                actualAccessLevel < ACCESS_LEVEL_PUBLIC || actualAccessLevel > ACCESS_LEVEL_WHITELIST,
                 ResultErrorCode.ILLEGAL_ARGUMENT,
                 "文章访问级别非法");
         if (scheduledPublishTime != null) {
             ExceptionThrowerCore.throwBusinessIf(
-                    actualStatus == 2,
+                    actualStatus == STATUS_OFFLINE,
                     ResultErrorCode.ILLEGAL_ARGUMENT,
                     "下架文章不能设置定时发布");
             ExceptionThrowerCore.throwBusinessIf(
@@ -74,8 +80,8 @@ public class ArticleStatusMachine {
 
     public Integer resolveStatusForSave(Integer requestedStatus, LocalDateTime scheduledPublishTime) {
         int actualStatus = normalizeStatus(requestedStatus);
-        if (actualStatus == 1 && isScheduledForFuture(scheduledPublishTime, LocalDateTime.now())) {
-            return 0;
+        if (actualStatus == STATUS_PUBLISHED && isScheduledForFuture(scheduledPublishTime, LocalDateTime.now())) {
+            return STATUS_DRAFT;
         }
         return actualStatus;
     }
@@ -85,7 +91,7 @@ public class ArticleStatusMachine {
                                             LocalDateTime existingPublishTime,
                                             LocalDateTime scheduledPublishTime) {
         int actualStatus = normalizeStatus(persistedStatus);
-        if (actualStatus == 1) {
+        if (actualStatus == STATUS_PUBLISHED) {
             return requestedPublishTime != null
                     ? requestedPublishTime
                     : (existingPublishTime != null ? existingPublishTime : LocalDateTime.now());
@@ -102,14 +108,14 @@ public class ArticleStatusMachine {
         }
         return isPublishedForNormalUsers(article, LocalDateTime.now())
                 && normalizeVisibilityScope(article.getVisibilityScope()).equals(ArticleVisibilityScopeEnum.PUBLIC.getValue())
-                && CollectionUtils.defaultInt(article.getAccessLevel()) == 0;
+                && CollectionUtils.defaultInt(article.getAccessLevel()) == ACCESS_LEVEL_PUBLIC;
     }
 
     public boolean isPublishedForNormalUsers(BlogArticle article, LocalDateTime now) {
         if (article == null) {
             return false;
         }
-        if (!Integer.valueOf(1).equals(normalizeStatus(article.getStatus()))) {
+        if (!Integer.valueOf(STATUS_PUBLISHED).equals(normalizeStatus(article.getStatus()))) {
             return false;
         }
         Integer reviewStatus = normalizeReviewStatus(article.getReviewStatus());
@@ -129,7 +135,7 @@ public class ArticleStatusMachine {
             return false;
         }
         Integer reviewStatus = normalizeReviewStatus(article.getReviewStatus());
-        return Integer.valueOf(0).equals(normalizeStatus(article.getStatus()))
+        return Integer.valueOf(STATUS_DRAFT).equals(normalizeStatus(article.getStatus()))
                 && !article.getScheduledPublishTime().isAfter(now)
                 && !reviewStatus.equals(ArticleReviewStatusEnum.REVIEWING.getValue())
                 && !reviewStatus.equals(ArticleReviewStatusEnum.REJECTED.getValue());
