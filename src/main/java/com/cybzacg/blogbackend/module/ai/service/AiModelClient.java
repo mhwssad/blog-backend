@@ -2,6 +2,7 @@ package com.cybzacg.blogbackend.module.ai.service;
 
 import com.cybzacg.blogbackend.domain.ai.AiChannelConfig;
 import com.cybzacg.blogbackend.domain.ai.AiChatMessage;
+import com.cybzacg.blogbackend.domain.file.FileInfo;
 import com.cybzacg.blogbackend.module.ai.model.data.AiModelCallResult;
 
 import java.util.List;
@@ -15,13 +16,14 @@ public interface AiModelClient {
 
     /**
      * 发起一次 AI 对话调用。
-     *
-     * @param config          渠道配置（含 apiBaseUrl、apiKeyEncrypted、modelName、maxContextTokens 等）
-     * @param systemPrompt    系统提示词
-     * @param contextMessages 历史上下文消息（按时间正序）
-     * @param userQuestion    当前用户提问
-     * @return 调用结果，包含响应内容、token 用量或错误信息
      */
     AiModelCallResult chat(AiChannelConfig config, String systemPrompt,
                            List<AiChatMessage> contextMessages, String userQuestion);
+
+    /**
+     * 发起一次多模态 AI 对话调用（支持图片附件）。
+     */
+    AiModelCallResult chat(AiChannelConfig config, String systemPrompt,
+                           List<AiChatMessage> contextMessages,
+                           String userQuestion, List<FileInfo> imageAttachments);
 }

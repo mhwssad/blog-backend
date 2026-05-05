@@ -3,12 +3,15 @@ package com.cybzacg.blogbackend.module.ai.service.impl;
 import com.cybzacg.blogbackend.config.LangChain4jConfig;
 import com.cybzacg.blogbackend.domain.ai.AiChannelConfig;
 import com.cybzacg.blogbackend.domain.ai.AiChatMessage;
+import com.cybzacg.blogbackend.domain.file.FileInfo;
 import com.cybzacg.blogbackend.module.ai.constant.AiConstants;
 import com.cybzacg.blogbackend.module.ai.model.data.AiModelCallResult;
 import com.cybzacg.blogbackend.module.ai.service.AiModelClient;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
@@ -31,9 +34,17 @@ public class AiModelClientImpl implements AiModelClient {
     @Override
     public AiModelCallResult chat(AiChannelConfig config, String systemPrompt,
                                   List<AiChatMessage> contextMessages, String userQuestion) {
+        return chat(config, systemPrompt, contextMessages, userQuestion, null);
+    }
+
+    @Override
+    public AiModelCallResult chat(AiChannelConfig config, String systemPrompt,
+                                  List<AiChatMessage> contextMessages,
+                                  String userQuestion, List<FileInfo> imageAttachments) {
         try {
             ChatModel model = LangChain4jConfig.buildModel(config);
-            List<ChatMessage> messages = buildMessages(config, systemPrompt, contextMessages, userQuestion);
+            List<ChatMessage> messages = buildMessages(config, systemPrompt, contextMessages,
+                    userQuestion, imageAttachments);
 
             ChatResponse response = model.chat(messages);
 
@@ -54,7 +65,8 @@ public class AiModelClientImpl implements AiModelClient {
      * 从最老的消息开始裁剪，直到满足限制。系统提示词和当前用户提问始终保留。
      */
     private List<ChatMessage> buildMessages(AiChannelConfig config, String systemPrompt,
-                                            List<AiChatMessage> contextMessages, String userQuestion) {
+                                            List<AiChatMessage> contextMessages,
+                                            String userQuestion, List<FileInfo> imageAttachments) {
         List<ChatMessage> history = convertHistory(contextMessages);
         int maxContextTokens = config.getMaxContextTokens() != null ? config.getMaxContextTokens() : 0;
 
@@ -67,8 +79,26 @@ public class AiModelClientImpl implements AiModelClient {
             messages.add(SystemMessage.from(systemPrompt));
         }
         messages.addAll(history);
-        messages.add(UserMessage.from(userQuestion));
+
+        if (imageAttachments != null && !imageAttachments.isEmpty()) {
+            messages.add(buildMultimodalUserMessage(userQuestion, imageAttachments));
+        } else {
+            messages.add(UserMessage.from(userQuestion));
+        }
         return messages;
+    }
+
+    /**
+     * 构造包含文本和图片的多模态用户消息。
+     */
+    private UserMessage buildMultimodalUserMessage(String text, List<FileInfo> images) {
+        List<dev.langchain4j.data.message.Content> contents = new ArrayList<>(images.size() + 1);
+        contents.add(TextContent.from(text));
+        for (FileInfo image : images) {
+            String url = image.getFileUrl() != null ? image.getFileUrl() : image.getFilePath();
+            contents.add(ImageContent.from(url));
+        }
+        return UserMessage.from(contents);
     }
 
     /**
@@ -77,7 +107,6 @@ public class AiModelClientImpl implements AiModelClient {
     private List<ChatMessage> convertHistory(List<AiChatMessage> contextMessages) {
         List<ChatMessage> result = new ArrayList<>(contextMessages.size());
         for (AiChatMessage msg : contextMessages) {
-            // 跳过失败消息
             if (msg.getResponseStatus() == null || msg.getResponseStatus() != 1) {
                 continue;
             }
@@ -101,8 +130,6 @@ public class AiModelClientImpl implements AiModelClient {
 
     /**
      * 按估算 token 数裁剪历史消息（从最老的开始移除），确保不超过上限。
-     *
-     * <p>估算公式：字符数 / 2。此为粗略估算，适用于中文为主的场景。
      */
     private List<ChatMessage> trimContext(List<ChatMessage> history, int maxContextTokens) {
         int totalTokens = estimateTokens(history);
@@ -110,7 +137,6 @@ public class AiModelClientImpl implements AiModelClient {
             return history;
         }
 
-        // 从头部（最老的消息）开始裁剪
         List<ChatMessage> trimmed = new ArrayList<>(history);
         while (!trimmed.isEmpty() && estimateTokens(trimmed) > maxContextTokens) {
             trimmed.remove(0);
@@ -118,9 +144,6 @@ public class AiModelClientImpl implements AiModelClient {
         return trimmed;
     }
 
-    /**
-     * 估算消息列表的 token 数（字符数 / 2）。
-     */
     private int estimateTokens(List<ChatMessage> messages) {
         int totalChars = 0;
         for (ChatMessage message : messages) {
@@ -140,9 +163,6 @@ public class AiModelClientImpl implements AiModelClient {
         return "";
     }
 
-    /**
-     * 将 LangChain4j ChatResponse 映射为项目内部调用结果。
-     */
     private AiModelCallResult mapResponse(ChatResponse response) {
         AiModelCallResult result = new AiModelCallResult();
         result.setSuccess(true);
@@ -163,9 +183,6 @@ public class AiModelClientImpl implements AiModelClient {
         return result;
     }
 
-    /**
-     * 截断错误信息，避免过长异常信息影响日志和存储。
-     */
     private String truncateErrorMessage(String message) {
         if (message == null) {
             return "未知错误";

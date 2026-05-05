@@ -85,7 +85,30 @@ public class LangChain4jConfig {
     }
 
     /**
-     * 根据渠道配置动态构建 ChatModel。
+     * 根据渠道配置动态构建 StreamingChatModel（用于流式输出）。
+     */
+    public static StreamingChatModel buildStreamingModel(AiChannelConfig config) {
+        String baseUrl = StrUtils.trimToNull(config.getApiBaseUrl());
+        String apiKey = StrUtils.trimToNull(config.getApiKeyEncrypted());
+        if (baseUrl == null) {
+            throw new IllegalArgumentException("渠道 [" + config.getChannelCode() + "] apiBaseUrl 不能为空");
+        }
+        if (apiKey == null) {
+            throw new IllegalArgumentException("渠道 [" + config.getChannelCode() + "] apiKeyEncrypted 不能为空");
+        }
+        return OpenAiStreamingChatModel.builder()
+                .baseUrl(baseUrl)
+                .apiKey(apiKey)
+                .modelName(StrUtils.trimToDefault(config.getModelName(), "deepseek-chat"))
+                .temperature(AiConstants.DEFAULT_TEMPERATURE)
+                .maxTokens(AiConstants.DEFAULT_MAX_TOKENS)
+                .timeout(Duration.ofSeconds(AiConstants.DEFAULT_TIMEOUT_SECONDS))
+                .logRequests(false)
+                .logResponses(false)
+                .build();
+    }
+
+    /**
      *
      * <p>用于 AI 模块多渠道场景，每次调用生成独立的模型实例。缺失字段使用 {@link AiConstants} 默认值兜底。
      *
