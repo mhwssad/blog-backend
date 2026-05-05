@@ -21,6 +21,7 @@ import com.cybzacg.blogbackend.module.ai.repository.AiMessageAttachmentRepositor
 import com.cybzacg.blogbackend.module.ai.service.AiModelClient;
 import com.cybzacg.blogbackend.module.ai.service.AiQuotaService;
 import com.cybzacg.blogbackend.module.ai.service.AiRagService;
+import com.cybzacg.blogbackend.module.ai.service.AiTokenBudgetService;
 import com.cybzacg.blogbackend.module.ai.service.AiUsageLogService;
 import com.cybzacg.blogbackend.module.ai.service.impl.AiChatServiceImpl;
 import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
@@ -66,6 +67,8 @@ class AiChatServiceImplTest {
     private AiMessageAttachmentRepository aiMessageAttachmentRepository;
     @Mock
     private FileInfoRepository fileInfoRepository;
+    @Mock
+    private AiTokenBudgetService aiTokenBudgetService;
 
     private AiChatServiceImpl aiChatService;
 
@@ -81,10 +84,13 @@ class AiChatServiceImplTest {
                 aiUsageLogService,
                 aiModelConvert,
                 aiMessageAttachmentRepository,
-                fileInfoRepository
+                fileInfoRepository,
+                aiTokenBudgetService
         );
         lenient().when(aiRagService.retrieve(any(), any())).thenReturn(new com.cybzacg.blogbackend.module.ai.model.internal.AiRagRetrievalResult());
         lenient().when(aiRagService.enrichSystemPrompt(any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
+        lenient().when(aiTokenBudgetService.checkBudget(any(), any(), any(), any(), any()))
+                .thenReturn(new AiTokenBudgetService.BudgetCheck(true, 0, 0, 0, 0));
     }
 
     // ========== createSession ==========

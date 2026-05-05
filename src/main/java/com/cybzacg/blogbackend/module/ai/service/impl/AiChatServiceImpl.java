@@ -23,6 +23,7 @@ import com.cybzacg.blogbackend.module.ai.service.AiChatService;
 import com.cybzacg.blogbackend.module.ai.service.AiModelClient;
 import com.cybzacg.blogbackend.module.ai.service.AiQuotaService;
 import com.cybzacg.blogbackend.module.ai.service.AiRagService;
+import com.cybzacg.blogbackend.module.ai.service.AiTokenBudgetService;
 import com.cybzacg.blogbackend.module.ai.service.AiUsageLogService;
 import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
 import com.cybzacg.blogbackend.utils.JsonUtils;
@@ -59,6 +60,7 @@ public class AiChatServiceImpl implements AiChatService {
     private final AiModelConvert aiModelConvert;
     private final AiMessageAttachmentRepository aiMessageAttachmentRepository;
     private final FileInfoRepository fileInfoRepository;
+    private final AiTokenBudgetService aiTokenBudgetService;
 
     /**
      * {@inheritDoc}
@@ -169,6 +171,15 @@ public class AiChatServiceImpl implements AiChatService {
         // 3. 额度检查
         aiQuotaService.checkQuota(userId, config);
 
+        // 3.5 Token 预算预检
+        List<AiChatMessage> preloadedContext = aiChatMessageRepository
+                .listBySessionIdOrderById(sessionId, AiConstants.DEFAULT_MAX_CONTEXT_MESSAGES);
+        AiTokenBudgetService.BudgetCheck budgetCheck = aiTokenBudgetService.checkBudget(
+                config, request.getContent(), preloadedContext, null, null);
+        ExceptionThrowerCore.throwBusinessIf(
+                !budgetCheck.withinBudget(),
+                ResultErrorCode.ILLEGAL_ARGUMENT, "输入内容超出 Token 预算限制");
+
         // 4. 保存用户消息
         AiChatMessage userMessage = new AiChatMessage();
         userMessage.setSessionId(sessionId);
@@ -183,12 +194,18 @@ public class AiChatServiceImpl implements AiChatService {
         // 4.5 解析并校验附件
         List<FileInfo> imageAttachments = resolveAttachments(userId, userMessage.getId(), request.getAttachmentFileIds());
 
-        // 5. 加载上下文消息
-        List<AiChatMessage> contextMessages = aiChatMessageRepository
-                .listBySessionIdOrderById(sessionId, AiConstants.DEFAULT_MAX_CONTEXT_MESSAGES);
+        // 5. 复用已加载上下文，按预算裁剪
+        List<AiChatMessage> contextMessages = preloadedContext;
+        if (config.getMaxHistoryTokens() != null && config.getMaxHistoryTokens() > 0) {
+            contextMessages = aiTokenBudgetService.trimHistory(contextMessages, config.getMaxHistoryTokens());
+        }
 
         // 6. RAG 检索并调用 AI 模型
         AiRagRetrievalResult ragResult = aiRagService.retrieve(config, request.getContent());
+        String ragContext = ragResult.getContextText();
+        if (config.getMaxRagTokens() != null && config.getMaxRagTokens() > 0 && ragContext != null) {
+            ragContext = aiTokenBudgetService.trimRagContext(ragContext, config.getMaxRagTokens());
+        }
         String systemPrompt = aiRagService.enrichSystemPrompt(config.getSystemPromptTemplate(), ragResult);
         AiModelCallResult callResult;
         AiMessageResponseStatusEnum responseStatus;

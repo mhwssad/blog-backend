@@ -17,6 +17,7 @@ import com.cybzacg.blogbackend.module.ai.repository.AiMessageAttachmentRepositor
 import com.cybzacg.blogbackend.module.ai.service.AiModelClient;
 import com.cybzacg.blogbackend.module.ai.service.AiQuotaService;
 import com.cybzacg.blogbackend.module.ai.service.AiRagService;
+import com.cybzacg.blogbackend.module.ai.service.AiTokenBudgetService;
 import com.cybzacg.blogbackend.module.ai.service.AiUsageLogService;
 import com.cybzacg.blogbackend.module.ai.service.impl.AiChatServiceImpl;
 import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
@@ -51,6 +52,7 @@ class AiChatServiceImplStreamTest {
     @Mock private AiModelConvert aiModelConvert;
     @Mock private AiMessageAttachmentRepository aiMessageAttachmentRepository;
     @Mock private FileInfoRepository fileInfoRepository;
+    @Mock private AiTokenBudgetService aiTokenBudgetService;
 
     private AiChatServiceImpl aiChatService;
 
@@ -60,7 +62,10 @@ class AiChatServiceImplStreamTest {
                 aiChatSessionRepository, aiChatMessageRepository,
                 aiChannelConfigRepository, aiModelClient,
                 aiQuotaService, aiRagService, aiUsageLogService,
-                aiModelConvert, aiMessageAttachmentRepository, fileInfoRepository);
+                aiModelConvert, aiMessageAttachmentRepository, fileInfoRepository,
+                aiTokenBudgetService);
+        lenient().when(aiTokenBudgetService.checkBudget(any(), any(), any(), any(), any()))
+                .thenReturn(new AiTokenBudgetService.BudgetCheck(true, 0, 0, 0, 0));
     }
 
     @Test
