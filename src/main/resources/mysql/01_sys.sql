@@ -305,6 +305,7 @@ CREATE TABLE `ai_chat_message`
     `request_target_id`   bigint COMMENT '关联目标ID（文章/聊天等）',
     `token_count`         int         DEFAULT 0 COMMENT '消息 token 数',
     `data_scope_snapshot` json COMMENT '当次读取范围快照 JSON',
+    `rag_reference_json`  json COMMENT 'RAG 引用来源 JSON',
     `response_status`     tinyint     DEFAULT 1 COMMENT '响应状态：0-失败，1-成功',
     `error_message`       varchar(512) COMMENT '错误信息',
     `created_at`          datetime    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
@@ -328,6 +329,10 @@ CREATE TABLE `ai_usage_log`
     `quota_cost`         int         DEFAULT 1 COMMENT '额度消耗',
     `success_status`     tinyint     DEFAULT 1 COMMENT '成功状态：0-失败，1-成功',
     `error_code`         varchar(64) COMMENT '错误码',
+    `rag_enabled`        tinyint     DEFAULT 0 NOT NULL COMMENT '是否启用 RAG：0-否，1-是',
+    `rag_hit_count`      int         DEFAULT 0 NOT NULL COMMENT 'RAG 命中数量',
+    `rag_duration_ms`    bigint      DEFAULT 0 NOT NULL COMMENT 'RAG 检索耗时毫秒',
+    `rag_reference_json` json COMMENT 'RAG 引用来源 JSON',
     `created_at`         datetime    DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
     PRIMARY KEY (`id`) USING BTREE,
     KEY `idx_ai_usage_log_user_created` (`user_id`, `created_at` DESC) COMMENT '按用户查询使用记录',
@@ -389,6 +394,37 @@ CREATE TABLE `ai_knowledge_entry`
     KEY `idx_ai_knowledge_entry_synced` (`synced_at`) COMMENT '按同步时间查询'
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='AI 知识条目表';
+
+-- ============================================
+-- AI 知识分块表
+-- 保存 RAG 检索使用的文本分块和 embedding
+-- ============================================
+DROP TABLE IF EXISTS `ai_knowledge_chunk`;
+CREATE TABLE `ai_knowledge_chunk`
+(
+    `id`              bigint       NOT NULL AUTO_INCREMENT COMMENT '分块ID',
+    `entry_id`        bigint       NOT NULL COMMENT '知识条目ID',
+    `source_type`     varchar(32)  NOT NULL COMMENT '来源类型',
+    `source_id`       bigint       NOT NULL COMMENT '来源对象ID',
+    `title`           varchar(256) NOT NULL COMMENT '来源标题快照',
+    `source_url`      varchar(512) NULL COMMENT '来源页面URL',
+    `chunk_index`     int          NOT NULL COMMENT '分块序号',
+    `chunk_text`      text         NOT NULL COMMENT '分块文本',
+    `content_hash`    varchar(64)  NOT NULL COMMENT '分块内容 SHA-256',
+    `embedding_json`  longtext     NOT NULL COMMENT 'embedding 向量 JSON 数组',
+    `embedding_dim`   int          NOT NULL COMMENT '向量维度',
+    `embedding_model` varchar(128) NOT NULL COMMENT 'embedding 模型名称',
+    `status`          tinyint      DEFAULT 1 NOT NULL COMMENT '状态：0-失效，1-有效',
+    `entry_version`   int          DEFAULT 1 NOT NULL COMMENT '知识条目版本号',
+    `created_at`      datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    `updated_at`      datetime     DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    UNIQUE KEY `uk_ai_knowledge_chunk_hash` (`entry_id`, `chunk_index`, `content_hash`) COMMENT '同条目同序号内容唯一',
+    KEY `idx_ai_knowledge_chunk_entry` (`entry_id`, `status`, `chunk_index`) COMMENT '按条目查询有效分块',
+    KEY `idx_ai_knowledge_chunk_source` (`source_type`, `source_id`, `status`) COMMENT '按来源查询分块',
+    KEY `idx_ai_knowledge_chunk_status` (`status`, `updated_at` DESC) COMMENT '按状态检索分块'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='AI 知识分块表';
 
 -- ============================================
 -- AI 知识同步任务表

@@ -4,6 +4,9 @@ import com.cybzacg.blogbackend.domain.ai.AiMcpServerConfig;
 import com.cybzacg.blogbackend.domain.ai.AiToolAuthorization;
 import com.cybzacg.blogbackend.domain.ai.AiToolCallLog;
 import com.cybzacg.blogbackend.domain.ai.AiToolDefinition;
+import com.cybzacg.blogbackend.common.constant.RedisConstants;
+import com.cybzacg.blogbackend.common.redis.RedisKeyUtils;
+import com.cybzacg.blogbackend.common.redis.RedisOperator;
 import com.cybzacg.blogbackend.enums.ai.AiToolAuthorizationTypeEnum;
 import com.cybzacg.blogbackend.enums.ai.AiToolSourceTypeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
@@ -28,6 +31,7 @@ import org.springframework.util.StringUtils;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.time.Duration;
 
 /**
  * AI 工具统一执行服务实现。
@@ -42,6 +46,7 @@ public class AiToolExecutionServiceImpl implements AiToolExecutionService {
     private final AiToolCallLogRepository aiToolCallLogRepository;
     private final AiMcpServerConfigRepository aiMcpServerConfigRepository;
     private final AiMcpClientFactory aiMcpClientFactory;
+    private final RedisOperator redisOperator;
 
     @Override
     public void validateAuthorized(String toolCode, AiToolExecutionContext context) {
@@ -56,6 +61,7 @@ public class AiToolExecutionServiceImpl implements AiToolExecutionService {
         context.setToolCode(tool.getToolCode());
         context.setToolName(tool.getToolName());
         validateAuthorization(tool, context);
+        enforceRateLimit(tool, context);
         validateArguments(arguments, tool);
 
         long start = System.currentTimeMillis();
@@ -132,6 +138,19 @@ public class AiToolExecutionServiceImpl implements AiToolExecutionService {
             ExceptionThrowerCore.throwBusinessIf(!args.containsKey(field),
                     ResultErrorCode.ILLEGAL_ARGUMENT, "工具入参缺少必填字段: " + field);
         }
+    }
+
+    private void enforceRateLimit(AiToolDefinition tool, AiToolExecutionContext context) {
+        String subject = context.getUserId() != null ? String.valueOf(context.getUserId()) : "anonymous";
+        String key = RedisKeyUtils.build(RedisConstants.AI_TOOL_EXECUTE_RATE_LIMIT_PREFIX,
+                tool.getToolCode(), subject);
+        long count = redisOperator.increment(key);
+        if (count == 1) {
+            redisOperator.expire(key, Duration.ofMinutes(1));
+        }
+        ExceptionThrowerCore.throwBusinessIf(count > 30,
+                ResultErrorCode.REQUEST_RATE_LIMITED,
+                "工具调用过于频繁，请稍后再试");
     }
 
     private String doExecute(AiToolDefinition tool, String arguments) throws Exception {

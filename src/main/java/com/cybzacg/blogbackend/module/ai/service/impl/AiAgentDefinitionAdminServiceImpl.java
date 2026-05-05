@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.ai.AiAgentDefinition;
+import com.cybzacg.blogbackend.enums.SysAuditOperationType;
 import com.cybzacg.blogbackend.enums.ai.AiDataScopeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.ai.constant.AiConstants;
@@ -15,6 +16,8 @@ import com.cybzacg.blogbackend.module.ai.model.admin.AiAgentDefinitionSaveReques
 import com.cybzacg.blogbackend.module.ai.model.admin.AiAgentDefinitionVO;
 import com.cybzacg.blogbackend.module.ai.repository.AiAgentDefinitionRepository;
 import com.cybzacg.blogbackend.module.ai.service.AiAgentDefinitionAdminService;
+import com.cybzacg.blogbackend.module.auth.audit.model.common.SysAuditLogCreateRequest;
+import com.cybzacg.blogbackend.module.auth.audit.service.SysAuditLogService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.JsonUtils;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
@@ -25,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -36,6 +40,7 @@ import java.util.Optional;
 public class AiAgentDefinitionAdminServiceImpl implements AiAgentDefinitionAdminService {
 
     private final AiAgentDefinitionRepository aiAgentDefinitionRepository;
+    private final SysAuditLogService sysAuditLogService;
     private final AiModelConvert aiModelConvert;
 
     @Override
@@ -76,6 +81,7 @@ public class AiAgentDefinitionAdminServiceImpl implements AiAgentDefinitionAdmin
         definition.setCreatedBy(operatorId);
         definition.setUpdatedBy(operatorId);
         aiAgentDefinitionRepository.save(definition);
+        recordHighRiskAudit(null, definition, operatorId);
 
         log.info("创建 Agent 定义: id={}, name={}", definition.getId(), definition.getName());
         return aiModelConvert.toAgentDefinitionVO(definition);
@@ -87,6 +93,7 @@ public class AiAgentDefinitionAdminServiceImpl implements AiAgentDefinitionAdmin
         AiAgentDefinition definition = ExceptionThrowerCore.requireNonNull(
                 aiAgentDefinitionRepository.getById(id),
                 ResultErrorCode.AI_AGENT_NOT_FOUND);
+        AiAgentDefinition before = copyDefinition(definition);
 
         validateNameUnique(request.getName(), id);
         validateDataScopeJson(request.getDataScopeJson());
@@ -94,6 +101,7 @@ public class AiAgentDefinitionAdminServiceImpl implements AiAgentDefinitionAdmin
         aiModelConvert.updateAgentDefinition(request, definition);
         definition.setUpdatedBy(operatorId);
         aiAgentDefinitionRepository.updateById(definition);
+        recordHighRiskAudit(before, definition, operatorId);
 
         log.info("更新 Agent 定义: id={}, name={}", id, definition.getName());
         return aiModelConvert.toAgentDefinitionVO(definition);
@@ -109,10 +117,14 @@ public class AiAgentDefinitionAdminServiceImpl implements AiAgentDefinitionAdmin
         AiAgentDefinition definition = ExceptionThrowerCore.requireNonNull(
                 aiAgentDefinitionRepository.getById(id),
                 ResultErrorCode.AI_AGENT_NOT_FOUND);
+        Integer before = definition.getEnabled();
 
         definition.setEnabled(enabled);
         definition.setUpdatedBy(operatorId);
         aiAgentDefinitionRepository.updateById(definition);
+        if (!Objects.equals(before, enabled)) {
+            recordAudit(operatorId, definition.getId(), "enabled=" + before, "enabled=" + enabled);
+        }
 
         log.info("切换 Agent 状态: id={}, enabled={}", id, enabled);
     }
@@ -169,5 +181,48 @@ public class AiAgentDefinitionAdminServiceImpl implements AiAgentDefinitionAdmin
         } catch (IllegalArgumentException e) {
             return false;
         }
+    }
+
+    private void recordHighRiskAudit(AiAgentDefinition before, AiAgentDefinition after, Long operatorId) {
+        boolean highRisk = before == null
+                || !Objects.equals(before.getDataScopeJson(), after.getDataScopeJson())
+                || !Objects.equals(before.getExtraConfigJson(), after.getExtraConfigJson())
+                || !Objects.equals(before.getSystemPrompt(), after.getSystemPrompt());
+        if (!highRisk) {
+            return;
+        }
+        recordAudit(operatorId, after.getId(), buildStateSummary(before), buildStateSummary(after));
+    }
+
+    private void recordAudit(Long operatorId, Long targetId, String beforeState, String afterState) {
+        SysAuditLogCreateRequest audit = new SysAuditLogCreateRequest();
+        audit.setOperatorUserId(operatorId);
+        audit.setOperationType(SysAuditOperationType.MODIFY_AI_AGENT.getCode());
+        audit.setTargetTypeName("AiAgentDefinition");
+        audit.setTargetId(targetId);
+        audit.setBeforeState(beforeState);
+        audit.setAfterState(afterState);
+        sysAuditLogService.record(audit);
+    }
+
+    private String buildStateSummary(AiAgentDefinition definition) {
+        if (definition == null) {
+            return null;
+        }
+        return "name=" + definition.getName()
+                + ",enabled=" + definition.getEnabled()
+                + ",dataScopeJson=" + definition.getDataScopeJson()
+                + ",extraConfigJson=" + definition.getExtraConfigJson();
+    }
+
+    private AiAgentDefinition copyDefinition(AiAgentDefinition source) {
+        AiAgentDefinition target = new AiAgentDefinition();
+        target.setId(source.getId());
+        target.setName(source.getName());
+        target.setSystemPrompt(source.getSystemPrompt());
+        target.setDataScopeJson(source.getDataScopeJson());
+        target.setEnabled(source.getEnabled());
+        target.setExtraConfigJson(source.getExtraConfigJson());
+        return target;
     }
 }

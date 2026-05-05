@@ -17,6 +17,9 @@ public final class RedisConstants {
 
     public static final String AI_KNOWLEDGE_SYNC_LOCK_PREFIX = "ai:knowledge:sync:lock";
     public static final String AI_KNOWLEDGE_SOURCE_CONFIG_CACHE_PREFIX = "ai:knowledge:source-config";
+    public static final String AI_RAG_ACTIVE_CHUNKS_CACHE_KEY = "ai:rag:chunks:active";
+    public static final String AI_RAG_SEARCH_CACHE_PREFIX = "ai:rag:search";
+    public static final String AI_TOOL_EXECUTE_RATE_LIMIT_PREFIX = "ai:tool:execute:rate-limit";
 
     private RedisConstants() {
     }

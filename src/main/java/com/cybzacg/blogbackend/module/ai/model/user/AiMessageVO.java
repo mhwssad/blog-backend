@@ -1,9 +1,11 @@
 package com.cybzacg.blogbackend.module.ai.model.user;
 
+import com.cybzacg.blogbackend.module.ai.model.common.AiRagReferenceVO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * AI消息信息。
@@ -28,6 +30,9 @@ public class AiMessageVO {
 
     @Schema(description = "错误信息")
     private String errorMessage;
+
+    @Schema(description = "RAG 引用来源")
+    private List<AiRagReferenceVO> ragReferences;
 
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;

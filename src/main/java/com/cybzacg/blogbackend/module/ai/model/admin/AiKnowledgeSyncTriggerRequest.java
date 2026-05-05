@@ -17,6 +17,9 @@ public class AiKnowledgeSyncTriggerRequest {
     @Schema(description = "任务类型，默认 full_sync")
     private String taskType = "full_sync";
 
+    @Schema(description = "来源对象ID，single_entry 时必填")
+    private Long sourceId;
+
     @Schema(description = "备注")
     private String remark;
 }

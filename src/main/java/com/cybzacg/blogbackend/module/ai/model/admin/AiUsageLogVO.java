@@ -1,9 +1,11 @@
 package com.cybzacg.blogbackend.module.ai.model.admin;
 
+import com.cybzacg.blogbackend.module.ai.model.common.AiRagReferenceVO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * AI使用日志信息。
@@ -43,6 +45,18 @@ public class AiUsageLogVO {
 
     @Schema(description = "错误码")
     private String errorCode;
+
+    @Schema(description = "是否启用 RAG：0-否，1-是")
+    private Integer ragEnabled;
+
+    @Schema(description = "RAG 命中数量")
+    private Integer ragHitCount;
+
+    @Schema(description = "RAG 检索耗时毫秒")
+    private Long ragDurationMs;
+
+    @Schema(description = "RAG 引用来源")
+    private List<AiRagReferenceVO> ragReferences;
 
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;

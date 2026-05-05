@@ -63,6 +63,14 @@ chat:
     dispatch-fixed-delay-ms: 15000
 
 ai:
+  rag:
+    enabled: ${AI_RAG_ENABLED:true}
+    chunk-size: ${AI_RAG_CHUNK_SIZE:800}
+    chunk-overlap: ${AI_RAG_CHUNK_OVERLAP:120}
+    top-k: ${AI_RAG_TOP_K:5}
+    min-score: ${AI_RAG_MIN_SCORE:0.35}
+    cache-ttl: ${AI_RAG_CACHE_TTL:30m}
+    embedding-provider: ${AI_RAG_EMBEDDING_PROVIDER:mysql-redis}
   langchain4j:
     enabled: ${AI_LANGCHAIN4J_ENABLED:false}
     provider: ${AI_PROVIDER:deepseek}

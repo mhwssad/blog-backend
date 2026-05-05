@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.cybzacg.blogbackend.domain.ai.AiKnowledgeEntry;
 
+import java.util.List;
+
 /**
  * AiKnowledgeEntry Repository。
  */
@@ -31,4 +33,14 @@ public interface AiKnowledgeEntryRepository extends IService<AiKnowledgeEntry> {
      * 统计指定来源类型和状态的条目数。
      */
     long countBySourceTypeAndStatus(String sourceType, Integer status);
+
+    /**
+     * 查询指定来源类型下需要同步的条目。
+     */
+    List<AiKnowledgeEntry> listSyncCandidates(String sourceType, String taskType, int limit);
+
+    /**
+     * 查询指定来源类型下的有效条目。
+     */
+    List<AiKnowledgeEntry> listActiveBySourceType(String sourceType, int limit);
 }

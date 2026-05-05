@@ -19,6 +19,7 @@ import com.cybzacg.blogbackend.module.ai.repository.AiChatMessageRepository;
 import com.cybzacg.blogbackend.module.ai.repository.AiChatSessionRepository;
 import com.cybzacg.blogbackend.module.ai.service.AiModelClient;
 import com.cybzacg.blogbackend.module.ai.service.AiQuotaService;
+import com.cybzacg.blogbackend.module.ai.service.AiRagService;
 import com.cybzacg.blogbackend.module.ai.service.AiUsageLogService;
 import com.cybzacg.blogbackend.module.ai.service.impl.AiChatServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,6 +55,8 @@ class AiChatServiceImplTest {
     @Mock
     private AiQuotaService aiQuotaService;
     @Mock
+    private AiRagService aiRagService;
+    @Mock
     private AiUsageLogService aiUsageLogService;
     @Mock
     private AiModelConvert aiModelConvert;
@@ -68,9 +71,12 @@ class AiChatServiceImplTest {
                 aiChannelConfigRepository,
                 aiModelClient,
                 aiQuotaService,
+                aiRagService,
                 aiUsageLogService,
                 aiModelConvert
         );
+        lenient().when(aiRagService.retrieve(any(), any())).thenReturn(new com.cybzacg.blogbackend.module.ai.model.internal.AiRagRetrievalResult());
+        lenient().when(aiRagService.enrichSystemPrompt(any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     // ========== createSession ==========
@@ -142,7 +148,7 @@ class AiChatServiceImplTest {
         verify(aiChatMessageRepository, times(2)).save(any(AiChatMessage.class));
         verify(aiQuotaService).recordUsage(userId, config.getId());
         verify(aiUsageLogService).logUsage(eq(userId), eq(10L), eq(sessionId),
-                any(), eq(10), eq(20), eq(30), any(), any());
+                any(), eq(10), eq(20), eq(30), any(), any(), any(), any(), any(), any());
     }
 
     @Test

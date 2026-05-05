@@ -4,9 +4,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.domain.ai.AiKnowledgeEntry;
+import com.cybzacg.blogbackend.enums.ai.AiKnowledgeEntryStatusEnum;
 import com.cybzacg.blogbackend.mapper.ai.AiKnowledgeEntryMapper;
+import com.cybzacg.blogbackend.module.ai.constant.AiConstants;
 import com.cybzacg.blogbackend.module.ai.repository.AiKnowledgeEntryRepository;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 /**
  * AiKnowledgeEntry Repository 实现。
@@ -41,5 +45,32 @@ public class AiKnowledgeEntryRepositoryImpl
         return count(new LambdaQueryWrapper<AiKnowledgeEntry>()
                 .eq(sourceType != null, AiKnowledgeEntry::getSourceType, sourceType)
                 .eq(status != null, AiKnowledgeEntry::getStatus, status));
+    }
+
+    @Override
+    public List<AiKnowledgeEntry> listSyncCandidates(String sourceType, String taskType, int limit) {
+        int actualLimit = limit <= 0 ? 1000 : limit;
+        LambdaQueryWrapper<AiKnowledgeEntry> wrapper = new LambdaQueryWrapper<AiKnowledgeEntry>()
+                .eq(AiKnowledgeEntry::getSourceType, sourceType)
+                .ne(AiKnowledgeEntry::getStatus, AiKnowledgeEntryStatusEnum.DELETED.getValue())
+                .orderByAsc(AiKnowledgeEntry::getSyncedAt)
+                .orderByDesc(AiKnowledgeEntry::getUpdatedAt)
+                .last("limit " + actualLimit);
+        if (AiConstants.SYNC_TASK_TYPE_INCREMENTAL.equals(taskType)) {
+            wrapper.and(w -> w.eq(AiKnowledgeEntry::getStatus, AiKnowledgeEntryStatusEnum.OUTDATED.getValue())
+                    .or()
+                    .isNull(AiKnowledgeEntry::getSyncedAt));
+        }
+        return list(wrapper);
+    }
+
+    @Override
+    public List<AiKnowledgeEntry> listActiveBySourceType(String sourceType, int limit) {
+        int actualLimit = limit <= 0 ? 1000 : limit;
+        return list(new LambdaQueryWrapper<AiKnowledgeEntry>()
+                .eq(AiKnowledgeEntry::getSourceType, sourceType)
+                .eq(AiKnowledgeEntry::getStatus, AiKnowledgeEntryStatusEnum.ACTIVE.getValue())
+                .orderByDesc(AiKnowledgeEntry::getUpdatedAt)
+                .last("limit " + actualLimit));
     }
 }

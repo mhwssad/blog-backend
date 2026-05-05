@@ -19,11 +19,16 @@ import com.cybzacg.blogbackend.module.ai.model.admin.AiKnowledgeSourceConfigSave
 import com.cybzacg.blogbackend.module.ai.model.admin.AiKnowledgeSourceConfigVO;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiKnowledgeSyncTaskVO;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiUsageLogVO;
+import com.cybzacg.blogbackend.module.ai.model.common.AiRagReferenceVO;
 import com.cybzacg.blogbackend.module.ai.model.user.AiAgentTaskVO;
 import com.cybzacg.blogbackend.module.ai.model.user.AiMessageVO;
 import com.cybzacg.blogbackend.module.ai.model.user.AiSessionDetailVO;
 import com.cybzacg.blogbackend.module.ai.model.user.AiSessionVO;
+import com.cybzacg.blogbackend.utils.JsonUtils;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.mapstruct.*;
+
+import java.util.List;
 
 /**
  * AI模块对象转换。
@@ -66,4 +71,27 @@ public interface AiModelConvert {
     AiAgentTaskAdminVO toAgentTaskAdminVO(AiAgentTask task);
 
     AiAgentTaskVO toAgentTaskVO(AiAgentTask task);
+
+    @AfterMapping
+    default void fillMessageRagReferences(AiChatMessage message, @MappingTarget AiMessageVO vo) {
+        vo.setRagReferences(parseRagReferences(message.getRagReferenceJson()));
+    }
+
+    @AfterMapping
+    default void fillUsageRagReferences(AiUsageLog log, @MappingTarget AiUsageLogVO vo) {
+        vo.setRagReferences(parseRagReferences(log.getRagReferenceJson()));
+    }
+
+    default List<AiRagReferenceVO> parseRagReferences(String json) {
+        if (json == null || json.isBlank()) {
+            return List.of();
+        }
+        try {
+            List<AiRagReferenceVO> references = JsonUtils.fromJson(json, new TypeReference<>() {
+            });
+            return references == null ? List.of() : references;
+        } catch (RuntimeException ex) {
+            return List.of();
+        }
+    }
 }

@@ -235,7 +235,20 @@ Authorization: Bearer <accessToken>
 | `tokenCount` | Integer | 消息token数 |
 | `responseStatus` | Integer | 响应状态：0-失败/1-成功 |
 | `errorMessage` | String | 错误信息 |
+| `ragReferences` | Array | RAG 引用来源；仅助手消息命中知识库时返回，字段见下方 |
 | `createdAt` | DateTime | 创建时间 |
+
+- `ragReferences` 字段：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `sourceType` | String | 来源类型：`public_article`/`forum_post`/`author_profile`/`admin_entry` |
+| `sourceId` | Long | 来源对象ID |
+| `entryId` | Long | 知识条目ID |
+| `title` | String | 来源标题 |
+| `sourceUrl` | String | 来源页面URL |
+| `chunkIndex` | Integer | 命中分块序号 |
+| `score` | Double | 相似度 |
 
 - 响应示例：
 
@@ -256,6 +269,17 @@ Authorization: Bearer <accessToken>
         "tokenCount": 156,
         "responseStatus": 1,
         "errorMessage": null,
+        "ragReferences": [
+          {
+            "sourceType": "public_article",
+            "sourceId": 1001,
+            "entryId": 501,
+            "title": "Java Stream API 入门",
+            "sourceUrl": "/articles/1001",
+            "chunkIndex": 0,
+            "score": 0.8123
+          }
+        ],
         "createdAt": "2026-04-15 14:05:00"
       },
       {
@@ -306,10 +330,13 @@ Authorization: Bearer <accessToken>
     "tokenCount": 12,
     "responseStatus": 1,
     "errorMessage": null,
+    "ragReferences": [],
     "createdAt": "2026-04-15 14:04:00"
   }
 }
 ```
+
+> RAG 当前仅检索公开可访问知识：公开文章、公开论坛帖子、公开作者资料和启用的后台知识条目；私聊、私密文章、白名单文章、登录可见内容、隐藏/删除内容不会作为引用返回。
 
 ### 3.7 关闭会话
 
@@ -694,6 +721,10 @@ Authorization: Bearer <accessToken>
 | `quotaCost` | Integer | 额度消耗 |
 | `successStatus` | Integer | 成功状态：0-失败/1-成功 |
 | `errorCode` | String | 错误码 |
+| `ragEnabled` | Integer | 是否启用 RAG：0-否/1-是 |
+| `ragHitCount` | Integer | RAG 命中数量 |
+| `ragDurationMs` | Long | RAG 检索耗时毫秒 |
+| `ragReferences` | Array | RAG 引用来源 |
 | `createdAt` | DateTime | 调用时间 |
 
 - 响应示例：
@@ -720,6 +751,20 @@ Authorization: Bearer <accessToken>
         "quotaCost": 1,
         "successStatus": 1,
         "errorCode": null,
+        "ragEnabled": 1,
+        "ragHitCount": 1,
+        "ragDurationMs": 18,
+        "ragReferences": [
+          {
+            "sourceType": "public_article",
+            "sourceId": 1001,
+            "entryId": 501,
+            "title": "Java Stream API 入门",
+            "sourceUrl": "/articles/1001",
+            "chunkIndex": 0,
+            "score": 0.8123
+          }
+        ],
         "createdAt": "2026-04-15 14:05:00"
       }
     ]

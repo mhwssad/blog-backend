@@ -37,6 +37,21 @@ public class AiUsageLogServiceImpl implements AiUsageLogService {
                          String requestSceneType, Integer requestTokens,
                          Integer responseTokens, Integer totalTokens,
                          Integer successStatus, String errorCode) {
+        logUsage(userId, channelConfigId, sessionId, requestSceneType, requestTokens,
+                responseTokens, totalTokens, successStatus, errorCode,
+                0, 0, 0L, null);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void logUsage(Long userId, Long channelConfigId, Long sessionId,
+                         String requestSceneType, Integer requestTokens,
+                         Integer responseTokens, Integer totalTokens,
+                         Integer successStatus, String errorCode,
+                         Integer ragEnabled, Integer ragHitCount,
+                         Long ragDurationMs, String ragReferenceJson) {
         AiUsageLog log = new AiUsageLog();
         log.setUserId(userId);
         log.setChannelConfigId(channelConfigId);
@@ -48,6 +63,10 @@ public class AiUsageLogServiceImpl implements AiUsageLogService {
         log.setQuotaCost(totalTokens != null ? totalTokens : 0);
         log.setSuccessStatus(successStatus);
         log.setErrorCode(errorCode);
+        log.setRagEnabled(ragEnabled != null ? ragEnabled : 0);
+        log.setRagHitCount(ragHitCount != null ? ragHitCount : 0);
+        log.setRagDurationMs(ragDurationMs != null ? ragDurationMs : 0L);
+        log.setRagReferenceJson(ragReferenceJson);
         aiUsageLogRepository.save(log);
     }
 

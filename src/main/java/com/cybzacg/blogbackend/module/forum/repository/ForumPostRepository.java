@@ -19,6 +19,16 @@ public interface ForumPostRepository extends IService<ForumPost> {
 
     Page<ForumPost> pageAdminPosts(ForumPostAdminPageQuery query);
 
+    /**
+     * 查询可进入 RAG 知识库的公开帖子。
+     */
+    java.util.List<ForumPost> listPublicVisibleForRag(int limit);
+
+    /**
+     * 查询指定帖子，仅当其可进入 RAG 知识库时返回。
+     */
+    ForumPost findPublicVisibleForRag(Long postId);
+
     boolean existsBySectionId(Long sectionId);
 
     void incrementLikeCount(Long id, int delta);

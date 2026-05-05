@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * 系统用户 Repository 实现，基于 MyBatis-Plus。
@@ -190,5 +191,29 @@ public class SysUserRepositoryImpl extends ServiceImpl<SysUserMapper, SysUser>
                 .eq(SysUser::getDeletedFlag, 0)
                 .eq(SysUser::getStatus, 1)
                 .orderByDesc(SysUser::getId));
+    }
+
+    @Override
+    public List<SysUser> listPublicProfilesForRag(int limit) {
+        int actualLimit = limit <= 0 ? 1000 : limit;
+        return list(publicProfileRagWrapper()
+                .orderByDesc(SysUser::getUpdatedAt)
+                .last("limit " + actualLimit));
+    }
+
+    @Override
+    public SysUser findPublicProfileForRag(Long userId) {
+        if (userId == null) {
+            return null;
+        }
+        return getOne(publicProfileRagWrapper()
+                .eq(SysUser::getId, userId)
+                .last("limit 1"), false);
+    }
+
+    private LambdaQueryWrapper<SysUser> publicProfileRagWrapper() {
+        return new LambdaQueryWrapper<SysUser>()
+                .eq(SysUser::getDeletedFlag, 0)
+                .eq(SysUser::getStatus, 1);
     }
 }

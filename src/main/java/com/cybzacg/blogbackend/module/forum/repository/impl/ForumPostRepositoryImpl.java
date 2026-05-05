@@ -15,6 +15,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * 论坛帖子 Repository 实现。
@@ -75,9 +76,33 @@ public class ForumPostRepositoryImpl extends ServiceImpl<ForumPostMapper, ForumP
     }
 
     @Override
+    public List<ForumPost> listPublicVisibleForRag(int limit) {
+        int actualLimit = limit <= 0 ? 1000 : limit;
+        return list(publicVisibleRagWrapper()
+                .orderByDesc(ForumPost::getUpdatedAt)
+                .last("limit " + actualLimit));
+    }
+
+    @Override
+    public ForumPost findPublicVisibleForRag(Long postId) {
+        if (postId == null) {
+            return null;
+        }
+        return getOne(publicVisibleRagWrapper()
+                .eq(ForumPost::getId, postId)
+                .last("limit 1"), false);
+    }
+
+    @Override
     public boolean existsBySectionId(Long sectionId) {
         return count(new LambdaQueryWrapper<ForumPost>()
                 .eq(ForumPost::getSectionId, sectionId)) > 0;
+    }
+
+    private LambdaQueryWrapper<ForumPost> publicVisibleRagWrapper() {
+        return new LambdaQueryWrapper<ForumPost>()
+                .eq(ForumPost::getStatus, ForumPostStatusEnum.PUBLISHED.getValue())
+                .eq(ForumPost::getVisibilityScope, ForumVisibilityScopeEnum.PUBLIC.getValue());
     }
 
     private void applyPublicSort(LambdaQueryWrapper<ForumPost> wrapper, String sort) {

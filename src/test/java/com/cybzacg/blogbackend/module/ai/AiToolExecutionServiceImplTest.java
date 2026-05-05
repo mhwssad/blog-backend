@@ -4,6 +4,7 @@ import com.cybzacg.blogbackend.domain.ai.AiMcpServerConfig;
 import com.cybzacg.blogbackend.domain.ai.AiToolAuthorization;
 import com.cybzacg.blogbackend.domain.ai.AiToolCallLog;
 import com.cybzacg.blogbackend.domain.ai.AiToolDefinition;
+import com.cybzacg.blogbackend.common.redis.RedisOperator;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiToolExecuteVO;
@@ -29,6 +30,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -45,6 +47,8 @@ class AiToolExecutionServiceImplTest {
     private AiMcpServerConfigRepository aiMcpServerConfigRepository;
     @Mock
     private AiMcpClientFactory aiMcpClientFactory;
+    @Mock
+    private RedisOperator redisOperator;
 
     private AiToolExecutionServiceImpl service;
 
@@ -55,8 +59,10 @@ class AiToolExecutionServiceImplTest {
                 aiToolAuthorizationRepository,
                 aiToolCallLogRepository,
                 aiMcpServerConfigRepository,
-                aiMcpClientFactory
+                aiMcpClientFactory,
+                redisOperator
         );
+        lenient().when(redisOperator.increment(any())).thenReturn(1L);
     }
 
     @Test

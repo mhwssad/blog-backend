@@ -35,5 +35,13 @@ public class AiUsageLog {
     private Integer successStatus;
     /** 错误码 */
     private String errorCode;
+    /** 是否启用 RAG：0-否，1-是 */
+    private Integer ragEnabled;
+    /** RAG 命中数量 */
+    private Integer ragHitCount;
+    /** RAG 检索耗时毫秒 */
+    private Long ragDurationMs;
+    /** RAG 引用来源 JSON */
+    private String ragReferenceJson;
     private LocalDateTime createdAt;
 }

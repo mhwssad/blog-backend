@@ -31,6 +31,16 @@ public interface AiUsageLogService {
                   Integer successStatus, String errorCode);
 
     /**
+     * 记录一次 AI 调用日志，包含 RAG 检索元数据。
+     */
+    void logUsage(Long userId, Long channelConfigId, Long sessionId,
+                  String requestSceneType, Integer requestTokens,
+                  Integer responseTokens, Integer totalTokens,
+                  Integer successStatus, String errorCode,
+                  Integer ragEnabled, Integer ragHitCount,
+                  Long ragDurationMs, String ragReferenceJson);
+
+    /**
      * 分页查询使用日志。
      *
      * @param query 查询条件

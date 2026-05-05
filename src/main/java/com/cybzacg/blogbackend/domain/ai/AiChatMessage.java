@@ -31,6 +31,8 @@ public class AiChatMessage {
     private Integer tokenCount;
     /** 当次读取范围快照 JSON */
     private String dataScopeSnapshot;
+    /** RAG 引用来源 JSON */
+    private String ragReferenceJson;
     /** 响应状态：0-失败，1-成功 */
     private Integer responseStatus;
     /** 错误信息 */

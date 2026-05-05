@@ -11,6 +11,7 @@ import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.ai.constant.AiConstants;
 import com.cybzacg.blogbackend.module.ai.convert.AiModelConvert;
 import com.cybzacg.blogbackend.module.ai.model.data.AiModelCallResult;
+import com.cybzacg.blogbackend.module.ai.model.internal.AiRagRetrievalResult;
 import com.cybzacg.blogbackend.module.ai.model.user.*;
 import com.cybzacg.blogbackend.module.ai.repository.AiChannelConfigRepository;
 import com.cybzacg.blogbackend.module.ai.repository.AiChatMessageRepository;
@@ -18,6 +19,7 @@ import com.cybzacg.blogbackend.module.ai.repository.AiChatSessionRepository;
 import com.cybzacg.blogbackend.module.ai.service.AiChatService;
 import com.cybzacg.blogbackend.module.ai.service.AiModelClient;
 import com.cybzacg.blogbackend.module.ai.service.AiQuotaService;
+import com.cybzacg.blogbackend.module.ai.service.AiRagService;
 import com.cybzacg.blogbackend.module.ai.service.AiUsageLogService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
@@ -44,6 +46,7 @@ public class AiChatServiceImpl implements AiChatService {
     private final AiChannelConfigRepository aiChannelConfigRepository;
     private final AiModelClient aiModelClient;
     private final AiQuotaService aiQuotaService;
+    private final AiRagService aiRagService;
     private final AiUsageLogService aiUsageLogService;
     private final AiModelConvert aiModelConvert;
 
@@ -175,11 +178,13 @@ public class AiChatServiceImpl implements AiChatService {
         List<AiChatMessage> contextMessages = aiChatMessageRepository
                 .listBySessionIdOrderById(sessionId, AiConstants.DEFAULT_MAX_CONTEXT_MESSAGES);
 
-        // 6. 调用 AI 模型
+        // 6. RAG 检索并调用 AI 模型
+        AiRagRetrievalResult ragResult = aiRagService.retrieve(config, request.getContent());
+        String systemPrompt = aiRagService.enrichSystemPrompt(config.getSystemPromptTemplate(), ragResult);
         AiModelCallResult callResult;
         AiMessageResponseStatusEnum responseStatus;
         try {
-            callResult = aiModelClient.chat(config, config.getSystemPromptTemplate(), contextMessages, request.getContent());
+            callResult = aiModelClient.chat(config, systemPrompt, contextMessages, request.getContent());
             responseStatus = callResult.isSuccess()
                     ? AiMessageResponseStatusEnum.SUCCESS
                     : AiMessageResponseStatusEnum.FAILED;
@@ -200,6 +205,7 @@ public class AiChatServiceImpl implements AiChatService {
         assistantMessage.setRequestSceneType(request.getRequestSceneType());
         assistantMessage.setRequestTargetId(request.getRequestTargetId());
         assistantMessage.setTokenCount(callResult.getTotalTokens());
+        assistantMessage.setRagReferenceJson(ragResult.getReferenceJson());
         assistantMessage.setResponseStatus(responseStatus.getValue());
         assistantMessage.setErrorMessage(responseStatus == AiMessageResponseStatusEnum.FAILED
                 ? callResult.getErrorMessage() : null);
@@ -218,7 +224,11 @@ public class AiChatServiceImpl implements AiChatService {
                 callResult.getResponseTokens(),
                 callResult.getTotalTokens(),
                 responseStatus.getValue(),
-                responseStatus == AiMessageResponseStatusEnum.FAILED ? callResult.getErrorMessage() : null
+                responseStatus == AiMessageResponseStatusEnum.FAILED ? callResult.getErrorMessage() : null,
+                ragResult.isEnabled() ? 1 : 0,
+                ragResult.hitCount(),
+                ragResult.getDurationMs(),
+                ragResult.getReferenceJson()
         );
 
         // 10. 更新会话最后消息时间

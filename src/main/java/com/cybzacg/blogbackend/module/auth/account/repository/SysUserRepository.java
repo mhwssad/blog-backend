@@ -90,4 +90,14 @@ public interface SysUserRepository extends IService<SysUser> {
      * 按关键词搜索用户（匹配 username 或 nickname）。
      */
     Page<SysUser> searchByKeyword(String keyword, long current, long size);
+
+    /**
+     * 查询可进入 RAG 知识库的公开作者资料。
+     */
+    java.util.List<SysUser> listPublicProfilesForRag(int limit);
+
+    /**
+     * 查询指定用户公开资料，仅当其可进入 RAG 知识库时返回。
+     */
+    SysUser findPublicProfileForRag(Long userId);
 }

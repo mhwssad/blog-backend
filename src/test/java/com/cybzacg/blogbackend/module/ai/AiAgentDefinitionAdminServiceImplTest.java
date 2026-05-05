@@ -12,6 +12,7 @@ import com.cybzacg.blogbackend.module.ai.model.admin.AiAgentDefinitionSaveReques
 import com.cybzacg.blogbackend.module.ai.model.admin.AiAgentDefinitionVO;
 import com.cybzacg.blogbackend.module.ai.repository.AiAgentDefinitionRepository;
 import com.cybzacg.blogbackend.module.ai.service.impl.AiAgentDefinitionAdminServiceImpl;
+import com.cybzacg.blogbackend.module.auth.audit.service.SysAuditLogService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,6 +39,8 @@ class AiAgentDefinitionAdminServiceImplTest {
     private AiAgentDefinitionRepository aiAgentDefinitionRepository;
     @Mock
     private AiModelConvert aiModelConvert;
+    @Mock
+    private SysAuditLogService sysAuditLogService;
 
     private AiAgentDefinitionAdminServiceImpl service;
 
@@ -45,6 +48,7 @@ class AiAgentDefinitionAdminServiceImplTest {
     void setUp() {
         service = new AiAgentDefinitionAdminServiceImpl(
                 aiAgentDefinitionRepository,
+                sysAuditLogService,
                 aiModelConvert
         );
     }

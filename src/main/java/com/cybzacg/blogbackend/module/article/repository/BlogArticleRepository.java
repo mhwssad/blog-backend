@@ -28,6 +28,16 @@ public interface BlogArticleRepository extends IService<BlogArticle> {
 
     List<BlogArticle> listReadyForScheduledPublish(LocalDateTime now, int limit);
 
+    /**
+     * 查询可进入 RAG 知识库的公开文章。
+     */
+    List<BlogArticle> listPublicVisibleForRag(int limit);
+
+    /**
+     * 查询指定文章，仅当其可进入 RAG 知识库时返回。
+     */
+    BlogArticle findPublicVisibleForRag(Long articleId);
+
     long countByAuthorId(Long authorId);
 
     /**

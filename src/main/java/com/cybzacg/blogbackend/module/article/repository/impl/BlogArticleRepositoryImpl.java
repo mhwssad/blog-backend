@@ -101,6 +101,24 @@ public class BlogArticleRepositoryImpl extends ServiceImpl<BlogArticleMapper, Bl
         return list(wrapper);
     }
 
+    @Override
+    public List<BlogArticle> listPublicVisibleForRag(int limit) {
+        int actualLimit = limit <= 0 ? 1000 : limit;
+        return list(publicVisibleRagWrapper()
+                .orderByDesc(BlogArticle::getUpdatedAt)
+                .last("limit " + actualLimit));
+    }
+
+    @Override
+    public BlogArticle findPublicVisibleForRag(Long articleId) {
+        if (articleId == null) {
+            return null;
+        }
+        return getOne(publicVisibleRagWrapper()
+                .eq(BlogArticle::getId, articleId)
+                .last("limit 1"), false);
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -126,6 +144,19 @@ public class BlogArticleRepositoryImpl extends ServiceImpl<BlogArticleMapper, Bl
                 .and(wrapper -> wrapper.isNull(BlogArticle::getScheduledPublishTime)
                         .or()
                         .le(BlogArticle::getScheduledPublishTime, LocalDateTime.now())));
+    }
+
+    private LambdaQueryWrapper<BlogArticle> publicVisibleRagWrapper() {
+        return new LambdaQueryWrapper<BlogArticle>()
+                .eq(BlogArticle::getStatus, 1)
+                .in(BlogArticle::getReviewStatus,
+                        ArticleReviewStatusEnum.NOT_SUBMITTED.getValue(),
+                        ArticleReviewStatusEnum.APPROVED.getValue())
+                .eq(BlogArticle::getVisibilityScope, ArticleVisibilityScopeEnum.PUBLIC.getValue())
+                .eq(BlogArticle::getAccessLevel, 0)
+                .and(wrapper -> wrapper.isNull(BlogArticle::getScheduledPublishTime)
+                        .or()
+                        .le(BlogArticle::getScheduledPublishTime, LocalDateTime.now()));
     }
 
     @Override
