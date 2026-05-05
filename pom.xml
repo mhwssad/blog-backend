@@ -122,6 +122,13 @@
             <version>${langchain4j-beta.version}</version>
         </dependency>
 
+        <!-- LangChain4j MCP 客户端：支撑 AI / Agent 通过 MCP 发现和调用外部工具 -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-mcp</artifactId>
+            <version>${langchain4j-beta.version}</version>
+        </dependency>
+
 
         <dependency>
             <groupId>org.projectlombok</groupId>
