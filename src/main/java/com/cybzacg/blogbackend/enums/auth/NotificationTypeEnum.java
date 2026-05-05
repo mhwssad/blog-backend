@@ -17,7 +17,8 @@ public enum NotificationTypeEnum {
     CHANNEL_ANNOUNCEMENT("channel_announcement", "频道公告"),
     SYSTEM_ANNOUNCEMENT("system_announcement", "系统公告"),
     AI_TASK_DONE("ai_task_done", "AI任务完成"),
-    REPORT_RESULT("report_result", "举报处理结果");
+    REPORT_RESULT("report_result", "举报处理结果"),
+    FORUM_POST_ESSENCE("forum_post_essence", "论坛帖子设为精华");
 
     private final String code;
     private final String label;
@@ -58,6 +59,7 @@ public enum NotificationTypeEnum {
             case SYSTEM_ANNOUNCEMENT -> !Integer.valueOf(0).equals(setting.getSystemNoticeEnabled());
             case AI_TASK_DONE -> !Integer.valueOf(0).equals(setting.getAiTaskNoticeEnabled());
             case REPORT_RESULT -> !Integer.valueOf(0).equals(setting.getReportResultNoticeEnabled());
+            case FORUM_POST_ESSENCE -> !Integer.valueOf(0).equals(setting.getForumEssenceNoticeEnabled());
         };
     }
 
@@ -74,6 +76,7 @@ public enum NotificationTypeEnum {
             case SYSTEM_ANNOUNCEMENT -> setting.setSystemNoticeEnabled(value);
             case AI_TASK_DONE -> setting.setAiTaskNoticeEnabled(value);
             case REPORT_RESULT -> setting.setReportResultNoticeEnabled(value);
+            case FORUM_POST_ESSENCE -> setting.setForumEssenceNoticeEnabled(value);
         }
     }
 }

@@ -9,7 +9,9 @@ import lombok.Getter;
 public enum ReportTargetTypeEnum {
     ARTICLE("article", "文章"),
     COMMENT("comment", "评论"),
-    CHAT_MESSAGE("chat_message", "聊天消息");
+    CHAT_MESSAGE("chat_message", "聊天消息"),
+    FORUM_POST("forum_post", "论坛帖子"),
+    FORUM_REPLY("forum_reply", "论坛回复");
 
     private final String code;
     private final String label;

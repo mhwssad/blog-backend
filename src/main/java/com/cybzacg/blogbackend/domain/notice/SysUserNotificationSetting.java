@@ -77,6 +77,11 @@ public class SysUserNotificationSetting {
     private Integer reportResultNoticeEnabled;
 
     /**
+     * 论坛精华通知开关
+     */
+    private Integer forumEssenceNoticeEnabled;
+
+    /**
      * 创建时间
      */
     private LocalDateTime createdAt;

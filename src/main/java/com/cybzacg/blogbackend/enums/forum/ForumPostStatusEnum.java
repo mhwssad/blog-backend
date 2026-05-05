@@ -13,7 +13,8 @@ public enum ForumPostStatusEnum {
     PUBLISHED(1, "已发布"),
     REVIEWING(2, "审核中"),
     REJECTED(3, "已拒绝"),
-    DELETED(4, "已删除");
+    DELETED(4, "已删除"),
+    HIDDEN(5, "隐藏");
 
     private final Integer value;
     private final String description;

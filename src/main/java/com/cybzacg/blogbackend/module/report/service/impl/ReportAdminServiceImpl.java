@@ -26,6 +26,10 @@ import com.cybzacg.blogbackend.module.chat.governance.service.ChatMuteGovernance
 import com.cybzacg.blogbackend.module.chat.message.model.admin.ChatAdminMessageDetailVO;
 import com.cybzacg.blogbackend.module.content.comment.repository.SysCommentRepository;
 import com.cybzacg.blogbackend.module.content.comment.service.CommentAdminService;
+import com.cybzacg.blogbackend.domain.forum.ForumPost;
+import com.cybzacg.blogbackend.domain.forum.ForumReply;
+import com.cybzacg.blogbackend.module.forum.repository.ForumPostRepository;
+import com.cybzacg.blogbackend.module.forum.repository.ForumReplyRepository;
 import com.cybzacg.blogbackend.module.report.convert.ReportModelConvert;
 import com.cybzacg.blogbackend.module.report.model.admin.ReportAdminPageQuery;
 import com.cybzacg.blogbackend.module.report.model.admin.ReportAdminVO;
@@ -70,6 +74,8 @@ public class ReportAdminServiceImpl implements ReportAdminService {
     private final SysCommentRepository sysCommentRepository;
     private final SysUserAdminService sysUserAdminService;
     private final NotificationDeliveryService notificationDeliveryService;
+    private final ForumPostRepository forumPostRepository;
+    private final ForumReplyRepository forumReplyRepository;
 
     /**
      * 分页查询举报记录（管理端）。
@@ -506,6 +512,14 @@ public class ReportAdminServiceImpl implements ReportAdminService {
                     yield detail != null ? detail.getSenderId() : null;
                 }
                 yield null;
+            }
+            case FORUM_POST -> {
+                ForumPost post = forumPostRepository.getById(targetId);
+                yield post != null ? post.getAuthorId() : null;
+            }
+            case FORUM_REPLY -> {
+                ForumReply reply = forumReplyRepository.getById(targetId);
+                yield reply != null ? reply.getUserId() : null;
             }
         };
     }
