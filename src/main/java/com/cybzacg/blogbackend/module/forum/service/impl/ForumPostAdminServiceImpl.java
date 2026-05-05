@@ -7,12 +7,15 @@ import com.cybzacg.blogbackend.domain.forum.ForumPost;
 import com.cybzacg.blogbackend.domain.forum.ForumSection;
 import com.cybzacg.blogbackend.enums.SysAuditOperationType;
 import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
+import com.cybzacg.blogbackend.enums.ai.AiKnowledgeSourceTypeEnum;
+import com.cybzacg.blogbackend.enums.ai.ContentChangeAction;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.enums.forum.ForumPostStatusEnum;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.audit.model.common.SysAuditLogCreateRequest;
 import com.cybzacg.blogbackend.module.auth.audit.service.SysAuditLogService;
 import com.cybzacg.blogbackend.module.auth.notice.service.NotificationDeliveryService;
+import com.cybzacg.blogbackend.module.ai.event.ContentChangeEvent;
 import com.cybzacg.blogbackend.module.chat.conversation.repository.ForumPostChannelLinkRepository;
 import com.cybzacg.blogbackend.module.forum.convert.ForumModelConvert;
 import com.cybzacg.blogbackend.module.forum.model.admin.ForumPostAdminDetailVO;
@@ -25,6 +28,7 @@ import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +49,7 @@ public class ForumPostAdminServiceImpl implements ForumPostAdminService {
     private final SysAuditLogService sysAuditLogService;
     private final NotificationDeliveryService notificationDeliveryService;
     private final ForumPostChannelLinkRepository forumPostChannelLinkRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     private static final int LINK_STATUS_INVALID = 0;
     private static final int LINK_STATUS_NORMAL = 1;
@@ -81,6 +86,9 @@ public class ForumPostAdminServiceImpl implements ForumPostAdminService {
         forumPostChannelLinkRepository.updateStatusByForumPostId(id, LINK_STATUS_INVALID);
         recordAudit(operatorId, post.getAuthorId(), SysAuditOperationType.HIDE_FORUM_POST,
                 id, beforeState, "{\"status\":" + ForumPostStatusEnum.HIDDEN.getValue() + "}", ip, ua);
+        eventPublisher.publishEvent(new ContentChangeEvent(
+                AiKnowledgeSourceTypeEnum.FORUM_POST.getCode(),
+                id, ContentChangeAction.HIDE, post.getAuthorId()));
     }
 
     @Override
@@ -95,6 +103,9 @@ public class ForumPostAdminServiceImpl implements ForumPostAdminService {
         forumPostChannelLinkRepository.updateStatusByForumPostId(id, LINK_STATUS_NORMAL);
         recordAudit(operatorId, post.getAuthorId(), SysAuditOperationType.RESTORE_FORUM_POST,
                 id, beforeState, "{\"status\":" + ForumPostStatusEnum.PUBLISHED.getValue() + "}", ip, ua);
+        eventPublisher.publishEvent(new ContentChangeEvent(
+                AiKnowledgeSourceTypeEnum.FORUM_POST.getCode(),
+                id, ContentChangeAction.RESTORE, post.getAuthorId()));
     }
 
     @Override
@@ -109,6 +120,9 @@ public class ForumPostAdminServiceImpl implements ForumPostAdminService {
         forumPostChannelLinkRepository.updateStatusByForumPostId(id, LINK_STATUS_INVALID);
         recordAudit(operatorId, post.getAuthorId(), SysAuditOperationType.DELETE_FORUM_POST,
                 id, beforeState, "{\"status\":" + ForumPostStatusEnum.DELETED.getValue() + "}", ip, ua);
+        eventPublisher.publishEvent(new ContentChangeEvent(
+                AiKnowledgeSourceTypeEnum.FORUM_POST.getCode(),
+                id, ContentChangeAction.DELETE, post.getAuthorId()));
     }
 
     @Override

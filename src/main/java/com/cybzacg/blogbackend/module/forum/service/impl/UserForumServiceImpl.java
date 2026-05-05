@@ -8,6 +8,8 @@ import com.cybzacg.blogbackend.domain.content.SysInteraction;
 import com.cybzacg.blogbackend.domain.forum.ForumPost;
 import com.cybzacg.blogbackend.domain.forum.ForumReply;
 import com.cybzacg.blogbackend.domain.forum.ForumSection;
+import com.cybzacg.blogbackend.enums.ai.AiKnowledgeSourceTypeEnum;
+import com.cybzacg.blogbackend.enums.ai.ContentChangeAction;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.enums.forum.ForumPostStatusEnum;
 import com.cybzacg.blogbackend.enums.forum.ForumReplyStatusEnum;
@@ -17,6 +19,7 @@ import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
 import com.cybzacg.blogbackend.module.auth.notice.service.NotificationDeliveryService;
 import com.cybzacg.blogbackend.module.chat.conversation.model.user.ForumPostChannelLinkVO;
 import com.cybzacg.blogbackend.module.chat.conversation.service.ForumPostChannelLinkService;
+import com.cybzacg.blogbackend.module.ai.event.ContentChangeEvent;
 import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionFolderRepository;
 import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionRepository;
 import com.cybzacg.blogbackend.module.content.interaction.repository.SysInteractionRepository;
@@ -32,6 +35,7 @@ import com.cybzacg.blogbackend.utils.PaginationUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,6 +58,7 @@ public class UserForumServiceImpl implements UserForumService {
     private final ForumPostChannelLinkService forumPostChannelLinkService;
     private final ForumModelConvert forumModelConvert;
     private final NotificationDeliveryService notificationDeliveryService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public PageResult<UserForumPostVO> pageMyPosts(UserForumPostPageQuery query) {
@@ -93,6 +98,11 @@ public class UserForumServiceImpl implements UserForumService {
             post.setPublishedAt(LocalDateTime.now());
         }
         forumPostRepository.save(post);
+        if (Objects.equals(post.getStatus(), ForumPostStatusEnum.PUBLISHED.getValue())) {
+            eventPublisher.publishEvent(new ContentChangeEvent(
+                    AiKnowledgeSourceTypeEnum.FORUM_POST.getCode(),
+                    post.getId(), ContentChangeAction.PUBLISH, userId));
+        }
         return forumModelConvert.toUserPostDetailVO(post);
     }
 
@@ -114,6 +124,11 @@ public class UserForumServiceImpl implements UserForumService {
             post.setPublishedAt(LocalDateTime.now());
         }
         forumPostRepository.updateById(post);
+        if (Objects.equals(post.getStatus(), ForumPostStatusEnum.PUBLISHED.getValue())) {
+            eventPublisher.publishEvent(new ContentChangeEvent(
+                    AiKnowledgeSourceTypeEnum.FORUM_POST.getCode(),
+                    id, ContentChangeAction.UPDATE, userId));
+        }
         return forumModelConvert.toUserPostDetailVO(post);
     }
 
@@ -125,6 +140,9 @@ public class UserForumServiceImpl implements UserForumService {
         if (Objects.equals(post.getStatus(), ForumPostStatusEnum.DELETED.getValue())) {
             return;
         }
+        eventPublisher.publishEvent(new ContentChangeEvent(
+                AiKnowledgeSourceTypeEnum.FORUM_POST.getCode(),
+                id, ContentChangeAction.DELETE, userId));
         forumPostRepository.softDeleteById(id);
     }
 
