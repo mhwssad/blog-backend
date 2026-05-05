@@ -1,10 +1,14 @@
 package com.cybzacg.blogbackend.module.article.task;
 
 import com.cybzacg.blogbackend.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.enums.ai.AiKnowledgeSourceTypeEnum;
+import com.cybzacg.blogbackend.enums.ai.ContentChangeAction;
+import com.cybzacg.blogbackend.module.ai.event.ContentChangeEvent;
 import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.article.service.ArticleStatusMachine;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +24,7 @@ import java.util.List;
 public class ScheduledPublishTask {
     private final BlogArticleRepository blogArticleRepository;
     private final ArticleStatusMachine articleStatusMachine;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Scheduled(cron = "${article.scheduled-publish-cron:0 * * * * *}")
     public void publishReadyArticles() {
@@ -39,6 +44,9 @@ public class ScheduledPublishTask {
                 article.setPublishTime(article.getScheduledPublishTime());
                 article.setScheduledPublishTime(null);
                 blogArticleRepository.updateById(article);
+                eventPublisher.publishEvent(new ContentChangeEvent(
+                        AiKnowledgeSourceTypeEnum.PUBLIC_ARTICLE.getCode(),
+                        article.getId(), ContentChangeAction.PUBLISH, article.getAuthorId()));
                 publishedCount++;
             } catch (Exception ex) {
                 log.error("文章定时发布失败，articleId={}", article.getId(), ex);

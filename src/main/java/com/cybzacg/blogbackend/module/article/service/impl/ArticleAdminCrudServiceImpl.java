@@ -20,6 +20,9 @@ import com.cybzacg.blogbackend.module.article.service.*;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.author.service.AuthorPermissionService;
 import com.cybzacg.blogbackend.module.auth.config.service.SysConfigService;
+import com.cybzacg.blogbackend.enums.ai.AiKnowledgeSourceTypeEnum;
+import com.cybzacg.blogbackend.enums.ai.ContentChangeAction;
+import com.cybzacg.blogbackend.module.ai.event.ContentChangeEvent;
 import com.cybzacg.blogbackend.module.auth.experience.event.XpAwardEvent;
 import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionFolderRepository;
 import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionRepository;
@@ -121,6 +124,11 @@ public class ArticleAdminCrudServiceImpl implements ArticleAdminCrudService {
                 article.getAuthorId(), ExperienceSourceTypeEnum.ARTICLE_PUBLISH.getValue(),
                 String.valueOf(article.getId()),
                 "article_publish:" + article.getAuthorId() + ":" + article.getId()));
+        if (Integer.valueOf(1).equals(article.getStatus())) {
+            eventPublisher.publishEvent(new ContentChangeEvent(
+                    AiKnowledgeSourceTypeEnum.PUBLIC_ARTICLE.getCode(),
+                    article.getId(), ContentChangeAction.PUBLISH, article.getAuthorId()));
+        }
         return buildArticleDetail(article);
     }
 
@@ -139,6 +147,11 @@ public class ArticleAdminCrudServiceImpl implements ArticleAdminCrudService {
         syncArticleAttachments(id, article.getContent(), article.getCoverImage());
         if (!Objects.equals(previousAuthorId, article.getAuthorId())) {
             articleSeriesService.cleanupArticleSeriesRelations(id);
+        }
+        if (Integer.valueOf(1).equals(article.getStatus())) {
+            eventPublisher.publishEvent(new ContentChangeEvent(
+                    AiKnowledgeSourceTypeEnum.PUBLIC_ARTICLE.getCode(),
+                    id, ContentChangeAction.UPDATE, article.getAuthorId()));
         }
         return buildArticleDetail(article);
     }
@@ -160,12 +173,23 @@ public class ArticleAdminCrudServiceImpl implements ArticleAdminCrudService {
             article.setPublishTime(LocalDateTime.now());
         }
         blogArticleRepository.updateById(article);
+        ContentChangeAction statusAction = null;
+        if (Integer.valueOf(1).equals(actualStatus)) {
+            statusAction = ContentChangeAction.PUBLISH;
+        } else if (Integer.valueOf(2).equals(actualStatus)) {
+            statusAction = ContentChangeAction.HIDE;
+        }
+        if (statusAction != null) {
+            eventPublisher.publishEvent(new ContentChangeEvent(
+                    AiKnowledgeSourceTypeEnum.PUBLIC_ARTICLE.getCode(),
+                    id, statusAction, article.getAuthorId()));
+        }
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteArticle(Long id) {
-        getArticleOrThrow(id);
+        BlogArticle article = getArticleOrThrow(id);
         List<SysComment> comments = sysCommentRepository.findByTargetTypeAndTargetId(TARGET_TYPE_ARTICLE, id);
         List<SysCollection> collections = sysCollectionRepository.listByTargetTypeAndTargetId(TARGET_TYPE_ARTICLE, id);
 
@@ -180,6 +204,9 @@ public class ArticleAdminCrudServiceImpl implements ArticleAdminCrudService {
         refreshCollectionFolderCounts(collections);
         sysInteractionRepository.removeByTargetTypeAndTargetId(TARGET_TYPE_ARTICLE, id);
         sysUserFootprintRepository.removeByTargetTypeAndTargetId(TARGET_TYPE_ARTICLE, id);
+        eventPublisher.publishEvent(new ContentChangeEvent(
+                AiKnowledgeSourceTypeEnum.PUBLIC_ARTICLE.getCode(),
+                id, ContentChangeAction.DELETE, article.getAuthorId()));
         blogArticleRepository.removeById(id);
     }
 
