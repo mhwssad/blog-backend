@@ -1,5 +1,6 @@
 package com.cybzacg.blogbackend.module.ai.convert;
 
+import com.cybzacg.blogbackend.domain.ai.AiMessageAttachment;
 import com.cybzacg.blogbackend.domain.ai.AiAgentDefinition;
 import com.cybzacg.blogbackend.domain.ai.AiAgentTask;
 import com.cybzacg.blogbackend.domain.ai.AiChannelConfig;
@@ -20,6 +21,7 @@ import com.cybzacg.blogbackend.module.ai.model.admin.AiKnowledgeSourceConfigVO;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiKnowledgeSyncTaskVO;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiUsageLogVO;
 import com.cybzacg.blogbackend.module.ai.model.common.AiRagReferenceVO;
+import com.cybzacg.blogbackend.module.ai.model.user.AttachmentVO;
 import com.cybzacg.blogbackend.module.ai.model.user.AiAgentTaskVO;
 import com.cybzacg.blogbackend.module.ai.model.user.AiMessageVO;
 import com.cybzacg.blogbackend.module.ai.model.user.AiSessionDetailVO;
@@ -71,6 +73,9 @@ public interface AiModelConvert {
     AiAgentTaskAdminVO toAgentTaskAdminVO(AiAgentTask task);
 
     AiAgentTaskVO toAgentTaskVO(AiAgentTask task);
+
+    @Mapping(target = "fileUrl", ignore = true)
+    AttachmentVO toAttachmentVO(AiMessageAttachment attachment);
 
     @AfterMapping
     default void fillMessageRagReferences(AiChatMessage message, @MappingTarget AiMessageVO vo) {

@@ -34,6 +34,9 @@ public class AiMessageVO {
     @Schema(description = "RAG 引用来源")
     private List<AiRagReferenceVO> ragReferences;
 
+    @Schema(description = "附件列表")
+    private List<AttachmentVO> attachments;
+
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
 }

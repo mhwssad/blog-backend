@@ -5,6 +5,8 @@ import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.ai.AiChannelConfig;
 import com.cybzacg.blogbackend.domain.ai.AiChatMessage;
 import com.cybzacg.blogbackend.domain.ai.AiChatSession;
+import com.cybzacg.blogbackend.domain.ai.AiMessageAttachment;
+import com.cybzacg.blogbackend.domain.file.FileInfo;
 import com.cybzacg.blogbackend.enums.ai.AiChatSessionStatusEnum;
 import com.cybzacg.blogbackend.enums.ai.AiMessageResponseStatusEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
@@ -16,11 +18,13 @@ import com.cybzacg.blogbackend.module.ai.model.user.*;
 import com.cybzacg.blogbackend.module.ai.repository.AiChannelConfigRepository;
 import com.cybzacg.blogbackend.module.ai.repository.AiChatMessageRepository;
 import com.cybzacg.blogbackend.module.ai.repository.AiChatSessionRepository;
+import com.cybzacg.blogbackend.module.ai.repository.AiMessageAttachmentRepository;
 import com.cybzacg.blogbackend.module.ai.service.AiChatService;
 import com.cybzacg.blogbackend.module.ai.service.AiModelClient;
 import com.cybzacg.blogbackend.module.ai.service.AiQuotaService;
 import com.cybzacg.blogbackend.module.ai.service.AiRagService;
 import com.cybzacg.blogbackend.module.ai.service.AiUsageLogService;
+import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 /**
  * AI 对话服务实现。
@@ -49,6 +54,8 @@ public class AiChatServiceImpl implements AiChatService {
     private final AiRagService aiRagService;
     private final AiUsageLogService aiUsageLogService;
     private final AiModelConvert aiModelConvert;
+    private final AiMessageAttachmentRepository aiMessageAttachmentRepository;
+    private final FileInfoRepository fileInfoRepository;
 
     /**
      * {@inheritDoc}
@@ -56,28 +63,23 @@ public class AiChatServiceImpl implements AiChatService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AiSessionVO createSession(Long userId, AiSessionCreateRequest request) {
-        // 确定渠道配置
         AiChannelConfig config;
         if (request.getChannelConfigId() != null) {
             config = ExceptionThrowerCore.requireNonNull(
                     aiChannelConfigRepository.getById(request.getChannelConfigId()),
                     ResultErrorCode.AI_CHANNEL_NOT_FOUND);
         } else {
-            // 使用默认渠道
             List<AiChannelConfig> enabledChannels = aiChannelConfigRepository.listEnabledOrderByDefault();
             ExceptionThrowerCore.throwBusinessIf(enabledChannels.isEmpty(), ResultErrorCode.AI_CHANNEL_NOT_FOUND);
             config = enabledChannels.get(0);
         }
 
-        // 校验渠道状态
         ExceptionThrowerCore.throwBusinessIf(
                 config.getStatus() == null || config.getStatus() != 1,
                 ResultErrorCode.AI_CHANNEL_DISABLED);
 
-        // 预检查额度
         aiQuotaService.checkQuota(userId, config);
 
-        // 创建会话
         AiChatSession session = new AiChatSession();
         session.setUserId(userId);
         session.setChannelConfigId(config.getId());
@@ -137,6 +139,7 @@ public class AiChatServiceImpl implements AiChatService {
         List<AiMessageVO> records = page.getRecords().stream()
                 .map(aiModelConvert::toMessageVO)
                 .toList();
+        fillAttachments(records);
         return PageResult.of(page, records);
     }
 
@@ -174,6 +177,9 @@ public class AiChatServiceImpl implements AiChatService {
         userMessage.setResponseStatus(AiMessageResponseStatusEnum.SUCCESS.getValue());
         aiChatMessageRepository.save(userMessage);
 
+        // 4.5 解析并校验附件
+        List<FileInfo> imageAttachments = resolveAttachments(userId, userMessage.getId(), request.getAttachmentFileIds());
+
         // 5. 加载上下文消息
         List<AiChatMessage> contextMessages = aiChatMessageRepository
                 .listBySessionIdOrderById(sessionId, AiConstants.DEFAULT_MAX_CONTEXT_MESSAGES);
@@ -184,7 +190,8 @@ public class AiChatServiceImpl implements AiChatService {
         AiModelCallResult callResult;
         AiMessageResponseStatusEnum responseStatus;
         try {
-            callResult = aiModelClient.chat(config, systemPrompt, contextMessages, request.getContent());
+            callResult = aiModelClient.chat(config, systemPrompt, contextMessages,
+                    request.getContent(), imageAttachments);
             responseStatus = callResult.isSuccess()
                     ? AiMessageResponseStatusEnum.SUCCESS
                     : AiMessageResponseStatusEnum.FAILED;
@@ -235,7 +242,9 @@ public class AiChatServiceImpl implements AiChatService {
         session.setLastMessageAt(LocalDateTime.now());
         aiChatSessionRepository.updateById(session);
 
-        return aiModelConvert.toMessageVO(assistantMessage);
+        AiMessageVO result = aiModelConvert.toMessageVO(assistantMessage);
+        fillAttachments(List.of(result));
+        return result;
     }
 
     /**
@@ -252,14 +261,85 @@ public class AiChatServiceImpl implements AiChatService {
 
     /**
      * 校验会话归属关系。
-     *
-     * @param sessionId 会话ID
-     * @param userId    用户ID
-     * @return 会话实体
      */
     private AiChatSession verifySessionOwnership(Long sessionId, Long userId) {
         AiChatSession session = aiChatSessionRepository.findByIdAndUserId(sessionId, userId);
         ExceptionThrowerCore.throwBusinessIfNull(session, ResultErrorCode.AI_SESSION_NOT_FOUND);
         return session;
+    }
+
+    /**
+     * 解析并校验附件文件，保存关联记录，返回图片类附件列表。
+     */
+    private List<FileInfo> resolveAttachments(Long userId, Long messageId, List<Long> attachmentFileIds) {
+        if (attachmentFileIds == null || attachmentFileIds.isEmpty()) {
+            return List.of();
+        }
+
+        List<FileInfo> files = fileInfoRepository.listByIds(attachmentFileIds);
+        List<FileInfo> validFiles = files.stream()
+                .filter(f -> userId.equals(f.getUploadUserId()))
+                .filter(f -> f.getStatus() != null && f.getStatus() == 1)
+                .filter(f -> AiConstants.ALLOWED_ATTACHMENT_FILE_TYPES.contains(f.getFileType()))
+                .limit(AiConstants.MAX_ATTACHMENTS_PER_MESSAGE)
+                .toList();
+
+        ExceptionThrowerCore.throwBusinessIf(
+                validFiles.size() != attachmentFileIds.size(),
+                ResultErrorCode.ILLEGAL_ARGUMENT, "部分附件不存在、无权限或不支持该文件类型");
+
+        List<AiMessageAttachment> attachments = validFiles.stream()
+                .map(f -> {
+                    AiMessageAttachment a = new AiMessageAttachment();
+                    a.setMessageId(messageId);
+                    a.setFileId(f.getId());
+                    a.setFileType(f.getFileType());
+                    a.setMimeType(f.getMimeType());
+                    return a;
+                }).toList();
+        aiMessageAttachmentRepository.saveBatch(attachments);
+
+        return validFiles.stream()
+                .filter(f -> "image".equals(f.getFileType()))
+                .toList();
+    }
+
+    /**
+     * 批量填充消息 VO 的附件信息。
+     */
+    private void fillAttachments(List<AiMessageVO> messages) {
+        if (messages.isEmpty()) {
+            return;
+        }
+        List<Long> messageIds = messages.stream().map(AiMessageVO::getId).toList();
+        List<AiMessageAttachment> allAttachments = aiMessageAttachmentRepository.listByMessageIds(messageIds);
+        if (allAttachments.isEmpty()) {
+            return;
+        }
+
+        // 批量查询文件信息以填充 fileUrl
+        List<Long> fileIds = allAttachments.stream().map(AiMessageAttachment::getFileId).distinct().toList();
+        Map<Long, FileInfo> fileInfoMap = fileInfoRepository.listByIds(fileIds).stream()
+                .collect(java.util.stream.Collectors.toMap(FileInfo::getId, f -> f));
+
+        Map<Long, List<AiMessageAttachment>> grouped = allAttachments.stream()
+                .collect(java.util.stream.Collectors.groupingBy(AiMessageAttachment::getMessageId));
+
+        for (AiMessageVO vo : messages) {
+            List<AiMessageAttachment> msgAttachments = grouped.getOrDefault(vo.getId(), List.of());
+            if (msgAttachments.isEmpty()) {
+                continue;
+            }
+            List<AttachmentVO> attachmentVOs = msgAttachments.stream()
+                    .map(a -> {
+                        AttachmentVO avo = aiModelConvert.toAttachmentVO(a);
+                        FileInfo fi = fileInfoMap.get(a.getFileId());
+                        if (fi != null) {
+                            avo.setFileUrl(fi.getFileUrl() != null ? fi.getFileUrl() : fi.getFilePath());
+                        }
+                        return avo;
+                    }).toList();
+            vo.setAttachments(attachmentVOs);
+        }
     }
 }
