@@ -124,7 +124,7 @@ public class ArticleAdminCrudServiceImpl implements ArticleAdminCrudService {
                 article.getAuthorId(), ExperienceSourceTypeEnum.ARTICLE_PUBLISH.getValue(),
                 String.valueOf(article.getId()),
                 "article_publish:" + article.getAuthorId() + ":" + article.getId()));
-        if (Integer.valueOf(1).equals(article.getStatus())) {
+        if (shouldPublishKnowledgeEvent(article)) {
             eventPublisher.publishEvent(new ContentChangeEvent(
                     AiKnowledgeSourceTypeEnum.PUBLIC_ARTICLE.getCode(),
                     article.getId(), ContentChangeAction.PUBLISH, article.getAuthorId()));
@@ -148,7 +148,7 @@ public class ArticleAdminCrudServiceImpl implements ArticleAdminCrudService {
         if (!Objects.equals(previousAuthorId, article.getAuthorId())) {
             articleSeriesService.cleanupArticleSeriesRelations(id);
         }
-        if (Integer.valueOf(1).equals(article.getStatus())) {
+        if (shouldPublishKnowledgeEvent(article)) {
             eventPublisher.publishEvent(new ContentChangeEvent(
                     AiKnowledgeSourceTypeEnum.PUBLIC_ARTICLE.getCode(),
                     id, ContentChangeAction.UPDATE, article.getAuthorId()));
@@ -174,7 +174,7 @@ public class ArticleAdminCrudServiceImpl implements ArticleAdminCrudService {
         }
         blogArticleRepository.updateById(article);
         ContentChangeAction statusAction = null;
-        if (Integer.valueOf(1).equals(actualStatus)) {
+        if (Integer.valueOf(1).equals(actualStatus) && shouldPublishKnowledgeEvent(article)) {
             statusAction = ContentChangeAction.PUBLISH;
         } else if (Integer.valueOf(2).equals(actualStatus)) {
             statusAction = ContentChangeAction.HIDE;
@@ -211,6 +211,13 @@ public class ArticleAdminCrudServiceImpl implements ArticleAdminCrudService {
     }
 
     // ==================== private helpers ====================
+
+    /**
+     * AI 知识库只接收公开可见且普通用户可访问的文章变更事件。
+     */
+    private boolean shouldPublishKnowledgeEvent(BlogArticle article) {
+        return articleStatusMachine.canShowInPublicList(article);
+    }
 
     ArticleDetailVO buildArticleDetail(BlogArticle article) {
         ArticleDetailVO detailVO = articleModelConvert.toDetailVO(article);
