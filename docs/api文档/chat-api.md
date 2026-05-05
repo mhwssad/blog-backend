@@ -1,99 +1,39 @@
-# 聊天与 WebSocket 接口文档
+# 聊天模块前端参考手册
 
-本文档面向前端联调，对应 2026-03-30 当前仓库中的 chat 模块实现。
+本文档面向前端开发者，基于实际代码编写，提供完整的接口调用示例和响应说明。
 
-## 1. 当前能力范围
+---
 
-当前已支持：
+## 会话列表页
 
-- 单聊、群聊、全站群聊
-- 文本消息、文件消息、图片消息、语音消息
-- 回复能力，当前同时返回 `replyMessageId` 和 `reply` 快照
-- 消息编辑、撤回、仅当前用户视角删除
-- 会话列表 / 会话详情 / 历史消息 / 已读推进
-- 群管理员、转让群主、禁言、群公告
-- 频道创建申请、后台审核，审核通过后生成主题频道
-- 后台会话管理、消息详情、回执明细、成员角色/状态/禁言管理、后台撤回
-- WebSocket 新消息、编辑、撤回、删除、会话更新、成员更新、已读推进推送
-- WebSocket 多节点广播，当前基于 Redis pub/sub 分发到各节点本地会话
-- 聊天域用户级分钟频控、敏感词拦截，以及媒体任务完成后的 `message_updated` 更新推送
+### 获取我的会话列表
 
-当前仍未支持：
+**接口信息**
+- 路径: `GET /api/user/chat/conversations`
+- 鉴权: 是
+- 说明: 分页查询当前用户的会话列表，支持按关键字搜索会话名称或最后一条消息内容
 
-- 富文本引用块、跨会话引用与多层嵌套回复展示
-- 更完整的审核工作流、人工复核和未读/会话缓存
+**请求参数**
 
-## 2. 鉴权要求
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
+|-----|------|------|--------|-----|
+| current | Long | 否 | 1 | 页码 |
+| size | Long | 否 | 20 | 每页条数 |
+| keyword | String | 否 | - | 关键字，模糊查询会话名或最后一条消息内容 |
 
-### 2.1 用户侧 HTTP
+**请求示例**
 
-除 `security.unsecured-urls` 中声明的匿名接口外，`/api/user/chat/**` 都要求登录。
+```javascript
+// axios
+axios.get('/api/user/chat/conversations', {
+  params: { current: 1, size: 20 }
+})
 
-```http
-Authorization: Bearer <accessToken>
+// 请求 URL
+GET /api/user/chat/conversations?current=1&size=20
 ```
 
-### 2.2 公开访客接口
-
-访客无需登录即可访问的全站大厅消息查看接口：
-
-- `GET /api/public/chat/lobby/messages` - 访客查看大厅消息
-
-### 2.3 后台聊天管理 HTTP
-
-后台统一走 `/api/sys/chats/**`，除登录外还要求对应权限：
-
-- `content:chat:query`
-- `content:chat:update`
-
-### 2.4 WebSocket
-
-- 地址：`/ws/chat`
-- 令牌来源：
-    - `Authorization` 请求头
-    - Query 参数 `accessToken`
-
-浏览器示例：
-
-```js
-const socket = new WebSocket(
-  `ws://localhost:8000/ws/chat?accessToken=${accessToken}`,
-);
-```
-
-## 3. 公开访客接口
-
-### 3.1 访客查看大厅消息
-
-- 请求：`GET /api/public/chat/lobby/messages`
-- 鉴权：否
-- 用途：访客无需登录即可查看全站大厅消息
-- 查询参数：
-
-| 参数 | 类型 | 必填 | 说明 |
-| --- | --- | --- | --- |
-| `current` | Long | 否 | 页码，默认 `1` |
-| `size` | Long | 否 | 每页条数，默认 `20` |
-| `beforeMessageId` | Long | 否 | 只查询该消息 ID 之前的历史消息 |
-
-- 响应字段：`ChatLobbyMessageVO`
-
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| `id` | Long | 消息 ID |
-| `senderId` | Long | 发送人 ID |
-| `senderUsername` | String | 发送人用户名 |
-| `senderNickname` | String | 发送人昵称 |
-| `senderAvatar` | String | 发送人头像 |
-| `content` | String | 消息内容 |
-| `messageType` | String | `text/file/image/voice` |
-| `createdAt` | DateTime | 发送时间 |
-
-- 说明：
-    - 访客只能查看大厅消息，不能发送。
-    - 消息列表按时间倒序返回。
-
-- 响应示例：
+**响应示例**
 
 ```json
 {
@@ -101,118 +41,7 @@ const socket = new WebSocket(
   "message": "成功",
   "timestamp": 1774310400000,
   "data": {
-    "total": 1,
-    "current": 1,
-    "size": 20,
-    "records": [
-      {
-        "id": 90001,
-        "senderId": 1,
-        "senderName": "张三",
-        "senderAvatar": "https://example.com/avatar/1.png",
-        "messageType": "text",
-        "content": "大家好，欢迎来到全站大厅！",
-        "createdAt": "2026-03-30 10:00:00"
-      }
-    ]
-  }
-}
-```
-
-## 4. 用户侧 HTTP 接口
-
-### 4.1 接口总览
-
-| 接口       | 方法       | 路径                                                                   |
-|----------|----------|----------------------------------------------------------------------|
-| 分页查询我的会话 | `GET`    | `/api/user/chat/conversations`                                       |
-| 查询会话详情   | `GET`    | `/api/user/chat/conversations/{conversationId}`                      |
-| 打开或创建单聊  | `POST`   | `/api/user/chat/single-conversations`                                |
-| 加入公开频道或公开群 | `POST`   | `/api/user/chat/conversations/{conversationId}/join`            |
-| 离开频道或公开群 | `POST`   | `/api/user/chat/conversations/{conversationId}/leave`            |
-| 分页查询会话消息 | `GET`    | `/api/user/chat/conversations/{conversationId}/messages`             |
-| 发送文本消息   | `POST`   | `/api/user/chat/messages/text`                                       |
-| 发送文件消息   | `POST`   | `/api/user/chat/messages/file`                                       |
-| 编辑消息     | `PUT`    | `/api/user/chat/messages/{messageId}`                                |
-| 撤回消息     | `POST`   | `/api/user/chat/messages/{messageId}/revoke`                         |
-| 删除我的消息视图 | `DELETE` | `/api/user/chat/messages/{messageId}`                                |
-| 推进会话已读   | `POST`   | `/api/user/chat/conversations/{conversationId}/read`                 |
-| 创建群聊     | `POST`   | `/api/user/chat/groups`                                              |
-| 搜索公开群聊   | `GET`    | `/api/user/chat/groups/search`                                       |
-| 查询群详情    | `GET`    | `/api/user/chat/groups/{conversationId}`                             |
-| 查询群成员    | `GET`    | `/api/user/chat/groups/{conversationId}/members`                     |
-| 邀请群成员    | `POST`   | `/api/user/chat/groups/{conversationId}/members`                     |
-| 设置群管理员   | `PUT`    | `/api/user/chat/groups/{conversationId}/admins/{memberUserId}`       |
-| 取消群管理员   | `DELETE` | `/api/user/chat/groups/{conversationId}/admins/{memberUserId}`       |
-| 转让群主     | `PUT`    | `/api/user/chat/groups/{conversationId}/owner`                       |
-| 设置成员禁言   | `PUT`    | `/api/user/chat/groups/{conversationId}/members/{memberUserId}/mute` |
-| 更新群公告    | `PUT`    | `/api/user/chat/groups/{conversationId}/notice`                      |
-| 移除群成员    | `DELETE` | `/api/user/chat/groups/{conversationId}/members/{memberUserId}`      |
-| 退出群聊     | `POST`   | `/api/user/chat/groups/{conversationId}/leave`                       |
-| 解散群聊     | `DELETE` | `/api/user/chat/groups/{conversationId}`                             |
-| 提交频道申请   | `POST`   | `/api/user/chat/channel-applications`                                |
-| 查询最近频道申请 | `GET`    | `/api/user/chat/channel-applications/latest`                         |
-| 分页查询频道申请 | `GET`    | `/api/user/chat/channel-applications`                                |
-| 分享帖子到频道 | `POST`   | `/api/user/chat/forum-links`                                        |
-| 查询帖子关联的频道 | `GET`   | `/api/user/chat/forum-links/posts/{forumPostId}`                    |
-| 分页查询频道关联的帖子 | `GET`   | `/api/user/chat/forum-links/channels/{conversationId}`             |
-| 取消帖子与频道的关联 | `DELETE`   | `/api/user/chat/forum-links/posts/{forumPostId}`                    |
-| 提交入群申请   | `POST`   | `/api/user/chat/groups/{conversationId}/join-applications`           |
-| 分页查询我的入群申请 | `GET`    | `/api/user/chat/group-join-applications`                             |
-| 分页查询群入群申请 | `GET`    | `/api/user/chat/groups/{conversationId}/join-applications`           |
-| 审核入群申请   | `PUT`    | `/api/user/chat/groups/{conversationId}/join-applications/{applicationId}/review` |
-| 创建群邀请链接 | `POST`   | `/api/user/chat/groups/{conversationId}/invite-links`              |
-| 分页查询群邀请链接 | `GET`    | `/api/user/chat/groups/{conversationId}/invite-links`               |
-| 停用群邀请链接 | `PUT`    | `/api/user/chat/groups/{conversationId}/invite-links/{inviteLinkId}/disable` |
-| 通过邀请链接入群 | `POST`   | `/api/user/chat/group-invite-links/{inviteToken}/join`              |
-
-### 4.2 会话查询
-
-`GET /api/user/chat/conversations`
-
-请求参数：
-
-| 参数        | 位置    | 必填 | 说明              |
-|-----------|-------|----|-----------------|
-| `current` | query | 否  | 页码，默认 `1`       |
-| `size`    | query | 否  | 每页条数，默认 `20`    |
-| `keyword` | query | 否  | 按会话名、最后一条消息内容筛选 |
-
-会话对象重点字段：
-
-| 字段                 | 说明                                  |
-|--------------------|-------------------------------------|
-| `conversationType` | `single/group/global`               |
-| `sceneType`        | 业务场景：`single_chat/user_group/hall_channel/topic_channel/global_channel` |
-| `notice`           | 群公告，对应 `chat_conversation.announcement` |
-| `visibilityScope`  | 可见范围：`public/member/private` |
-| `allowGuestView`   | 访客是否可见：`0/1` |
-| `requireJoinToSpeak` | 是否需要加入后发言：`0/1` |
-| `joinRule`         | 加入规则：`free/approval/invite_only` |
-| `speakLevelLimit`  | 发言最低等级限制 |
-| `memberLimit`      | 成员上限，`0` 表示不限制 |
-| `slowModeSeconds`  | 慢速模式秒数，`0` 表示关闭 |
-| `displaySort`      | 展示排序 |
-| `channelCategoryCode` | 频道或群分类编码 |
-| `selfRole`         | 当前用户角色：`owner/admin/member`         |
-| `memberCount`      | 当前活跃成员数                             |
-| `unreadCount`      | 当前用户未读数                             |
-| `lastMessage`      | 最后一条消息摘要                            |
-
-说明：
-
-- 首次访问时，如果全站群不存在成员关系，服务端会自动补建。
-- 单聊详情会额外返回 `targetUserId / targetUsername / targetNickname`。
-
-- 响应示例：
-
-```json
-{
-  "code": 200,
-  "message": "成功",
-  "timestamp": 1774310400000,
-  "data": {
-    "total": 2,
+    "total": 3,
     "current": 1,
     "size": 20,
     "records": [
@@ -221,313 +50,160 @@ const socket = new WebSocket(
         "conversationType": "single",
         "sceneType": "single_chat",
         "name": "李四",
-        "avatar": "https://example.com/avatar/2.png",
+        "avatar": "https://example.com/avatar/lisi.jpg",
         "ownerId": null,
         "notice": null,
-        "allSite": false,
-        "status": 1,
+        "allSite": null,
+        "status": 0,
         "visibilityScope": null,
-        "allowGuestView": 0,
-        "requireJoinToSpeak": 0,
+        "allowGuestView": null,
+        "requireJoinToSpeak": null,
         "joinRule": null,
-        "speakLevelLimit": 0,
-        "memberLimit": 0,
-        "slowModeSeconds": 0,
-        "displaySort": 0,
+        "speakLevelLimit": null,
+        "memberLimit": null,
+        "slowModeSeconds": null,
+        "displaySort": null,
         "channelCategoryCode": null,
         "selfRole": null,
-        "memberCount": 2,
-        "unreadCount": 3,
-        "targetUserId": 2,
+        "memberCount": null,
+        "unreadCount": 2,
+        "targetUserId": 102,
         "targetUsername": "lisi",
         "targetNickname": "李四",
-        "lastReadMessageId": 89999,
-        "lastReadAt": "2026-03-30 09:50:00",
-        "lastDeliveredMessageId": 89999,
-        "lastDeliveredAt": "2026-03-30 09:50:00",
+        "lastReadMessageId": 9001,
+        "lastReadAt": "2025-01-15T10:30:00",
+        "lastDeliveredMessageId": 9002,
+        "lastDeliveredAt": "2025-01-15T10:31:00",
         "lastMessage": {
-          "id": 90010,
-          "senderId": 2,
+          "id": 9010,
+          "senderId": 102,
           "senderNickname": "李四",
           "messageType": "text",
-          "content": "明天一起讨论技术方案吧",
-          "createdAt": "2026-03-30 10:05:00"
+          "content": "好的，明天见！",
+          "createdAt": "2025-01-15T10:32:00"
         },
-        "createdAt": "2026-03-20 14:00:00",
-        "updatedAt": "2026-03-30 10:05:00"
+        "createdAt": "2025-01-10T08:00:00",
+        "updatedAt": "2025-01-15T10:32:00"
       },
       {
-        "id": 2001,
+        "id": 1002,
         "conversationType": "group",
-        "sceneType": "user_group",
-        "name": "项目群",
-        "avatar": "https://example.com/group/2001.png",
-        "ownerId": 1,
-        "notice": "入群后请先看置顶说明",
+        "sceneType": "group_chat",
+        "name": "技术交流群",
+        "avatar": "https://example.com/avatar/tech-group.jpg",
+        "ownerId": 101,
+        "notice": "本群禁止广告",
         "allSite": false,
-        "status": 1,
-        "visibilityScope": "public",
+        "status": 0,
+        "visibilityScope": "private",
         "allowGuestView": 0,
-        "requireJoinToSpeak": 1,
-        "joinRule": "approval",
+        "requireJoinToSpeak": 0,
+        "joinRule": "free",
         "speakLevelLimit": 1,
         "memberLimit": 200,
         "slowModeSeconds": 0,
-        "displaySort": 0,
-        "channelCategoryCode": "backend",
-        "selfRole": "owner",
-        "memberCount": 15,
-        "unreadCount": 0,
+        "displaySort": 1,
+        "channelCategoryCode": "tech",
+        "selfRole": "member",
+        "memberCount": 45,
+        "unreadCount": 5,
         "targetUserId": null,
         "targetUsername": null,
         "targetNickname": null,
-        "lastReadMessageId": 80050,
-        "lastReadAt": "2026-03-30 09:30:00",
-        "lastDeliveredMessageId": 80050,
-        "lastDeliveredAt": "2026-03-30 09:30:00",
+        "lastReadMessageId": 8001,
+        "lastReadAt": "2025-01-15T09:00:00",
+        "lastDeliveredMessageId": 8005,
+        "lastDeliveredAt": "2025-01-15T09:05:00",
         "lastMessage": {
-          "id": 80050,
-          "senderId": 3,
+          "id": 8010,
+          "senderId": 103,
           "senderNickname": "王五",
           "messageType": "text",
-          "content": "今晚 8 点发版，请提前同步。",
-          "createdAt": "2026-03-30 09:30:00"
+          "content": "有人知道怎么解决吗？",
+          "createdAt": "2025-01-15T11:00:00"
         },
-        "createdAt": "2026-03-10 08:00:00",
-        "updatedAt": "2026-03-30 09:30:00"
+        "createdAt": "2025-01-05T10:00:00",
+        "updatedAt": "2025-01-15T11:00:00"
       }
     ]
   }
 }
 ```
 
-### 4.3 加入公开频道或公开群
+**响应字段说明**
 
-`POST /api/user/chat/conversations/{conversationId}/join`
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| id | Long | 会话ID |
+| conversationType | String | 会话类型：`single` 单聊、`group` 群聊、`global` 全局频道 |
+| sceneType | String | 业务场景：`single_chat`、`group_chat`、`public_channel` 等 |
+| name | String | 会话名称（群聊时为群名称，单聊时为对方昵称） |
+| avatar | String | 会话头像URL |
+| ownerId | Long | 群主用户ID（仅群聊） |
+| notice | String | 群公告（仅群聊） |
+| allSite | Boolean | 是否全站群聊 |
+| status | Integer | 会话状态：`0` 正常 |
+| visibilityScope | String | 可见范围：`public` 公开、`private` 私有 |
+| allowGuestView | Integer | 访客是否可见：`0` 否、`1` 是 |
+| requireJoinToSpeak | Integer | 是否需要加入后发言：`0` 否、`1` 是 |
+| joinRule | String | 加入规则：`free` 自由加入、`approval` 需要审批、`invite_only` 邀请制 |
+| speakLevelLimit | Integer | 发言最低等级限制 |
+| memberLimit | Integer | 成员上限，`0` 表示不限制 |
+| slowModeSeconds | Integer | 慢速模式秒数，`0` 表示关闭 |
+| displaySort | Integer | 展示排序权重 |
+| channelCategoryCode | String | 频道或群分类编码 |
+| selfRole | String | 当前用户在会话中的角色：`owner` 群主、`admin` 管理员、`member` 成员 |
+| memberCount | Long | 活跃成员数量 |
+| unreadCount | Integer | 未读消息数 |
+| targetUserId | Long | 单聊目标用户ID |
+| targetUsername | String | 单聊目标用户名 |
+| targetNickname | String | 单聊目标昵称 |
+| lastReadMessageId | Long | 当前用户最后已读的消息ID |
+| lastReadAt | LocalDateTime | 最后已读时间 |
+| lastDeliveredMessageId | Long | 最后已送达的消息ID |
+| lastDeliveredAt | LocalDateTime | 最后送达时间 |
+| lastMessage | Object | 最后一条消息摘要 |
+| lastMessage.id | Long | 消息ID |
+| lastMessage.senderId | Long | 发送人ID |
+| lastMessage.senderNickname | String | 发送人昵称 |
+| lastMessage.messageType | String | 消息类型：`text` 文本、`file` 文件等 |
+| lastMessage.content | String | 消息内容摘要 |
+| lastMessage.createdAt | LocalDateTime | 发送时间 |
+| createdAt | LocalDateTime | 会话创建时间 |
+| updatedAt | LocalDateTime | 会话最后更新时间 |
 
-路径参数：`conversationId`
+**错误码**
 
-说明：
+| code | 说明 | 前端处理 |
+|-----|------|---------|
+| 401 | 未登录或Token无效 | 跳转登录页 |
+| 500 | 服务器内部错误 | 显示错误提示 |
 
-- 用户加入公开频道或公开群后可以收发消息
-- 加入规则为 `free` 时直接加入成功
-- 加入规则为 `approval` 时会创建待审核的入群申请
-- 加入规则为 `invite_only` 时会拒绝加入请求
+---
 
-### 4.4 离开频道或公开群
+### 打开或创建单聊会话
 
-`POST /api/user/chat/conversations/{conversationId}/leave`
+**接口信息**
+- 路径: `POST /api/user/chat/single-conversations`
+- 鉴权: 是
+- 说明: 根据目标用户ID打开或创建一个单聊会话
 
-路径参数：`conversationId`
+**请求示例**
 
-说明：
-
-- 群主不能直接退群，必须先转让群主或解散群聊
-- 离开后不再接收该会话的消息推送
-
-### 4.5 消息查询
-
-`GET /api/user/chat/conversations/{conversationId}/messages`
-
-请求参数：
-
-| 参数                | 位置    | 必填 | 说明                |
-|-------------------|-------|----|-------------------|
-| `current`         | query | 否  | 页码，默认 `1`         |
-| `size`            | query | 否  | 每页条数，默认 `20`      |
-| `beforeMessageId` | query | 否  | 只查询该消息 ID 之前的历史消息 |
-
-消息对象重点字段：
-
-| 字段                  | 说明                               |
-|---------------------|----------------------------------|
-| `messageType`       | `text/file/image/voice`          |
-| `content`           | 文本内容或附件摘要；撤回后固定为“消息已撤回”          |
-| `file`              | 附件消息载荷；文本消息为空                    |
-| `replyMessageId`    | 被回复消息 ID；未回复时为空                  |
-| `reply`             | 被回复消息快照；如旧消息未落快照且原消息已不可见，会返回占位快照 |
-| `deliveryStatus`    | 当前用户视角下的投递状态：`0/1/2`             |
-| `readByCurrentUser` | 当前用户是否已读                         |
-| `revoked`           | 是否已撤回                            |
-| `edited`            | 是否编辑过；当前仅文本消息可能为 `true`          |
-| `updatedAt`         | 更新时间                             |
-
-附件载荷 `file` 字段：
-
-| 字段                | 说明                                          |
-|-------------------|---------------------------------------------|
-| `businessId`      | 聊天文件业务引用 ID                                 |
-| `fileId`          | 文件 ID                                       |
-| `fileName`        | 文件名                                         |
-| `originalName`    | 原始文件名                                       |
-| `fileUrl`         | 文件地址                                        |
-| `fileSize`        | 文件大小                                        |
-| `fileType`        | 文件类型                                        |
-| `mimeType`        | MIME 类型                                     |
-| `previewUrl`      | 预览地址，图片/语音当前复用原文件地址                         |
-| `thumbnailUrl`    | 缩略图地址；图片刚发送时可能先回落原图，媒体任务完成后会更新为 sidecar 缩略图 |
-| `width`           | 图片宽度，异步媒体任务完成前可能为空                          |
-| `height`          | 图片高度，异步媒体任务完成前可能为空                          |
-| `durationSeconds` | 语音时长，异步媒体任务完成前可能为空                          |
-| `waveform`        | 语音波形采样点，异步媒体任务完成前可能为空                       |
-| `transcodeStatus` | 转码状态：`source/pending/ready/failed`          |
-
-回复快照 `reply` 字段：
-
-| 字段                 | 说明                                |
-|--------------------|-----------------------------------|
-| `id`               | 被回复消息 ID                          |
-| `senderId`         | 被回复消息发送人 ID                       |
-| `senderUsername`   | 被回复消息发送人用户名                       |
-| `senderNickname`   | 被回复消息发送人昵称                        |
-| `senderAvatar`     | 被回复消息发送人头像                        |
-| `messageType`      | 被回复消息类型                           |
-| `replyToMessageId` | 被回复消息自己又回复了哪条消息，仅作为状态链接，不继续内联多层快照 |
-| `content`          | 被回复消息摘要                           |
-| `file`             | 被回复消息附件快照                         |
-| `revoked`          | 被回复消息是否已撤回                        |
-| `deleted`          | 仅用于提示原消息当前不可见的兜底状态                |
-| `state`            | 当前状态：`normal/revoked/unavailable` |
-| `createdAt`        | 被回复消息发送时间                         |
-
-说明：
-
-- 当前实现采用“在线即 delivered”语义：如果发送时服务端检测到接收方存在在线 WebSocket 会话，会立即把 recipient 推进到
-  `已送达`。
-- 用户拉取历史消息时，如命中此前仍是 `待投递` 的消息，也会补记为 `已送达`；`deliveredMessageId` / `lastDeliveredMessageId`
-  只会单调前进，不会被并发旧事务回退。
-- 新消息发送时会把被回复消息摘要快照持久化到 payload；旧消息若没有快照，服务端会尽量回查原消息并补齐。
-- 若被回复消息当前仍可见，接口会优先返回原消息的实时摘要，因此编辑或撤回后，`reply.content / reply.state / reply.revoked`
-  会跟随更新；只有原消息不可见时才回退到 payload 快照。
-- 图片和语音消息发送成功后会先返回基础载荷，随后由异步媒体任务补齐缩略图、WAV 预览、时长和波形，并通过 `message_updated`
-  推给在线成员。
-- 若旧消息的原始被回复消息已经不可见，`reply.deleted = true`，`reply.state = unavailable`，`reply.content` 会回退为”引用消息已不可见”。
-- 当前不会返回多层 `reply.reply...` 结构；如需展示”被引用消息本身也是回复”，前端可结合 `reply.replyToMessageId` 做弱提示或跳转入口。
-
-- 响应示例：
-
-```json
-{
-  “code”: 200,
-  “message”: “成功”,
-  “timestamp”: 1774310400000,
-  “data”: {
-    “total”: 2,
-    “current”: 1,
-    “size”: 20,
-    “records”: [
-      {
-        “id”: 90010,
-        “conversationId”: 1001,
-        “senderId”: 2,
-        “senderUsername”: “lisi”,
-        “senderNickname”: “李四”,
-        “senderAvatar”: “https://example.com/avatar/2.png”,
-        “messageType”: “text”,
-        “content”: “明天一起讨论技术方案吧”,
-        “file”: null,
-        “replyMessageId”: 90009,
-        “reply”: {
-          “id”: 90009,
-          “senderId”: 1,
-          “senderUsername”: “zhangsan”,
-          “senderNickname”: “张三”,
-          “senderAvatar”: “https://example.com/avatar/1.png”,
-          “messageType”: “text”,
-          “replyToMessageId”: null,
-          “content”: “有时间吗？”,
-          “file”: null,
-          “revoked”: false,
-          “deleted”: false,
-          “state”: “normal”,
-          “createdAt”: “2026-03-30 10:04:00”
-        },
-        “clientMessageId”: “msg-lisi-001”,
-        “self”: false,
-        “deliveryStatus”: 2,
-        “readByCurrentUser”: true,
-        “readAt”: “2026-03-30 10:06:00”,
-        “revoked”: false,
-        “edited”: false,
-        “updatedAt”: null,
-        “createdAt”: “2026-03-30 10:05:00”
-      },
-      {
-        “id”: 90009,
-        “conversationId”: 1001,
-        “senderId”: 1,
-        “senderUsername”: “zhangsan”,
-        “senderNickname”: “张三”,
-        “senderAvatar”: “https://example.com/avatar/1.png”,
-        “messageType”: “text”,
-        “content”: “有时间吗？”,
-        “file”: null,
-        “replyMessageId”: null,
-        “reply”: null,
-        “clientMessageId”: “msg-zhangsan-001”,
-        “self”: true,
-        “deliveryStatus”: 2,
-        “readByCurrentUser”: true,
-        “readAt”: “2026-03-30 10:04:00”,
-        “revoked”: false,
-        “edited”: false,
-        “updatedAt”: null,
-        “createdAt”: “2026-03-30 10:04:00”
-      }
-    ]
-  }
-}
+```javascript
+// axios
+axios.post('/api/user/chat/single-conversations', {
+  targetUserId: 102
+})
 ```
 
-### 4.4 发送文本消息
+**请求体**
 
-`POST /api/user/chat/messages/text`
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| targetUserId | Long | 是 | 目标用户ID |
 
-请求体支持两种模式：
-
-已有会话发送：
-
-```json
-{
-  "conversationId": 1001,
-  "content": "hello",
-  "clientMessageId": "msg-001",
-  "replyMessageId": 90001
-}
-```
-
-自动建立单聊发送：
-
-```json
-{
-  "targetUserId": 2,
-  "content": "hello",
-  "clientMessageId": "msg-001",
-  "replyMessageId": 90001
-}
-```
-
-说明：
-
-- `conversationId` 和 `targetUserId` 不能同时为空。
-- `clientMessageId` 作为同一发送人的幂等键；并发重复发送命中唯一键冲突时，服务端会回查并返回已落库消息。
-- `replyMessageId` 非空时，必须是当前用户在同一会话内可见的消息。
-- 当前成员被禁言时会拒绝发送。
-- **禁言拦截说明**：消息发送时会检查统一禁言记录，支持四种范围：
-    - `global`（全站禁言）：阻断所有场景（大厅、频道、群聊）的消息发送。
-    - `lobby`（大厅禁言）：阻断大厅和全站频道的消息发送。
-    - `topic_channel`（主题频道禁言）：仅阻断对应主题频道的消息发送。
-    - `group`（群聊禁言）：仅阻断对应群聊的消息发送。
-  - 全站禁言会覆盖所有场景，无论当前会话类型。
-  - 范围禁言仅在匹配的会话场景下生效；单聊不受任何禁言范围影响。
-  - 禁言到期后下次发送时自动放行，无需手动解除。
-- 当前会话如配置了 `speakLevelLimit`，或全站大厅命中了系统配置 `chat.hall.speak.min-level`，未达到等级门槛的用户会被拒绝发送。
-- 聊天域当前还会按用户维度做分钟级发送频控，并按系统配置 `chat.sensitive-words` 做基础敏感词拦截。
-- 发送成功后，服务端会把被回复消息的摘要快照一并写入消息 payload，避免后续前端必须二次查原消息。
-- 单聊文本消息发送成功后，会按接收方 `private_message` 通知偏好投递站内通知。
-- 群聊 / 全站群 / 频道文本中包含 `@用户ID` 时，会按被 @ 用户的 `group_mention` 通知偏好投递站内通知；第一阶段仅解析当前会话活跃成员的用户 ID。
-
-- 响应示例（发送文本消息 / 发送文件消息 统一返回 ChatMessageVO）：
+**响应示例**
 
 ```json
 {
@@ -535,445 +211,542 @@ const socket = new WebSocket(
   "message": "成功",
   "timestamp": 1774310400000,
   "data": {
-    "id": 90011,
+    "id": 1001,
+    "conversationType": "single",
+    "sceneType": "single_chat",
+    "name": "李四",
+    "avatar": "https://example.com/avatar/lisi.jpg",
+    "targetUserId": 102,
+    "targetUsername": "lisi",
+    "targetNickname": "李四",
+    "unreadCount": 0,
+    "status": 0,
+    "createdAt": "2025-01-10T08:00:00",
+    "updatedAt": "2025-01-15T12:00:00"
+  }
+}
+```
+
+---
+
+### 查询会话详情
+
+**接口信息**
+- 路径: `GET /api/user/chat/conversations/{conversationId}`
+- 鉴权: 是
+- 说明: 根据会话ID查询会话详细信息
+
+**请求示例**
+
+```javascript
+axios.get('/api/user/chat/conversations/1001')
+```
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "id": 1001,
+    "conversationType": "single",
+    "sceneType": "single_chat",
+    "name": "李四",
+    "avatar": "https://example.com/avatar/lisi.jpg",
+    "status": 0,
+    "targetUserId": 102,
+    "targetUsername": "lisi",
+    "targetNickname": "李四",
+    "lastReadMessageId": 9001,
+    "lastReadAt": "2025-01-15T10:30:00",
+    "lastDeliveredMessageId": 9002,
+    "lastDeliveredAt": "2025-01-15T10:31:00",
+    "createdAt": "2025-01-10T08:00:00",
+    "updatedAt": "2025-01-15T10:32:00"
+  }
+}
+```
+
+---
+
+## 聊天页
+
+### 分页查询会话消息
+
+**接口信息**
+- 路径: `GET /api/user/chat/conversations/{conversationId}/messages`
+- 鉴权: 是
+- 说明: 分页获取指定会话的历史消息，默认按时间倒序
+
+**请求参数**
+
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
+|-----|------|------|--------|-----|
+| current | Long | 否 | 1 | 页码 |
+| size | Long | 否 | 20 | 每页条数 |
+| beforeMessageId | Long | 否 | - | 查询该消息ID之前的消息，用于滚动加载更多 |
+
+**请求示例**
+
+```javascript
+// 首次加载
+axios.get('/api/user/chat/conversations/1001/messages', {
+  params: { current: 1, size: 20 }
+})
+
+// 加载更多历史消息
+axios.get('/api/user/chat/conversations/1001/messages', {
+  params: { current: 1, size: 20, beforeMessageId: 9000 }
+})
+```
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 100,
+    "current": 1,
+    "size": 20,
+    "records": [
+      {
+        "id": 9020,
+        "conversationId": 1001,
+        "senderId": 101,
+        "senderUsername": "zhangsan",
+        "senderNickname": "张三",
+        "senderAvatar": "https://example.com/avatar/zhangsan.jpg",
+        "messageType": "text",
+        "content": "你好，明天有空吗？",
+        "file": null,
+        "replyMessageId": null,
+        "reply": null,
+        "clientMessageId": "msg-uuid-123456",
+        "self": true,
+        "deliveryStatus": 2,
+        "readByCurrentUser": true,
+        "readAt": "2025-01-15T10:35:00",
+        "revoked": false,
+        "edited": false,
+        "updatedAt": "2025-01-15T10:30:00",
+        "createdAt": "2025-01-15T10:30:00"
+      },
+      {
+        "id": 9019,
+        "conversationId": 1001,
+        "senderId": 102,
+        "senderUsername": "lisi",
+        "senderNickname": "李四",
+        "senderAvatar": "https://example.com/avatar/lisi.jpg",
+        "messageType": "text",
+        "content": "有空的，什么事？",
+        "file": null,
+        "replyMessageId": null,
+        "reply": null,
+        "clientMessageId": null,
+        "self": false,
+        "deliveryStatus": 2,
+        "readByCurrentUser": true,
+        "readAt": "2025-01-15T10:35:00",
+        "revoked": false,
+        "edited": false,
+        "updatedAt": "2025-01-15T10:32:00",
+        "createdAt": "2025-01-15T10:32:00"
+      },
+      {
+        "id": 9018,
+        "conversationId": 1001,
+        "senderId": 102,
+        "senderUsername": "lisi",
+        "senderNickname": "李四",
+        "senderAvatar": "https://example.com/avatar/lisi.jpg",
+        "messageType": "file",
+        "content": null,
+        "file": {
+          "businessId": 5001,
+          "fileId": 3001,
+          "fileName": "document.pdf",
+          "originalName": "项目文档.pdf",
+          "fileUrl": "https://example.com/files/document.pdf",
+          "fileSize": 1024000,
+          "fileType": "pdf",
+          "mimeType": "application/pdf",
+          "previewUrl": null,
+          "thumbnailUrl": null,
+          "width": null,
+          "height": null,
+          "durationSeconds": null,
+          "waveform": null,
+          "transcodeStatus": "ready"
+        },
+        "replyMessageId": null,
+        "reply": null,
+        "clientMessageId": null,
+        "self": false,
+        "deliveryStatus": 1,
+        "readByCurrentUser": false,
+        "readAt": null,
+        "revoked": false,
+        "edited": false,
+        "updatedAt": "2025-01-15T10:33:00",
+        "createdAt": "2025-01-15T10:33:00"
+      }
+    ]
+  }
+}
+```
+
+**响应字段说明**
+
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| id | Long | 消息ID |
+| conversationId | Long | 所属会话ID |
+| senderId | Long | 发送人用户ID |
+| senderUsername | String | 发送人用户名 |
+| senderNickname | String | 发送人昵称 |
+| senderAvatar | String | 发送人头像URL |
+| messageType | String | 消息类型：`text` 文本、`file` 文件等 |
+| content | String | 文本消息内容 |
+| file | Object | 文件消息载荷，详见下方 |
+| replyMessageId | Long | 回复的消息ID |
+| reply | Object | 回复消息快照，详见下方 |
+| clientMessageId | String | 客户端消息ID（用于幂等控制） |
+| self | Boolean | 是否当前用户自己发送 |
+| deliveryStatus | Integer | 投递状态：`0` 待投递、`1` 已送达、`2` 已读 |
+| readByCurrentUser | Boolean | 当前用户是否已读 |
+| readAt | LocalDateTime | 当前用户读到该消息的时间 |
+| revoked | Boolean | 是否已撤回 |
+| edited | Boolean | 是否编辑过 |
+| updatedAt | LocalDateTime | 消息更新时间 |
+| createdAt | LocalDateTime | 消息发送时间 |
+
+**file 对象字段说明**
+
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| businessId | Long | 聊天文件业务引用ID |
+| fileId | Long | 文件ID |
+| fileName | String | 文件名称（聊天展示名） |
+| originalName | String | 原始文件名 |
+| fileUrl | String | 文件访问地址 |
+| fileSize | Long | 文件大小（字节） |
+| fileType | String | 文件类型（如 pdf、jpg、mp4） |
+| mimeType | String | MIME 类型 |
+| previewUrl | String | 预览地址（图片/语音可直接复用） |
+| thumbnailUrl | String | 缩略图地址 |
+| width | Integer | 图片宽度（仅图片） |
+| height | Integer | 图片高度（仅图片） |
+| durationSeconds | Integer | 语音时长秒数（仅语音） |
+| waveform | List<Integer> | 语音波形采样点 |
+| transcodeStatus | String | 转码状态：`source` 原始、`pending` 转码中、`ready` 可用、`failed` 失败 |
+
+**reply 对象字段说明**
+
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| id | Long | 被回复消息ID |
+| senderId | Long | 被回复消息发送人ID |
+| senderUsername | String | 被回复消息发送人用户名 |
+| senderNickname | String | 被回复消息发送人昵称 |
+| senderAvatar | String | 被回复消息发送人头像 |
+| messageType | String | 被回复消息类型 |
+| replyToMessageId | Long | 被回复消息自身所引用的上一层消息ID |
+| content | String | 被回复消息摘要内容 |
+| file | Object | 被回复消息附件快照 |
+| revoked | Boolean | 被回复消息是否已撤回 |
+| deleted | Boolean | 被回复消息是否已不可见 |
+| state | String | 被回复消息状态：`normal` 正常、`revoked` 已撤回、`unavailable` 不可用 |
+| createdAt | LocalDateTime | 被回复消息发送时间 |
+
+---
+
+### 发送文本消息
+
+**接口信息**
+- 路径: `POST /api/user/chat/messages/text`
+- 鉴权: 是
+- 说明: 发送文本消息，支持单聊和群聊
+
+**请求示例**
+
+```javascript
+// 已有会话ID时
+axios.post('/api/user/chat/messages/text', {
+  conversationId: 1001,
+  content: '你好，明天有空吗？',
+  clientMessageId: 'msg-uuid-123456',
+  replyMessageId: null
+})
+
+// 无会话ID（单聊新会话）
+axios.post('/api/user/chat/messages/text', {
+  targetUserId: 102,
+  content: '你好，明天有空吗？'
+})
+```
+
+**请求体**
+
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| conversationId | Long | 否 | 会话ID，已存在会话时优先传该字段 |
+| targetUserId | Long | 否 | 单聊目标用户ID，未传会话ID时用于自动创建/获取单聊 |
+| content | String | 是 | 文本消息内容，最大2000字符 |
+| clientMessageId | String | 否 | 客户端幂等消息ID，建议使用UUID |
+| replyMessageId | Long | 否 | 回复的消息ID |
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "id": 9021,
     "conversationId": 1001,
-    "senderId": 1,
+    "senderId": 101,
     "senderUsername": "zhangsan",
     "senderNickname": "张三",
-    "senderAvatar": "https://example.com/avatar/1.png",
+    "senderAvatar": "https://example.com/avatar/zhangsan.jpg",
     "messageType": "text",
-    "content": "好的，明天见！",
+    "content": "你好，明天有空吗？",
     "file": null,
     "replyMessageId": null,
     "reply": null,
-    "clientMessageId": "msg-zhangsan-002",
+    "clientMessageId": "msg-uuid-123456",
+    "self": true,
+    "deliveryStatus": 0,
+    "readByCurrentUser": false,
+    "readAt": null,
+    "revoked": false,
+    "edited": false,
+    "updatedAt": "2025-01-15T12:00:00",
+    "createdAt": "2025-01-15T12:00:00"
+  }
+}
+```
+
+---
+
+### 发送文件消息
+
+**接口信息**
+- 路径: `POST /api/user/chat/messages/file`
+- 鉴权: 是
+- 说明: 发送文件消息（图片、语音、视频、文档等），文件需先通过文件上传接口获取 businessId
+
+**请求示例**
+
+```javascript
+// 已有会话ID时
+axios.post('/api/user/chat/messages/file', {
+  conversationId: 1001,
+  businessId: 5001,
+  clientMessageId: 'msg-uuid-789012',
+  replyMessageId: null
+})
+
+// 无会话ID（单聊新会话）
+axios.post('/api/user/chat/messages/file', {
+  targetUserId: 102,
+  businessId: 5001
+})
+```
+
+**请求体**
+
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| conversationId | Long | 否 | 会话ID，已存在会话时优先传该字段 |
+| targetUserId | Long | 否 | 单聊目标用户ID，未传会话ID时用于自动创建/获取单聊 |
+| businessId | Long | 是 | 上传完成后得到的文件业务引用ID |
+| clientMessageId | String | 否 | 客户端幂等消息ID |
+| replyMessageId | Long | 否 | 回复的消息ID |
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "id": 9022,
+    "conversationId": 1001,
+    "senderId": 101,
+    "senderUsername": "zhangsan",
+    "senderNickname": "张三",
+    "senderAvatar": "https://example.com/avatar/zhangsan.jpg",
+    "messageType": "file",
+    "content": null,
+    "file": {
+      "businessId": 5001,
+      "fileId": 3001,
+      "fileName": "photo.jpg",
+      "originalName": "照片.jpg",
+      "fileUrl": "https://example.com/files/photo.jpg",
+      "fileSize": 2048000,
+      "fileType": "jpg",
+      "mimeType": "image/jpeg",
+      "previewUrl": "https://example.com/files/photo.jpg",
+      "thumbnailUrl": "https://example.com/files/photo_thumb.jpg",
+      "width": 1920,
+      "height": 1080,
+      "durationSeconds": null,
+      "waveform": null,
+      "transcodeStatus": "ready"
+    },
+    "clientMessageId": "msg-uuid-789012",
+    "self": true,
+    "deliveryStatus": 0,
+    "readByCurrentUser": false,
+    "readAt": null,
+    "revoked": false,
+    "edited": false,
+    "updatedAt": "2025-01-15T12:01:00",
+    "createdAt": "2025-01-15T12:01:00"
+  }
+}
+```
+
+---
+
+### 编辑消息
+
+**接口信息**
+- 路径: `PUT /api/user/chat/messages/{messageId}`
+- 鉴权: 是
+- 说明: 编辑已发送的文本消息，仅本人发送的消息可编辑
+
+**请求示例**
+
+```javascript
+axios.put('/api/user/chat/messages/9021', {
+  content: '你好，明天有空吗？想约你吃饭。'
+})
+```
+
+**请求体**
+
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| content | String | 是 | 新的文本消息内容，最大2000字符 |
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "id": 9021,
+    "conversationId": 1001,
+    "senderId": 101,
+    "senderUsername": "zhangsan",
+    "senderNickname": "张三",
+    "senderAvatar": "https://example.com/avatar/zhangsan.jpg",
+    "messageType": "text",
+    "content": "你好，明天有空吗？想约你吃饭。",
+    "file": null,
+    "replyMessageId": null,
+    "reply": null,
+    "clientMessageId": "msg-uuid-123456",
     "self": true,
     "deliveryStatus": 1,
     "readByCurrentUser": false,
     "readAt": null,
     "revoked": false,
-    "edited": false,
-    "updatedAt": null,
-    "createdAt": "2026-03-30 10:10:00"
+    "edited": true,
+    "updatedAt": "2025-01-15T12:05:00",
+    "createdAt": "2025-01-15T12:00:00"
   }
 }
 ```
 
-### 4.5 发送文件消息
+---
 
-`POST /api/user/chat/messages/file`
+### 撤回消息
 
-请求体：
+**接口信息**
+- 路径: `POST /api/user/chat/messages/{messageId}/revoke`
+- 鉴权: 是
+- 说明: 撤回已发送的消息，仅本人发送的消息可撤回
+
+**请求示例**
+
+```javascript
+axios.post('/api/user/chat/messages/9021/revoke')
+```
+
+**响应示例**
 
 ```json
 {
-  "conversationId": 1001,
-  "businessId": 501,
-  "clientMessageId": "file-001",
-  "replyMessageId": 90001
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": null
 }
 ```
 
-或：
+---
+
+### 删除消息（当前用户视角）
+
+**接口信息**
+- 路径: `DELETE /api/user/chat/messages/{messageId}`
+- 鉴权: 是
+- 说明: 删除消息，仅从当前用户视角删除，不影响其他用户看到
+
+**请求示例**
+
+```javascript
+axios.delete('/api/user/chat/messages/9021')
+```
+
+**响应示例**
 
 ```json
 {
-  "targetUserId": 2,
-  "businessId": 501
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": null
 }
 ```
 
-说明：
+---
 
-- 单聊附件消息发送成功后，会按接收方 `private_message` 通知偏好投递站内通知。
+### 推进会话已读游标
 
-说明：
+**接口信息**
+- 路径: `POST /api/user/chat/conversations/{conversationId}/read`
+- 鉴权: 是
+- 说明: 告诉服务器当前用户已阅读到某条消息，推进已读进度
 
-- `businessId` 来自 `file` 模块上传完成后的业务引用 ID。
-- 当前只接受：
-    - 上传阶段的临时引用 `temp`
-    - 尚未绑定具体消息的 `chat_message` 引用
-- 服务端会根据 `file_info.mime_type` 自动推断消息类型：
-    - `image/*` -> `image`
-    - `audio/*` -> `voice`
-    - 其他 -> `file`
-- 附件载荷当前会统一补出 `previewUrl / thumbnailUrl / transcodeStatus` 等扩展字段；发送成功后会触发异步媒体任务，补齐图片缩略图、语音
-  WAV 预览、时长和波形。
-- 语音消息初始通常返回 `transcodeStatus = pending`；如果异步转码成功会更新成 `ready`，失败则更新成 `failed` 并继续保留原始
-  `previewUrl`。
-- 若底层存储或音频格式暂不支持自动解析/转码，对应 `width / height / durationSeconds / waveform` 仍可能为空，或
-  `transcodeStatus = failed`；这不影响消息主流程发送成功。
-- `replyMessageId` 非空时，同样要求当前用户在该会话内可见。
-- 发送成功后，服务端会把文件业务引用重绑到 `chat_message`，并清理临时引用。
-- `clientMessageId` 的并发重复提交同样会回查并返回已存在消息，不重复生成新的聊天记录。
-- 附件消息与文本消息共享同一套等级发言门槛校验。
+**请求示例**
 
-### 4.6 编辑 / 撤回 / 删除
-
-编辑：
-
-- 方法：`PUT`
-- 路径：`/api/user/chat/messages/{messageId}`
-
-```json
-{
-  "content": "修改后的内容"
-}
+```javascript
+axios.post('/api/user/chat/conversations/1001/read', {
+  readMessageId: 9020
+})
 ```
 
-约束：
+**请求体**
 
-- 仅允许编辑自己发送的文本消息
-- 文件消息、已撤回消息不允许编辑
-- 编辑成功后，服务端会向当前会话活跃成员推送 `message_updated`
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| readMessageId | Long | 是 | 最后已读消息ID |
 
-撤回：
-
-- 方法：`POST`
-- 路径：`/api/user/chat/messages/{messageId}/revoke`
-
-说明：
-
-- 当前仅允许撤回自己发送的消息
-- 撤回后消息主记录保留，但内容会改为“消息已撤回”
-- 文件消息撤回时会释放聊天引用
-- 撤回成功后，服务端会向当前会话活跃成员推送 `message_revoked`
-
-删除我的消息视图：
-
-- 方法：`DELETE`
-- 路径：`/api/user/chat/messages/{messageId}`
-
-说明：
-
-- 仅隐藏当前用户视角，不影响其他成员
-- 删除后会重新计算当前会话未读数
-- 删除成功后，服务端会只向当前用户在线会话推送 `message_deleted`，用于多标签页同步本人视图
-
-### 4.7 推进会话已读
-
-`POST /api/user/chat/conversations/{conversationId}/read`
-
-```json
-{
-  "readMessageId": 90013
-}
-```
-
-响应会返回：
-
-- `conversationId`
-- `userId`
-- `readMessageId`
-- `readAt`
-- `deliveredMessageId`
-- `deliveredAt`
-- `unreadCount`
-
-### 4.8 群治理接口
-
-创建群聊：
-
-```json
-POST /api/user/chat/groups
-{
-  "name": "项目群",
-  "avatar": "https://example.com/group.png",
-  "description": "项目协作与后端技术交流",
-  "announcement": "入群后请先看置顶说明",
-  "categoryCode": "backend",
-  "visibilityScope": "public",
-  "joinRule": "approval",
-  "speakLevelLimit": 1,
-  "memberLimit": 200,
-  "memberUserIds": [2, 3, 4]
-}
-```
-
-群治理规则：
-
-- 创建普通群聊前会校验系统配置 `chat.group.create.min-level`，默认要求达到 `Lv.2`。
-- 创建普通群聊前会校验系统配置 `chat.group.create.max-count`，默认单用户最多创建 20 个正常普通群，`0` 表示不限制。
-- 创建群聊时可设置群简介、公告、分类、可见范围、加入规则、发言等级和成员上限。
-- `visibilityScope` 支持 `public/private`，未传默认 `private`；群搜索只展示 `public` 正常普通群。
-- `joinRule` 支持 `free/approval/invite_only`，未传默认 `free`。
-- `memberLimit = 0` 表示不限制；创建、邀请成员和审批入群时都会校验人数上限。
-- 群主可设置/取消管理员、转让群主、禁言管理员和普通成员、更新公告、移除管理员和普通成员
-- 管理员可邀请成员、禁言普通成员、更新公告、移除普通成员
-- 管理员不能操作群主，也不能操作其他管理员
-- 主题频道公告变更且新公告非空时，会按频道成员的 `channel_announcement` 通知偏好投递站内通知。
-
-搜索公开群聊：
-
-```http
-GET /api/user/chat/groups/search?current=1&size=20&keyword=后端&categoryCode=backend
-```
-
-响应记录重点字段：
-
-| 字段 | 说明 |
-| --- | --- |
-| `id` | 群聊会话 ID |
-| `name` | 群名称 |
-| `description` | 群简介 |
-| `notice` | 群公告 |
-| `visibilityScope` | 可见范围，当前搜索只返回 `public` |
-| `joinRule` | 加入规则 |
-| `memberLimit` | 成员上限 |
-| `memberCount` | 当前活跃成员数 |
-| `joined` | 当前登录用户是否已加入 |
-| `selfRole` | 当前登录用户在群内角色，未加入为空 |
-
-设置群管理员：
-
-```http
-PUT /api/user/chat/groups/{conversationId}/admins/{memberUserId}
-```
-
-取消群管理员：
-
-```http
-DELETE /api/user/chat/groups/{conversationId}/admins/{memberUserId}
-```
-
-转让群主：
-
-```json
-PUT /api/user/chat/groups/{conversationId}/owner
-{
-  "targetUserId": 2
-}
-```
-
-设置禁言：
-
-```json
-PUT /api/user/chat/groups/{conversationId}/members/{memberUserId}/mute
-{
-  "muteUntil": "2026-03-31 12:00:00"
-}
-```
-
-更新群公告：
-
-```json
-PUT /api/user/chat/groups/{conversationId}/notice
-{
-  "notice": "今晚 8 点发版，请提前同步。"
-}
-```
-
-移除群成员：
-
-```http
-DELETE /api/user/chat/groups/{conversationId}/members/{memberUserId}
-```
-
-说明：
-
-- 用户不能通过“移除成员”接口移除自己
-- 群主不能直接退群，只能先转让群主或解散
-- 邀请成员、设置管理员、取消管理员、转让群主、禁言成员、移除成员、成员退群后，服务端会推送 `members_updated`
-- 转让群主、更新群公告、解散群聊后，服务端还会补推 `conversation_updated`
-- 群解散后，用户侧会话详情和历史消息接口都会视为“会话不可用”；如需审计历史消息，请走后台聊天管理接口
-- 全站群会在访问消息时自动补建/恢复当前用户成员资格，但邀请、退群、移除成员、管理员任免、群公告等普通群治理接口不适用于全站群
-
-### 4.9 频道创建申请
-
-提交申请：
-
-```json
-POST /api/user/chat/channel-applications
-{
-  "desiredName": "Java 后端讨论",
-  "desiredSceneType": "topic_channel",
-  "desiredCategoryCode": "backend",
-  "description": "用于沉淀后端学习和项目实践讨论"
-}
-```
-
-说明：
-
-- 当前仅支持申请 `topic_channel`。
-- 申请前会校验系统配置 `chat.channel-create-application.min-level`，默认要求达到 `Lv.2`。
-- 已存在待审核申请时会拒绝重复提交；待补充状态再次提交会复用原申请并回到待审核。
-- 审核通过后，后台会创建一个主题频道会话，并把申请人加入为 `owner`。
-
-查询最近一次申请：
-
-```http
-GET /api/user/chat/channel-applications/latest
-```
-
-分页查询我的申请：
-
-```http
-GET /api/user/chat/channel-applications?current=1&size=10
-```
-
-### 4.10 帖子频道挂接
-
-分享帖子到频道：
-
-```json
-POST /api/user/chat/forum-links
-{
-  "forumPostId": 123,
-  "conversationId": 1001
-}
-```
-
-说明：
-
-- 用户可以将论坛帖子分享到主题频道进行讨论。
-- 同一帖子在同一频道只能关联一次。
-
-查询帖子关联的频道：
-
-```http
-GET /api/user/chat/forum-links/posts/{forumPostId}
-```
-
-分页查询频道关联的帖子：
-
-```http
-GET /api/user/chat/forum-links/channels/{conversationId}?current=1&size=20
-```
-
-取消帖子与频道的关联：
-
-```http
-DELETE /api/user/chat/forum-links/posts/{forumPostId}
-```
-
-说明：
-
-- 只有帖子的分享人或频道管理员可以取消关联。
-- 取消关联不会删除帖子本身。
-
-### 4.11 入群申请
-
-提交入群申请：
-
-```json
-POST /api/user/chat/groups/{conversationId}/join-applications
-{
-  "applyMessage": "我正在学习这个方向，希望加入一起交流"
-}
-```
-
-分页查询我的入群申请：
-
-```http
-GET /api/user/chat/group-join-applications?current=1&size=10&applyStatus=0
-```
-
-群主或管理员分页查询指定群的入群申请：
-
-```http
-GET /api/user/chat/groups/{conversationId}/join-applications?current=1&size=10&applyStatus=0
-```
-
-审核入群申请：
-
-```json
-PUT /api/user/chat/groups/{conversationId}/join-applications/{applicationId}/review
-{
-  "reviewStatus": 1,
-  "reviewComment": "欢迎加入"
-}
-```
-
-说明：
-
-- 仅普通群聊支持入群申请，单聊、全站群和不可用群聊会被拒绝。
-- 已是正常群成员时不能重复申请。
-- 已存在待审核申请时会拒绝重复提交。
-- 群人数达到 `memberLimit` 时，提交申请或审核通过都会被拒绝。
-- `joinRule = invite_only` 的群聊不接受主动申请。
-- `reviewStatus` 支持 `1-通过`、`2-拒绝`。
-- 审核通过后会创建或恢复群成员关系，成员加入来源记录为 `application`。
-
-### 4.12 群邀请链接
-
-创建邀请链接：
-
-```json
-POST /api/user/chat/groups/{conversationId}/invite-links
-{
-  "expireAt": "2026-05-01 12:00:00",
-  "maxUseCount": 10
-}
-```
-
-分页查询群邀请链接：
-
-```http
-GET /api/user/chat/groups/{conversationId}/invite-links?current=1&size=10&status=1
-```
-
-停用邀请链接：
-
-```http
-PUT /api/user/chat/groups/{conversationId}/invite-links/{inviteLinkId}/disable
-```
-
-通过邀请链接入群：
-
-```http
-POST /api/user/chat/group-invite-links/{inviteToken}/join
-```
-
-说明：
-
-- 只有群主或管理员可以创建、查询和停用群邀请链接。
-- `expireAt` 为空表示不过期，`maxUseCount = 0` 表示不限使用次数。
-- 链接停用、过期或达到使用次数上限后不可继续入群。
-- 已在群内的用户重复使用链接会直接返回成功，不重复增加使用次数。
-- 群人数达到 `memberLimit` 时，通过邀请链接入群会被拒绝。
-- 通过邀请链接入群会创建或恢复成员关系，成员加入来源记录为 `invite_link`。
-
-## 5. 后台聊天管理接口
-
-### 5.1 接口总览
-
-| 接口       | 方法     | 路径                                                                            | 权限                    |
-|----------|--------|-------------------------------------------------------------------------------|-----------------------|
-| 分页查询会话   | `GET`  | `/api/sys/chats/conversations`                                                | `content:chat:query`  |
-| 查询会话详情   | `GET`  | `/api/sys/chats/conversations/{conversationId}`                               | `content:chat:query`  |
-| 查询会话成员   | `GET`  | `/api/sys/chats/conversations/{conversationId}/members`                       | `content:chat:query`  |
-| 分页查询会话消息 | `GET`  | `/api/sys/chats/conversations/{conversationId}/messages`                      | `content:chat:query`  |
-| 查询消息详情   | `GET`  | `/api/sys/chats/conversations/{conversationId}/messages/{messageId}`          | `content:chat:query`  |
-| 分页查询消息回执 | `GET`  | `/api/sys/chats/conversations/{conversationId}/messages/{messageId}/receipts` | `content:chat:query`  |
-| 更新成员角色   | `PUT`  | `/api/sys/chats/conversations/{conversationId}/members/{memberUserId}/role`   | `content:chat:update` |
-| 更新成员状态   | `PUT`  | `/api/sys/chats/conversations/{conversationId}/members/{memberUserId}/status` | `content:chat:update` |
-| 更新成员禁言   | `PUT`  | `/api/sys/chats/conversations/{conversationId}/members/{memberUserId}/mute`   | `content:chat:update` |
-| 后台撤回消息   | `POST` | `/api/sys/chats/conversations/{conversationId}/messages/{messageId}/revoke`   | `content:chat:update` |
-| 更新会话状态   | `PUT`  | `/api/sys/chats/conversations/{conversationId}/status`                        | `content:chat:update-status` |
-| 更新大厅频道设置 | `PUT`  | `/api/sys/chats/lobby/settings`                                               | `content:chat:update` |
-| 置顶大厅消息   | `POST` | `/api/sys/chats/lobby/messages/{messageId}/pin`                               | `content:chat:update` |
-| 取消置顶大厅消息 | `DELETE` | `/api/sys/chats/lobby/messages/{messageId}/pin`                             | `content:chat:update` |
-| 分页查询大厅置顶消息 | `GET` | `/api/sys/chats/lobby/messages/pinned`                                       | `content:chat:query`  |
-| 禁言大厅用户   | `PUT`  | `/api/sys/chats/lobby/members/{memberUserId}/mute`                            | `content:chat:update` |
-| 踢出大厅用户   | `PUT`  | `/api/sys/chats/lobby/members/{memberUserId}/kick`                            | `content:chat:update` |
-| 创建主题频道   | `POST` | `/api/sys/chats/topic-channels`                                               | `content:chat:update` |
-| 编辑主题频道   | `PUT`  | `/api/sys/chats/topic-channels/{conversationId}`                              | `content:chat:update` |
-| 分页查询频道申请 | `GET`  | `/api/sys/chats/channel-applications`                                         | `content:channel-application:query` |
-| 查询频道申请详情 | `GET`  | `/api/sys/chats/channel-applications/{id}`                                    | `content:channel-application:query` |
-| 审核频道申请   | `PUT`  | `/api/sys/chats/channel-applications/{id}/review`                             | `content:channel-application:review` |
-| 创建禁言     | `POST` | `/api/sys/chats/mutes`                                                        | `content:chat:update` |
-| 分页查询禁言记录 | `GET`  | `/api/sys/chats/mutes`                                                        | `content:chat:query`  |
-| 解除禁言     | `PUT`  | `/api/sys/chats/mutes/{id}/release`                                           | `content:chat:update` |
-
-### 5.2 会话与消息分页
-
-会话分页：
-
-- `GET /api/sys/chats/conversations`
-- 支持 `keyword / conversationType / status / ownerId / memberUserId / isAllSite`
-- 查询参数默认值：`current=1`，`size=20`
-
-会话分页响应示例：
+**响应示例**
 
 ```json
 {
@@ -981,510 +754,914 @@ POST /api/user/chat/group-invite-links/{inviteToken}/join
   "message": "成功",
   "timestamp": 1774310400000,
   "data": {
-    "total": 1,
+    "conversationId": 1001,
+    "userId": 101,
+    "readMessageId": 9020,
+    "readAt": "2025-01-15T12:10:00",
+    "deliveredMessageId": 9022,
+    "deliveredAt": "2025-01-15T12:05:00",
+    "unreadCount": 0
+  }
+}
+```
+
+**响应字段说明**
+
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| conversationId | Long | 会话ID |
+| userId | Long | 用户ID |
+| readMessageId | Long | 最后已读消息ID |
+| readAt | LocalDateTime | 最后已读时间 |
+| deliveredMessageId | Long | 最后已送达的消息ID |
+| deliveredAt | LocalDateTime | 最后送达时间 |
+| unreadCount | Integer | 更新后的未读数 |
+
+---
+
+## 群聊页
+
+### 创建群聊
+
+**接口信息**
+- 路径: `POST /api/user/chat/groups`
+- 鉴权: 是
+- 说明: 创建一个新的群聊
+
+**请求示例**
+
+```javascript
+axios.post('/api/user/chat/groups', {
+  name: '技术交流群',
+  avatar: 'https://example.com/avatar/tech-group.jpg',
+  description: '欢迎技术爱好者加入',
+  announcement: '本群禁止广告和无关内容',
+  categoryCode: 'tech',
+  visibilityScope: 'private',
+  joinRule: 'free',
+  speakLevelLimit: 1,
+  memberLimit: 200,
+  memberUserIds: [102, 103, 104]
+})
+```
+
+**请求体**
+
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| name | String | 是 | 群名称，最大128字符 |
+| avatar | String | 否 | 群头像URL，最大512字符 |
+| description | String | 否 | 群简介，最大256字符 |
+| announcement | String | 否 | 群公告，最大512字符 |
+| categoryCode | String | 否 | 群分类编码，最大32字符 |
+| visibilityScope | String | 否 | 可见范围：`public` 公开、`private` 私有，默认 `private` |
+| joinRule | String | 否 | 加入规则：`free` 自由加入、`approval` 需要审批、`invite_only` 邀请制，默认 `free` |
+| speakLevelLimit | Integer | 否 | 发言最低等级，默认1 |
+| memberLimit | Integer | 否 | 成员上限，0表示不限制 |
+| memberUserIds | List<Long> | 是 | 初始成员用户ID列表，不需要包含自己 |
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "id": 1003,
+    "conversationType": "group",
+    "sceneType": "group_chat",
+    "name": "技术交流群",
+    "avatar": "https://example.com/avatar/tech-group.jpg",
+    "ownerId": 101,
+    "notice": "本群禁止广告和无关内容",
+    "allSite": false,
+    "status": 0,
+    "visibilityScope": "private",
+    "allowGuestView": 0,
+    "requireJoinToSpeak": 0,
+    "joinRule": "free",
+    "speakLevelLimit": 1,
+    "memberLimit": 200,
+    "slowModeSeconds": 0,
+    "displaySort": 1,
+    "channelCategoryCode": "tech",
+    "selfRole": "owner",
+    "memberCount": 4,
+    "unreadCount": 0,
+    "createdAt": "2025-01-15T12:00:00",
+    "updatedAt": "2025-01-15T12:00:00"
+  }
+}
+```
+
+---
+
+### 查询群聊详情
+
+**接口信息**
+- 路径: `GET /api/user/chat/groups/{conversationId}`
+- 鉴权: 是
+- 说明: 获取群聊的详细信息
+
+**请求示例**
+
+```javascript
+axios.get('/api/user/chat/groups/1003')
+```
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "id": 1003,
+    "conversationType": "group",
+    "sceneType": "group_chat",
+    "name": "技术交流群",
+    "avatar": "https://example.com/avatar/tech-group.jpg",
+    "ownerId": 101,
+    "notice": "本群禁止广告和无关内容",
+    "allSite": false,
+    "status": 0,
+    "visibilityScope": "private",
+    "allowGuestView": 0,
+    "requireJoinToSpeak": 0,
+    "joinRule": "free",
+    "speakLevelLimit": 1,
+    "memberLimit": 200,
+    "slowModeSeconds": 0,
+    "displaySort": 1,
+    "channelCategoryCode": "tech",
+    "selfRole": "owner",
+    "memberCount": 4,
+    "createdAt": "2025-01-15T12:00:00",
+    "updatedAt": "2025-01-15T12:00:00"
+  }
+}
+```
+
+---
+
+### 查询群成员列表
+
+**接口信息**
+- 路径: `GET /api/user/chat/groups/{conversationId}/members`
+- 鉴权: 是
+- 说明: 获取群聊的所有成员列表
+
+**请求示例**
+
+```javascript
+axios.get('/api/user/chat/groups/1003/members')
+```
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": [
+    {
+      "userId": 101,
+      "username": "zhangsan",
+      "nickname": "张三",
+      "avatar": "https://example.com/avatar/zhangsan.jpg",
+      "role": "owner",
+      "status": 0,
+      "joinedAt": "2025-01-15T12:00:00",
+      "muteUntil": null
+    },
+    {
+      "userId": 102,
+      "username": "lisi",
+      "nickname": "李四",
+      "avatar": "https://example.com/avatar/lisi.jpg",
+      "role": "admin",
+      "status": 0,
+      "joinedAt": "2025-01-15T12:01:00",
+      "muteUntil": null
+    },
+    {
+      "userId": 103,
+      "username": "wangwu",
+      "nickname": "王五",
+      "avatar": "https://example.com/avatar/wangwu.jpg",
+      "role": "member",
+      "status": 0,
+      "joinedAt": "2025-01-15T12:02:00",
+      "muteUntil": "2025-01-16T12:00:00"
+    }
+  ]
+}
+```
+
+**响应字段说明**
+
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| userId | Long | 用户ID |
+| username | String | 用户名 |
+| nickname | String | 昵称 |
+| avatar | String | 头像URL |
+| role | String | 成员角色：`owner` 群主、`admin` 管理员、`member` 成员 |
+| status | Integer | 成员状态：`0` 正常 |
+| joinedAt | LocalDateTime | 加入时间 |
+| muteUntil | LocalDateTime | 禁言截止时间，为空表示未禁言 |
+
+---
+
+### 邀请群成员
+
+**接口信息**
+- 路径: `POST /api/user/chat/groups/{conversationId}/members`
+- 鉴权: 是
+- 说明: 邀请用户加入群聊，需要群主或管理员权限
+
+**请求示例**
+
+```javascript
+axios.post('/api/user/chat/groups/1003/members', {
+  memberUserIds: [105, 106]
+})
+```
+
+**请求体**
+
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| memberUserIds | List<Long> | 是 | 要邀请的用户ID列表 |
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": [
+    {
+      "userId": 105,
+      "username": "zhaoqi",
+      "nickname": "赵七",
+      "avatar": "https://example.com/avatar/zhaoqi.jpg",
+      "role": "member",
+      "status": 0,
+      "joinedAt": "2025-01-15T12:10:00",
+      "muteUntil": null
+    },
+    {
+      "userId": 106,
+      "username": "sunba",
+      "nickname": "孙八",
+      "avatar": "https://example.com/avatar/sunba.jpg",
+      "role": "member",
+      "status": 0,
+      "joinedAt": "2025-01-15T12:10:00",
+      "muteUntil": null
+    }
+  ]
+}
+```
+
+---
+
+### 设置群管理员
+
+**接口信息**
+- 路径: `PUT /api/user/chat/groups/{conversationId}/admins/{memberUserId}`
+- 鉴权: 是
+- 说明: 将群成员设置为管理员，需要群主权限
+
+**请求示例**
+
+```javascript
+axios.put('/api/user/chat/groups/1003/admins/102')
+```
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": [
+    {
+      "userId": 101,
+      "username": "zhangsan",
+      "nickname": "张三",
+      "role": "owner",
+      "status": 0,
+      "joinedAt": "2025-01-15T12:00:00",
+      "muteUntil": null
+    },
+    {
+      "userId": 102,
+      "username": "lisi",
+      "nickname": "李四",
+      "role": "admin",
+      "status": 0,
+      "joinedAt": "2025-01-15T12:01:00",
+      "muteUntil": null
+    }
+  ]
+}
+```
+
+---
+
+### 取消群管理员
+
+**接口信息**
+- 路径: `DELETE /api/user/chat/groups/{conversationId}/admins/{memberUserId}`
+- 鉴权: 是
+- 说明: 取消群成员的管理员身份，需要群主权限
+
+**请求示例**
+
+```javascript
+axios.delete('/api/user/chat/groups/1003/admins/102')
+```
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": [
+    {
+      "userId": 101,
+      "username": "zhangsan",
+      "nickname": "张三",
+      "role": "owner",
+      "status": 0,
+      "joinedAt": "2025-01-15T12:00:00",
+      "muteUntil": null
+    },
+    {
+      "userId": 102,
+      "username": "lisi",
+      "nickname": "李四",
+      "role": "member",
+      "status": 0,
+      "joinedAt": "2025-01-15T12:01:00",
+      "muteUntil": null
+    }
+  ]
+}
+```
+
+---
+
+### 转让群主
+
+**接口信息**
+- 路径: `PUT /api/user/chat/groups/{conversationId}/owner`
+- 鉴权: 是
+- 说明: 将群主身份转让给其他成员，需要群主权限
+
+**请求示例**
+
+```javascript
+axios.put('/api/user/chat/groups/1003/owner', {
+  targetUserId: 102
+})
+```
+
+**请求体**
+
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| targetUserId | Long | 是 | 新群主用户ID |
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "id": 1003,
+    "conversationType": "group",
+    "name": "技术交流群",
+    "ownerId": 102,
+    "selfRole": "member",
+    "updatedAt": "2025-01-15T12:15:00"
+  }
+}
+```
+
+---
+
+### 设置群成员禁言
+
+**接口信息**
+- 路径: `PUT /api/user/chat/groups/{conversationId}/members/{memberUserId}/mute`
+- 鉴权: 是
+- 说明: 对群成员禁言或取消禁言，需要管理员或群主权限
+
+**请求示例**
+
+```javascript
+// 禁言到指定时间
+axios.put('/api/user/chat/groups/1003/members/103/mute', {
+  muteUntil: '2025-01-16T12:00:00'
+})
+
+// 取消禁言
+axios.put('/api/user/chat/groups/1003/members/103/mute', {
+  muteUntil: null
+})
+```
+
+**请求体**
+
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| muteUntil | LocalDateTime | 否 | 禁言截止时间，为空表示取消禁言 |
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": [
+    {
+      "userId": 101,
+      "username": "zhangsan",
+      "nickname": "张三",
+      "role": "owner",
+      "status": 0,
+      "joinedAt": "2025-01-15T12:00:00",
+      "muteUntil": null
+    },
+    {
+      "userId": 103,
+      "username": "wangwu",
+      "nickname": "王五",
+      "role": "member",
+      "status": 0,
+      "joinedAt": "2025-01-15T12:02:00",
+      "muteUntil": "2025-01-16T12:00:00"
+    }
+  ]
+}
+```
+
+---
+
+### 更新群公告
+
+**接口信息**
+- 路径: `PUT /api/user/chat/groups/{conversationId}/notice`
+- 鉴权: 是
+- 说明: 更新群公告，需要管理员或群主权限
+
+**请求示例**
+
+```javascript
+axios.put('/api/user/chat/groups/1003/notice', {
+  notice: '本群公告：请大家遵守群规，禁止发广告。'
+})
+
+// 清空公告
+axios.put('/api/user/chat/groups/1003/notice', {
+  notice: ''
+})
+```
+
+**请求体**
+
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| notice | String | 否 | 群公告内容，最大500字符，为空表示清空 |
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "id": 1003,
+    "conversationType": "group",
+    "name": "技术交流群",
+    "notice": "本群公告：请大家遵守群规，禁止发广告。",
+    "updatedAt": "2025-01-15T12:20:00"
+  }
+}
+```
+
+---
+
+### 移除群成员
+
+**接口信息**
+- 路径: `DELETE /api/user/chat/groups/{conversationId}/members/{memberUserId}`
+- 鉴权: 是
+- 说明: 将成员移出群聊，需要管理员或群主权限
+
+**请求示例**
+
+```javascript
+axios.delete('/api/user/chat/groups/1003/members/103')
+```
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": null
+}
+```
+
+---
+
+### 退出群聊
+
+**接口信息**
+- 路径: `POST /api/user/chat/groups/{conversationId}/leave`
+- 鉴权: 是
+- 说明: 当前用户退出群聊，群主退出会导致群聊解散
+
+**请求示例**
+
+```javascript
+axios.post('/api/user/chat/groups/1003/leave')
+```
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": null
+}
+```
+
+---
+
+### 解散群聊
+
+**接口信息**
+- 路径: `DELETE /api/user/chat/groups/{conversationId}`
+- 鉴权: 是
+- 说明: 解散群聊，需要群主权限
+
+**请求示例**
+
+```javascript
+axios.delete('/api/user/chat/groups/1003')
+```
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": null
+}
+```
+
+---
+
+### 加入公开频道或公开群
+
+**接口信息**
+- 路径: `POST /api/user/chat/conversations/{conversationId}/join`
+- 鉴权: 是
+- 说明: 加入一个公开的频道或群聊
+
+**请求示例**
+
+```javascript
+axios.post('/api/user/chat/conversations/1005/join')
+```
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "id": 1005,
+    "conversationType": "group",
+    "sceneType": "public_channel",
+    "name": "公开聊天室",
+    "avatar": "https://example.com/avatar/public-room.jpg",
+    "ownerId": 1,
+    "status": 0,
+    "visibilityScope": "public",
+    "selfRole": "member",
+    "memberCount": 128,
+    "createdAt": "2024-12-01T10:00:00",
+    "updatedAt": "2025-01-15T12:00:00"
+  }
+}
+```
+
+---
+
+### 离开频道或公开群
+
+**接口信息**
+- 路径: `POST /api/user/chat/conversations/{conversationId}/leave`
+- 鉴权: 是
+- 说明: 离开一个公开的频道或群聊
+
+**请求示例**
+
+```javascript
+axios.post('/api/user/chat/conversations/1005/leave')
+```
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": null
+}
+```
+
+---
+
+## 群聊发现页
+
+### 搜索公开群聊
+
+**接口信息**
+- 路径: `GET /api/user/chat/groups/search`
+- 鉴权: 是
+- 说明: 搜索公开的群聊，支持按群名称和群简介模糊查询
+
+**请求参数**
+
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
+|-----|------|------|--------|-----|
+| current | Long | 否 | 1 | 页码 |
+| size | Long | 否 | 20 | 每页条数 |
+| keyword | String | 否 | - | 关键词，按群名称和群简介搜索 |
+| categoryCode | String | 否 | - | 群分类编码 |
+
+**请求示例**
+
+```javascript
+// 搜索所有公开群
+axios.get('/api/user/chat/groups/search', {
+  params: { current: 1, size: 20 }
+})
+
+// 搜索特定关键词
+axios.get('/api/user/chat/groups/search', {
+  params: { current: 1, size: 20, keyword: '技术' }
+})
+
+// 按分类筛选
+axios.get('/api/user/chat/groups/search', {
+  params: { current: 1, size: 20, categoryCode: 'tech' }
+})
+```
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 50,
     "current": 1,
     "size": 20,
     "records": [
       {
-        "id": 2001,
-        "conversationType": "group",
-        "sceneType": "user_group",
-        "name": "项目群",
-        "avatar": "https://example.com/group/2001.png",
+        "id": 1005,
+        "name": "技术交流群",
+        "avatar": "https://example.com/avatar/tech-group.jpg",
         "ownerId": 1,
-        "notice": "入群后请先看置顶说明",
-        "ownerUsername": "zhangsan",
-        "ownerNickname": "张三",
-        "allSite": false,
-        "status": 1,
+        "description": "欢迎技术爱好者加入，共同探讨技术问题",
+        "notice": "本群禁止广告",
         "visibilityScope": "public",
-        "allowGuestView": 0,
-        "requireJoinToSpeak": 1,
-        "joinRule": "approval",
+        "joinRule": "free",
         "speakLevelLimit": 1,
         "memberLimit": 200,
-        "slowModeSeconds": 0,
-        "displaySort": 100,
-        "channelCategoryCode": "backend",
-        "memberCount": 15,
-        "lastMessage": {
-          "id": 80050,
-          "senderId": 3,
-          "senderNickname": "王五",
-          "messageType": "text",
-          "content": "今晚 8 点发版，请提前同步。",
-          "createdAt": "2026-03-30 09:30:00"
-        },
-        "createdAt": "2026-03-10 08:00:00",
-        "updatedAt": "2026-03-30 09:30:00"
+        "channelCategoryCode": "tech",
+        "memberCount": 128,
+        "joined": false,
+        "selfRole": null,
+        "createdAt": "2024-12-01T10:00:00"
+      },
+      {
+        "id": 1006,
+        "name": "前端开发群",
+        "avatar": "https://example.com/avatar/fe-group.jpg",
+        "ownerId": 2,
+        "description": "前端开发者交流群",
+        "notice": null,
+        "visibilityScope": "public",
+        "joinRule": "approval",
+        "speakLevelLimit": 1,
+        "memberLimit": 100,
+        "channelCategoryCode": "tech",
+        "memberCount": 56,
+        "joined": true,
+        "selfRole": "member",
+        "createdAt": "2024-11-15T10:00:00"
       }
     ]
   }
 }
 ```
 
-消息分页：
-
-- `GET /api/sys/chats/conversations/{conversationId}/messages`
-- 支持 `beforeMessageId / senderId / messageType / keyword`
-
-后台消息对象重点字段：
-
-| 字段                        | 说明                      |
-|---------------------------|-------------------------|
-| `messageType`             | `text/file/image/voice` |
-| `file`                    | 附件消息载荷                  |
-| `replyMessageId`          | 被回复消息 ID                |
-| `reply`                   | 被回复消息快照                 |
-| `revokeStatus`            | 撤回状态                    |
-| `revokedBy`               | 撤回操作人 ID                |
-| `revokedAt`               | 撤回时间                    |
-| `totalRecipientCount`     | 接收成员总数                  |
-| `deliveredRecipientCount` | 已送达成员数                  |
-| `readRecipientCount`      | 已读成员数                   |
-| `edited`                  | 是否编辑过                   |
-| `updatedAt`               | 更新时间                    |
-
-### 5.3 消息详情
-
-`GET /api/sys/chats/conversations/{conversationId}/messages/{messageId}`
-
-返回内容在消息分页基础上，额外强调单条消息完整视角，适合后台详情抽屉或审计页。
-
-### 5.4 消息回执明细
-
-`GET /api/sys/chats/conversations/{conversationId}/messages/{messageId}/receipts`
-
-请求参数：
-
-| 参数                | 位置    | 必填 | 说明                 |
-|-------------------|-------|----|--------------------|
-| `current`         | query | 否  | 页码，默认 `1`          |
-| `size`            | query | 否  | 每页条数，默认 `20`       |
-| `recipientUserId` | query | 否  | 接收人用户 ID           |
-| `deliveryStatus`  | query | 否  | `0-待投递，1-已送达，2-已读` |
-| `visibleStatus`   | query | 否  | `0-已隐藏，1-可见`       |
-
-响应记录重点字段：
-
-- `recipientUserId`
-- `recipientUsername`
-- `recipientNickname`
-- `receiveType`
-- `deliveryStatus`
-- `deliveredAt`
-- `readAt`
-- `visibleStatus`
-
-### 5.5 后台成员管理
-
-更新角色：
-
-```json
-PUT /api/sys/chats/conversations/{conversationId}/members/{memberUserId}/role
-{
-  "role": "admin"
-}
-```
-
-支持值：`owner/admin/member`
-
-更新状态：
-
-```json
-PUT /api/sys/chats/conversations/{conversationId}/members/{memberUserId}/status
-{
-  "status": 3
-}
-```
-
-支持值：
-
-- `0` 已退出
-- `1` 正常
-- `2` 已移除
-- `3` 已禁用
-
-更新禁言：
-
-```json
-PUT /api/sys/chats/conversations/{conversationId}/members/{memberUserId}/mute
-{
-  "muteUntil": "2026-03-31 12:00:00"
-}
-```
-
-说明：
-
-- 把成员角色更新为 `owner` 时，服务端会同步更新 `chat_conversation.owner_id`
-- 后台成员治理当前仅支持普通群聊会话，单聊和全站群会直接拒绝
-- 角色/状态/禁言更新成功后，服务端会推送 `members_updated`
-- 群主转移类角色变更还会补推 `conversation_updated`
-
-### 5.6 后台撤回消息
-
-`POST /api/sys/chats/conversations/{conversationId}/messages/{messageId}/revoke`
-
-说明：
-
-- 已撤回消息再次调用会直接返回成功，不重复报错
-- 文件消息撤回时同样会释放聊天文件引用
-
-### 5.7 更新会话状态
-
-`PUT /api/sys/chats/conversations/{conversationId}/status`
-
-```json
-{
-  "status": 0
-}
-```
-
-当前后台只支持：
-
-- `0` 禁用
-- `1` 正常
-
-### 5.8 后台大厅频道管理
-
-更新大厅频道设置：
-
-```json
-PUT /api/sys/chats/lobby/settings
-{
-  "announcement": "大厅公告内容",
-  "speakLevelLimit": 1,
-  "slowModeSeconds": 0,
-  "memberLimit": 0
-}
-```
-
-置顶大厅消息：
-
-```http
-POST /api/sys/chats/lobby/messages/{messageId}/pin
-```
-
-取消置顶大厅消息：
-
-```http
-DELETE /api/sys/chats/lobby/messages/{messageId}/pin
-```
-
-分页查询大厅置顶消息：
-
-```http
-GET /api/sys/chats/lobby/messages/pinned?current=1&size=20
-```
-
-禁言大厅用户：
-
-```json
-PUT /api/sys/chats/lobby/members/{memberUserId}/mute
-{
-  "muteUntil": "2026-03-31 12:00:00"
-}
-```
-
-踢出大厅用户：
-
-```http
-PUT /api/sys/chats/lobby/members/{memberUserId}/kick
-```
-
-说明：
-
-- 大厅频道管理接口仅适用于全站大厅 (`global_channel/hall_channel`) 会话。
-- 置顶消息数没有明确上限，前端可按需展示。
-- 禁言 `muteUntil` 为空表示永久禁言。
-- 踢出用户会将该用户从大厅成员中移除，移除后可重新加入。
-
-### 5.9 后台主题频道管理
-
-创建主题频道：
-
-```json
-POST /api/sys/chats/topic-channels
-{
-  "name": "Java 后端讨论",
-  "avatar": "https://example.com/channel.png",
-  "description": "后端学习和项目实践讨论区",
-  "announcement": "请围绕 Java 后端主题讨论",
-  "categoryCode": "backend",
-  "visibilityScope": "member",
-  "joinRule": "approval",
-  "speakLevelLimit": 1,
-  "memberLimit": 0,
-  "slowModeSeconds": 0,
-  "displaySort": 100,
-  "ownerId": 1
-}
-```
-
-编辑主题频道：
-
-```json
-PUT /api/sys/chats/topic-channels/{conversationId}
-{
-  "name": "Java 后端讨论",
-  "description": "更新后的频道简介",
-  "announcement": "更新后的频道公告",
-  "categoryCode": "backend",
-  "visibilityScope": "member",
-  "joinRule": "approval",
-  "speakLevelLimit": 2,
-  "memberLimit": 500,
-  "slowModeSeconds": 10,
-  "displaySort": 100,
-  "ownerId": 1
-}
-```
-
-说明：
-
-- 主题频道底层仍使用 `chat_conversation`，`conversationType = group`，`sceneType = topic_channel`。
-- `ownerId` 不传时，创建接口默认使用当前管理员作为频道负责人。
-- `visibilityScope` 支持 `public/member/private`，未传默认 `member`；主题频道始终 `allowGuestView = 0`。
-- `joinRule` 支持 `free/approval/invite_only`，未传默认 `approval`。
-- 启用 / 禁用主题频道复用 `PUT /api/sys/chats/conversations/{conversationId}/status`。
-- 查看频道成员和消息复用后台会话成员与消息接口。
-
-### 5.10 后台频道创建申请
-
-分页查询：
-
-```http
-GET /api/sys/chats/channel-applications?current=1&size=10&applyStatus=0&keyword=Java
-```
-
-审核申请：
-
-```json
-PUT /api/sys/chats/channel-applications/{id}/review
-{
-  "reviewStatus": 1,
-  "reviewComment": "通过，先作为后端主题频道试运行"
-}
-```
-
-说明：
-
-- `reviewStatus` 支持 `1-通过`、`2-拒绝`、`3-待补充`。
-- 只有待审核申请可以审核。
-- 审核通过后会自动创建 `topic_channel` 会话，默认成员可见、加入后发言、加入规则为 `approval`，申请人会成为频道 `owner`。
-
-### 5.11 后台禁言管理
-
-创建禁言：
-
-```json
-POST /api/sys/chats/mutes
-{
-  "userId": 123,
-  "scope": "lobby",
-  "conversationId": null,
-  "muteUntil": "2026-05-10 12:00:00",
-  "reason": "发送违规内容"
-}
-```
-
-请求字段：
-
-| 字段             | 类型        | 必填 | 说明                                                     |
-|----------------|-----------|----|--------------------------------------------------------|
-| `userId`       | Long      | 是 | 被禁言用户 ID                                                |
-| `scope`        | String    | 是 | 禁言范围：`global`(全站) / `lobby`(大厅) / `topic_channel`(主题频道) / `group`(群聊) |
-| `conversationId` | Long      | 否 | 关联会话 ID，`topic_channel` 和 `group` 范围时必填                  |
-| `muteUntil`    | DateTime  | 否 | 禁言截止时间，为空表示永久禁言                                         |
-| `reason`       | String    | 否 | 禁言原因                                                    |
-
-分页查询禁言记录：
-
-```http
-GET /api/sys/chats/mutes?current=1&size=10&userId=123&scope=lobby&status=1
-```
-
-查询参数：
-
-| 参数       | 类型     | 必填 | 说明                                  |
-|----------|--------|----|-------------------------------------|
-| `current` | Long   | 否 | 页码，默认 `1`                            |
-| `size`   | Long   | 否 | 每页条数，默认 `10`，最大 `100`                |
-| `userId` | Long   | 否 | 按被禁言用户 ID 筛选                          |
-| `scope`  | String | 否 | 按禁言范围筛选                               |
-| `status` | Integer | 否 | 按状态筛选：`0`-已解除，`1`-生效中                |
-
-响应字段 `ChatMuteRecordVO`：
-
-| 字段                | 类型        | 说明                          |
-|-------------------|-----------|-----------------------------|
-| `id`              | Long      | 记录 ID                       |
-| `userId`          | Long      | 被禁言用户 ID                     |
-| `username`        | String    | 被禁言用户名                       |
-| `nickname`        | String    | 被禁言用户昵称                      |
-| `scope`           | String    | 禁言范围                         |
-| `conversationId`  | Long      | 关联会话 ID                      |
-| `conversationName` | String    | 关联会话名称                       |
-| `muteUntil`       | DateTime  | 禁言截止时间（NULL 表示永久）             |
-| `status`          | Integer   | `0`-已解除 `1`-生效中              |
-| `reason`          | String    | 禁言原因                         |
-| `sourceType`      | String    | 来源：`admin`/`report`/`auto`   |
-| `reportId`        | Long      | 关联举报 ID                      |
-| `operatorId`      | Long      | 操作人 ID                       |
-| `operatorUsername` | String    | 操作人用户名                       |
-| `releasedBy`      | Long      | 解除人 ID                       |
-| `releasedAt`      | DateTime  | 解除时间                         |
-| `createdAt`       | DateTime  | 创建时间                         |
-
-解除禁言：
-
-```http
-PUT /api/sys/chats/mutes/{id}/release
-```
-
-说明：
-
-- 已解除的禁言记录再次调用会返回 `CHAT_MUTE_ALREADY_RELEASED` 错误。
-- `global` 范围禁言会拦截所有场景（大厅、频道、群聊）的消息发送。
-- `lobby` 范围禁言会拦截大厅和全站频道的消息发送。
-- `topic_channel` 和 `group` 范围禁言需指定 `conversationId`，只拦截对应会话的消息发送。
-- 发送拦截采用动态判断：禁言到期后下次发送时自动放行，无需手动解除。
-- 举报处理 `mute_user` 结果类型现已接入统一禁言，可在 `ReportHandleRequest` 中指定 `muteScope` 和 `muteUntil`。
-
-## 6. 公开主题频道接口
-
-### 6.1 分页查询公开主题频道列表
-
-- 请求：`GET /api/public/chat/channels`
-- 鉴权：否
-- 用途：访客查看公开的主题频道列表
-- 查询参数：
-
-| 参数 | 类型 | 必填 | 说明 |
-| --- | --- | --- | --- |
-| `current` | Long | 否 | 页码，默认 `1` |
-| `size` | Long | 否 | 每页条数，默认 `20` |
-| `categoryCode` | String | 否 | 频道分类编码 |
-
-- 响应字段：`PublicChannelVO`
+**响应字段说明**
 
 | 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| `id` | Long | 会话 ID |
-| `name` | String | 频道名称 |
-| `avatar` | String | 频道头像 |
-| `description` | String | 频道描述 |
-| `memberCount` | Integer | 成员数 |
-| `messageCount` | Long | 消息数 |
-| `categoryCode` | String | 分类编码 |
-| `categoryName` | String | 分类名称 |
-| `visibilityScope` | String | 可见范围 |
-| `createdAt` | DateTime | 创建时间 |
+|-----|------|-----|
+| id | Long | 群聊ID |
+| name | String | 群名称 |
+| avatar | String | 群头像URL |
+| ownerId | Long | 群主用户ID |
+| description | String | 群简介 |
+| notice | String | 群公告 |
+| visibilityScope | String | 可见范围：`public` 公开、`private` 私有 |
+| joinRule | String | 加入规则：`free` 自由加入、`approval` 需要审批、`invite_only` 邀请制 |
+| speakLevelLimit | Integer | 发言最低等级限制 |
+| memberLimit | Integer | 成员上限，0表示不限制 |
+| channelCategoryCode | String | 群分类编码 |
+| memberCount | Long | 当前成员数量 |
+| joined | Boolean | 当前用户是否已加入 |
+| selfRole | String | 当前用户在群中的角色，为空表示未加入 |
+| createdAt | LocalDateTime | 群创建时间 |
 
-### 6.2 查询主题频道详情
+---
 
-- 请求：`GET /api/public/chat/channels/{conversationId}`
-- 鉴权：否
-- 用途：访客查看主题频道详情
-- 路径参数：`conversationId`
+## 大厅页（公开访客）
 
-- 响应字段：`PublicChannelDetailVO`
+### 访客查看大厅消息
 
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| `id` | Long | 会话 ID |
-| `name` | String | 频道名称 |
-| `avatar` | String | 频道头像 |
-| `description` | String | 频道描述 |
-| `announcement` | String | 频道公告 |
-| `memberCount` | Integer | 成员数 |
-| `messageCount` | Long | 消息数 |
-| `categoryCode` | String | 分类编码 |
-| `categoryName` | String | 分类名称 |
-| `visibilityScope` | String | 可见范围 |
-| `joinRule` | String | 加入规则 |
-| `speakLevelLimit` | Integer | 发言等级限制 |
-| `createdAt` | DateTime | 创建时间 |
+**接口信息**
+- 路径: `GET /api/public/chat/lobby/messages`
+- 鉴权: 否（公开接口，访客可访问）
+- 说明: 大厅是公开频道，无需登录即可查看消息
 
-## 7. WebSocket 协议
+**请求参数**
 
-### 7.1 当前支持的客户端请求
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
+|-----|------|------|--------|-----|
+| current | Long | 否 | 1 | 页码 |
+| size | Long | 否 | 20 | 每页条数 |
+| beforeMessageId | Long | 否 | - | 查询该消息ID之前的消息，用于滚动加载 |
 
-- `ping`
-- `send_message`
-- `mark_read`
+**请求示例**
 
-### 7.2 当前支持的服务端推送
+```javascript
+// 首次加载（无需鉴权）
+axios.get('/api/public/chat/lobby/messages', {
+  params: { current: 1, size: 20 }
+})
 
-- `ready`
-- `pong`
-- `ack`
-- `message_created`
-- `message_updated`
-- `message_revoked`
-- `message_deleted`
-- `conversation_updated`
-- `members_updated`
-- `read_updated`
-- `error`
+// 加载更多
+axios.get('/api/public/chat/lobby/messages', {
+  params: { current: 1, size: 20, beforeMessageId: 5000 }
+})
+```
 
-### 7.3 `send_message`
-
-请求：
+**响应示例**
 
 ```json
 {
-  "type": "send_message",
-  "requestId": "req-001",
-  "payload": {
-    "conversationId": 1001,
-    "content": "hello",
-    "clientMessageId": "msg-001",
-    "replyMessageId": 90001
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 200,
+    "current": 1,
+    "size": 20,
+    "records": [
+      {
+        "id": 5020,
+        "senderId": 1,
+        "senderName": "系统管理员",
+        "senderAvatar": "https://example.com/avatar/admin.jpg",
+        "messageType": "text",
+        "content": "欢迎来到大厅！",
+        "createdAt": "2025-01-15T08:00:00"
+      },
+      {
+        "id": 5019,
+        "senderId": 10,
+        "senderName": "游客张三",
+        "senderAvatar": "https://example.com/avatar/guest.jpg",
+        "messageType": "text",
+        "content": "大家好",
+        "createdAt": "2025-01-15T08:05:00"
+      }
+    ]
   }
 }
 ```
 
-说明：
+**响应字段说明**
 
-- 当前 WebSocket 侧 `send_message` 仍只映射到文本消息发送
-- `replyMessageId` 的校验规则与 HTTP 文本消息发送保持一致
-- 文件消息仍建议走 HTTP
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| id | Long | 消息ID |
+| senderId | Long | 发送者用户ID |
+| senderName | String | 发送者名称 |
+| senderAvatar | String | 发送者头像URL |
+| messageType | String | 消息类型：`text` 文本、`file` 文件等 |
+| content | String | 消息内容 |
+| createdAt | LocalDateTime | 发送时间 |
 
-### 7.4 `mark_read`
+---
 
-请求：
+## 枚举值说明
 
-```json
-{
-  "type": "mark_read",
-  "requestId": "req-002",
-  "payload": {
-    "conversationId": 1001,
-    "readMessageId": 90013
-  }
-}
-```
+### 会话类型 (conversationType)
+| 值 | 说明 |
+|---|------|
+| single | 单聊 |
+| group | 群聊 |
+| global | 全局频道 |
 
-### 7.5 当前限制
+### 业务场景 (sceneType)
+| 值 | 说明 |
+|---|------|
+| single_chat | 单聊 |
+| group_chat | 群聊 |
+| public_channel | 公开频道 |
 
-- 当前客户端主动请求仍只有 `send_message`、`mark_read` 两类业务请求
-- `message_updated` / `message_revoked` / `message_deleted` / `conversation_updated` / `members_updated`
-  都是服务端推送事件，客户端不能反向发送
-- `message_deleted` 只会推给执行删除操作的当前用户，不会广播给其他成员
-- 回复快照当前是单层摘要，不支持多层嵌套回复块，但会补 `reply.state` 与 `reply.replyToMessageId`
-- 后台审计当前仍以 HTTP 详情 / 回执接口为主，没有额外拆出一套后台专属 WS 事件
-- 当前多节点下，服务端会先推送本机在线连接，再通过 Redis pub/sub 广播到其他节点
-- 媒体任务完成后会继续复用 `message_updated` 通知前端刷新同一条消息，无需额外轮询 HTTP
+### 消息类型 (messageType)
+| 值 | 说明 |
+|---|------|
+| text | 文本消息 |
+| file | 文件消息 |
+| image | 图片消息（file 的子类型） |
+| audio | 语音消息（file 的子类型） |
+| video | 视频消息（file 的子类型） |
 
-## 8. 联调建议
+### 成员角色 (role)
+| 值 | 说明 |
+|---|------|
+| owner | 群主 |
+| admin | 管理员 |
+| member | 普通成员 |
 
-- 文件消息先走 `file` 模块上传，拿到 `businessId` 后再调用 chat 发送文件消息。
-- 会话列表、会话详情、后台会话详情当前都会返回 `notice`，该字段已直接对应 `chat_conversation.announcement`。
-- 若前端需要区分“撤回”和“删除”：
-    - 撤回看消息对象的 `revoked`
-    - 删除当前仅是本人视角隐藏，其他成员不会看到变化事件
-- 后台做审计时，优先组合使用：
-    - 会话消息分页
-    - 单条消息详情
-    - 消息回执明细
+### 投递状态 (deliveryStatus)
+| 值 | 说明 |
+|---|------|
+| 0 | 待投递 |
+| 1 | 已送达 |
+| 2 | 已读 |
+
+### 加入规则 (joinRule)
+| 值 | 说明 |
+|---|------|
+| free | 自由加入 |
+| approval | 需要审批 |
+| invite_only | 邀请制 |
+
+### 可见范围 (visibilityScope)
+| 值 | 说明 |
+|---|------|
+| public | 公开 |
+| private | 私有 |
+
+### 回复消息状态 (state)
+| 值 | 说明 |
+|---|------|
+| normal | 正常 |
+| revoked | 已撤回 |
+| unavailable | 不可用 |
+
+### 文件转码状态 (transcodeStatus)
+| 值 | 说明 |
+|---|------|
+| source | 原始文件 |
+| pending | 转码中 |
+| ready | 可用 |
+| failed | 转码失败 |

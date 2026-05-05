@@ -1,10 +1,21 @@
 # 后台数据看板接口文档
 
-本文档面向前端联调，对应项目中后台数据看板模块的实现。
+> 本文档面向前端联调，覆盖后台数据看板的核心概览、内容统计、社区统计、AI 统计、治理统计与 Excel 导出。
+
+## 快速接口对照表
+
+| 用途 | 方法 | 路径 |
+|---|---|---|
+| 核心概览 | GET | `/api/sys/dashboard/overview` |
+| 内容统计 | GET | `/api/sys/dashboard/content` |
+| 社区统计 | GET | `/api/sys/dashboard/community` |
+| AI 调用统计 | GET | `/api/sys/dashboard/ai` |
+| 治理统计 | GET | `/api/sys/dashboard/governance` |
+| 导出 Excel | GET | `/api/sys/dashboard/export` |
+
+---
 
 ## 1. 当前能力范围
-
-当前已支持：
 
 - 核心概览指标（用户、文章、评论、消息、AI 调用、举报）
 - 内容统计（文章、评论、点赞、收藏）
@@ -15,65 +26,67 @@
 
 ## 2. 鉴权要求
 
-后台看板接口统一走 `/api/sys/dashboard/**`，要求登录且拥有 `sys:dashboard:query` 权限：
+所有看板接口要求：
 
 ```http
 Authorization: Bearer <accessToken>
+权限：sys:dashboard:query
 ```
 
 ## 3. 公共查询参数
 
-所有看板接口共享以下查询参数（`DashboardRangeQuery`）：
+所有看板接口共享以下查询参数：
 
-| 参数         | 类型   | 必填 | 说明                                                        |
-|------------|------|------|-----------------------------------------------------------|
-| `rangeType` | String | 否  | 时间范围：`today` / `week` / `month` / `all` / `custom`，默认 `today` |
-| `startTime` | DateTime | 条件必填 | 自定义开始时间，`rangeType=custom` 时必填，ISO 8601 格式              |
-| `endTime`   | DateTime | 条件必填 | 自定义结束时间，`rangeType=custom` 时必填，ISO 8601 格式              |
+| 参数 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `rangeType` | String | 否 | 时间范围：`today` / `week` / `month` / `all` / `custom`，默认 `today` |
+| `startTime` | DateTime | 条件必填 | 自定义开始时间，`rangeType=custom` 时必填，ISO 8601 格式 |
+| `endTime` | DateTime | 条件必填 | 自定义结束时间，`rangeType=custom` 时必填，ISO 8601 格式 |
 
-各 `rangeType` 含义：
+**rangeType 含义**：
 
-| rangeType | 说明                                |
-|-----------|-----------------------------------|
-| `today`   | 今日（当天 00:00 ~ 次日 00:00）          |
-| `week`    | 本周（本周一 00:00 ~ 下周一 00:00）        |
-| `month`   | 本月（本月 1 日 00:00 ~ 下月 1 日 00:00）   |
-| `all`     | 全部（startTime / endTime 为空）         |
-| `custom`  | 自定义，必须同时传 startTime 和 endTime       |
+| 值 | 说明 |
+|---|---|
+| `today` | 今日（当天 00:00 ~ 次日 00:00） |
+| `week` | 本周（本周一 00:00 ~ 下周一 00:00） |
+| `month` | 本月（本月 1 日 00:00 ~ 下月 1 日 00:00） |
+| `all` | 全部（startTime / endTime 为空） |
+| `custom` | 自定义，必须同时传 startTime 和 endTime |
 
-边界说明：
+**边界说明**：
+- `rangeType` 传入非法值时返回 `40011 / 非法参数`
+- `rangeType=custom` 时，`startTime` 和 `endTime` 必须同时传入，且 `startTime` 必须早于 `endTime`
+- 自定义时间范围不能超过 366 天，超出返回业务错误
+- 不传 `rangeType` 时默认按 `today` 统计
 
-- `rangeType` 传入非法值时返回 `40011 / 非法参数`。
-- `rangeType=custom` 时，`startTime` 和 `endTime` 必须同时传入，且 `startTime` 必须早于 `endTime`。
-- 自定义时间范围不能超过 366 天，超出返回业务错误。
-- 不传 `rangeType` 时默认按 `today` 统计。
-
-## 4. 后台管理接口
+## 4. 接口详情
 
 ### 4.1 核心概览
 
-- 请求：`GET /api/sys/dashboard/overview`
-- 查询参数：公共查询参数
-- 响应：`DashboardOverviewVO`
+```
+GET /api/sys/dashboard/overview
+```
 
-| 字段                        | 类型     | 说明           |
-|---------------------------|--------|--------------|
-| `range`                   | Object | 时间范围         |
-| `range.rangeType`         | String | 时间范围类型       |
-| `range.startTime`         | DateTime | 统计开始时间     |
-| `range.endTime`           | DateTime | 统计结束时间     |
-| `registeredUserCount`     | Long   | 注册用户数        |
-| `activeUserCount`         | Long   | 活跃用户数        |
-| `authorCount`             | Long   | 作者数量          |
-| `articleCount`            | Long   | 文章总数          |
-| `pendingArticleReviewCount` | Long | 待审核文章数       |
-| `commentCount`            | Long   | 评论数           |
-| `chatMessageCount`        | Long   | 私信消息数         |
-| `aiCallCount`             | Long   | AI 调用次数       |
-| `reportCount`             | Long   | 举报总数          |
-| `pendingReportCount`      | Long   | 待处理举报数（全局）  |
+**响应** `DashboardOverviewVO`：
 
-- 响应示例：
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `range` | Object | 时间范围 |
+| `range.rangeType` | String | 时间范围类型 |
+| `range.startTime` | DateTime | 统计开始时间 |
+| `range.endTime` | DateTime | 统计结束时间 |
+| `registeredUserCount` | Long | 注册用户数 |
+| `activeUserCount` | Long | 活跃用户数 |
+| `authorCount` | Long | 作者数量 |
+| `articleCount` | Long | 文章总数 |
+| `pendingArticleReviewCount` | Long | 待审核文章数 |
+| `commentCount` | Long | 评论数 |
+| `chatMessageCount` | Long | 私信消息数 |
+| `aiCallCount` | Long | AI 调用次数 |
+| `reportCount` | Long | 举报总数 |
+| `pendingReportCount` | Long | 待处理举报数（全局，不受时间范围限制） |
+
+**响应示例**：
 
 ```json
 {
@@ -100,22 +113,26 @@ Authorization: Bearer <accessToken>
 }
 ```
 
+---
+
 ### 4.2 内容统计
 
-- 请求：`GET /api/sys/dashboard/content`
-- 查询参数：公共查询参数
-- 响应：`DashboardContentVO`
+```
+GET /api/sys/dashboard/content
+```
 
-| 字段                        | 类型   | 说明       |
-|---------------------------|------|----------|
-| `range`                   | Object | 时间范围   |
-| `articleCount`            | Long | 文章总数    |
+**响应** `DashboardContentVO`：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `range` | Object | 时间范围 |
+| `articleCount` | Long | 文章总数 |
 | `pendingArticleReviewCount` | Long | 待审核文章数 |
-| `commentCount`            | Long | 评论数     |
-| `likeCount`               | Long | 点赞数     |
-| `collectCount`            | Long | 收藏数     |
+| `commentCount` | Long | 评论数 |
+| `likeCount` | Long | 点赞数 |
+| `collectCount` | Long | 收藏数 |
 
-- 响应示例：
+**响应示例**：
 
 ```json
 {
@@ -137,28 +154,32 @@ Authorization: Bearer <accessToken>
 }
 ```
 
+---
+
 ### 4.3 社区统计
 
-- 请求：`GET /api/sys/dashboard/community`
-- 查询参数：公共查询参数
-- 响应：`DashboardCommunityVO`
+```
+GET /api/sys/dashboard/community
+```
 
-| 字段                 | 类型   | 说明       |
-|--------------------|------|----------|
-| `range`            | Object | 时间范围   |
-| `chatMessageCount` | Long | 私信消息数   |
-| `lobbyMessageCount` | Long | 大厅消息数  |
-| `groupCount`       | Long | 群组数量    |
-| `forumPostCount`   | Long | 论坛发帖数，排除已删除帖子 |
-| `forumReplyCount`  | Long | 论坛回复数，排除已删除回复 |
-| `hotSections`      | Array | 热门版块 Top 5，按发帖数+回复数排序 |
+**响应** `DashboardCommunityVO`：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `range` | Object | 时间范围 |
+| `chatMessageCount` | Long | 私信消息数 |
+| `lobbyMessageCount` | Long | 大厅消息数 |
+| `groupCount` | Long | 群组数量 |
+| `forumPostCount` | Long | 论坛发帖数（排除已删除） |
+| `forumReplyCount` | Long | 论坛回复数（排除已删除） |
+| `hotSections` | Array | 热门版块 Top 5 |
 | `hotSections[].sectionId` | Long | 版块 ID |
 | `hotSections[].sectionName` | String | 版块名称 |
 | `hotSections[].postCount` | Long | 版块发帖数 |
 | `hotSections[].replyCount` | Long | 版块回复数 |
-| `hotSections[].hotValue` | Long | 热度值，发帖数+回复数 |
+| `hotSections[].hotValue` | Long | 热度值（发帖数+回复数） |
 
-- 响应示例：
+**响应示例**：
 
 ```json
 {
@@ -189,24 +210,28 @@ Authorization: Bearer <accessToken>
 }
 ```
 
+---
+
 ### 4.4 AI 调用统计
 
-- 请求：`GET /api/sys/dashboard/ai`
-- 查询参数：公共查询参数
-- 响应：`DashboardAiVO`
+```
+GET /api/sys/dashboard/ai
+```
 
-| 字段                  | 类型   | 说明       |
-|---------------------|------|----------|
-| `range`             | Object | 时间范围   |
-| `aiCallCount`       | Long | AI 调用总次数 |
-| `aiSuccessCallCount` | Long | 成功调用次数  |
-| `aiFailedCallCount` | Long | 失败调用次数  |
-| `ragCallCount`      | Long | RAG 调用次数，当前按 `ai_usage_log.request_scene_type=rag` 统计 |
-| `agentTaskCount`    | Long | Agent 任务总数 |
-| `agentSuccessTaskCount` | Long | Agent 成功任务数，状态 `2` |
-| `agentFailedTaskCount` | Long | Agent 失败任务数，状态 `3` |
+**响应** `DashboardAiVO`：
 
-- 响应示例：
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `range` | Object | 时间范围 |
+| `aiCallCount` | Long | AI 调用总次数 |
+| `aiSuccessCallCount` | Long | 成功调用次数 |
+| `aiFailedCallCount` | Long | 失败调用次数 |
+| `ragCallCount` | Long | RAG 调用次数 |
+| `agentTaskCount` | Long | Agent 任务总数 |
+| `agentSuccessTaskCount` | Long | Agent 成功任务数（状态 `2`） |
+| `agentFailedTaskCount` | Long | Agent 失败任务数（状态 `3`） |
+
+**响应示例**：
 
 ```json
 {
@@ -230,29 +255,32 @@ Authorization: Bearer <accessToken>
 }
 ```
 
-- 说明：
-    - RAG 命中数、无命中数待 RAG 主链路和命中日志字段落地后补充。
+> 说明：RAG 命中数、无命中数待 RAG 主链路和命中日志字段落地后补充。
+
+---
 
 ### 4.5 治理统计
 
-- 请求：`GET /api/sys/dashboard/governance`
-- 查询参数：公共查询参数
-- 响应：`DashboardGovernanceVO`
+```
+GET /api/sys/dashboard/governance
+```
 
-| 字段                    | 类型   | 说明                    |
-|-----------------------|------|-----------------------|
-| `range`               | Object | 时间范围              |
-| `reportCount`         | Long | 举报总数（时间范围内）       |
-| `pendingReportCount`  | Long | 待处理举报数（全局，不受时间范围限制） |
-| `processingReportCount` | Long | 处理中举报数（时间范围内）   |
-| `handledReportCount`  | Long | 已处理举报数（时间范围内）    |
-| `rejectedReportCount` | Long | 已驳回举报数（时间范围内）    |
-| `averageHandleDurationMinutes` | Decimal | 平均举报处理耗时，单位分钟，按 `handled_at - reported_at` 计算 |
-| `punishmentDistributions` | Array | 处罚类型分布，空处罚类型归为 `none` |
+**响应** `DashboardGovernanceVO`：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `range` | Object | 时间范围 |
+| `reportCount` | Long | 举报总数（时间范围内） |
+| `pendingReportCount` | Long | 待处理举报数（全局，用于侧边栏红点） |
+| `processingReportCount` | Long | 处理中举报数（时间范围内） |
+| `handledReportCount` | Long | 已处理举报数（时间范围内） |
+| `rejectedReportCount` | Long | 已驳回举报数（时间范围内） |
+| `averageHandleDurationMinutes` | Decimal | 平均处理耗时（分钟） |
+| `punishmentDistributions` | Array | 处罚类型分布 |
 | `punishmentDistributions[].punishmentType` | String | 处罚类型 |
 | `punishmentDistributions[].count` | Long | 数量 |
 
-- 响应示例：
+**响应示例**：
 
 ```json
 {
@@ -272,44 +300,44 @@ Authorization: Bearer <accessToken>
     "rejectedReportCount": 4,
     "averageHandleDurationMinutes": 18.75,
     "punishmentDistributions": [
-      {
-        "punishmentType": "mute",
-        "count": 10
-      },
-      {
-        "punishmentType": "none",
-        "count": 6
-      }
+      { "punishmentType": "mute", "count": 10 },
+      { "punishmentType": "none", "count": 6 }
     ]
   }
 }
 ```
 
-- 说明：
-    - `pendingReportCount` 始终为全局待处理数量，不受时间范围筛选，用于后台侧边栏红点提醒。
-    - 其余字段均按请求中的时间范围统计。
+> 说明：`pendingReportCount` 始终为全局待处理数量，不受时间范围筛选。其余字段均按请求中的时间范围统计。
+
+---
 
 ### 4.6 导出运营看板统计
 
-- 请求：`GET /api/sys/dashboard/export`
-- 查询参数：公共查询参数
-- 鉴权：`sys:dashboard:query`
-- 响应：Excel 文件流
+```
+GET /api/sys/dashboard/export
+```
 
-响应头：
+**响应**：Excel 文件流
 
 | 响应头 | 说明 |
-|------|------|
+|---|---|
 | `Content-Type` | `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` |
-| `Content-Disposition` | 附件下载，文件名格式 `dashboard-yyyy-MM-dd.xlsx` |
+| `Content-Disposition` | 附件下载，格式 `dashboard-yyyy-MM-dd.xlsx` |
 
-导出内容：
+**导出内容**：
+- `概览`、`内容`、`社区`、`AI`、`治理` 汇总 sheet
+- `热门版块` 明细 sheet
+- `处罚分布` 明细 sheet
 
-- `概览`、`内容`、`社区`、`AI`、`治理` 汇总 sheet。
-- `热门版块` 明细 sheet。
-- `处罚分布` 明细 sheet。
+**请求示例**：
 
-边界说明：
+```javascript
+// axios
+axios.get('/api/sys/dashboard/export', {
+  params: { rangeType: 'month' },
+  responseType: 'blob',
+  headers: { Authorization: 'Bearer xxx' }
+})
+```
 
-- 时间范围校验规则与其他看板接口一致。
-- 导出统计口径与对应 JSON 看板接口一致。
+> 说明：时间范围校验规则与其他看板接口一致，导出统计口径与对应 JSON 看板接口一致。

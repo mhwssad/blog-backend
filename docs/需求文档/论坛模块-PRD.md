@@ -10,7 +10,7 @@
 - 最近同步日期：2026-05-04
 - 上级文档：`docs/需求文档/项目需求草案-PRD.md`
 - 关联文档：`docs/需求文档/论坛与频道交互草案.md`
-- 当前执行入口：`docs/tasks/01-forum-module-todo.md`
+- 当前执行入口：`docs/tasks/README.md`
 
 ## 2. 模块定位
 

@@ -9,7 +9,7 @@
 - 整理日期：2026-04-28
 - 最近同步日期：2026-05-05
 - 上级文档：`docs/需求文档/项目需求草案-PRD.md`
-- 当前执行入口：`docs/tasks/02-ai-rag-agents-todo.md`
+- 当前执行入口：`docs/tasks/README.md`
 
 ## 2. 模块定位
 

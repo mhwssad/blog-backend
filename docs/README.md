@@ -28,12 +28,7 @@
 
 ## 3. 研发任务与专项文档
 
-- `tasks/README.md`：第二期任务导航，包含论坛、AI 增强、迁移与用户自服务、治理通知增强、性能测试质量补强。
-- `tasks/01-forum-module-todo.md`：论坛正式模块任务清单。
-- `tasks/02-ai-rag-agents-todo.md`：知识库 / RAG / agents 任务清单。
-- `tasks/03-migration-user-service-todo.md`：外部博客迁移与用户自服务任务清单。
-- `tasks/04-governance-notification-enhancement-todo.md`：治理、通知与后台运营增强任务清单。
-- `tasks/05-performance-test-quality-todo.md`：性能、测试与代码质量补强任务清单。
+- `tasks/README.md`：第二期任务状态入口，已完成任务子文档已移除，后续新增任务从此处重新登记。
 
 ## 4. 使用约定
 
