@@ -112,6 +112,32 @@ VALUES (1900, 1000, '0,1000', '举报管理', 'M', 'SysReport', '/admin/reports'
        (1902, 1900, '0,1000,1900', '举报处理', 'B', NULL, NULL, NULL, 'sys:report:handle', 0, 0, 1, 2, NULL, NULL, NOW(),
         NOW(), NULL);
 
+-- 论坛帖子管理（内容管理 1700 -> 论坛管理 1830 下）
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1930, 1830, '0,1700,1830', '帖子管理', 'M', 'ContentForumPosts', '/admin/forum/posts', 'admin/forum/ForumPosts', NULL,
+        0, 1, 1, 2, 'documentation', NULL, NOW(), NOW(), NULL),
+       (1931, 1930, '0,1700,1830,1930', '帖子查询', 'B', NULL, NULL, NULL, 'content:forum:query', 0, 0, 1, 1, NULL, NULL,
+        NOW(), NOW(), NULL),
+       (1932, 1930, '0,1700,1830,1930', '帖子修改', 'B', NULL, NULL, NULL, 'content:forum:update', 0, 0, 1, 2, NULL, NULL,
+        NOW(), NOW(), NULL),
+       (1933, 1930, '0,1700,1830,1930', '帖子删除', 'B', NULL, NULL, NULL, 'content:forum:delete', 0, 0, 1, 3, NULL, NULL,
+        NOW(), NOW(), NULL);
+
+-- 论坛回复管理（内容管理 1700 -> 论坛管理 1830 下）
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1940, 1830, '0,1700,1830', '回复管理', 'M', 'ContentForumReplies', '/admin/forum/replies', 'admin/forum/ForumReplies', NULL,
+        0, 1, 1, 3, 'edit', NULL, NOW(), NOW(), NULL),
+       (1941, 1940, '0,1700,1830,1940', '回复查询', 'B', NULL, NULL, NULL, 'content:forum:query', 0, 0, 1, 1, NULL, NULL,
+        NOW(), NOW(), NULL),
+       (1942, 1940, '0,1700,1830,1940', '回复修改', 'B', NULL, NULL, NULL, 'content:forum:update', 0, 0, 1, 2, NULL, NULL,
+        NOW(), NOW(), NULL),
+       (1943, 1940, '0,1700,1830,1940', '回复删除', 'B', NULL, NULL, NULL, 'content:forum:delete', 0, 0, 1, 3, NULL, NULL,
+        NOW(), NOW(), NULL);
+
 -- 高风险审计查询（系统管理 1000 下）
 INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
                         `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,

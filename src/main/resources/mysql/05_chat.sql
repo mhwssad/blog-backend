@@ -291,7 +291,7 @@ CREATE TABLE forum_post
     author_id         BIGINT                              NOT NULL COMMENT '作者用户ID',
     title             VARCHAR(128)                        NOT NULL COMMENT '帖子标题',
     content           LONGTEXT                            NULL COMMENT '帖子内容',
-    status            TINYINT   DEFAULT 0                 NOT NULL COMMENT '状态：0-草稿，1-已发布，2-审核中，3-已拒绝，4-已删除',
+    status            TINYINT   DEFAULT 0                 NOT NULL COMMENT '状态：0-草稿，1-已发布，2-审核中，3-已拒绝，4-已删除，5-隐藏',
     visibility_scope  TINYINT   DEFAULT 0                 NOT NULL COMMENT '可见范围：0-公开，1-登录可见',
     is_top            TINYINT   DEFAULT 0                 NOT NULL COMMENT '是否置顶：0-否，1-是',
     is_essence        TINYINT   DEFAULT 0                 NOT NULL COMMENT '是否精华：0-否，1-是',

@@ -1,6 +1,6 @@
 # 论坛 API
 
-本文档覆盖二期论坛 P0 的公开查询接口、登录用户行为接口、帖子与频道挂接入口，以及 P1 后台版块管理接口。
+本文档覆盖二期论坛 P0 的公开查询接口、登录用户行为接口、帖子与频道挂接入口，以及 P1 后台版块管理、帖子/回复治理接口。
 
 ## 1. 路由分组
 
@@ -266,7 +266,7 @@ Authorization: Bearer <accessToken>
 
 | 枚举 | 值 |
 | --- | --- |
-| 帖子状态 | `0` 草稿，`1` 已发布，`2` 审核中，`3` 已拒绝，`4` 已删除 |
+| 帖子状态 | `0` 草稿，`1` 已发布，`2` 审核中，`3` 已拒绝，`4` 已删除，`5` 隐藏 |
 | 回复状态 | `1` 正常，`2` 隐藏，`3` 删除，`4` 审核中 |
 | 可见范围 | `0` 公开，`1` 登录可见 |
 | 互动目标类型 | `forum_post` |
@@ -276,7 +276,128 @@ Authorization: Bearer <accessToken>
 
 | 权限 | 说明 |
 | --- | --- |
-| `content:forum:query` | 查询后台论坛版块 |
+| `content:forum:query` | 查询后台论坛版块/帖子/回复 |
 | `content:forum:create` | 新增论坛版块 |
-| `content:forum:update` | 修改论坛版块或状态 |
-| `content:forum:delete` | 删除无帖子论坛版块 |
+| `content:forum:update` | 修改论坛版块或状态，隐藏/恢复/置顶/精华帖子/回复 |
+| `content:forum:delete` | 删除论坛版块/帖子/回复 |
+
+## 8. 后台帖子管理接口
+
+### 8.1 分页查询帖子
+
+- 请求：`GET /api/sys/forum/posts`
+- 鉴权：`content:forum:query`
+- 响应：`PageResult<ForumPostAdminVO>`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | Long | 帖子 ID |
+| `sectionId` | Long | 版块 ID |
+| `sectionName` | String | 版块名称 |
+| `authorId` | Long | 作者 ID |
+| `authorName` | String | 作者昵称 |
+| `title` | String | 帖子标题 |
+| `status` | Integer | 状态值 |
+| `statusName` | String | 状态描述 |
+| `visibilityScope` | Integer | 可见范围 |
+| `isTop` | Integer | 是否置顶 |
+| `isEssence` | Integer | 是否精华 |
+| `viewCount` | Integer | 浏览数 |
+| `likeCount` | Integer | 点赞数 |
+| `replyCount` | Integer | 回复数 |
+| `collectCount` | Integer | 收藏数 |
+| `shareCount` | Integer | 分享数 |
+| `publishedAt` | DateTime | 发布时间 |
+| `createdAt` | DateTime | 创建时间 |
+| `updatedAt` | DateTime | 更新时间 |
+
+查询参数：`keyword`（标题/内容）、`sectionId`、`authorId`、`status`、`createdAtStart`、`createdAtEnd`、`isTop`、`isEssence`、`current`、`size`
+
+### 8.2 查询帖子详情
+
+- 请求：`GET /api/sys/forum/posts/{id}`
+- 鉴权：`content:forum:query`
+- 响应：`ForumPostAdminDetailVO`（列表 VO + `content` 字段）
+
+### 8.3 隐藏帖子
+
+- 请求：`PUT /api/sys/forum/posts/{id}/hide`
+- 鉴权：`content:forum:update`
+- 响应：`Result<Void>`
+- 已删除帖子不能隐藏
+
+### 8.4 恢复帖子
+
+- 请求：`PUT /api/sys/forum/posts/{id}/restore`
+- 鉴权：`content:forum:update`
+- 响应：`Result<Void>`
+- 仅隐藏状态可恢复，恢复后状态为已发布
+
+### 8.5 删除帖子
+
+- 请求：`DELETE /api/sys/forum/posts/{id}`
+- 鉴权：`content:forum:delete`
+- 响应：`Result<Void>`
+- 软删除，已删除帖子不能重复删除
+
+### 8.6 切换置顶
+
+- 请求：`PUT /api/sys/forum/posts/{id}/top?enabled=true|false`
+- 鉴权：`content:forum:update`
+- 响应：`Result<Void>`
+
+### 8.7 切换精华
+
+- 请求：`PUT /api/sys/forum/posts/{id}/essence?enabled=true|false`
+- 鉴权：`content:forum:update`
+- 响应：`Result<Void>`
+- 设为精华时通知帖子作者
+
+## 9. 后台回复管理接口
+
+### 9.1 分页查询回复
+
+- 请求：`GET /api/sys/forum/replies`
+- 鉴权：`content:forum:query`
+- 响应：`PageResult<ForumReplyAdminVO>`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | Long | 回复 ID |
+| `postId` | Long | 帖子 ID |
+| `postTitle` | String | 帖子标题 |
+| `parentId` | Long | 父回复 ID |
+| `rootId` | Long | 根回复 ID |
+| `userId` | Long | 回复用户 ID |
+| `userName` | String | 回复用户昵称 |
+| `content` | String | 回复内容 |
+| `status` | Integer | 状态值 |
+| `statusName` | String | 状态描述 |
+| `floorNo` | Integer | 楼层号 |
+| `likeCount` | Integer | 点赞数 |
+| `replyCount` | Integer | 回复数 |
+| `createdAt` | DateTime | 创建时间 |
+| `updatedAt` | DateTime | 更新时间 |
+
+查询参数：`keyword`（内容）、`postId`、`userId`、`status`、`current`、`size`
+
+### 9.2 隐藏回复
+
+- 请求：`PUT /api/sys/forum/replies/{id}/hide`
+- 鉴权：`content:forum:update`
+- 响应：`Result<Void>`
+- 已删除回复不能隐藏
+
+### 9.3 恢复回复
+
+- 请求：`PUT /api/sys/forum/replies/{id}/restore`
+- 鉴权：`content:forum:update`
+- 响应：`Result<Void>`
+- 仅隐藏状态可恢复，恢复后状态为正常
+
+### 9.4 删除回复
+
+- 请求：`DELETE /api/sys/forum/replies/{id}`
+- 鉴权：`content:forum:delete`
+- 响应：`Result<Void>`
+- 软删除，同步递减帖子回复数和父回复回复数
