@@ -1,6 +1,7 @@
 package com.cybzacg.blogbackend.module.ai.convert;
 
 import com.cybzacg.blogbackend.domain.ai.AiMessageAttachment;
+import com.cybzacg.blogbackend.domain.ai.AiChannelAccount;
 import com.cybzacg.blogbackend.domain.ai.AiAgentDefinition;
 import com.cybzacg.blogbackend.domain.ai.AiAgentTask;
 import com.cybzacg.blogbackend.domain.ai.AiChannelConfig;
@@ -13,6 +14,8 @@ import com.cybzacg.blogbackend.domain.ai.AiUsageLog;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiAgentDefinitionSaveRequest;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiAgentDefinitionVO;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiAgentTaskAdminVO;
+import com.cybzacg.blogbackend.module.ai.model.admin.AiChannelAccountSaveRequest;
+import com.cybzacg.blogbackend.module.ai.model.admin.AiChannelAccountVO;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiChannelConfigSaveRequest;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiChannelConfigVO;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiKnowledgeEntryVO;
@@ -76,6 +79,13 @@ public interface AiModelConvert {
 
     @Mapping(target = "fileUrl", ignore = true)
     AttachmentVO toAttachmentVO(AiMessageAttachment attachment);
+
+    AiChannelAccountVO toChannelAccountVO(AiChannelAccount account);
+
+    AiChannelAccount toChannelAccount(AiChannelAccountSaveRequest request);
+
+    @InheritConfiguration
+    void updateChannelAccount(AiChannelAccountSaveRequest request, @MappingTarget AiChannelAccount account);
 
     @AfterMapping
     default void fillMessageRagReferences(AiChatMessage message, @MappingTarget AiMessageVO vo) {
