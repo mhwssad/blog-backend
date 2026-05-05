@@ -6,6 +6,7 @@ import com.cybzacg.blogbackend.domain.ai.AiChatMessage;
 import com.cybzacg.blogbackend.domain.file.FileInfo;
 import com.cybzacg.blogbackend.module.ai.constant.AiConstants;
 import com.cybzacg.blogbackend.module.ai.model.data.AiModelCallResult;
+import com.cybzacg.blogbackend.module.ai.model.data.AiStreamEvent;
 import com.cybzacg.blogbackend.module.ai.service.AiModelClient;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
@@ -14,13 +15,19 @@ import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.output.TokenUsage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 
 /**
  * AI 模型调用客户端实现。
@@ -188,5 +195,56 @@ public class AiModelClientImpl implements AiModelClient {
             return "未知错误";
         }
         return message.length() > 500 ? message.substring(0, 500) + "..." : message;
+    }
+
+    @Override
+    public String streamChat(AiChannelConfig config, String systemPrompt,
+                             List<AiChatMessage> contextMessages,
+                             String userQuestion, List<FileInfo> imageAttachments,
+                             Consumer<AiStreamEvent> eventConsumer) {
+        StreamingChatModel streamingModel = LangChain4jConfig.buildStreamingModel(config);
+        List<ChatMessage> messages = buildMessages(config, systemPrompt, contextMessages,
+                userQuestion, imageAttachments);
+
+        StringBuilder fullResponse = new StringBuilder();
+        CompletableFuture<Void> streamDone = new CompletableFuture<>();
+
+        streamingModel.chat(messages, new StreamingChatResponseHandler() {
+            @Override
+            public void onPartialResponse(String partialResponse) {
+                fullResponse.append(partialResponse);
+                eventConsumer.accept(AiStreamEvent.delta(partialResponse));
+            }
+
+            @Override
+            public void onCompleteResponse(ChatResponse completeResponse) {
+                TokenUsage usage = completeResponse.tokenUsage();
+                if (usage != null) {
+                    eventConsumer.accept(AiStreamEvent.usage(
+                            usage.inputTokenCount() != null ? usage.inputTokenCount() : 0,
+                            usage.outputTokenCount() != null ? usage.outputTokenCount() : 0,
+                            usage.totalTokenCount() != null ? usage.totalTokenCount() : 0));
+                }
+                eventConsumer.accept(AiStreamEvent.done());
+                streamDone.complete(null);
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                log.warn("AI 流式调用失败，渠道: {}, 错误: {}", config.getChannelCode(), error.getMessage());
+                eventConsumer.accept(AiStreamEvent.error(error.getMessage()));
+                streamDone.completeExceptionally(error);
+            }
+        });
+
+        try {
+            streamDone.get(AiConstants.DEFAULT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            eventConsumer.accept(AiStreamEvent.error("响应超时"));
+        } catch (Exception e) {
+            // onError 已回调，忽略
+        }
+
+        return fullResponse.toString();
     }
 }
