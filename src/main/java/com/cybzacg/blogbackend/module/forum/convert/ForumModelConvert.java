@@ -3,6 +3,9 @@ package com.cybzacg.blogbackend.module.forum.convert;
 import com.cybzacg.blogbackend.domain.forum.ForumPost;
 import com.cybzacg.blogbackend.domain.forum.ForumReply;
 import com.cybzacg.blogbackend.domain.forum.ForumSection;
+import com.cybzacg.blogbackend.module.forum.model.admin.ForumPostAdminDetailVO;
+import com.cybzacg.blogbackend.module.forum.model.admin.ForumPostAdminVO;
+import com.cybzacg.blogbackend.module.forum.model.admin.ForumReplyAdminVO;
 import com.cybzacg.blogbackend.module.forum.model.admin.ForumSectionAdminVO;
 import com.cybzacg.blogbackend.module.forum.model.admin.ForumSectionSaveRequest;
 import com.cybzacg.blogbackend.module.forum.model.publics.ForumSectionVO;
@@ -46,6 +49,12 @@ public interface ForumModelConvert {
     UserForumPostDetailVO toUserPostDetailVO(ForumPost post);
 
     PublicForumReplyVO toPublicReplyVO(ForumReply reply);
+
+    ForumPostAdminVO toPostAdminVO(ForumPost post);
+
+    ForumPostAdminDetailVO toPostAdminDetailVO(ForumPost post);
+
+    ForumReplyAdminVO toReplyAdminVO(ForumReply reply);
 
     @Mapping(target = "title", expression = "java(StrUtils.trim(request.getTitle()))")
     @Mapping(target = "content", expression = "java(StrUtils.trim(request.getContent()))")
