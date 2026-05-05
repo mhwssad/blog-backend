@@ -1,13 +1,13 @@
 USE blog_backend;
 
--- 扩展功能菜单初始化脚本 (ID 范围: 1800-1929)
--- 包含：系列文章、频道申请、论坛管理、AI 管理、举报管理、高风险审计
+-- 扩展功能菜单初始化脚本 (ID 范围: 1800-1954)
+-- 包含：系列文章、频道申请、论坛管理、博客迁移、AI 管理、举报管理、高风险审计
 -- 前置依赖：无（菜单数据独立）
 
 START TRANSACTION;
 
-DELETE FROM `sys_role_menu` WHERE `menu_id` BETWEEN 1800 AND 1929;
-DELETE FROM `sys_menu` WHERE `id` BETWEEN 1800 AND 1929;
+DELETE FROM `sys_role_menu` WHERE `menu_id` BETWEEN 1800 AND 1954;
+DELETE FROM `sys_menu` WHERE `id` BETWEEN 1800 AND 1954;
 
 -- 系列文章管理（内容管理 1700 下）
 INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
@@ -136,6 +136,21 @@ VALUES (1940, 1830, '0,1700,1830', '回复管理', 'M', 'ContentForumReplies', '
        (1942, 1940, '0,1700,1830,1940', '回复修改', 'B', NULL, NULL, NULL, 'content:forum:update', 0, 0, 1, 2, NULL, NULL,
         NOW(), NOW(), NULL),
        (1943, 1940, '0,1700,1830,1940', '回复删除', 'B', NULL, NULL, NULL, 'content:forum:delete', 0, 0, 1, 3, NULL, NULL,
+        NOW(), NOW(), NULL);
+
+-- 博客迁移（内容管理 1700 下）
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1950, 1700, '0,1700', '博客迁移', 'M', 'ContentBlogMigration', '/admin/migrations/blog',
+        'admin/migration/BlogMigration', NULL, 0, 1, 1, 15, 'upload-filled', NULL, NOW(), NOW(), NULL),
+       (1951, 1950, '0,1700,1950', '迁移查询', 'B', NULL, NULL, NULL, 'content:migration:query', 0, 0, 1, 1, NULL, NULL,
+        NOW(), NOW(), NULL),
+       (1952, 1950, '0,1700,1950', '迁移创建', 'B', NULL, NULL, NULL, 'content:migration:create', 0, 0, 1, 2, NULL, NULL,
+        NOW(), NOW(), NULL),
+       (1953, 1950, '0,1700,1950', '迁移执行', 'B', NULL, NULL, NULL, 'content:migration:execute', 0, 0, 1, 3, NULL, NULL,
+        NOW(), NOW(), NULL),
+       (1954, 1950, '0,1700,1950', '迁移导出', 'B', NULL, NULL, NULL, 'content:migration:export', 0, 0, 1, 4, NULL, NULL,
         NOW(), NOW(), NULL);
 
 -- 高风险审计查询（系统管理 1000 下）

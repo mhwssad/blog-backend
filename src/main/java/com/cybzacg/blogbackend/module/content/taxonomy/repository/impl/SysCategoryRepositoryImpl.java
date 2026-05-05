@@ -78,4 +78,15 @@ public class SysCategoryRepositoryImpl extends ServiceImpl<SysCategoryMapper, Sy
                 .in(SysCategory::getId, ids)
                 .eq(SysCategory::getType, type));
     }
+
+    @Override
+    public List<SysCategory> listByTypeStatusAndCodes(String type, Integer status, Collection<String> codes) {
+        if (codes == null || codes.isEmpty()) {
+            return List.of();
+        }
+        return list(new LambdaQueryWrapper<SysCategory>()
+                .eq(SysCategory::getType, type)
+                .eq(SysCategory::getStatus, status)
+                .in(SysCategory::getCode, codes));
+    }
 }

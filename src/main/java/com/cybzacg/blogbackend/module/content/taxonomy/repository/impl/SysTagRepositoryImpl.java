@@ -41,4 +41,13 @@ public class SysTagRepositoryImpl extends ServiceImpl<SysTagMapper, SysTag> impl
     public List<SysTag> findByTargetType(String targetType) {
         return baseMapper.selectByTargetType(targetType);
     }
+
+    @Override
+    public List<SysTag> listByNames(List<String> names) {
+        if (names == null || names.isEmpty()) {
+            return List.of();
+        }
+        return list(new LambdaQueryWrapper<SysTag>()
+                .in(SysTag::getName, names));
+    }
 }

@@ -14,6 +14,7 @@
 | 后台管理框架初始化（用户信息、菜单、权限）              | `auth-api.md`    | `后台应用启动流程`、`获取当前登录用户`、`获取当前用户菜单`              |
 | 后台用户/角色/菜单/配置/通知/日志/经验体系页面 | `auth-api.md` | `后台系统管理接口`、`经验体系管理接口` |
 | 后台文章、分类、标签、评论、互动、足迹管理 | `content-api.md` | `后台内容管理接口` |
+| 外部博客迁移任务创建、预检、导入和失败导出 | `migration-api.md` | `后台博客迁移接口` |
 | 博客首页、文章列表、文章详情、分类/标签筛选             | `content-api.md` | `前台页面接口`                                      |
 | 评论、点赞、收藏、足迹等登录后行为                  | `content-api.md` | `登录后用户行为接口`                                   |
 | 论坛版块、帖子、回复、帖子点赞收藏与频道分享              | `forum-api.md`   | `公开论坛接口`、`用户论坛接口`、`后台论坛版块管理`                           |
@@ -32,6 +33,7 @@
 |--------------------|-----------------------------------|--------------------------------------------------------------------------------------------------------------------------|
 | `auth-api.md`      | 登录注册、后台权限框架、系统管理、用户通知中心           | `/api/auth/**`、`/api/sys/**` 中的认证/系统管理接口、`/api/user/notices/**`                                                          |
 | `content-api.md`   | 前台内容页、登录后内容行为、后台内容管理              | `/api/articles/**`、`/api/categories/**`、`/api/tags/**`、`/api/comments/**`、`/api/user/**` 中的内容行为接口、`/api/sys/**` 中的内容管理接口 |
+| `migration-api.md` | 外部博客迁移任务、预检、导入和失败记录导出            | `/api/sys/migrations/blog/**`                                                                                       |
 | `forum-api.md`     | 论坛公开浏览、用户发帖回帖、论坛互动、帖子频道分享与后台版块管理       | `/api/forum/**`、`/api/user/forum/**`、`/api/user/chat/forum-links/**`、`/api/sys/forum/**` |
 | `file-api.md`      | 上传流程、我的文件、后台文件库                   | `/api/user/files/**`、`/api/sys/files/**`                                                                                 |
 | `chat-api.md`      | 聊天 HTTP 接口、后台聊天管理、大厅/主题频道管理、公开频道访客接口与 WebSocket 实时协议 | `/api/user/chat/**`、`/api/sys/chats/**`、`/api/public/chat/**`、`/ws/chat`                                                                       |
@@ -340,6 +342,7 @@ Authorization: Bearer <accessToken>
 | `auth`    | `auth-api.md`      | 认证、用户、角色、菜单、系统配置、通知、日志               |
 | `article` | `content-api.md`   | 后台文章、前台文章、文章点赞                       |
 | `content` | `content-api.md`   | 分类、标签、评论、收藏、互动、足迹                    |
+| `migration` | `migration-api.md` | 外部博客迁移任务、预检、导入和失败导出                 |
 | `file`    | `file-api.md`      | 用户上传、我的文件、后台文件管理                     |
 | `chat`    | `chat-api.md`      | 会话列表、后台聊天管理、大厅/主题频道管理、消息发送、群管理与 WebSocket 实时推送 |
 | `chat`    | `websocket-api.md` | WebSocket 连接、认证、心跳、收发消息与推送事件         |
@@ -367,6 +370,7 @@ Authorization: Bearer <accessToken>
 3. 按业务模块继续看：
     - 用户/角色/菜单/配置/通知/日志/经验体系：`auth-api.md`
     - 内容管理：`content-api.md`
+    - 外部博客迁移：`migration-api.md`
     - 论坛管理：`forum-api.md`
     - 关注关系管理：`follow-api.md`
     - 文件管理：`file-api.md`

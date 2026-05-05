@@ -61,4 +61,9 @@ public interface SysCategoryRepository extends IService<SysCategory> {
      * @return 匹配的分类列表
      */
     List<SysCategory> listByTypeAndIds(String type, Collection<Long> ids);
+
+    /**
+     * 按类型、状态和编码集合查询分类。
+     */
+    List<SysCategory> listByTypeStatusAndCodes(String type, Integer status, Collection<String> codes);
 }

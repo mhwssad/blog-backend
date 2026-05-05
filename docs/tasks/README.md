@@ -20,7 +20,7 @@
 | ------------------------------------------------------------------------------------------------ | ------------------------------------- | ----------------------------------------------- | ------ |
 | [01-forum-module-todo.md](01-forum-module-todo.md)                                               | 论坛正式模块                          | P1 联动与通知已完成，测试补强已完成             | P0     |
 | [02-ai-rag-agents-todo.md](02-ai-rag-agents-todo.md)                                               | 知识库 / RAG / agents / 工具调用 / MCP | P1 知识库自动同步已完成                         | P0     |
-| [03-migration-user-service-todo.md](03-migration-user-service-todo.md)                           | 外部博客迁移与用户自服务              | P0 用户自服务已完成                             | P1     |
+| [03-migration-user-service-todo.md](03-migration-user-service-todo.md)                           | 外部博客迁移与用户自服务              | P1 外部博客迁移主流程已完成                     | P1     |
 | [04-governance-notification-enhancement-todo.md](04-governance-notification-enhancement-todo.md) | 治理、通知和后台运营增强              | P1 运营看板增强已完成                           | P1     |
 | [05-performance-test-quality-todo.md](05-performance-test-quality-todo.md)                       | 性能、测试和代码质量补强              | 待开始                                          | P2     |
 
@@ -53,6 +53,7 @@
 - AI 新增工具调用与 MCP 接入需求：后续需补齐工具定义、授权范围、调用执行、MCP 服务配置、工具发现、连接状态和调用审计，且不得绕过 AI 数据范围和后台治理边界。
 - 用户自服务 P0 已完成：个人资料查看/更新（新增 bio/website 字段）、修改密码（验证旧密码）、找回密码（邮箱验证码）、用户搜索（公开接口）。
 - 用户自服务测试补强已推进：已补齐个人资料查看/更新服务级测试，覆盖联系方式脱敏、MapStruct 更新委托和用户不存在异常。
+- 外部博客迁移 P1 主流程已完成：新增迁移任务/记录/附件表结构、后台任务创建/预检/执行/查询/失败导出接口，附件下载入库后替换外部 URL，并复用后台文章创建链路导入文章；迁移服务级测试、权限测试和 API 文档已补齐。
 - 治理通知增强 P0 禁言体系已完成：统一禁言记录表、4 种范围（全站/大厅/主题频道/群聊）、发送拦截接入、举报联动（可选禁言范围和时长）、后台管理接口。
 - 下一步可推进 `04-governance-notification-enhancement-todo.md` 剩余的举报通知、AI/Agent 通知，或根据前端联调需要推进其他任务。
 - 治理通知增强 P0 举报通知已完成：举报处理（通过/驳回）后自动通知举报人，新增 `REPORT_RESULT` 通知类型和偏好开关，通知内容按结果类型区分模板且不泄露处理人信息。

@@ -154,7 +154,15 @@ public enum ResultErrorCode implements ResultCode {
     AI_AGENT_NAME_DUPLICATE(73003, "Agent 名称已存在"),
     AI_AGENT_TASK_NOT_FOUND(73004, "Agent 任务不存在"),
     AI_AGENT_TASK_NOT_OWNER(73005, "无权操作此 Agent 任务"),
-    AI_AGENT_TASK_NOT_COMPLETABLE(73006, "Agent 任务状态不允许此操作");
+    AI_AGENT_TASK_NOT_COMPLETABLE(73006, "Agent 任务状态不允许此操作"),
+
+    // ========== 外部博客迁移模块 ==========
+
+    MIGRATION_TASK_NOT_FOUND(75001, "迁移任务不存在"),
+    MIGRATION_TASK_STATUS_INVALID(75002, "迁移任务状态不允许此操作"),
+    MIGRATION_FILE_INVALID(75003, "迁移文件无效"),
+    MIGRATION_PRECHECK_FAILED(75004, "迁移预检未通过"),
+    MIGRATION_ATTACHMENT_DOWNLOAD_FAILED(75005, "迁移附件下载失败");
 
     private final Integer code;
     private final String message;

@@ -32,4 +32,9 @@ public interface SysTagRepository extends IService<SysTag> {
      * @return 标签列表
      */
     List<SysTag> findByTargetType(String targetType);
+
+    /**
+     * 按名称集合查询标签。
+     */
+    List<SysTag> listByNames(List<String> names);
 }
