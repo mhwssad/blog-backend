@@ -26,6 +26,8 @@ import com.cybzacg.blogbackend.module.chat.governance.service.ChatMuteGovernance
 import com.cybzacg.blogbackend.module.chat.message.model.admin.ChatAdminMessageDetailVO;
 import com.cybzacg.blogbackend.module.content.comment.repository.SysCommentRepository;
 import com.cybzacg.blogbackend.module.content.comment.service.CommentAdminService;
+import com.cybzacg.blogbackend.module.forum.service.ForumPostAdminService;
+import com.cybzacg.blogbackend.module.forum.service.ForumReplyAdminService;
 import com.cybzacg.blogbackend.domain.forum.ForumPost;
 import com.cybzacg.blogbackend.domain.forum.ForumReply;
 import com.cybzacg.blogbackend.module.forum.repository.ForumPostRepository;
@@ -76,6 +78,8 @@ public class ReportAdminServiceImpl implements ReportAdminService {
     private final NotificationDeliveryService notificationDeliveryService;
     private final ForumPostRepository forumPostRepository;
     private final ForumReplyRepository forumReplyRepository;
+    private final ForumPostAdminService forumPostAdminService;
+    private final ForumReplyAdminService forumReplyAdminService;
 
     /**
      * 分页查询举报记录（管理端）。
@@ -419,6 +423,10 @@ public class ReportAdminServiceImpl implements ReportAdminService {
                     articleAdminService.deleteArticle(targetId);
                 } else if (targetType == ReportTargetTypeEnum.COMMENT) {
                     commentAdminService.deleteComment(targetId);
+                } else if (targetType == ReportTargetTypeEnum.FORUM_POST) {
+                    forumPostAdminService.deletePost(targetId, operatorId, ip, ua);
+                } else if (targetType == ReportTargetTypeEnum.FORUM_REPLY) {
+                    forumReplyAdminService.deleteReply(targetId, operatorId, ip, ua);
                 }
             }
             case "revoke_message" -> {
