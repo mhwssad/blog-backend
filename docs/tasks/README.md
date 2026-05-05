@@ -20,8 +20,8 @@
 | ------------------------------------------------------------------------------------------------ | ------------------------------------- | ----------------------------------------------- | ------ |
 | [01-forum-module-todo.md](01-forum-module-todo.md)                                               | 论坛正式模块                          | P1 联动与通知已完成，测试补强已完成             | P0     |
 | [02-ai-rag-agents-todo.md](02-ai-rag-agents-todo.md)                                               | 知识库 / RAG / agents / 工具调用 / MCP | P0 RAG 主链路已完成，保留外部向量数据库扩展点 | P0     |
-| [03-migration-user-service-todo.md](03-migration-user-service-todo.md)                           | 外部博客迁移与用户自服务              | P1 外部博客迁移主流程已完成                     | P1     |
-| [04-governance-notification-enhancement-todo.md](04-governance-notification-enhancement-todo.md) | 治理、通知和后台运营增强              | P1 运营看板增强已完成                           | P1     |
+| [03-migration-user-service-todo.md](03-migration-user-service-todo.md)                           | 外部博客迁移与用户自服务              | P2 友情链接已完成，用户自服务测试已补齐         | P1     |
+| [04-governance-notification-enhancement-todo.md](04-governance-notification-enhancement-todo.md) | 治理、通知和后台运营增强              | 看板缓存已完成，禁言测试已补齐，全部完成         | P1     |
 | [05-performance-test-quality-todo.md](05-performance-test-quality-todo.md)                       | 性能、测试和代码质量补强              | 待开始                                          | P2     |
 
 ## 3. 推荐执行顺序
@@ -68,3 +68,7 @@
 - AI 私密内容不入库边界已补强：文章仅在公开可见且普通用户可访问时触发知识库同步事件，白名单和登录可见文章不进入知识同步，并已补服务级测试。
 - AI Agent 数据范围校验已补强：Agent 定义创建/更新只接受 `AiDataScopeEnum` 允许的数据范围数组，未知范围、空数组和非 JSON 数组会返回非法参数。
 - 下一步可推进外部向量数据库实现、RAG 更细粒度权限策略，或穿插其他二期任务。
+- 友情链接已完成：新增 `blog_friend_link` 表、后台 CRUD 和公开列表接口，权限码 `content:friend-link:*`，菜单和角色授权已初始化，服务级测试和权限测试已补齐。
+- 用户自服务测试已补齐：修改密码（成功/旧密码错误/用户不存在）、找回密码（发送/静默返回/频控/验证码过期/错误/重置）、用户搜索（命中/无命中）。
+- 看板 Redis 缓存已完成：五类指标按时间范围缓存 60 秒，Redis 异常回源 SQL，导出接口自动复用缓存。
+- 禁言范围测试已补齐：全站/大厅/主题频道/群聊四类范围互不误伤，过期禁言不阻断，共 9 个测试用例。

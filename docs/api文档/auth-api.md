@@ -363,7 +363,149 @@ Authorization: Bearer <accessToken>
 }
 ```
 
-## 4. 后台应用启动流程
+## 4. 个人资料与密码管理
+
+### 4.1 个人资料接口
+
+| 场景 | 方法 | 路径 | 说明 |
+| --- | --- | --- | --- |
+| 查看个人资料 | GET | `/api/user/profile` | 需要登录 |
+| 更新个人资料 | PUT | `/api/user/profile` | 需要登录 |
+| 修改密码 | PUT | `/api/user/profile/password` | 需要登录 |
+
+#### 查看个人资料
+
+- 请求：`GET /api/user/profile`
+- 鉴权：是
+- 响应：`UserProfileVO`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | Long | 用户 ID |
+| `username` | String | 用户名 |
+| `nickname` | String | 昵称 |
+| `avatar` | String | 头像 URL |
+| `bio` | String | 个人简介 |
+| `website` | String | 个人站点 |
+| `gender` | Integer | 性别：`0` 未知，`1` 男，`2` 女，`3` 保密 |
+| `birthday` | LocalDate | 生日 |
+| `email` | String | 邮箱（脱敏） |
+| `phone` | String | 手机号（脱敏） |
+| `userLevel` | Integer | 用户等级 |
+| `experiencePoints` | Integer | 经验值 |
+| `createdAt` | DateTime | 注册时间 |
+
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "id": 1,
+    "username": "zhangsan",
+    "nickname": "张三",
+    "avatar": "https://example.com/avatar/1.jpg",
+    "bio": "全栈开发者，热爱开源",
+    "website": "https://zhangsan.dev",
+    "gender": 1,
+    "birthday": "1995-06-15",
+    "email": "zhang***@example.com",
+    "phone": "138****0001",
+    "userLevel": 2,
+    "experiencePoints": 150,
+    "createdAt": "2025-01-01T10:00:00"
+  }
+}
+```
+
+#### 更新个人资料
+
+- 请求：`PUT /api/user/profile`
+- 鉴权：是
+- 请求体：`UserProfileUpdateRequest`
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `nickname` | String | 否 | 昵称，最长 `50` 字符 |
+| `avatar` | String | 否 | 头像 URL，最长 `500` 字符 |
+| `bio` | String | 否 | 个人简介，最长 `500` 字符 |
+| `website` | String | 否 | 个人站点，需为合法 `http/https` URL，最长 `255` 字符 |
+| `gender` | Integer | 否 | 性别：`0` 未知，`1` 男，`2` 女，`3` 保密 |
+
+- 响应：同查看个人资料 `UserProfileVO`（返回更新后的完整资料）
+- 当前行为补充：
+    - 所有字段均为可选，仅更新传入的字段。
+    - `website` 为空字符串时会清空个人站点。
+
+### 4.2 修改密码
+
+- 请求：`PUT /api/user/profile/password`
+- 鉴权：是
+- 请求体：`UserPasswordChangeRequest`
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `oldPassword` | String | 是 | 原密码 |
+| `newPassword` | String | 是 | 新密码，`8-64` 位，需包含大小写字母和数字 |
+
+- 响应：`data = null`
+- 错误码：
+
+| 错误码 | 说明 |
+| --- | --- |
+| `40130` | 原密码错误 |
+| `40131` | 新密码不能与原密码相同 |
+| `40401` | 用户不存在 |
+
+- 当前行为补充：
+    - 修改密码成功后当前登录态不受影响，如需强制其他设备下线需走后台管理员操作。
+
+### 4.3 找回密码
+
+#### 发送重置验证码
+
+- 请求：`POST /api/auth/password-reset/code`
+- 鉴权：否
+- 请求体：`PasswordResetCodeRequest`
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `email` | String | 是 | 邮箱地址，需为合法邮箱格式 |
+
+- 响应：`data = null`
+- 错误码：
+
+| 错误码 | 说明 |
+| --- | --- |
+| `40115` | 发送过于频繁，请稍后再试 |
+
+- 当前行为补充：
+    - 同一邮箱默认 `60` 秒内只能发送一次。
+    - 验证码默认 `5` 分钟过期。
+
+#### 重置密码
+
+- 请求：`POST /api/auth/password-reset`
+- 鉴权：否
+- 请求体：`PasswordResetRequest`
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `email` | String | 是 | 邮箱地址，需为合法邮箱格式 |
+| `code` | String | 是 | 验证码 |
+| `newPassword` | String | 是 | 新密码，`8-64` 位 |
+
+- 响应：`data = null`
+- 错误码：
+
+| 错误码 | 说明 |
+| --- | --- |
+| `40112` | 邮箱验证码错误 |
+| `40113` | 邮箱验证码已过期 |
+
+## 5. 后台应用启动流程
 
 后台管理台通常要用到下面两组数据：
 
@@ -379,15 +521,68 @@ Authorization: Bearer <accessToken>
 - `keepAlive=1` 可映射前端页面缓存开关。
 - `params` 可直接作为扩展路由元数据使用。
 
-## 5. 公开作者主页
+## 6. 公开用户搜索
 
-### 5.1 页面会用到哪些接口
+### 6.1 搜索用户
+
+- 请求：`GET /api/users/search`
+- 鉴权：否（公开接口，无需登录）
+- 查询参数：`PublicUserSearchQuery`
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `keyword` | String | 搜索关键词，最少 `2` 个字符 |
+| `current` | Long | 页码，默认 `1` |
+| `size` | Long | 每页条数，默认 `10` |
+
+- 响应项：`PublicUserSearchVO`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | Long | 用户 ID |
+| `username` | String | 用户名 |
+| `nickname` | String | 昵称 |
+| `avatar` | String | 头像 URL |
+| `bio` | String | 个人简介 |
+
+- 响应示例：
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 1,
+    "current": 1,
+    "size": 10,
+    "records": [
+      {
+        "id": 1,
+        "username": "zhangsan",
+        "nickname": "张三",
+        "avatar": "https://example.com/avatar/1.jpg",
+        "bio": "全栈开发者，热爱开源"
+      }
+    ]
+  }
+}
+```
+
+- 当前行为补充：
+    - 关键词为空或少于 `2` 个字符时返回空列表。
+    - 搜索范围匹配用户名和昵称。
+    - 仅返回未删除、已启用的用户。
+
+## 7. 公开作者主页
+
+### 7.1 页面会用到哪些接口
 
 | 场景 | 接口 |
 | --- | --- |
 | 公开作者主页摘要 | `GET /api/users/{userId}/author-profile` |
 
-### 5.2 查询公开作者主页摘要
+### 7.2 查询公开作者主页摘要
 
 - 请求：`GET /api/users/{userId}/author-profile`
 - 鉴权：否
@@ -441,9 +636,9 @@ Authorization: Bearer <accessToken>
     - 公开系列数只统计启用且公开可见的系列。
     - 当前阶段先返回身份与计数摘要，不在该接口内直接编排关注关系、作品卡片详情和专栏详情。
 
-## 6. 登录用户作者申请
+## 8. 登录用户作者申请
 
-### 6.1 页面会用到哪些接口
+### 8.1 页面会用到哪些接口
 
 | 场景 | 接口 |
 | --- | --- |

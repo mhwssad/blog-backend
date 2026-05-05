@@ -315,9 +315,15 @@ Authorization: Bearer <accessToken>
 | `resultType` | String | 是 | 处理结果类型：delete_content/revoke_message/mute_user/ban_user/record_only |
 | `punishmentType` | String | 否 | 处罚类型 |
 | `remark` | String | 否 | 备注 |
-| `conversationId` | Long | 否 | 会话ID（举报聊天消息时必填） |
+| `conversationId` | Long | 否 | 会话ID（举报聊天消息时必填；resultType=mute_user 且 scope 为 topic_channel/group 时作为禁言关联会话） |
 | `muteScope` | String | 否 | 禁言范围：global/lobby/topic_channel/group（resultType=mute_user 时使用，默认 global） |
 | `muteUntil` | DateTime | 否 | 禁言截止时间（resultType=mute_user 时使用，默认 1 天，NULL 表示永久） |
+
+**禁言参数说明**：当 `resultType = mute_user` 时，系统会自动调用统一禁言服务创建禁言记录：
+
+- `muteScope` 决定禁言范围：`global`(全站) 阻断所有聊天场景；`lobby` 阻断大厅和全站频道；`topic_channel` / `group` 需配合 `conversationId` 指定目标会话。
+- 不传 `muteScope` 时默认 `global`；不传 `muteUntil` 时默认禁言 1 天。
+- 禁言记录来源标记为 `report`，并关联原举报 ID。
 
 - 响应：空
 
@@ -331,6 +337,15 @@ Authorization: Bearer <accessToken>
   "data": null
 }
 ```
+
+**举报结果通知**：处理（approve）或驳回（reject）举报后，系统会自动向举报人发送站内通知：
+
+- 通知类型：`REPORT_RESULT`
+- 通知标题：处理为"你的举报已处理"，驳回为"你的举报已驳回"
+- 通知内容根据处理结果类型生成，例如"你举报的评论已被删除"、"相关用户已被禁言"等
+- 驳回时会附带处理说明（截取前 100 字符）
+- 通知内容不包含处理人信息（脱敏处理）
+- 通知受用户 `report_result` 通知偏好控制
 
 ### 4.6 驳回举报
 
@@ -424,6 +439,20 @@ Authorization: Bearer <accessToken>
 | `handle` | 处理 |
 | `reject` | 驳回 |
 | `override` | 超管接管 |
+
+### 5.5 举报结果通知类型
+
+| 值 | 说明 |
+| --- | --- |
+| `REPORT_RESULT` | 举报处理结果通知 |
+
+通知内容字段：
+
+| 字段 | 说明 |
+| --- | --- |
+| `reportType` | 举报对象类型 |
+| `reportResult` | 处理结果：`approved` / `rejected` |
+| `handlerRemark` | 处理备注（已脱敏，不暴露处理人信息） |
 
 ## 6. 维护规则
 
