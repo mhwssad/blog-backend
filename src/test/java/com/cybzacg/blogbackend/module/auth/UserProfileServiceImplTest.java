@@ -1,6 +1,7 @@
 package com.cybzacg.blogbackend.module.auth;
 
 import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.account.convert.UserProfileModelConvert;
 import com.cybzacg.blogbackend.module.auth.account.model.user.UserProfileUpdateRequest;
@@ -105,6 +106,43 @@ class UserProfileServiceImplTest {
 
         verify(userProfileModelConvert, never()).updateProfile(any(), any());
         verify(sysUserRepository, never()).updateById(any());
+    }
+
+    @Test
+    void changePasswordShouldSucceedWithCorrectOldPassword() {
+        SysUser user = user();
+        user.setPassword("oldEncoded");
+        when(sysUserRepository.getById(1L)).thenReturn(user);
+        when(passwordEncoder.matches("OldPass123", "oldEncoded")).thenReturn(true);
+        when(passwordEncoder.matches("NewPass456", "oldEncoded")).thenReturn(false);
+        when(passwordEncoder.encode("NewPass456")).thenReturn("newEncoded");
+
+        service.changePassword(1L, "OldPass123", "NewPass456");
+
+        assertEquals("newEncoded", user.getPassword());
+        verify(sysUserRepository).updateById(user);
+    }
+
+    @Test
+    void changePasswordShouldRejectWrongOldPassword() {
+        SysUser user = user();
+        user.setPassword("oldEncoded");
+        when(sysUserRepository.getById(1L)).thenReturn(user);
+        when(passwordEncoder.matches("WrongPass", "oldEncoded")).thenReturn(false);
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> service.changePassword(1L, "WrongPass", "NewPass456"));
+        assertEquals(ResultErrorCode.OLD_PASSWORD_MISMATCH.getCode(), ex.getCode());
+        verify(sysUserRepository, never()).updateById(any());
+    }
+
+    @Test
+    void changePasswordShouldRejectNonexistentUser() {
+        when(sysUserRepository.getById(999L)).thenReturn(null);
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> service.changePassword(999L, "OldPass123", "NewPass456"));
+        assertEquals(ResultErrorCode.USER_NOT_FOUND.getCode(), ex.getCode());
     }
 
     private SysUser user() {
