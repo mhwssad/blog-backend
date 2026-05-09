@@ -8,7 +8,10 @@ import com.cybzacg.blogbackend.module.forum.service.UserForumService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/user/forum")
 @Tag(name = "用户论坛接口")
 @RequiredArgsConstructor
+@Validated
 public class UserForumController {
     private final UserForumService userForumService;
 
@@ -29,7 +33,7 @@ public class UserForumController {
 
     @GetMapping("/posts/{id}")
     @Operation(summary = "查询我的论坛帖子详情")
-    public Result<UserForumPostDetailVO> getMyPost(@PathVariable Long id) {
+    public Result<UserForumPostDetailVO> getMyPost(@PathVariable @NotNull @Positive Long id) {
         return Result.success(userForumService.getMyPost(id));
     }
 
@@ -41,21 +45,21 @@ public class UserForumController {
 
     @PutMapping("/posts/{id}")
     @Operation(summary = "编辑我的论坛帖子")
-    public Result<UserForumPostDetailVO> updatePost(@PathVariable Long id,
+    public Result<UserForumPostDetailVO> updatePost(@PathVariable @NotNull @Positive Long id,
                                                     @Valid @RequestBody ForumPostSaveRequest request) {
         return Result.success(userForumService.updatePost(id, request));
     }
 
     @DeleteMapping("/posts/{id}")
     @Operation(summary = "删除我的论坛帖子")
-    public Result<Void> deletePost(@PathVariable Long id) {
+    public Result<Void> deletePost(@PathVariable @NotNull @Positive Long id) {
         userForumService.deletePost(id);
         return Result.success();
     }
 
     @PostMapping("/posts/{postId}/replies")
     @Operation(summary = "发表论坛回复")
-    public Result<Void> createReply(@PathVariable Long postId,
+    public Result<Void> createReply(@PathVariable @NotNull @Positive Long postId,
                                     @Valid @RequestBody ForumReplySaveRequest request) {
         userForumService.createReply(postId, request);
         return Result.success();
@@ -63,7 +67,7 @@ public class UserForumController {
 
     @PutMapping("/replies/{replyId}")
     @Operation(summary = "编辑我的论坛回复")
-    public Result<Void> updateReply(@PathVariable Long replyId,
+    public Result<Void> updateReply(@PathVariable @NotNull @Positive Long replyId,
                                     @Valid @RequestBody ForumReplySaveRequest request) {
         userForumService.updateReply(replyId, request);
         return Result.success();
@@ -71,28 +75,28 @@ public class UserForumController {
 
     @DeleteMapping("/replies/{replyId}")
     @Operation(summary = "删除我的论坛回复")
-    public Result<Void> deleteReply(@PathVariable Long replyId) {
+    public Result<Void> deleteReply(@PathVariable @NotNull @Positive Long replyId) {
         userForumService.deleteReply(replyId);
         return Result.success();
     }
 
     @PostMapping("/posts/{postId}/likes")
     @Operation(summary = "点赞论坛帖子")
-    public Result<Void> likePost(@PathVariable Long postId) {
+    public Result<Void> likePost(@PathVariable @NotNull @Positive Long postId) {
         userForumService.likePost(postId);
         return Result.success();
     }
 
     @DeleteMapping("/posts/{postId}/likes")
     @Operation(summary = "取消点赞论坛帖子")
-    public Result<Void> unlikePost(@PathVariable Long postId) {
+    public Result<Void> unlikePost(@PathVariable @NotNull @Positive Long postId) {
         userForumService.unlikePost(postId);
         return Result.success();
     }
 
     @PostMapping("/posts/{postId}/collections")
     @Operation(summary = "收藏论坛帖子")
-    public Result<Void> collectPost(@PathVariable Long postId,
+    public Result<Void> collectPost(@PathVariable @NotNull @Positive Long postId,
                                     @RequestBody(required = false) ForumPostCollectRequest request) {
         userForumService.collectPost(postId, request);
         return Result.success();
@@ -100,14 +104,14 @@ public class UserForumController {
 
     @DeleteMapping("/posts/{postId}/collections")
     @Operation(summary = "取消收藏论坛帖子")
-    public Result<Void> uncollectPost(@PathVariable Long postId) {
+    public Result<Void> uncollectPost(@PathVariable @NotNull @Positive Long postId) {
         userForumService.uncollectPost(postId);
         return Result.success();
     }
 
     @PostMapping("/posts/{postId}/channel-share")
     @Operation(summary = "分享论坛帖子到频道")
-    public Result<ForumPostChannelLinkVO> sharePostToChannel(@PathVariable Long postId,
+    public Result<ForumPostChannelLinkVO> sharePostToChannel(@PathVariable @NotNull @Positive Long postId,
                                                              @Valid @RequestBody ForumPostChannelShareRequest request) {
         return Result.success(userForumService.sharePostToChannel(postId, request.getConversationId()));
     }

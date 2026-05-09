@@ -10,8 +10,11 @@ import com.cybzacg.blogbackend.utils.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/sys/forum/posts")
 @Tag(name = "后台论坛帖子管理")
 @RequiredArgsConstructor
+@Validated
 public class ForumPostAdminController {
     private final ForumPostAdminService forumPostAdminService;
 
@@ -34,14 +38,14 @@ public class ForumPostAdminController {
     @GetMapping("/{id}")
     @Operation(summary = "查询论坛帖子详情")
     @PreAuthorize("@permission.hasPermission('content:forum:query')")
-    public Result<ForumPostAdminDetailVO> getPost(@PathVariable Long id) {
+    public Result<ForumPostAdminDetailVO> getPost(@PathVariable @NotNull @Positive Long id) {
         return Result.success(forumPostAdminService.getPost(id));
     }
 
     @PutMapping("/{id}/hide")
     @Operation(summary = "隐藏论坛帖子")
     @PreAuthorize("@permission.hasPermission('content:forum:update')")
-    public Result<Void> hidePost(@PathVariable Long id, HttpServletRequest httpRequest) {
+    public Result<Void> hidePost(@PathVariable @NotNull @Positive Long id, HttpServletRequest httpRequest) {
         forumPostAdminService.hidePost(id, operatorId(httpRequest), ip(httpRequest), ua(httpRequest));
         return Result.success();
     }
@@ -49,7 +53,7 @@ public class ForumPostAdminController {
     @PutMapping("/{id}/restore")
     @Operation(summary = "恢复论坛帖子")
     @PreAuthorize("@permission.hasPermission('content:forum:update')")
-    public Result<Void> restorePost(@PathVariable Long id, HttpServletRequest httpRequest) {
+    public Result<Void> restorePost(@PathVariable @NotNull @Positive Long id, HttpServletRequest httpRequest) {
         forumPostAdminService.restorePost(id, operatorId(httpRequest), ip(httpRequest), ua(httpRequest));
         return Result.success();
     }
@@ -57,7 +61,7 @@ public class ForumPostAdminController {
     @DeleteMapping("/{id}")
     @Operation(summary = "删除论坛帖子")
     @PreAuthorize("@permission.hasPermission('content:forum:delete')")
-    public Result<Void> deletePost(@PathVariable Long id, HttpServletRequest httpRequest) {
+    public Result<Void> deletePost(@PathVariable @NotNull @Positive Long id, HttpServletRequest httpRequest) {
         forumPostAdminService.deletePost(id, operatorId(httpRequest), ip(httpRequest), ua(httpRequest));
         return Result.success();
     }
@@ -65,7 +69,7 @@ public class ForumPostAdminController {
     @PutMapping("/{id}/top")
     @Operation(summary = "切换论坛帖子置顶")
     @PreAuthorize("@permission.hasPermission('content:forum:update')")
-    public Result<Void> toggleTop(@PathVariable Long id,
+    public Result<Void> toggleTop(@PathVariable @NotNull @Positive Long id,
                                   @RequestParam boolean enabled,
                                   HttpServletRequest httpRequest) {
         forumPostAdminService.toggleTop(id, enabled, operatorId(httpRequest), ip(httpRequest), ua(httpRequest));
@@ -75,7 +79,7 @@ public class ForumPostAdminController {
     @PutMapping("/{id}/essence")
     @Operation(summary = "切换论坛帖子精华")
     @PreAuthorize("@permission.hasPermission('content:forum:update')")
-    public Result<Void> toggleEssence(@PathVariable Long id,
+    public Result<Void> toggleEssence(@PathVariable @NotNull @Positive Long id,
                                       @RequestParam boolean enabled,
                                       HttpServletRequest httpRequest) {
         forumPostAdminService.toggleEssence(id, enabled, operatorId(httpRequest), ip(httpRequest), ua(httpRequest));

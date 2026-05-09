@@ -40,8 +40,6 @@ import java.util.Objects;
 public class UserFollowServiceImpl implements UserFollowService {
     private static final int FOLLOW_STATUS_ACTIVE = 1;
     private static final int FOLLOW_STATUS_INACTIVE = 0;
-    private static final int SPECIAL_FOLLOW_ENABLED = 1;
-    private static final int SPECIAL_FOLLOW_DISABLED = 0;
     private static final long DEFAULT_PAGE_SIZE = 10L;
     private static final long MAX_PAGE_SIZE = 100L;
     private static final Duration FOLLOW_COUNT_CACHE_TTL = Duration.ofMinutes(5);
@@ -174,7 +172,6 @@ public class UserFollowServiceImpl implements UserFollowService {
     @Transactional(rollbackFor = Exception.class)
     public void updateSpecialFollow(Long targetUserId, UserFollowSpecialUpdateRequest request) {
         Long userId = SecurityUtils.requireUserId();
-        validateSpecialFollowValue(request);
         SysUserFollow relation = requireActiveFollowRelation(userId, targetUserId);
         followModelConvert.updateSpecialFollow(request, relation);
         sysUserFollowRepository.updateById(relation);
@@ -194,6 +191,7 @@ public class UserFollowServiceImpl implements UserFollowService {
 
     /**
      * 创建新关注关系，并在并发插入撞上唯一键时回退到“读取后恢复”的收口路径。
+     * @return true 表示成功创建或恢复；false 表示已是有效关注关系无需处理
      */
     private boolean createFollowRelation(Long userId, Long targetUserId, LocalDateTime now) {
         SysUserFollow created = followModelConvert.toNewFollow(userId, targetUserId, now);
@@ -224,6 +222,9 @@ public class UserFollowServiceImpl implements UserFollowService {
         sysUserFollowRepository.updateById(relation);
     }
 
+    /**
+     * 查询活跃的关注关系，若不存在或已取关则抛出业务异常。
+     */
     private SysUserFollow requireActiveFollowRelation(Long userId, Long targetUserId) {
         requireActiveTargetUser(userId, targetUserId);
         SysUserFollow relation = getFollowRelation(userId, targetUserId);
@@ -235,6 +236,9 @@ public class UserFollowServiceImpl implements UserFollowService {
         return relation;
     }
 
+    /**
+     * 查询关注关系，若不存在则返回 null。
+     */
     private SysUserFollow getFollowRelation(Long userId, Long targetUserId) {
         return sysUserFollowRepository.findByFollowerAndFollowing(userId, targetUserId);
     }
@@ -243,7 +247,6 @@ public class UserFollowServiceImpl implements UserFollowService {
      * 校验目标用户是否存在、可用且不是自己，避免非法关注关系写入。
      */
     private void requireActiveTargetUser(Long userId, Long targetUserId) {
-        ExceptionThrowerCore.throwBusinessIfNull(targetUserId, ResultErrorCode.USER_NOT_FOUND, "用户不存在");
         ExceptionThrowerCore.throwBusinessIf(Objects.equals(userId, targetUserId), ResultErrorCode.ILLEGAL_ARGUMENT, "不能关注自己");
         SysUser targetUser = sysUserRepository.getById(targetUserId);
         ExceptionThrowerCore.throwBusinessIf(
@@ -258,21 +261,16 @@ public class UserFollowServiceImpl implements UserFollowService {
         );
     }
 
-    private void validateSpecialFollowValue(UserFollowSpecialUpdateRequest request) {
-        ExceptionThrowerCore.throwBusinessIfNull(request, ResultErrorCode.ILLEGAL_ARGUMENT, "更新参数不能为空");
-        Integer specialFollow = request.getSpecialFollow();
-        ExceptionThrowerCore.throwBusinessIf(
-                !Objects.equals(specialFollow, SPECIAL_FOLLOW_DISABLED)
-                        && !Objects.equals(specialFollow, SPECIAL_FOLLOW_ENABLED),
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "特别关注状态不合法"
-        );
-    }
-
+    /**
+     * 判断关注关系是否处于活跃状态。
+     */
     private boolean isActiveRelation(SysUserFollow relation) {
         return Objects.equals(relation.getFollowStatus(), FOLLOW_STATUS_ACTIVE);
     }
 
+    /**
+     * 将数据库记录映射为 VO 对象列表。
+     */
     private List<UserFollowUserVO> mapUserRecords(List<FollowRelationUserItem> items) {
         if (items == null || items.isEmpty()) {
             return List.of();
@@ -280,10 +278,16 @@ public class UserFollowServiceImpl implements UserFollowService {
         return items.stream().map(followModelConvert::toUserFollowUserVO).toList();
     }
 
+    /**
+     * 构建空的分页结果。
+     */
     private PageResult<UserFollowUserVO> emptyPageResult(long current, long size) {
         return PageResult.empty(current, size);
     }
 
+    /**
+     * 从 Redis 读取关注计数缓存，读取失败时返回 null 并触发日志警告。
+     */
     private UserFollowCountVO readFollowCountCache(String cacheKey) {
         try {
             return redisOperator.get(cacheKey, UserFollowCountVO.class);
@@ -293,6 +297,9 @@ public class UserFollowServiceImpl implements UserFollowService {
         }
     }
 
+    /**
+     * 将关注计数结果写入 Redis 缓存，写入失败时仅记录日志不阻断业务。
+     */
     private void writeFollowCountCache(String cacheKey, UserFollowCountVO result) {
         try {
             redisOperator.set(cacheKey, result, FOLLOW_COUNT_CACHE_TTL);
@@ -301,11 +308,17 @@ public class UserFollowServiceImpl implements UserFollowService {
         }
     }
 
+    /**
+     * 清除关注计数缓存，同时清理关注者和被关注者两侧的缓存。
+     */
     private void evictFollowCountCache(Long followerId, Long followingId) {
         evictFollowCountCache(followerId);
         evictFollowCountCache(followingId);
     }
 
+    /**
+     * 清除指定用户的关注计数缓存，缓存清除失败时记录日志但不阻断业务。
+     */
     private void evictFollowCountCache(Long userId) {
         if (userId == null) {
             return;
@@ -317,6 +330,9 @@ public class UserFollowServiceImpl implements UserFollowService {
         }
     }
 
+    /**
+     * 构建用户关注计数的 Redis 缓存 Key。
+     */
     private String followCountCacheKey(Long userId) {
         return RedisKeyUtils.build(RedisConstants.FOLLOW_COUNT_CACHE_PREFIX, userId);
     }

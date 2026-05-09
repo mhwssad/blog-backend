@@ -9,8 +9,11 @@ import com.cybzacg.blogbackend.utils.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/sys/forum/replies")
 @Tag(name = "后台论坛回复管理")
 @RequiredArgsConstructor
+@Validated
 public class ForumReplyAdminController {
     private final ForumReplyAdminService forumReplyAdminService;
 
@@ -33,7 +37,7 @@ public class ForumReplyAdminController {
     @PutMapping("/{id}/hide")
     @Operation(summary = "隐藏论坛回复")
     @PreAuthorize("@permission.hasPermission('content:forum:update')")
-    public Result<Void> hideReply(@PathVariable Long id, HttpServletRequest httpRequest) {
+    public Result<Void> hideReply(@PathVariable @NotNull @Positive Long id, HttpServletRequest httpRequest) {
         forumReplyAdminService.hideReply(id, operatorId(httpRequest), ip(httpRequest), ua(httpRequest));
         return Result.success();
     }
@@ -41,7 +45,7 @@ public class ForumReplyAdminController {
     @PutMapping("/{id}/restore")
     @Operation(summary = "恢复论坛回复")
     @PreAuthorize("@permission.hasPermission('content:forum:update')")
-    public Result<Void> restoreReply(@PathVariable Long id, HttpServletRequest httpRequest) {
+    public Result<Void> restoreReply(@PathVariable @NotNull @Positive Long id, HttpServletRequest httpRequest) {
         forumReplyAdminService.restoreReply(id, operatorId(httpRequest), ip(httpRequest), ua(httpRequest));
         return Result.success();
     }
@@ -49,7 +53,7 @@ public class ForumReplyAdminController {
     @DeleteMapping("/{id}")
     @Operation(summary = "删除论坛回复")
     @PreAuthorize("@permission.hasPermission('content:forum:delete')")
-    public Result<Void> deleteReply(@PathVariable Long id, HttpServletRequest httpRequest) {
+    public Result<Void> deleteReply(@PathVariable @NotNull @Positive Long id, HttpServletRequest httpRequest) {
         forumReplyAdminService.deleteReply(id, operatorId(httpRequest), ip(httpRequest), ua(httpRequest));
         return Result.success();
     }

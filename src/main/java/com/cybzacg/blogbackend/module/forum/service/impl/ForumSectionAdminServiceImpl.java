@@ -106,10 +106,6 @@ public class ForumSectionAdminServiceImpl implements ForumSectionAdminService {
         safeQuery.setCurrent(PaginationUtils.normalizeCurrent(safeQuery.getCurrent()));
         safeQuery.setSize(PaginationUtils.normalizeSize(safeQuery.getSize(), 10L, 100L));
         safeQuery.setKeyword(StrUtils.trimToNull(safeQuery.getKeyword()));
-        ExceptionThrowerCore.throwBusinessIf(safeQuery.getStatus() != null && !isValidStatus(safeQuery.getStatus()),
-                ResultErrorCode.ILLEGAL_ARGUMENT, "版块状态非法");
-        ExceptionThrowerCore.throwBusinessIf(safeQuery.getVisibilityScope() != null && !isValidVisibilityScope(safeQuery.getVisibilityScope()),
-                ResultErrorCode.ILLEGAL_ARGUMENT, "版块可见范围非法");
         return safeQuery;
     }
 
@@ -117,10 +113,6 @@ public class ForumSectionAdminServiceImpl implements ForumSectionAdminService {
         String name = StrUtils.trim(request.getName());
         boolean duplicated = forumSectionRepository.existsByNameExcludingId(name, currentId);
         ExceptionThrowerCore.throwBusinessIf(duplicated, ResultErrorCode.DATA_ALREADY_EXISTS, "版块名称已存在");
-        ExceptionThrowerCore.throwBusinessIf(request.getVisibilityScope() != null && !isValidVisibilityScope(request.getVisibilityScope()),
-                ResultErrorCode.ILLEGAL_ARGUMENT, "版块可见范围非法");
-        ExceptionThrowerCore.throwBusinessIf(request.getStatus() != null && !isValidStatus(request.getStatus()),
-                ResultErrorCode.ILLEGAL_ARGUMENT, "版块状态非法");
     }
 
     private void applyDefaults(ForumSection section) {
@@ -130,11 +122,6 @@ public class ForumSectionAdminServiceImpl implements ForumSectionAdminService {
                 : section.getVisibilityScope());
         section.setPostLevelLimit(section.getPostLevelLimit() == null ? 1 : section.getPostLevelLimit());
         section.setStatus(section.getStatus() == null ? STATUS_ENABLED : section.getStatus());
-    }
-
-    private boolean isValidVisibilityScope(Integer visibilityScope) {
-        return Objects.equals(visibilityScope, ForumVisibilityScopeEnum.PUBLIC.getValue())
-                || Objects.equals(visibilityScope, ForumVisibilityScopeEnum.LOGIN_ONLY.getValue());
     }
 
     private boolean isValidStatus(Integer status) {

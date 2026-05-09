@@ -13,9 +13,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -25,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/sys/reports")
 @Tag(name = "后台举报管理")
 @RequiredArgsConstructor
+@Validated
 public class ReportAdminController {
 
     private final ReportAdminService reportAdminService;
@@ -60,7 +64,7 @@ public class ReportAdminController {
         description = "查询单条举报记录的完整详情，包含处理人、被举报对象信息。"
     )
     @PreAuthorize("@permission.hasPermission('sys:report:query')")
-    public Result<ReportAdminVO> getReportDetail(@PathVariable Long id) {
+    public Result<ReportAdminVO> getReportDetail(@PathVariable @NotNull @Positive Long id) {
         return Result.success(reportAdminService.getReportDetail(id));
     }
 
@@ -78,7 +82,7 @@ public class ReportAdminController {
             "仅在举报状态为待处理（PENDING）时可操作。"
     )
     @PreAuthorize("@permission.hasPermission('sys:report:handle')")
-    public Result<Void> claimReport(@PathVariable Long id) {
+    public Result<Void> claimReport(@PathVariable @NotNull @Positive Long id) {
         Long operatorId = SecurityUtils.requireUserId();
         reportAdminService.claimReport(id, operatorId);
         return Result.success();
@@ -100,7 +104,7 @@ public class ReportAdminController {
     )
     @PreAuthorize("@permission.hasPermission('sys:report:handle')")
     public Result<Void> handleReport(
-        @PathVariable Long id,
+        @PathVariable @NotNull @Positive Long id,
         @Valid @RequestBody ReportHandleRequest handleRequest
     ) {
         Long operatorId = SecurityUtils.requireUserId();
@@ -124,8 +128,8 @@ public class ReportAdminController {
     )
     @PreAuthorize("@permission.hasPermission('sys:report:handle')")
     public Result<Void> rejectReport(
-        @PathVariable Long id,
-        @RequestBody ReportRejectRequest rejectRequest
+        @PathVariable @NotNull @Positive Long id,
+        @Valid @RequestBody ReportRejectRequest rejectRequest
     ) {
         Long operatorId = SecurityUtils.requireUserId();
         String ip = request.getRemoteAddr();
@@ -154,7 +158,7 @@ public class ReportAdminController {
             "已处理或已驳回的举报不可再接管。"
     )
     @PreAuthorize("@permission.hasPermission('sys:report:handle')")
-    public Result<Void> overrideClaim(@PathVariable Long id) {
+    public Result<Void> overrideClaim(@PathVariable @NotNull @Positive Long id) {
         Long operatorId = SecurityUtils.requireUserId();
         String ip = request.getRemoteAddr();
         String ua = request.getHeader("User-Agent");
@@ -175,7 +179,7 @@ public class ReportAdminController {
     )
     @PreAuthorize("@permission.hasPermission('sys:report:query')")
     public Result<List<ReportHandleLogVO>> listHandleLogs(
-        @PathVariable Long id
+        @PathVariable @NotNull @Positive Long id
     ) {
         return Result.success(reportAdminService.listHandleLogs(id));
     }

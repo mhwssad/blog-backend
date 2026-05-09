@@ -1,9 +1,7 @@
 package com.cybzacg.blogbackend.module.forum.model.user;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 
 @Data
@@ -21,9 +19,13 @@ public class ForumPostSaveRequest {
     @Schema(description = "内容")
     private String content;
 
+    @Min(value = 0, message = "帖子状态不合法")
+    @Max(value = 1, message = "帖子状态不合法")
     @Schema(description = "状态：0-草稿，1-已发布")
     private Integer status;
 
+    @Min(value = 0, message = "可见范围不合法")
+    @Max(value = 1, message = "可见范围不合法")
     @Schema(description = "可见范围：0-公开，1-登录可见")
     private Integer visibilityScope;
 }

@@ -9,7 +9,11 @@ import com.cybzacg.blogbackend.utils.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -19,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/user/reports")
 @Tag(name = "用户举报")
 @RequiredArgsConstructor
+@Validated
 public class UserReportController {
 
     private final ReportService reportService;
@@ -36,8 +41,8 @@ public class UserReportController {
     @Operation(summary = "查询我的举报记录")
     public Result<PageResult<ReportVO>> listMyReports(
         @RequestParam(required = false) String targetType,
-        @RequestParam(defaultValue = "1") Long current,
-        @RequestParam(defaultValue = "10") Long size
+        @RequestParam(defaultValue = "1") @NotNull @Min(1) Long current,
+        @RequestParam(defaultValue = "10") @NotNull @Min(1) Long size
     ) {
         Long userId = SecurityUtils.requireUserId();
         return Result.success(
@@ -47,7 +52,7 @@ public class UserReportController {
 
     @GetMapping("/{id}")
     @Operation(summary = "查询举报详情")
-    public Result<ReportVO> getMyReport(@PathVariable Long id) {
+    public Result<ReportVO> getMyReport(@PathVariable @NotNull @Positive Long id) {
         Long userId = SecurityUtils.requireUserId();
         return Result.success(reportService.getMyReport(userId, id));
     }

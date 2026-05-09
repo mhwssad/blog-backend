@@ -41,7 +41,7 @@ public class PublicFollowServiceImpl implements PublicFollowService {
         long size = PaginationUtils.normalizeSize(query == null ? null : query.getSize(), DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
         long total = CollectionUtils.defaultLong(sysUserFollowRepository.countPublicFollowPage(userId));
         if (total == 0L) {
-            return emptyPage(current, size);
+            return PageResult.empty(current, size);
         }
         long offset = (current - 1) * size;
         List<PublicFollowUserVO> records = sysUserFollowRepository.selectPublicFollowPage(userId, offset, size)
@@ -61,7 +61,7 @@ public class PublicFollowServiceImpl implements PublicFollowService {
         long size = PaginationUtils.normalizeSize(query == null ? null : query.getSize(), DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
         long total = CollectionUtils.defaultLong(sysUserFollowRepository.countPublicFanPage(userId));
         if (total == 0L) {
-            return emptyPage(current, size);
+            return PageResult.empty(current, size);
         }
         long offset = (current - 1) * size;
         List<PublicFollowUserVO> records = sysUserFollowRepository.selectPublicFanPage(userId, offset, size)
@@ -72,7 +72,6 @@ public class PublicFollowServiceImpl implements PublicFollowService {
     }
 
     private void requireActiveUser(Long userId) {
-        ExceptionThrowerCore.throwBusinessIfNull(userId, ResultErrorCode.USER_NOT_FOUND, "用户不存在");
         SysUser user = sysUserRepository.getById(userId);
         ExceptionThrowerCore.throwBusinessIf(
                 user == null || !Objects.equals(user.getDeletedFlag(), 0) || !Objects.equals(user.getStatus(), 1),
@@ -80,9 +79,4 @@ public class PublicFollowServiceImpl implements PublicFollowService {
                 "用户不存在"
         );
     }
-
-    private PageResult<PublicFollowUserVO> emptyPage(long current, long size) {
-        return PageResult.empty(current, size);
-    }
-
 }

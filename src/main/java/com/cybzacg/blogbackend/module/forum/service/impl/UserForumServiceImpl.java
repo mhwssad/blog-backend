@@ -377,23 +377,11 @@ public class UserForumServiceImpl implements UserForumService {
     }
 
     private Integer normalizeSaveStatus(Integer status) {
-        if (status == null) {
-            return ForumPostStatusEnum.PUBLISHED.getValue();
-        }
-        ExceptionThrowerCore.throwBusinessIf(!Objects.equals(status, ForumPostStatusEnum.DRAFT.getValue())
-                        && !Objects.equals(status, ForumPostStatusEnum.PUBLISHED.getValue()),
-                ResultErrorCode.ILLEGAL_ARGUMENT, "用户侧仅支持保存草稿或发布帖子");
-        return status;
+        return status == null ? ForumPostStatusEnum.PUBLISHED.getValue() : status;
     }
 
     private Integer normalizeVisibilityScope(Integer visibilityScope) {
-        if (visibilityScope == null) {
-            return ForumVisibilityScopeEnum.PUBLIC.getValue();
-        }
-        ExceptionThrowerCore.throwBusinessIf(!Objects.equals(visibilityScope, ForumVisibilityScopeEnum.PUBLIC.getValue())
-                        && !Objects.equals(visibilityScope, ForumVisibilityScopeEnum.LOGIN_ONLY.getValue()),
-                ResultErrorCode.ILLEGAL_ARGUMENT, "帖子可见范围非法");
-        return visibilityScope;
+        return visibilityScope == null ? ForumVisibilityScopeEnum.PUBLIC.getValue() : visibilityScope;
     }
 
     private SysCollectionFolder getOrCreateDefaultForumFolder(Long userId) {
