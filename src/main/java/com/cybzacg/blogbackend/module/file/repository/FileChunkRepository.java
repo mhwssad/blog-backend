@@ -12,7 +12,7 @@ public interface FileChunkRepository extends IService<FileChunk> {
      *
      * @param uploadTaskId 上传任务 ID
      * @param chunkNumber  分片序号
-     * @return 分片记录
+     * @return 分片记录，不存在则返回 null
      */
     FileChunk findByTaskIdAndChunkNumber(Long uploadTaskId, Integer chunkNumber);
 
@@ -20,7 +20,7 @@ public interface FileChunkRepository extends IService<FileChunk> {
      * 统计任务已完成分片数。
      *
      * @param uploadTaskId    上传任务 ID
-     * @param completedStatus 完成状态值
+     * @param completedStatus 已完成状态值
      * @return 已完成分片数
      */
     long countByTaskIdAndStatus(Long uploadTaskId, Integer completedStatus);

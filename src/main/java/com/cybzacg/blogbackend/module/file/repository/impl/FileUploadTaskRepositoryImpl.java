@@ -35,11 +35,11 @@ public class FileUploadTaskRepositoryImpl extends ServiceImpl<FileUploadTaskMapp
     }
 
     /**
-     * 用户分页查询自己的上传任务列表，支持按任务状态、是否秒传、是否分片上传过滤。
+     * 用户分页查询上传任务，支持按任务状态、秒传标识和分片标识过滤。
      *
-     * @param userId 用户ID
+     * @param userId 用户 ID
      * @param query  分页查询条件
-     * @return 符合条件的上传任务分页结果，按创建时间和ID倒序排列
+     * @return 上传任务分页结果，按创建时间和 ID 倒序排列
      */
     @Override
     public Page<FileUploadTask> pageByUserAndStatus(Long userId, UserFileTaskPageQuery query) {
@@ -53,10 +53,10 @@ public class FileUploadTaskRepositoryImpl extends ServiceImpl<FileUploadTaskMapp
     }
 
     /**
-     * 管理员分页查询上传任务列表，支持按上传用户、任务状态、秒传标识和分片标识过滤。
+     * 管理员分页查询上传任务，支持按上传用户、任务状态、秒传标识和分片标识过滤。
      *
      * @param query 分页查询条件
-     * @return 符合条件的上传任务分页结果，按创建时间和ID倒序排列
+     * @return 上传任务分页结果，按创建时间和 ID 倒序排列
      */
     @Override
     public Page<FileUploadTask> pageAdminTasks(FileTaskPageQuery query) {
@@ -70,13 +70,12 @@ public class FileUploadTaskRepositoryImpl extends ServiceImpl<FileUploadTaskMapp
     }
 
     /**
-     * 查询已过期且处于指定状态的上传任务，用于定时清理过期任务。
-     * 结果按过期时间和ID升序排列，优先清理最早过期的任务。
+     * 查询过期上传任务，用于定时清理。结果按过期时间和 ID 升序排列，优先清理最早过期的任务。
      *
      * @param expireTime 过期时间阈值
      * @param statuses   目标状态集合
      * @param limit      最大返回条数
-     * @return 符合条件的过期上传任务列表
+     * @return 符合条件的过期任务列表
      */
     @Override
     public List<FileUploadTask> findExpiredTasks(LocalDateTime expireTime, List<Integer> statuses, int limit) {
@@ -89,11 +88,11 @@ public class FileUploadTaskRepositoryImpl extends ServiceImpl<FileUploadTaskMapp
     }
 
     /**
-     * 查询指定文件ID对应的最近 N 条上传任务记录。
+     * 查询文件最近关联的上传任务。
      *
-     * @param fileId 文件ID
+     * @param fileId 文件 ID
      * @param limit  最大返回条数
-     * @return 最近的上传任务列表，按创建时间和ID倒序排列
+     * @return 最近的上传任务列表，按创建时间和 ID 倒序排列
      */
     @Override
     public List<FileUploadTask> listRecentByFileId(Long fileId, int limit) {
@@ -105,10 +104,10 @@ public class FileUploadTaskRepositoryImpl extends ServiceImpl<FileUploadTaskMapp
     }
 
     /**
-     * 查询指定文件ID对应的所有上传任务记录。
+     * 查询文件关联的所有上传任务。
      *
-     * @param fileId 文件ID
-     * @return 该文件的所有上传任务记录
+     * @param fileId 文件 ID
+     * @return 该文件的所有上传任务列表
      */
     @Override
     public List<FileUploadTask> listByFileId(Long fileId) {
