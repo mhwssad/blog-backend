@@ -1,6 +1,7 @@
 USE blog_backend;
 
--- 系统管理菜单初始化脚本 (ID 范围: 1000-1600)
+-- 系统与运营菜单初始化脚本 (ID 范围: 1000-1699)
+-- 包含：系统管理、通知管理
 -- 前置依赖：无（菜单数据独立）
 
 START TRANSACTION;
@@ -32,27 +33,22 @@ VALUES (1100, 1000, '0,1000', '用户管理', 'M', 'SysUser', '/admin/users', 'a
        (1105, 1100, '0,1000,1100', '重置密码', 'B', NULL, NULL, NULL, 'sys:user:reset-password', 0, 0, 1, 5, NULL, NULL,
         NOW(), NOW(), NULL),
        (1106, 1100, '0,1000,1100', '分配角色', 'B', NULL, NULL, NULL, 'sys:user:assign-role', 0, 0, 1, 6, NULL, NULL,
+        NOW(), NOW(), NULL),
+       (1107, 1100, '0,1000,1100', '封禁用户', 'B', NULL, NULL, NULL, 'sys:user:ban', 0, 0, 1, 7, NULL, NULL,
+        NOW(), NOW(), NULL),
+       (1108, 1100, '0,1000,1100', '解除封禁', 'B', NULL, NULL, NULL, 'sys:user:unban', 0, 0, 1, 8, NULL, NULL,
+        NOW(), NOW(), NULL),
+       (1109, 1100, '0,1000,1100', '调整等级', 'B', NULL, NULL, NULL, 'sys:user:adjust-level', 0, 0, 1, 9, NULL, NULL,
+        NOW(), NOW(), NULL),
+       (1110, 1100, '0,1000,1100', '调整经验', 'B', NULL, NULL, NULL, 'sys:user:adjust-experience', 0, 0, 1, 10, NULL, NULL,
         NOW(), NOW(), NULL);
-
--- 作者申请管理
-INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
-                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
-                        `update_time`, `params`)
-VALUES (1110, 1000, '0,1000', '作者申请', 'M', 'SysAuthorApplication', '/admin/author-applications',
-        'admin/author/AuthorApplications', NULL, 0, 1, 1, 2, 'document-checked', NULL, NOW(), NOW(), NULL),
-       (1111, 1110, '0,1000,1110', '作者申请查询', 'B', NULL, NULL, NULL, 'sys:author-application:query', 0, 0, 1, 1,
-        NULL, NULL, NOW(), NOW(), NULL),
-       (1112, 1110, '0,1000,1110', '作者申请审核', 'B', NULL, NULL, NULL, 'sys:author-application:review', 0, 0, 1, 2,
-        NULL, NULL, NOW(), NOW(), NULL),
-       (1113, 1110, '0,1000,1110', '作者状态修正', 'B', NULL, NULL, NULL, 'sys:author-application:repair', 0, 0, 1, 3,
-        NULL, NULL, NOW(), NOW(), NULL);
 
 -- 经验体系管理
 INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
                         `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
                         `update_time`, `params`)
-VALUES (1140, 1000, '0,1000', '经验管理', 'M', 'SysExperience', '/admin/experience', 'admin/user/UserLevels', NULL, 0, 1, 1, 5, 'star',
-        NULL, NOW(), NOW(), NULL),
+VALUES (1140, 1000, '0,1000', '经验管理', 'M', 'SysExperience', '/admin/experience', 'admin/user-level/UserLevels', NULL, 0,
+        1, 1, 2, 'star', NULL, NOW(), NOW(), NULL),
        (1141, 1140, '0,1000,1140', '经验查询', 'B', NULL, NULL, NULL, 'sys:experience:query', 0, 0, 1, 1, NULL, NULL, NOW(),
         NOW(), NULL),
        (1142, 1140, '0,1000,1140', '等级调整', 'B', NULL, NULL, NULL, 'sys:experience:adjust', 0, 0, 1, 2, NULL, NULL, NOW(),
@@ -81,7 +77,7 @@ VALUES (1200, 1000, '0,1000', '角色管理', 'M', 'SysRole', '/admin/roles', 'a
 INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
                         `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
                         `update_time`, `params`)
-VALUES (1300, 1000, '0,1000', '菜单管理', 'M', 'SysMenu', '/admin/menus', 'admin/menu/Menus', NULL, 0, 1, 1, 3, 'tree-table',
+VALUES (1300, 1000, '0,1000', '菜单管理', 'M', 'SysMenu', '/admin/menus', 'admin/menu/Menus', NULL, 0, 1, 1, 4, 'tree-table',
         NULL, NOW(), NOW(), NULL),
        (1301, 1300, '0,1000,1300', '菜单查询', 'B', NULL, NULL, NULL, 'sys:menu:query', 0, 0, 1, 1, NULL, NULL, NOW(),
         NOW(), NULL),
@@ -96,7 +92,7 @@ VALUES (1300, 1000, '0,1000', '菜单管理', 'M', 'SysMenu', '/admin/menus', 'a
 INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
                         `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
                         `update_time`, `params`)
-VALUES (1400, 1000, '0,1000', '参数配置', 'M', 'SysConfig', '/admin/configs', 'admin/config/Configs', NULL, 0, 1, 1, 4, 'edit',
+VALUES (1400, 1000, '0,1000', '参数配置', 'M', 'SysConfig', '/admin/configs', 'admin/config/Configs', NULL, 0, 1, 1, 5, 'edit',
         NULL, NOW(), NOW(), NULL),
        (1401, 1400, '0,1000,1400', '配置查询', 'B', NULL, NULL, NULL, 'sys:config:query', 0, 0, 1, 1, NULL, NULL, NOW(),
         NOW(), NULL),
@@ -107,23 +103,23 @@ VALUES (1400, 1000, '0,1000', '参数配置', 'M', 'SysConfig', '/admin/configs'
        (1404, 1400, '0,1000,1400', '配置删除', 'B', NULL, NULL, NULL, 'sys:config:delete', 0, 0, 1, 4, NULL, NULL, NOW(),
         NOW(), NULL);
 
--- 通知管理
+-- 通知管理（独立根菜单）
 INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
                         `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
                         `update_time`, `params`)
-VALUES (1500, 1000, '0,1000', '通知管理', 'M', 'SysNotice', '/admin/notices', 'admin/notice/Notices', NULL, 0, 1, 1, 5,
+VALUES (1500, 0, '0', '通知管理', 'M', 'SysNotice', '/admin/notices', 'admin/notice/Notices', NULL, 0, 1, 1, 6,
         'message', NULL, NOW(), NOW(), NULL),
-       (1501, 1500, '0,1000,1500', '通知查询', 'B', NULL, NULL, NULL, 'sys:notice:query', 0, 0, 1, 1, NULL, NULL, NOW(),
+       (1501, 1500, '0,1500', '通知查询', 'B', NULL, NULL, NULL, 'sys:notice:query', 0, 0, 1, 1, NULL, NULL, NOW(),
         NOW(), NULL),
-       (1502, 1500, '0,1000,1500', '通知新增', 'B', NULL, NULL, NULL, 'sys:notice:create', 0, 0, 1, 2, NULL, NULL, NOW(),
+       (1502, 1500, '0,1500', '通知新增', 'B', NULL, NULL, NULL, 'sys:notice:create', 0, 0, 1, 2, NULL, NULL, NOW(),
         NOW(), NULL),
-       (1503, 1500, '0,1000,1500', '通知修改', 'B', NULL, NULL, NULL, 'sys:notice:update', 0, 0, 1, 3, NULL, NULL, NOW(),
+       (1503, 1500, '0,1500', '通知修改', 'B', NULL, NULL, NULL, 'sys:notice:update', 0, 0, 1, 3, NULL, NULL, NOW(),
         NOW(), NULL),
-       (1504, 1500, '0,1000,1500', '通知发布', 'B', NULL, NULL, NULL, 'sys:notice:publish', 0, 0, 1, 4, NULL, NULL, NOW(),
+       (1504, 1500, '0,1500', '通知发布', 'B', NULL, NULL, NULL, 'sys:notice:publish', 0, 0, 1, 4, NULL, NULL, NOW(),
         NOW(), NULL),
-       (1505, 1500, '0,1000,1500', '通知撤回', 'B', NULL, NULL, NULL, 'sys:notice:revoke', 0, 0, 1, 5, NULL, NULL, NOW(),
+       (1505, 1500, '0,1500', '通知撤回', 'B', NULL, NULL, NULL, 'sys:notice:revoke', 0, 0, 1, 5, NULL, NULL, NOW(),
         NOW(), NULL),
-       (1506, 1500, '0,1000,1500', '通知删除', 'B', NULL, NULL, NULL, 'sys:notice:delete', 0, 0, 1, 6, NULL, NULL, NOW(),
+       (1506, 1500, '0,1500', '通知删除', 'B', NULL, NULL, NULL, 'sys:notice:delete', 0, 0, 1, 6, NULL, NULL, NOW(),
         NOW(), NULL);
 
 -- 日志管理
@@ -137,6 +133,15 @@ VALUES (1600, 1000, '0,1000', '日志管理', 'M', 'SysLog', '/admin/logs', 'adm
        (1602, 1600, '0,1000,1600', '日志删除', 'B', NULL, NULL, NULL, 'sys:log:delete', 0, 0, 1, 2, NULL, NULL, NOW(),
         NOW(), NULL),
        (1603, 1600, '0,1000,1600', '日志清理', 'B', NULL, NULL, NULL, 'sys:log:clean', 0, 0, 1, 3, NULL, NULL, NOW(),
+        NOW(), NULL);
+
+-- 审计日志
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1610, 1000, '0,1000', '审计日志', 'M', 'SysAuditLog', '/admin/audit-logs', 'admin/audit/AuditLog', NULL, 0, 1, 1, 7,
+        'lock', NULL, NOW(), NOW(), NULL),
+       (1611, 1610, '0,1000,1610', '审计查询', 'B', NULL, NULL, NULL, 'sys:audit:query', 0, 0, 1, 1, NULL, NULL, NOW(),
         NOW(), NULL);
 
 COMMIT;

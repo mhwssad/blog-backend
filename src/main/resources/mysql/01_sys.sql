@@ -202,9 +202,6 @@ CREATE TABLE `sys_user_notice`
   DEFAULT CHARSET = utf8mb4 COMMENT ='用户通知公告关联表';
 
 
-
-
-
 DROP TABLE IF EXISTS `sys_author_application`;
 CREATE TABLE `sys_author_application`
 (
@@ -728,6 +725,7 @@ ALTER TABLE `ai_channel_config`
     ADD COLUMN `max_output_tokens`     INT NULL DEFAULT NULL COMMENT '输出最大 token 预算（null=不限，覆盖默认 maxTokens）' AFTER `max_attachment_tokens`;
 
 -- AI 渠道账号池表
+DROP TABLE IF EXISTS `ai_channel_account`;
 CREATE TABLE `ai_channel_account`
 (
     `id`                     bigint       NOT NULL AUTO_INCREMENT COMMENT '账号ID',

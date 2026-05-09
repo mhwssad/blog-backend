@@ -63,6 +63,7 @@ ENGINE = InnoDB
 DEFAULT CHARSET = utf8mb4
 COLLATE = utf8mb4_unicode_ci;
 
+DROP TABLE IF EXISTS blog_migration_attachment;
 CREATE TABLE blog_migration_attachment
 (
     id            BIGINT AUTO_INCREMENT COMMENT '迁移附件ID',
@@ -78,7 +79,7 @@ CREATE TABLE blog_migration_attachment
     updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
 
     PRIMARY KEY (id),
-    UNIQUE KEY uk_record_url (record_id, external_url),
+    UNIQUE KEY uk_record_url (record_id, external_url(766)),
     INDEX idx_task_status (task_id, status),
     INDEX idx_file_id (file_id)
 ) COMMENT '外部博客迁移附件记录表'

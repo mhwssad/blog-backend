@@ -11,9 +11,9 @@
 --   03_02_user_init.sql          — 用户 + 用户角色关联（admin / demo）
 --   03_03_config_init.sql        — 系统参数配置（站点名称、注册开关等）
 --   03_04_notice_init.sql        — 通知 + 用户通知关联（含 ALTER TABLE）
---   03_05_menu_system_init.sql   — 系统管理菜单（1000-1600）
---   03_06_menu_content_init.sql  — 内容管理菜单（1700-1795）
---   03_07_menu_extended_init.sql — 扩展功能菜单（1800-1929：系列/频道/群/AI/举报/看板/审计）
+--   03_05_menu_system_init.sql   — 系统与运营菜单（1000-1699：系统管理/通知管理/审计日志）
+--   03_06_menu_content_init.sql  — 内容、互动与文件菜单（1700-1799：含迁移管理）
+--   03_07_menu_extended_init.sql — 社区、AI 与治理菜单（1800-1999：含论坛管理）
 --   03_08_role_menu_auth_init.sql— 角色-菜单授权（超级管理员全量授权）
 --   03_09_demo_content_init.sql  — 演示内容数据（分类/标签/文章/评论/互动/收藏/足迹）
 --

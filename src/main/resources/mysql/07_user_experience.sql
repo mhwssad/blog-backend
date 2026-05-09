@@ -20,7 +20,7 @@ CREATE TABLE `user_experience_log`
   CHARACTER SET = utf8mb4 COMMENT = '用户经验流水表';
 
 -- 经验体系配置项
-INSERT INTO `sys_config` (`config_key`, `config_name`, `config_value`, `remark`, `create_time`, `update_time`)
+INSERT IGNORE INTO `sys_config` (`config_key`, `config_name`, `config_value`, `remark`, `create_time`, `update_time`)
 VALUES ('xp.source.daily_login.value', '每日登录经验值', '10', '每日首次登录获得', NOW(), NOW()),
        ('xp.source.article_publish.value', '文章发布经验值', '20', '每篇文章获得', NOW(), NOW()),
        ('xp.source.comment_create.value', '评论发布经验值', '5', '每条评论获得', NOW(), NOW()),
