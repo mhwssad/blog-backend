@@ -1,11 +1,5 @@
 # 前端 API 联调导航
 
-这份目录不是后端控制器清单，而是给前端同学用来快速定位接口的入口页。建议先看本页，再进入对应模块文档。
-
-如果你需要确认项目阶段、开发规范或数据库修复口径，请回到 [`docs/README.md`](../README.md)。
-
-# 前端 API 联调导航
-
 > 本文档是前端联调入口页，建议先看本页，再进入对应模块文档。
 >
 > 需确认项目阶段、开发规范或数据库修复口径，请回到 [`docs/README.md`](../README.md)。
@@ -17,10 +11,17 @@
 | 场景 | 看这个文档 | 关键章节 |
 |---|---|---|
 | 登录页 / 注册页 | `auth-api.md` | 账号登录、邮箱验证码登录、注册 |
+| 忘记密码 / 密码重置 | `auth-api.md` | 密码重置 |
 | 后台框架初始化 | `auth-api.md` | 应用启动初始化、获取当前用户、获取菜单 |
 | 个人资料 / 修改密码 | `auth-api.md` | 个人中心 |
 | 通知中心 | `auth-api.md` | 通知列表、未读数、已读处理 |
+| 通知设置 | `auth-api.md` | 通知偏好设置 |
 | 后台用户/角色/菜单/配置/日志 | `auth-api.md` | 后台系统管理接口 |
+| 超管接管登录 | `auth-api.md` | 接管登录、超级管理员操作 |
+| 作者申请 / 审核 | `auth-api.md` | 作者申请、后台审核管理 |
+| 作者主页（公开） | `auth-api.md` | 公开作者资料 |
+| 经验体系 | `auth-api.md` | 用户经验查询、后台经验管理 |
+| 审计日志 | `auth-api.md` | 审计日志后台管理 |
 
 ### 内容与文章
 
@@ -30,7 +31,11 @@
 | 分类 / 标签筛选 | `content-api.md` | 分类树、标签列表 |
 | 评论区 | `content-api.md` | 文章评论 |
 | 点赞 / 收藏 / 足迹 | `content-api.md` | 用户文章行为、收藏夹、足迹 |
+| 文章系列 / 专栏 | `content-api.md` | 文章系列管理 |
+| 文章审核 | `content-api.md` | 文章送审、后台审核管理 |
 | 后台文章 / 分类 / 标签 / 评论管理 | `content-api.md` | 后台内容管理 |
+| 友情链接 | `content-api.md` | 友情链接公开与后台管理 |
+| 公开文件访问 | `content-api.md` | 公开文件下载 |
 | 外部博客迁移 | `migration-api.md` | 任务创建、预检、执行、导出 |
 
 ### 社区与社交
@@ -49,14 +54,20 @@
 | 文件上传 / 我的文件 | `file-api.md` | 用户上传接入流程、用户文件接口 |
 | 聊天会话 / 消息发送 | `chat-api.md` | HTTP 接口、WebSocket 协议 |
 | 群聊管理 | `chat-api.md` | 群聊页 |
+| 群聊邀请 / 入群申请 | `chat-api.md` | 群聊邀请链接、入群审批 |
+| 主题频道 | `chat-api.md` | 主题频道公开浏览、后台管理 |
+| 帖子频道挂接 | `chat-api.md` | 论坛帖子关联频道 |
+| 频道申请 | `chat-api.md` | 用户频道申请、后台审批 |
+| 聊天大厅 | `chat-api.md` | 大厅频道、后台管理 |
+| 聊台治理 / 禁言 | `chat-api.md` | 后台禁言管理、聊天治理 |
 | WebSocket 实时通信 | `websocket-api.md` | 连接、心跳、收发消息 |
 
 ### AI 与数据
 
 | 场景 | 看这个文档 | 关键章节 |
 |---|---|---|
-| AI 对话 | `ai-api.md` | 用户侧接口 |
-| AI 后台管理 | `ai-api.md` | 后台管理接口 |
+| AI 对话 / Agent 任务 | `ai-api.md` | 用户侧接口 |
+| AI 后台管理（渠道/账号池/知识库/Agent/工具/MCP） | `ai-api.md` | 后台管理接口 |
 | 后台数据看板 | `dashboard-api.md` | 核心概览、内容/社区/AI/治理统计 |
 
 ---
@@ -65,15 +76,15 @@
 
 | 文档 | 面向页面 / 模块 | 主要路由范围 |
 |---|---|---|
-| `auth-api.md` | 登录注册、后台权限框架、系统管理、用户通知中心 | `/api/auth/**`、`/api/sys/**` 认证接口、`/api/user/notices/**` |
-| `content-api.md` | 前台内容页、登录后内容行为、后台内容管理 | `/api/articles/**`、`/api/categories/**`、`/api/tags/**`、`/api/comments/**`、`/api/user/**` 内容行为、`/api/sys/**` 内容管理 |
+| `auth-api.md` | 登录注册、密码重置、超管接管、作者申请/审核、经验体系、审计日志、后台权限框架、用户通知中心与设置 | `/api/auth/**`、`/api/sys/**` 认证/经验/审计接口、`/api/user/notices/**`、`/api/user/author-applications/**`、`/api/user/experience/**`、`/api/sys/author-applications/**`、`/api/sys/experience/**`、`/api/sys/audit-logs/**`、`/api/admin/**`、`/api/users/{userId}/author-profile` |
+| `content-api.md` | 前台内容页、登录后内容行为、文章系列/审核、友情链接、后台内容管理、公开文件访问 | `/api/articles/**`、`/api/categories/**`、`/api/tags/**`、`/api/comments/**`、`/api/user/**` 内容行为、`/api/user/series/**`、`/api/user/articles/**` 审核/管理、`/api/sys/**` 内容管理、`/api/public/friend-links/**`、`/api/public/series/**`、`/api/public/files/**` |
 | `migration-api.md` | 外部博客迁移任务、预检、导入、失败导出 | `/api/sys/migrations/blog/**` |
 | `forum-api.md` | 论坛公开浏览、用户发帖回帖、互动、帖子频道分享、后台版块管理 | `/api/forum/**`、`/api/user/forum/**`、`/api/user/chat/forum-links/**`、`/api/sys/forum/**` |
-| `file-api.md` | 上传流程、我的文件、后台文件库 | `/api/user/files/**`、`/api/sys/files/**` |
-| `chat-api.md` | 聊天 HTTP 接口、后台管理、大厅/主题频道、WebSocket 实时协议 | `/api/user/chat/**`、`/api/sys/chats/**`、`/api/public/chat/**`、`/ws/chat` |
+| `file-api.md` | 上传流程、我的文件、后台文件库 | `/api/user/files/**`、`/api/sys/files/**`、`/api/public/files/**` |
+| `chat-api.md` | 聊天 HTTP 接口、后台管理、大厅/主题频道、群聊邀请/入群、频道申请、帖子频道挂接、禁言治理 | `/api/user/chat/**`、`/api/sys/chats/**`、`/api/public/chat/**`、`/ws/chat` |
 | `websocket-api.md` | WebSocket 连接、认证、心跳、收发消息与推送 | `/ws/chat` |
 | `follow-api.md` | 关注、粉丝、互关状态、公开查看、后台治理 | `/api/user/follows/**`、`/api/users/{userId}/**`、`/api/sys/follows/**` |
-| `ai-api.md` | AI 对话、渠道配置、后台 AI 管理、工具/MCP 与统计 | `/api/user/ai/**`、`/api/sys/ai/**` |
+| `ai-api.md` | AI 对话、渠道配置与账号池、知识库、Agent、工具、MCP 服务与统计 | `/api/user/ai/**`、`/api/sys/ai/**` |
 | `report-api.md` | 举报提交、记录查询、后台处理与日志 | `/api/user/reports/**`、`/api/sys/reports/**` |
 | `dashboard-api.md` | 后台数据看板：核心概览、内容/社区/AI/治理统计与导出 | `/api/sys/dashboard/**` |
 
@@ -358,24 +369,20 @@ Authorization: Bearer <accessToken>
 1. `auth-api.md` → 登录态接入流程
 2. `auth-api.md` → 后台应用启动流程
 3. 按业务模块继续：
-   - 用户/角色/菜单/配置/通知/日志/经验体系 → `auth-api.md`
-   - 内容管理 → `content-api.md`
+   - 用户/角色/菜单/配置/通知/日志/经验体系/审计日志/作者申请/超管 → `auth-api.md`
+   - 内容管理/文章审核/文章系列/友情链接 → `content-api.md`
    - 外部博客迁移 → `migration-api.md`
    - 论坛管理 → `forum-api.md`
    - 关注关系管理 → `follow-api.md`
    - 文件管理 → `file-api.md`
-   - 聊天管理 → `chat-api.md`
-   - AI 对话/工具/MCP → `ai-api.md`
+   - 聊天管理/主题频道/大厅/群聊邀请/禁言治理 → `chat-api.md`
+   - AI 对话/渠道配置/账号池/知识库/Agent/工具/MCP → `ai-api.md`
    - 举报管理 → `report-api.md`
    - 数据看板 → `dashboard-api.md`
 
 ---
 
 ## 维护规则
-
-- 新增、删除、修改前端可见接口时，必须同步更新对应文档
-- 如果只是补字段、改枚举或改边界行为，也不能只改代码不改文档
-- 当某个接口更适合归入另一个前端场景时，允许调整文档结构，但要保持本页导航可用
 
 - 新增、删除、修改前端可见接口时，必须同步更新对应文档
 - 如果只是补字段、改枚举或改边界行为，也不能只改代码不改文档

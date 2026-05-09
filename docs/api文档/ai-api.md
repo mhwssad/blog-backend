@@ -570,13 +570,14 @@ axios.get('/api/sys/ai/channels', {
         "id": 1,
         "channelCode": "deepseek-chat",
         "channelName": "DeepSeek 对话渠道",
-        "provider": "deepseek",
-        "modelName": "deepseek-chat",
-        "apiBaseUrl": "https://api.deepseek.com/v1",
-        "apiKeyEncrypted": "******",
         "dailyQuota": 5000,
         "userDailyQuota": 50,
         "maxContextTokens": 64000,
+        "maxInputTokens": 8000,
+        "maxHistoryTokens": 16000,
+        "maxRagTokens": 4000,
+        "maxAttachmentTokens": 4000,
+        "maxOutputTokens": 4000,
         "dataScopeJson": "[\"public_article\",\"forum_post\"]",
         "systemPromptTemplate": "你是一个有帮助的AI助手。",
         "status": 1,
@@ -601,13 +602,14 @@ axios.get('/api/sys/ai/channels', {
 | `records[].id` | Long | 渠道配置ID |
 | `records[].channelCode` | String | 渠道编码 |
 | `records[].channelName` | String | 渠道名称 |
-| `records[].provider` | String | 提供方 |
-| `records[].modelName` | String | 模型名称 |
-| `records[].apiBaseUrl` | String | 接口基础地址 |
-| `records[].apiKeyEncrypted` | String | 加密后的 API Key（脱敏） |
 | `records[].dailyQuota` | Integer | 全局每日额度，0表示不限制 |
 | `records[].userDailyQuota` | Integer | 单用户每日额度，0表示不限制 |
 | `records[].maxContextTokens` | Integer | 上下文长度上限，0表示不限制 |
+| `records[].maxInputTokens` | Integer | 单次输入最大 token 预算，null 表示不限 |
+| `records[].maxHistoryTokens` | Integer | 历史上下文最大 token 预算，null 表示不限 |
+| `records[].maxRagTokens` | Integer | RAG 上下文最大 token 预算，null 表示不限 |
+| `records[].maxAttachmentTokens` | Integer | 附件最大 token 预算，null 表示不限 |
+| `records[].maxOutputTokens` | Integer | 输出最大 token 预算，null 表示不限 |
 | `records[].dataScopeJson` | String | 可读取数据范围配置 JSON |
 | `records[].systemPromptTemplate` | String | 系统提示词模板 |
 | `records[].status` | Integer | 状态：0-停用，1-启用 |
@@ -649,13 +651,14 @@ axios.get('/api/sys/ai/channels/1', {
     "id": 1,
     "channelCode": "deepseek-chat",
     "channelName": "DeepSeek 对话渠道",
-    "provider": "deepseek",
-    "modelName": "deepseek-chat",
-    "apiBaseUrl": "https://api.deepseek.com/v1",
-    "apiKeyEncrypted": "******",
     "dailyQuota": 5000,
     "userDailyQuota": 50,
     "maxContextTokens": 64000,
+    "maxInputTokens": 8000,
+    "maxHistoryTokens": 16000,
+    "maxRagTokens": 4000,
+    "maxAttachmentTokens": 4000,
+    "maxOutputTokens": 4000,
     "dataScopeJson": "[\"public_article\",\"forum_post\"]",
     "systemPromptTemplate": "你是一个有帮助的AI助手。",
     "status": 1,
@@ -689,13 +692,14 @@ axios.get('/api/sys/ai/channels/1', {
 axios.post('/api/sys/ai/channels', {
   channelCode: 'deepseek-chat',
   channelName: 'DeepSeek 对话渠道',
-  provider: 'deepseek',
-  modelName: 'deepseek-chat',
-  apiBaseUrl: 'https://api.deepseek.com/v1',
-  apiKeyEncrypted: 'sk-xxxxxxx',
   dailyQuota: 5000,
   userDailyQuota: 50,
   maxContextTokens: 64000,
+  maxInputTokens: 8000,
+  maxHistoryTokens: 16000,
+  maxRagTokens: 4000,
+  maxAttachmentTokens: 4000,
+  maxOutputTokens: 4000,
   dataScopeJson: '["public_article","forum_post"]',
   systemPromptTemplate: '你是一个有帮助的AI助手。',
   status: 1,
@@ -710,13 +714,14 @@ axios.post('/api/sys/ai/channels', {
 |-----|------|------|-----|
 | `channelCode` | String | 是 | 渠道编码 |
 | `channelName` | String | 是 | 渠道名称 |
-| `provider` | String | 是 | 提供方 |
-| `modelName` | String | 是 | 模型名称 |
-| `apiBaseUrl` | String | 否 | 接口基础地址 |
-| `apiKeyEncrypted` | String | 否 | API Key（加密存储） |
 | `dailyQuota` | Integer | 否 | 全局每日额度，0表示不限制 |
 | `userDailyQuota` | Integer | 否 | 单用户每日额度，0表示不限制 |
 | `maxContextTokens` | Integer | 否 | 上下文长度上限，0表示不限制 |
+| `maxInputTokens` | Integer | 否 | 单次输入最大 token 预算，null 表示不限 |
+| `maxHistoryTokens` | Integer | 否 | 历史上下文最大 token 预算，null 表示不限 |
+| `maxRagTokens` | Integer | 否 | RAG 上下文最大 token 预算，null 表示不限 |
+| `maxAttachmentTokens` | Integer | 否 | 附件最大 token 预算，null 表示不限 |
+| `maxOutputTokens` | Integer | 否 | 输出最大 token 预算，null 表示不限 |
 | `dataScopeJson` | String | 否 | 可读取数据范围配置 JSON |
 | `systemPromptTemplate` | String | 否 | 系统提示词模板 |
 | `status` | Integer | 否 | 状态：0-停用，1-启用 |
@@ -733,13 +738,14 @@ axios.post('/api/sys/ai/channels', {
     "id": 1,
     "channelCode": "deepseek-chat",
     "channelName": "DeepSeek 对话渠道",
-    "provider": "deepseek",
-    "modelName": "deepseek-chat",
-    "apiBaseUrl": "https://api.deepseek.com/v1",
-    "apiKeyEncrypted": "******",
     "dailyQuota": 5000,
     "userDailyQuota": 50,
     "maxContextTokens": 64000,
+    "maxInputTokens": 8000,
+    "maxHistoryTokens": 16000,
+    "maxRagTokens": 4000,
+    "maxAttachmentTokens": 4000,
+    "maxOutputTokens": 4000,
     "dataScopeJson": "[\"public_article\",\"forum_post\"]",
     "systemPromptTemplate": "你是一个有帮助的AI助手。",
     "status": 1,
@@ -774,12 +780,14 @@ axios.post('/api/sys/ai/channels', {
 axios.put('/api/sys/ai/channels/1', {
   channelCode: 'deepseek-chat',
   channelName: 'DeepSeek 对话渠道（更新）',
-  provider: 'deepseek',
-  modelName: 'deepseek-chat',
-  apiBaseUrl: 'https://api.deepseek.com/v1',
   dailyQuota: 6000,
   userDailyQuota: 60,
   maxContextTokens: 64000,
+  maxInputTokens: 8000,
+  maxHistoryTokens: 16000,
+  maxRagTokens: 4000,
+  maxAttachmentTokens: 4000,
+  maxOutputTokens: 4000,
   dataScopeJson: '["public_article","forum_post","author_profile"]',
   systemPromptTemplate: '你是一个专业有帮助的AI助手。',
   status: 1,
@@ -806,13 +814,14 @@ axios.put('/api/sys/ai/channels/1', {
     "id": 1,
     "channelCode": "deepseek-chat",
     "channelName": "DeepSeek 对话渠道（更新）",
-    "provider": "deepseek",
-    "modelName": "deepseek-chat",
-    "apiBaseUrl": "https://api.deepseek.com/v1",
-    "apiKeyEncrypted": "******",
     "dailyQuota": 6000,
     "userDailyQuota": 60,
     "maxContextTokens": 64000,
+    "maxInputTokens": 8000,
+    "maxHistoryTokens": 16000,
+    "maxRagTokens": 4000,
+    "maxAttachmentTokens": 4000,
+    "maxOutputTokens": 4000,
     "dataScopeJson": "[\"public_article\",\"forum_post\",\"author_profile\"]",
     "systemPromptTemplate": "你是一个专业有帮助的AI助手。",
     "status": 1,
@@ -917,6 +926,998 @@ axios.delete('/api/sys/ai/channels/1', {
 | 403 | 无权限 | 提示无权限 |
 | 404 | 渠道配置不存在 | 提示配置已删除 |
 | 409 | 渠道正在使用中 | 提示无法删除 |
+
+---
+
+### AI 会话后台管理
+
+#### 分页查询用户会话
+
+**接口信息**
+- 路径: `GET /api/sys/ai/sessions`
+- 鉴权: `ai:session:query`
+- 说明: 后台分页查询所有用户的 AI 会话
+
+**查询参数说明**
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `current` | Long | 否 | 页码，默认 `1` |
+| `size` | Long | 否 | 每页条数，默认 `20` |
+| `userId` | Long | 否 | 用户ID |
+| `status` | Integer | 否 | 会话状态：0-关闭，1-正常 |
+| `channelConfigId` | Long | 否 | 渠道配置ID |
+| `startTime` | DateTime | 否 | 创建开始时间 |
+| `endTime` | DateTime | 否 | 创建结束时间 |
+
+**响应字段说明**
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| `id` | Long | 会话ID |
+| `userId` | Long | 用户ID |
+| `username` | String | 用户名 |
+| `nickname` | String | 用户昵称 |
+| `channelConfigId` | Long | 渠道配置ID |
+| `channelName` | String | 渠道名称 |
+| `title` | String | 会话标题 |
+| `sceneType` | String | 场景类型 |
+| `status` | Integer | 状态：0-关闭，1-正常 |
+| `lastMessageAt` | DateTime | 最后消息时间 |
+| `createdAt` | DateTime | 创建时间 |
+| `updatedAt` | DateTime | 更新时间 |
+
+---
+
+#### 查询会话详情（后台）
+
+**接口信息**
+- 路径: `GET /api/sys/ai/sessions/{id}`
+- 鉴权: `ai:session:query`
+- 说明: 后台查询指定会话详情
+
+**路径参数说明**
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `id` | Long | 是 | 会话ID |
+
+---
+
+### AI 调用统计
+
+#### 分页查询使用日志
+
+**接口信息**
+- 路径: `GET /api/sys/ai/usage-logs`
+- 鉴权: `ai:usage-stats:query`
+- 说明: 分页查询 AI 调用日志
+
+**查询参数说明**
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `current` | Long | 否 | 页码，默认 `1` |
+| `size` | Long | 否 | 每页条数，默认 `20` |
+| `userId` | Long | 否 | 用户ID |
+| `channelConfigId` | Long | 否 | 渠道配置ID |
+| `startTime` | DateTime | 否 | 开始时间 |
+| `endTime` | DateTime | 否 | 结束时间 |
+| `successStatus` | Integer | 否 | 成功状态：0-失败，1-成功 |
+
+**响应字段说明**
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| `id` | Long | 日志ID |
+| `userId` | Long | 用户ID |
+| `channelConfigId` | Long | 渠道配置ID |
+| `sessionId` | Long | 会话ID |
+| `requestSceneType` | String | 请求场景类型 |
+| `requestTokens` | Integer | 请求 token 数 |
+| `responseTokens` | Integer | 响应 token 数 |
+| `totalTokens` | Integer | 总 token 数 |
+| `quotaCost` | Integer | 额度消耗 |
+| `successStatus` | Integer | 成功状态：0-失败，1-成功 |
+| `errorCode` | String | 错误码 |
+| `ragEnabled` | Integer | 是否启用 RAG：0-否，1-是 |
+| `ragHitCount` | Integer | RAG 命中数量 |
+| `ragDurationMs` | Long | RAG 检索耗时（毫秒） |
+| `ragReferences` | Array | RAG 引用来源（同消息中的 ragReferences 结构） |
+| `createdAt` | DateTime | 创建时间 |
+
+---
+
+#### 获取使用统计
+
+**接口信息**
+- 路径: `GET /api/sys/ai/usage-logs/stats`
+- 鉴权: `ai:usage-stats:query`
+- 说明: 获取 AI 调用汇总统计
+
+**查询参数说明**: 同分页查询使用日志的筛选参数
+
+**响应字段说明**
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| `totalCalls` | long | 总调用次数 |
+| `successCalls` | long | 成功调用次数 |
+| `failedCalls` | long | 失败调用次数 |
+| `totalTokens` | long | 总 token 数 |
+| `totalQuotaCost` | long | 总额度消耗 |
+
+---
+
+### AI 渠道账号池管理
+
+> provider / modelName / apiBaseUrl / apiKey 已下沉到账号级别，一个渠道可配置多个账号。
+
+#### 分页查询渠道账号列表
+
+**接口信息**
+- 路径: `GET /api/sys/ai/channels/{channelId}/accounts`
+- 鉴权: `ai:channel-account:query`
+- 说明: 分页查询指定渠道下的账号列表
+
+**路径参数说明**
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `channelId` | Long | 是 | 渠道配置ID |
+
+**响应字段说明**
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| `id` | Long | 账号ID |
+| `channelConfigId` | Long | 所属渠道配置ID |
+| `accountName` | String | 账号名称（备注） |
+| `provider` | String | 提供方（deepseek/openai/zhipu 等） |
+| `modelName` | String | 模型名称 |
+| `apiBaseUrl` | String | 接口基础地址 |
+| `apiKeyEncrypted` | String | API Key（脱敏） |
+| `weight` | Integer | 权重，默认 1 |
+| `status` | Integer | 状态：0-停用，1-启用 |
+| `dailyQuota` | Integer | 每日额度，0-不限 |
+| `consecutiveErrors` | Integer | 连续错误次数 |
+| `maxConsecutiveErrors` | Integer | 最大连续错误次数，默认 5 |
+| `lastErrorAt` | DateTime | 最近错误时间 |
+| `lastErrorMessage` | String | 最近错误信息 |
+| `disabledAt` | DateTime | 自动禁用时间 |
+| `autoRecoverAt` | DateTime | 计划自动恢复时间 |
+| `totalCallCount` | Long | 累计调用次数 |
+| `lastUsedAt` | DateTime | 最近使用时间 |
+| `createdBy` | Long | 创建人ID |
+| `updatedBy` | Long | 更新人ID |
+| `createdAt` | DateTime | 创建时间 |
+| `updatedAt` | DateTime | 更新时间 |
+
+---
+
+#### 查询渠道账号详情
+
+**接口信息**
+- 路径: `GET /api/sys/ai/channels/{channelId}/accounts/{id}`
+- 鉴权: `ai:channel-account:query`
+
+---
+
+#### 创建渠道账号
+
+**接口信息**
+- 路径: `POST /api/sys/ai/channels/{channelId}/accounts`
+- 鉴权: `ai:channel-account:create`
+
+**请求体字段说明**
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `accountName` | String | 是 | 账号名称（备注） |
+| `provider` | String | 是 | 提供方（deepseek/openai/zhipu 等） |
+| `modelName` | String | 是 | 模型名称 |
+| `apiBaseUrl` | String | 是 | 接口基础地址 |
+| `apiKeyEncrypted` | String | 是 | API Key |
+| `weight` | Integer | 否 | 权重，默认 1 |
+| `status` | Integer | 否 | 状态：0-停用，1-启用 |
+| `dailyQuota` | Integer | 否 | 每日额度，0-不限 |
+| `maxConsecutiveErrors` | Integer | 否 | 最大连续错误次数，默认 5 |
+| `mfaTicket` | String | 否 | 二次验证票据（修改 API Key 时必填） |
+
+---
+
+#### 更新渠道账号
+
+**接口信息**
+- 路径: `PUT /api/sys/ai/channels/{channelId}/accounts/{id}`
+- 鉴权: `ai:channel-account:update`
+- 请求体字段: 同创建渠道账号
+
+---
+
+#### 更新渠道账号状态
+
+**接口信息**
+- 路径: `PUT /api/sys/ai/channels/{channelId}/accounts/{id}/status`
+- 鉴权: `ai:channel-account:update`
+
+**请求体字段说明**
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `status` | Integer | 是 | 状态：0-停用，1-启用 |
+
+---
+
+#### 删除渠道账号
+
+**接口信息**
+- 路径: `DELETE /api/sys/ai/channels/{channelId}/accounts/{id}`
+- 鉴权: `ai:channel-account:delete`
+
+---
+
+### AI 知识源配置
+
+#### 查询所有知识源配置
+
+**接口信息**
+- 路径: `GET /api/sys/ai/knowledge/source-config`
+- 鉴权: `ai:knowledge:query`
+- 说明: 查询所有知识源配置（返回列表，非分页）
+
+**响应字段说明**
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| `id` | Long | 配置ID |
+| `sourceType` | String | 知识源类型编码 |
+| `enabled` | Integer | 是否启用：0-禁用，1-启用 |
+| `syncInterval` | Integer | 同步间隔（秒） |
+| `lastSyncedAt` | DateTime | 最近一次同步完成时间 |
+| `lastSyncStatus` | String | 最近同步状态 |
+| `configJson` | String | 扩展配置 JSON |
+| `updatedBy` | Long | 更新人ID |
+| `remark` | String | 备注 |
+| `createdAt` | DateTime | 创建时间 |
+| `updatedAt` | DateTime | 更新时间 |
+
+---
+
+#### 查询知识源配置详情
+
+**接口信息**
+- 路径: `GET /api/sys/ai/knowledge/source-config/{id}`
+- 鉴权: `ai:knowledge:query`
+
+---
+
+#### 更新知识源配置
+
+**接口信息**
+- 路径: `PUT /api/sys/ai/knowledge/source-config/{id}`
+- 鉴权: `ai:knowledge:update`
+
+**请求体字段说明**
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `syncInterval` | Integer | 是 | 同步间隔（秒） |
+| `configJson` | String | 否 | 扩展配置 JSON |
+| `remark` | String | 否 | 备注 |
+
+---
+
+#### 切换知识源启停状态
+
+**接口信息**
+- 路径: `PUT /api/sys/ai/knowledge/source-config/{id}/toggle`
+- 鉴权: `ai:knowledge:update`
+
+**查询参数说明**
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `enabled` | Integer | 是 | 0-禁用，1-启用 |
+
+---
+
+### AI 知识条目管理
+
+#### 分页查询知识条目
+
+**接口信息**
+- 路径: `GET /api/sys/ai/knowledge/entries`
+- 鉴权: `ai:knowledge:query`
+
+**查询参数说明**
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `current` | Long | 否 | 页码，默认 `1` |
+| `size` | Long | 否 | 每页条数，默认 `10` |
+| `sourceType` | String | 否 | 来源类型 |
+| `status` | Integer | 否 | 状态：0-禁用，1-正常，2-过期，3-已删除 |
+| `keyword` | String | 否 | 标题关键词 |
+
+**响应字段说明**
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| `id` | Long | 条目ID |
+| `sourceType` | String | 来源类型 |
+| `sourceId` | Long | 来源对象ID |
+| `title` | String | 标题 |
+| `summary` | String | 摘要 |
+| `sourceUrl` | String | 来源页面 URL |
+| `authorId` | Long | 原始作者ID |
+| `status` | Integer | 状态：0-禁用，1-正常，2-过期，3-已删除 |
+| `version` | Integer | 版本号 |
+| `chunkCount` | Integer | 分块数量 |
+| `sourceUpdatedAt` | DateTime | 源内容最后更新时间 |
+| `syncedAt` | DateTime | 最近同步时间 |
+| `tagJson` | String | 标签 JSON |
+| `createdAt` | DateTime | 创建时间 |
+| `updatedAt` | DateTime | 更新时间 |
+
+---
+
+#### 查询知识条目详情
+
+**接口信息**
+- 路径: `GET /api/sys/ai/knowledge/entries/{id}`
+- 鉴权: `ai:knowledge:query`
+
+---
+
+#### 更新知识条目状态
+
+**接口信息**
+- 路径: `PUT /api/sys/ai/knowledge/entries/{id}/status`
+- 鉴权: `ai:knowledge:update`
+
+**查询参数说明**
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `status` | Integer | 是 | 状态值：0-禁用，1-正常，2-过期，3-已删除 |
+
+---
+
+#### 触发知识同步任务
+
+**接口信息**
+- 路径: `POST /api/sys/ai/knowledge/entries/sync`
+- 鉴权: `ai:knowledge:sync`
+
+**请求体字段说明**
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `sourceType` | String | 是 | 知识源类型 |
+| `taskType` | String | 否 | 任务类型，默认 `full_sync` |
+| `sourceId` | Long | 否 | 来源对象ID（single_entry 时必填） |
+| `remark` | String | 否 | 备注 |
+
+---
+
+#### 分页查询同步任务
+
+**接口信息**
+- 路径: `GET /api/sys/ai/knowledge/entries/sync/tasks`
+- 鉴权: `ai:knowledge:query`
+
+**查询参数说明**
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `current` | Long | 否 | 页码，默认 `1` |
+| `size` | Long | 否 | 每页条数，默认 `10` |
+| `sourceType` | String | 否 | 知识源类型 |
+| `status` | Integer | 否 | 状态：0-待执行，1-执行中，2-已完成，3-失败 |
+
+**响应字段说明**
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| `id` | Long | 任务ID |
+| `taskType` | String | 任务类型 |
+| `sourceType` | String | 知识源类型 |
+| `status` | Integer | 状态：0-待执行，1-执行中，2-已完成，3-失败 |
+| `totalCount` | Integer | 总条目数 |
+| `successCount` | Integer | 成功条目数 |
+| `failCount` | Integer | 失败条目数 |
+| `skipCount` | Integer | 跳过条目数 |
+| `errorMessage` | String | 错误信息 |
+| `retryCount` | Integer | 已重试次数 |
+| `maxRetry` | Integer | 最大重试次数 |
+| `startedAt` | DateTime | 开始执行时间 |
+| `completedAt` | DateTime | 执行完成时间 |
+| `triggeredBy` | String | 触发方式 |
+| `operatorId` | Long | 操作人ID |
+| `remark` | String | 备注 |
+| `createdAt` | DateTime | 创建时间 |
+| `updatedAt` | DateTime | 更新时间 |
+
+---
+
+#### 查询同步任务详情
+
+**接口信息**
+- 路径: `GET /api/sys/ai/knowledge/entries/sync/tasks/{taskId}`
+- 鉴权: `ai:knowledge:query`
+
+---
+
+#### 重试失败的同步任务
+
+**接口信息**
+- 路径: `POST /api/sys/ai/knowledge/entries/sync/tasks/{taskId}/retry`
+- 鉴权: `ai:knowledge:sync`
+
+---
+
+### AI Agent 定义管理
+
+#### 分页查询 Agent 定义
+
+**接口信息**
+- 路径: `GET /api/sys/ai/agents/definitions`
+- 鉴权: `ai:agent:query`
+
+**查询参数说明**
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `current` | Long | 否 | 页码，默认 `1` |
+| `size` | Long | 否 | 每页条数，默认 `10` |
+| `keyword` | String | 否 | 名称关键词 |
+| `enabled` | Integer | 否 | 启用状态：0-停用，1-启用 |
+
+**响应字段说明**
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| `id` | Long | Agent ID |
+| `name` | String | Agent 名称 |
+| `description` | String | Agent 描述 |
+| `systemPrompt` | String | 系统提示词 |
+| `channelConfigId` | Long | 关联 AI 渠道配置 ID |
+| `dataScopeJson` | String | 数据读取范围配置 JSON |
+| `enabled` | Integer | 0-停用，1-启用 |
+| `maxTurns` | Integer | 最大对话轮次 |
+| `extraConfigJson` | String | 扩展配置 JSON |
+| `createdBy` | Long | 创建人ID |
+| `updatedBy` | Long | 更新人ID |
+| `createdAt` | DateTime | 创建时间 |
+| `updatedAt` | DateTime | 更新时间 |
+
+---
+
+#### 查询 Agent 定义详情
+
+**接口信息**
+- 路径: `GET /api/sys/ai/agents/definitions/{id}`
+- 鉴权: `ai:agent:query`
+
+---
+
+#### 创建 Agent 定义
+
+**接口信息**
+- 路径: `POST /api/sys/ai/agents/definitions`
+- 鉴权: `ai:agent:create`
+
+**请求体字段说明**
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `name` | String | 是 | Agent 名称（最多 64 字符） |
+| `description` | String | 否 | Agent 描述（最多 512 字符） |
+| `systemPrompt` | String | 是 | 系统提示词 |
+| `channelConfigId` | Long | 是 | 关联 AI 渠道配置 ID |
+| `dataScopeJson` | String | 否 | 数据读取范围配置 JSON |
+| `maxTurns` | Integer | 否 | 最大对话轮次，默认 1 |
+| `extraConfigJson` | String | 否 | 扩展配置 JSON |
+
+---
+
+#### 更新 Agent 定义
+
+**接口信息**
+- 路径: `PUT /api/sys/ai/agents/definitions/{id}`
+- 鉴权: `ai:agent:update`
+- 请求体字段: 同创建 Agent 定义
+
+---
+
+#### 切换 Agent 启停状态
+
+**接口信息**
+- 路径: `PUT /api/sys/ai/agents/definitions/{id}/toggle`
+- 鉴权: `ai:agent:update`
+
+**查询参数说明**
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `enabled` | Integer | 是 | 0-停用，1-启用 |
+
+---
+
+#### 删除 Agent 定义
+
+**接口信息**
+- 路径: `DELETE /api/sys/ai/agents/definitions/{id}`
+- 鉴权: `ai:agent:delete`
+
+---
+
+### AI Agent 任务后台管理
+
+#### 分页查询 Agent 任务（后台）
+
+**接口信息**
+- 路径: `GET /api/sys/ai/agents/tasks`
+- 鉴权: `ai:agent:query`
+
+**查询参数说明**
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `current` | Long | 否 | 页码，默认 `1` |
+| `size` | Long | 否 | 每页条数，默认 `10` |
+| `agentId` | Long | 否 | Agent 定义 ID |
+| `status` | Integer | 否 | 状态：0-待执行，1-执行中，2-已完成，3-失败，4-已取消 |
+
+**响应字段说明**
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| `id` | Long | 任务ID |
+| `userId` | Long | 发起用户ID |
+| `agentId` | Long | 关联 Agent 定义 ID |
+| `agentName` | String | Agent 名称 |
+| `status` | Integer | 状态：0-待执行，1-执行中，2-已完成，3-失败，4-已取消 |
+| `inputContent` | String | 用户输入 |
+| `outputContent` | String | Agent 输出 |
+| `errorMessage` | String | 错误信息 |
+| `tokenCount` | Integer | 消耗 token 数 |
+| `startedAt` | DateTime | 开始时间 |
+| `completedAt` | DateTime | 完成时间 |
+| `createdAt` | DateTime | 创建时间 |
+
+---
+
+#### 查询 Agent 任务详情（后台）
+
+**接口信息**
+- 路径: `GET /api/sys/ai/agents/tasks/{id}`
+- 鉴权: `ai:agent:query`
+
+---
+
+### AI Agent 用户任务
+
+#### 发起 Agent 任务
+
+**接口信息**
+- 路径: `POST /api/user/ai/agents/tasks`
+- 鉴权: 是
+- 说明: 用户发起 Agent 任务
+
+**请求体字段说明**
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `agentId` | Long | 是 | Agent 定义 ID |
+| `inputContent` | String | 是 | 用户输入内容 |
+
+**响应字段说明**
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| `id` | Long | 任务ID |
+| `agentId` | Long | Agent 定义 ID |
+| `agentName` | String | Agent 名称 |
+| `status` | Integer | 状态：0-待执行，1-执行中，2-已完成，3-失败，4-已取消 |
+| `inputContent` | String | 用户输入 |
+| `outputContent` | String | Agent 输出 |
+| `errorMessage` | String | 错误信息 |
+| `tokenCount` | Integer | 消耗 token 数 |
+| `createdAt` | DateTime | 创建时间 |
+| `completedAt` | DateTime | 完成时间 |
+
+---
+
+#### 分页查询我的 Agent 任务
+
+**接口信息**
+- 路径: `GET /api/user/ai/agents/tasks`
+- 鉴权: 是
+
+**查询参数说明**
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `current` | Long | 否 | 页码，默认 `1` |
+| `size` | Long | 否 | 每页条数，默认 `10` |
+| `status` | Integer | 否 | 状态：0-待执行，1-执行中，2-已完成，3-失败，4-已取消 |
+
+---
+
+#### 查询 Agent 任务详情（用户）
+
+**接口信息**
+- 路径: `GET /api/user/ai/agents/tasks/{id}`
+- 鉴权: 是
+
+---
+
+#### 取消 Agent 任务
+
+**接口信息**
+- 路径: `PUT /api/user/ai/agents/tasks/{id}/cancel`
+- 鉴权: 是
+
+---
+
+### AI 工具管理
+
+#### 分页查询工具定义
+
+**接口信息**
+- 路径: `GET /api/sys/ai/tools`
+- 鉴权: `ai:tool:query`
+
+**查询参数说明**
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `current` | Long | 否 | 页码，默认 `1` |
+| `size` | Long | 否 | 每页条数，默认 `10` |
+| `toolCode` | String | 否 | 工具编码 |
+| `toolName` | String | 否 | 工具名称 |
+| `sourceType` | String | 否 | 来源类型 builtin/mcp |
+| `enabled` | Integer | 否 | 启用状态：0-停用，1-启用 |
+
+**响应字段说明**
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| `id` | Long | ID |
+| `toolCode` | String | 工具编码 |
+| `toolName` | String | 工具名称 |
+| `sourceType` | String | 来源类型 |
+| `mcpServerId` | Long | MCP 服务 ID |
+| `mcpToolName` | String | MCP 原始工具名 |
+| `description` | String | 描述 |
+| `parametersSchema` | String | 参数 Schema |
+| `resultSchema` | String | 返回 Schema |
+| `riskLevel` | String | 风险等级 low/medium/high |
+| `useScenarios` | String | 适用场景 |
+| `enabled` | Integer | 启用状态 |
+| `createdBy` | Long | 创建人ID |
+| `updatedBy` | Long | 更新人ID |
+| `createdAt` | DateTime | 创建时间 |
+| `updatedAt` | DateTime | 更新时间 |
+
+---
+
+#### 查询工具详情
+
+**接口信息**
+- 路径: `GET /api/sys/ai/tools/{id}`
+- 鉴权: `ai:tool:query`
+
+---
+
+#### 创建工具定义
+
+**接口信息**
+- 路径: `POST /api/sys/ai/tools`
+- 鉴权: `ai:tool:create`
+
+**请求体字段说明**
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `toolCode` | String | 是 | 工具编码（最多 64 字符） |
+| `toolName` | String | 是 | 工具名称（最多 128 字符） |
+| `sourceType` | String | 是 | 来源类型 builtin/mcp |
+| `mcpServerId` | Long | 否 | MCP 服务 ID |
+| `mcpToolName` | String | 否 | MCP 原始工具名 |
+| `description` | String | 否 | 工具描述 |
+| `parametersSchema` | String | 否 | 参数 Schema JSON |
+| `resultSchema` | String | 否 | 返回 Schema JSON |
+| `riskLevel` | String | 是 | 风险等级 low/medium/high |
+| `useScenarios` | String | 否 | 适用场景 JSON 数组 |
+| `enabled` | Integer | 是 | 启用状态：0-停用，1-启用 |
+| `mfaTicket` | String | 否 | MFA 票据 |
+
+---
+
+#### 更新工具定义
+
+**接口信息**
+- 路径: `PUT /api/sys/ai/tools/{id}`
+- 鉴权: `ai:tool:update`
+- 请求体字段: 同创建工具定义
+
+---
+
+#### 更新工具状态
+
+**接口信息**
+- 路径: `PUT /api/sys/ai/tools/{id}/status`
+- 鉴权: `ai:tool:update`
+
+**查询参数说明**
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `enabled` | Integer | 是 | 0-停用，1-启用 |
+
+---
+
+#### 删除工具定义
+
+**接口信息**
+- 路径: `DELETE /api/sys/ai/tools/{id}`
+- 鉴权: `ai:tool:delete`
+
+---
+
+#### 后台测试执行工具
+
+**接口信息**
+- 路径: `POST /api/sys/ai/tools/{id}/execute`
+- 鉴权: `ai:tool:execute`
+- 说明: 在后台测试执行指定工具
+
+**请求体字段说明**
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `toolCode` | String | 否 | 工具编码 |
+| `arguments` | String | 否 | 工具参数 JSON |
+| `agentId` | Long | 否 | Agent ID |
+| `sessionId` | Long | 否 | 会话 ID |
+| `taskId` | Long | 否 | 任务 ID |
+| `sceneType` | String | 否 | 场景类型 |
+| `dataScope` | String | 否 | 数据范围 |
+
+**响应字段说明**
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| `success` | Boolean | 是否成功 |
+| `resultText` | String | 结果文本 |
+| `errorMessage` | String | 错误信息 |
+| `elapsedMs` | Long | 耗时（毫秒） |
+| `callLogId` | Long | 调用日志 ID |
+
+---
+
+#### 分页查询工具调用日志
+
+**接口信息**
+- 路径: `GET /api/sys/ai/tools/call-logs`
+- 鉴权: `ai:tool:query`
+
+**查询参数说明**
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `current` | Long | 否 | 页码，默认 `1` |
+| `size` | Long | 否 | 每页条数，默认 `10` |
+| `toolId` | Long | 否 | 工具 ID |
+| `userId` | Long | 否 | 用户 ID |
+| `agentId` | Long | 否 | Agent ID |
+| `taskId` | Long | 否 | 任务 ID |
+| `successStatus` | Integer | 否 | 成功状态：0-失败，1-成功 |
+
+**响应字段说明**
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| `id` | Long | ID |
+| `userId` | Long | 用户 ID |
+| `agentId` | Long | Agent ID |
+| `sessionId` | Long | 会话 ID |
+| `taskId` | Long | 任务 ID |
+| `toolId` | Long | 工具 ID |
+| `toolCode` | String | 工具编码 |
+| `toolName` | String | 工具名称 |
+| `requestSceneType` | String | 请求场景 |
+| `requestSummary` | String | 入参摘要 |
+| `responseSummary` | String | 结果摘要 |
+| `successStatus` | Integer | 成功状态 |
+| `elapsedMs` | Long | 耗时（毫秒） |
+| `errorMessage` | String | 错误信息 |
+| `createdAt` | DateTime | 创建时间 |
+
+---
+
+#### 分页查询工具授权
+
+**接口信息**
+- 路径: `GET /api/sys/ai/tools/authorizations`
+- 鉴权: `ai:tool:query`
+
+**查询参数说明**
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `current` | Long | 否 | 页码，默认 `1` |
+| `size` | Long | 否 | 每页条数，默认 `10` |
+| `toolId` | Long | 否 | 工具 ID |
+| `authorizationType` | String | 否 | 授权类型 |
+| `authorizationKey` | String | 否 | 授权键 |
+| `enabled` | Integer | 否 | 启用状态 |
+
+**响应字段说明**
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| `id` | Long | ID |
+| `toolId` | Long | 工具 ID |
+| `authorizationType` | String | 授权类型 agent/scene/permission/data_scope |
+| `authorizationKey` | String | 授权键 |
+| `dataScope` | String | 数据范围 |
+| `enabled` | Integer | 启用状态 |
+| `createdBy` | Long | 创建人ID |
+| `updatedBy` | Long | 更新人ID |
+| `createdAt` | DateTime | 创建时间 |
+| `updatedAt` | DateTime | 更新时间 |
+
+---
+
+#### 创建工具授权
+
+**接口信息**
+- 路径: `POST /api/sys/ai/tools/authorizations`
+- 鉴权: `ai:tool:update`
+
+**请求体字段说明**
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `toolId` | Long | 是 | 工具 ID |
+| `authorizationType` | String | 是 | 授权类型 agent/scene/permission/data_scope |
+| `authorizationKey` | String | 是 | 授权键（最多 128 字符） |
+| `dataScope` | String | 否 | 数据范围 |
+| `enabled` | Integer | 是 | 启用状态：0-停用，1-启用 |
+
+---
+
+#### 更新工具授权
+
+**接口信息**
+- 路径: `PUT /api/sys/ai/tools/authorizations/{id}`
+- 鉴权: `ai:tool:update`
+- 请求体字段: 同创建工具授权
+
+---
+
+#### 删除工具授权
+
+**接口信息**
+- 路径: `DELETE /api/sys/ai/tools/authorizations/{id}`
+- 鉴权: `ai:tool:update`
+
+---
+
+### AI MCP 服务管理
+
+#### 分页查询 MCP 服务
+
+**接口信息**
+- 路径: `GET /api/sys/ai/mcp-servers`
+- 鉴权: `ai:mcp:query`
+
+**查询参数说明**
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `current` | Long | 否 | 页码，默认 `1` |
+| `size` | Long | 否 | 每页条数，默认 `10` |
+| `serverName` | String | 否 | 服务名称 |
+| `transportType` | String | 否 | 传输类型 stdio/http |
+| `enabled` | Integer | 否 | 启用状态 |
+
+**响应字段说明**
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| `id` | Long | ID |
+| `serverName` | String | 服务名称 |
+| `transportType` | String | 传输类型 |
+| `connectionConfigJson` | String | 连接配置 JSON |
+| `timeoutSeconds` | Integer | 超时时间（秒） |
+| `enabled` | Integer | 启用状态 |
+| `lastHealthStatus` | String | 最近健康状态 |
+| `lastDiscoveredAt` | DateTime | 最近发现时间 |
+| `lastErrorSummary` | String | 最近错误摘要 |
+| `createdBy` | Long | 创建人ID |
+| `updatedBy` | Long | 更新人ID |
+| `createdAt` | DateTime | 创建时间 |
+| `updatedAt` | DateTime | 更新时间 |
+
+---
+
+#### 查询 MCP 服务详情
+
+**接口信息**
+- 路径: `GET /api/sys/ai/mcp-servers/{id}`
+- 鉴权: `ai:mcp:query`
+
+---
+
+#### 创建 MCP 服务
+
+**接口信息**
+- 路径: `POST /api/sys/ai/mcp-servers`
+- 鉴权: `ai:mcp:create`
+
+**请求体字段说明**
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `serverName` | String | 是 | 服务名称（最多 128 字符） |
+| `transportType` | String | 是 | 传输类型 stdio/http |
+| `connectionConfigJson` | String | 是 | 连接配置 JSON |
+| `authConfigJson` | String | 否 | 鉴权配置 JSON |
+| `timeoutSeconds` | Integer | 是 | 超时时间（秒） |
+| `enabled` | Integer | 是 | 启用状态：0-停用，1-启用 |
+| `mfaTicket` | String | 否 | MFA 票据 |
+
+---
+
+#### 更新 MCP 服务
+
+**接口信息**
+- 路径: `PUT /api/sys/ai/mcp-servers/{id}`
+- 鉴权: `ai:mcp:update`
+- 请求体字段: 同创建 MCP 服务
+
+---
+
+#### 更新 MCP 服务状态
+
+**接口信息**
+- 路径: `PUT /api/sys/ai/mcp-servers/{id}/status`
+- 鉴权: `ai:mcp:update`
+
+**查询参数说明**
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `enabled` | Integer | 是 | 0-停用，1-启用 |
+
+---
+
+#### 删除 MCP 服务
+
+**接口信息**
+- 路径: `DELETE /api/sys/ai/mcp-servers/{id}`
+- 鉴权: `ai:mcp:delete`
+
+---
+
+#### 发现 MCP 工具
+
+**接口信息**
+- 路径: `POST /api/sys/ai/mcp-servers/{id}/discover`
+- 鉴权: `ai:mcp:discover`
+- 说明: 连接 MCP 服务并发现可用工具
+
+**响应字段说明**
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| `discoveredCount` | Integer | 发现工具数量 |
+| `syncedCount` | Integer | 同步后的工具数量 |
+
+---
+
+#### 查询 MCP 工具快照
+
+**接口信息**
+- 路径: `GET /api/sys/ai/mcp-servers/{id}/tools`
+- 鉴权: `ai:mcp:query`
+- 说明: 查询指定 MCP 服务的工具快照（返回列表，非分页）
+
+**响应字段说明**
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| `id` | Long | ID |
+| `mcpServerId` | Long | MCP 服务 ID |
+| `mcpToolName` | String | MCP 原始工具名 |
+| `toolCode` | String | 工具编码 |
+| `toolName` | String | 工具名称 |
+| `description` | String | 描述 |
+| `parametersSchema` | String | 参数 Schema |
+| `resultSchema` | String | 返回 Schema |
+| `riskLevel` | String | 风险等级 |
+| `useScenarios` | String | 适用场景 |
+| `enabled` | Integer | 启用状态 |
+| `discoveredAt` | DateTime | 发现时间 |
+| `rawDefinitionJson` | String | 原始定义 JSON |
+| `lastErrorSummary` | String | 错误摘要 |
+| `createdAt` | DateTime | 创建时间 |
+| `updatedAt` | DateTime | 更新时间 |
+
+---
+
+#### 查询 MCP 连接状态
+
+**接口信息**
+- 路径: `GET /api/sys/ai/mcp-servers/{id}/health`
+- 鉴权: `ai:mcp:query`
+
+**响应字段说明**
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| `healthy` | Boolean | 是否健康 |
+| `status` | String | 状态 |
+| `errorSummary` | String | 错误摘要 |
 
 ---
 

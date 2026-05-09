@@ -1665,3 +1665,761 @@ axios.get('/api/public/chat/lobby/messages', {
 | pending | 转码中 |
 | ready | 可用 |
 | failed | 转码失败 |
+
+---
+
+## 后台主题频道管理
+
+### 创建主题频道
+
+**接口信息**
+- 路径: `POST /api/sys/chats/topic-channels`
+- 鉴权: 是（权限: `content:chat:update`）
+- 说明: 创建主题频道
+
+**请求示例**
+
+```javascript
+axios.post('/api/sys/chats/topic-channels', {
+  name: '技术讨论频道',
+  avatar: 'https://example.com/avatar/tech-channel.jpg',
+  categoryCode: 'tech',
+  visibilityScope: 'public',
+  joinRule: 'free',
+  speakLevelLimit: 1,
+  memberLimit: 500
+})
+```
+
+---
+
+### 更新主题频道
+
+**接口信息**
+- 路径: `PUT /api/sys/chats/topic-channels/{conversationId}`
+- 鉴权: 是（权限: `content:chat:update`）
+- 说明: 更新主题频道信息
+
+**请求示例**
+
+```javascript
+axios.put('/api/sys/chats/topic-channels/1005', {
+  name: '技术讨论频道（新）',
+  notice: '请遵守频道规则'
+})
+```
+
+---
+
+## 公开主题频道
+
+### 分页查询主题频道
+
+**接口信息**
+- 路径: `GET /api/public/chat/channels`
+- 鉴权: 否（公开接口）
+- 说明: 分页查询公开主题频道列表
+
+**请求参数**
+
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
+|-----|------|------|--------|-----|
+| current | Long | 否 | 1 | 页码 |
+| size | Long | 否 | 20 | 每页条数 |
+| categoryCode | String | 否 | - | 频道分类编码筛选 |
+
+**请求示例**
+
+```javascript
+axios.get('/api/public/chat/channels', {
+  params: { current: 1, size: 20, categoryCode: 'tech' }
+})
+```
+
+---
+
+### 查询主题频道详情
+
+**接口信息**
+- 路径: `GET /api/public/chat/channels/{conversationId}`
+- 鉴权: 否（公开接口）
+- 说明: 查询指定主题频道的详细信息
+
+**请求示例**
+
+```javascript
+axios.get('/api/public/chat/channels/1005')
+```
+
+---
+
+## 帖子频道关联
+
+### 分享帖子到频道
+
+**接口信息**
+- 路径: `POST /api/user/chat/forum-links`
+- 鉴权: 是
+- 说明: 将论坛帖子分享到聊天频道
+
+**请求示例**
+
+```javascript
+axios.post('/api/user/chat/forum-links', {
+  forumPostId: 2001,
+  conversationId: 1005
+})
+```
+
+---
+
+### 查询帖子关联的频道
+
+**接口信息**
+- 路径: `GET /api/user/chat/forum-links/posts/{forumPostId}`
+- 鉴权: 是
+- 说明: 查询指定帖子所关联的频道信息
+
+**请求示例**
+
+```javascript
+axios.get('/api/user/chat/forum-links/posts/2001')
+```
+
+---
+
+### 分页查询频道关联的帖子
+
+**接口信息**
+- 路径: `GET /api/user/chat/forum-links/channels/{conversationId}`
+- 鉴权: 是
+- 说明: 分页查询指定频道关联的帖子列表
+
+**请求参数**
+
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
+|-----|------|------|--------|-----|
+| current | Long | 否 | 1 | 页码 |
+| size | Long | 否 | 20 | 每页条数 |
+
+**请求示例**
+
+```javascript
+axios.get('/api/user/chat/forum-links/channels/1005', {
+  params: { current: 1, size: 20 }
+})
+```
+
+---
+
+### 取消帖子频道关联
+
+**接口信息**
+- 路径: `DELETE /api/user/chat/forum-links/posts/{forumPostId}`
+- 鉴权: 是
+- 说明: 取消帖子与频道的关联
+
+**请求示例**
+
+```javascript
+axios.delete('/api/user/chat/forum-links/posts/2001')
+```
+
+---
+
+## 后台频道申请管理
+
+### 分页查询频道申请
+
+**接口信息**
+- 路径: `GET /api/sys/chats/channel-applications`
+- 鉴权: 是（权限: `content:channel-application:query`）
+- 说明: 分页查询频道创建申请列表
+
+**请求示例**
+
+```javascript
+axios.get('/api/sys/chats/channel-applications', {
+  params: { current: 1, size: 20 }
+})
+```
+
+---
+
+### 查询频道申请详情
+
+**接口信息**
+- 路径: `GET /api/sys/chats/channel-applications/{id}`
+- 鉴权: 是（权限: `content:channel-application:query`）
+- 说明: 查询指定频道申请的详细信息
+
+**请求示例**
+
+```javascript
+axios.get('/api/sys/chats/channel-applications/301')
+```
+
+---
+
+### 审核频道申请
+
+**接口信息**
+- 路径: `PUT /api/sys/chats/channel-applications/{id}/review`
+- 鉴权: 是（权限: `content:channel-application:review`）
+- 说明: 审核频道创建申请，通过或拒绝
+
+**请求示例**
+
+```javascript
+// 通过
+axios.put('/api/sys/chats/channel-applications/301/review', {
+  approved: true,
+  reviewRemark: '符合要求，予以通过'
+})
+
+// 拒绝
+axios.put('/api/sys/chats/channel-applications/301/review', {
+  approved: false,
+  reviewRemark: '频道名称不规范，请修改后重新提交'
+})
+```
+
+---
+
+## 用户频道创建申请
+
+### 提交频道创建申请
+
+**接口信息**
+- 路径: `POST /api/user/chat/channel-applications`
+- 鉴权: 是
+- 说明: 用户提交频道创建申请
+
+**请求示例**
+
+```javascript
+axios.post('/api/user/chat/channel-applications', {
+  name: '前端学习频道',
+  description: '前端开发者学习与交流',
+  categoryCode: 'tech',
+  reason: '希望创建一个专注于前端技术学习的频道'
+})
+```
+
+---
+
+### 查询最近一次申请
+
+**接口信息**
+- 路径: `GET /api/user/chat/channel-applications/latest`
+- 鉴权: 是
+- 说明: 查询当前用户最近一次频道创建申请
+
+**请求示例**
+
+```javascript
+axios.get('/api/user/chat/channel-applications/latest')
+```
+
+---
+
+### 分页查询我的申请
+
+**接口信息**
+- 路径: `GET /api/user/chat/channel-applications`
+- 鉴权: 是
+- 说明: 分页查询当前用户的频道创建申请列表
+
+**请求示例**
+
+```javascript
+axios.get('/api/user/chat/channel-applications', {
+  params: { current: 1, size: 20 }
+})
+```
+
+---
+
+## 群邀请链接
+
+### 创建邀请链接
+
+**接口信息**
+- 路径: `POST /api/user/chat/groups/{conversationId}/invite-links`
+- 鉴权: 是
+- 说明: 为群聊创建邀请链接
+
+**请求示例**
+
+```javascript
+axios.post('/api/user/chat/groups/1003/invite-links', {
+  maxUses: 10,
+  expireHours: 24
+})
+```
+
+---
+
+### 分页查询邀请链接
+
+**接口信息**
+- 路径: `GET /api/user/chat/groups/{conversationId}/invite-links`
+- 鉴权: 是
+- 说明: 分页查询群聊的邀请链接列表
+
+**请求示例**
+
+```javascript
+axios.get('/api/user/chat/groups/1003/invite-links', {
+  params: { current: 1, size: 20 }
+})
+```
+
+---
+
+### 禁用邀请链接
+
+**接口信息**
+- 路径: `PUT /api/user/chat/groups/{conversationId}/invite-links/{inviteLinkId}/disable`
+- 鉴权: 是
+- 说明: 禁用指定的邀请链接
+
+**请求示例**
+
+```javascript
+axios.put('/api/user/chat/groups/1003/invite-links/501/disable')
+```
+
+---
+
+### 通过邀请令牌加入群
+
+**接口信息**
+- 路径: `POST /api/user/chat/group-invite-links/{inviteToken}/join`
+- 鉴权: 是
+- 说明: 通过邀请令牌加入群聊
+
+**请求示例**
+
+```javascript
+axios.post('/api/user/chat/group-invite-links/abc123token/join')
+```
+
+---
+
+## 入群申请
+
+### 提交入群申请
+
+**接口信息**
+- 路径: `POST /api/user/chat/groups/{conversationId}/join-applications`
+- 鉴权: 是
+- 说明: 向需要审批的群聊提交入群申请
+
+**请求示例**
+
+```javascript
+axios.post('/api/user/chat/groups/1003/join-applications', {
+  reason: '希望加入群聊学习交流'
+})
+```
+
+---
+
+### 我的入群申请
+
+**接口信息**
+- 路径: `GET /api/user/chat/group-join-applications`
+- 鉴权: 是
+- 说明: 分页查询当前用户提交的入群申请列表
+
+**请求示例**
+
+```javascript
+axios.get('/api/user/chat/group-join-applications', {
+  params: { current: 1, size: 20 }
+})
+```
+
+---
+
+### 查询群的入群申请列表
+
+**接口信息**
+- 路径: `GET /api/user/chat/groups/{conversationId}/join-applications`
+- 鉴权: 是
+- 说明: 查询指定群的入群申请列表，需要管理员或群主权限
+
+**请求示例**
+
+```javascript
+axios.get('/api/user/chat/groups/1003/join-applications', {
+  params: { current: 1, size: 20 }
+})
+```
+
+---
+
+### 审核入群申请
+
+**接口信息**
+- 路径: `PUT /api/user/chat/groups/{conversationId}/join-applications/{applicationId}/review`
+- 鉴权: 是
+- 说明: 审核入群申请，通过或拒绝，需要管理员或群主权限
+
+**请求示例**
+
+```javascript
+// 通过
+axios.put('/api/user/chat/groups/1003/join-applications/401/review', {
+  approved: true
+})
+
+// 拒绝
+axios.put('/api/user/chat/groups/1003/join-applications/401/review', {
+  approved: false,
+  rejectReason: '不符合群聊加入条件'
+})
+```
+
+---
+
+## 后台大厅管理
+
+### 更新大厅设置
+
+**接口信息**
+- 路径: `PUT /api/sys/chats/lobby/settings`
+- 鉴权: 是（权限: `content:chat:update`）
+- 说明: 更新大厅的全局设置
+
+**请求示例**
+
+```javascript
+axios.put('/api/sys/chats/lobby/settings', {
+  speakLevelLimit: 2,
+  slowModeSeconds: 5,
+  allowGuestSpeak: false
+})
+```
+
+---
+
+### 置顶消息
+
+**接口信息**
+- 路径: `POST /api/sys/chats/lobby/messages/{messageId}/pin`
+- 鉴权: 是（权限: `content:chat:update`）
+- 说明: 置顶大厅中的指定消息
+
+**请求示例**
+
+```javascript
+axios.post('/api/sys/chats/lobby/messages/5020/pin')
+```
+
+---
+
+### 取消置顶
+
+**接口信息**
+- 路径: `DELETE /api/sys/chats/lobby/messages/{messageId}/pin`
+- 鉴权: 是（权限: `content:chat:update`）
+- 说明: 取消大厅中指定消息的置顶状态
+
+**请求示例**
+
+```javascript
+axios.delete('/api/sys/chats/lobby/messages/5020/pin')
+```
+
+---
+
+### 分页查询置顶消息
+
+**接口信息**
+- 路径: `GET /api/sys/chats/lobby/messages/pinned`
+- 鉴权: 是（权限: `content:chat:query`）
+- 说明: 分页查询大厅中的置顶消息列表
+
+**请求参数**
+
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
+|-----|------|------|--------|-----|
+| current | Long | 否 | 1 | 页码 |
+| size | Long | 否 | 20 | 每页条数 |
+
+**请求示例**
+
+```javascript
+axios.get('/api/sys/chats/lobby/messages/pinned', {
+  params: { current: 1, size: 20 }
+})
+```
+
+---
+
+### 禁言大厅成员
+
+**接口信息**
+- 路径: `PUT /api/sys/chats/lobby/members/{memberUserId}/mute`
+- 鉴权: 是（权限: `content:chat:update`）
+- 说明: 禁言大厅中的指定成员
+
+**请求示例**
+
+```javascript
+axios.put('/api/sys/chats/lobby/members/103/mute', {
+  muteUntil: '2025-01-16T12:00:00'
+})
+```
+
+---
+
+### 踢出大厅成员
+
+**接口信息**
+- 路径: `PUT /api/sys/chats/lobby/members/{memberUserId}/kick`
+- 鉴权: 是（权限: `content:chat:update`）
+- 说明: 将指定成员踢出大厅
+
+**请求示例**
+
+```javascript
+axios.put('/api/sys/chats/lobby/members/103/kick')
+```
+
+---
+
+## 后台聊天治理
+
+### 分页查询会话
+
+**接口信息**
+- 路径: `GET /api/sys/chats/conversations`
+- 鉴权: 是（权限: `content:chat:query`）
+- 说明: 分页查询所有会话列表，用于后台管理
+
+**请求示例**
+
+```javascript
+axios.get('/api/sys/chats/conversations', {
+  params: { current: 1, size: 20 }
+})
+```
+
+---
+
+### 查询会话详情
+
+**接口信息**
+- 路径: `GET /api/sys/chats/conversations/{conversationId}`
+- 鉴权: 是（权限: `content:chat:query`）
+- 说明: 查询指定会话的详细信息
+
+**请求示例**
+
+```javascript
+axios.get('/api/sys/chats/conversations/1001')
+```
+
+---
+
+### 查询会话成员列表
+
+**接口信息**
+- 路径: `GET /api/sys/chats/conversations/{conversationId}/members`
+- 鉴权: 是（权限: `content:chat:query`）
+- 说明: 查询指定会话的成员列表
+
+**请求示例**
+
+```javascript
+axios.get('/api/sys/chats/conversations/1003/members')
+```
+
+---
+
+### 分页查询会话消息
+
+**接口信息**
+- 路径: `GET /api/sys/chats/conversations/{conversationId}/messages`
+- 鉴权: 是（权限: `content:chat:query`）
+- 说明: 分页查询指定会话的消息列表
+
+**请求示例**
+
+```javascript
+axios.get('/api/sys/chats/conversations/1001/messages', {
+  params: { current: 1, size: 20 }
+})
+```
+
+---
+
+### 查询消息详情
+
+**接口信息**
+- 路径: `GET /api/sys/chats/conversations/{conversationId}/messages/{messageId}`
+- 鉴权: 是（权限: `content:chat:query`）
+- 说明: 查询指定消息的详细信息
+
+**请求示例**
+
+```javascript
+axios.get('/api/sys/chats/conversations/1001/messages/9021')
+```
+
+---
+
+### 查询消息已读回执
+
+**接口信息**
+- 路径: `GET /api/sys/chats/conversations/{conversationId}/messages/{messageId}/receipts`
+- 鉴权: 是（权限: `content:chat:query`）
+- 说明: 查询指定消息的已读回执列表
+
+**请求示例**
+
+```javascript
+axios.get('/api/sys/chats/conversations/1001/messages/9021/receipts', {
+  params: { current: 1, size: 20 }
+})
+```
+
+---
+
+### 修改成员角色
+
+**接口信息**
+- 路径: `PUT /api/sys/chats/conversations/{conversationId}/members/{memberUserId}/role`
+- 鉴权: 是（权限: `content:chat:update`）
+- 说明: 修改会话中指定成员的角色
+
+**请求示例**
+
+```javascript
+axios.put('/api/sys/chats/conversations/1003/members/103/role', {
+  role: 'admin'
+})
+```
+
+---
+
+### 修改成员状态
+
+**接口信息**
+- 路径: `PUT /api/sys/chats/conversations/{conversationId}/members/{memberUserId}/status`
+- 鉴权: 是（权限: `content:chat:update`）
+- 说明: 修改会话中指定成员的状态（如正常、禁用）
+
+**请求示例**
+
+```javascript
+axios.put('/api/sys/chats/conversations/1003/members/103/status', {
+  status: 1
+})
+```
+
+---
+
+### 修改成员禁言
+
+**接口信息**
+- 路径: `PUT /api/sys/chats/conversations/{conversationId}/members/{memberUserId}/mute`
+- 鉴权: 是（权限: `content:chat:update`）
+- 说明: 修改会话中指定成员的禁言状态
+
+**请求示例**
+
+```javascript
+axios.put('/api/sys/chats/conversations/1003/members/103/mute', {
+  muteUntil: '2025-01-16T12:00:00'
+})
+```
+
+---
+
+### 后台撤回消息
+
+**接口信息**
+- 路径: `POST /api/sys/chats/conversations/{conversationId}/messages/{messageId}/revoke`
+- 鉴权: 是（权限: `content:chat:update`）
+- 说明: 后台管理员撤回指定会话中的消息
+
+**请求示例**
+
+```javascript
+axios.post('/api/sys/chats/conversations/1001/messages/9021/revoke')
+```
+
+---
+
+### 修改会话状态
+
+**接口信息**
+- 路径: `PUT /api/sys/chats/conversations/{conversationId}/status`
+- 鉴权: 是（权限: `content:chat:update-status`）
+- 说明: 修改指定会话的状态（如正常、禁用、归档）
+
+**请求示例**
+
+```javascript
+axios.put('/api/sys/chats/conversations/1003/status', {
+  status: 1
+})
+```
+
+---
+
+## 后台禁言管理
+
+### 创建禁言记录
+
+**接口信息**
+- 路径: `POST /api/sys/chats/mutes`
+- 鉴权: 是（权限: `content:chat:update`）
+- 说明: 创建禁言记录，对用户进行禁言
+
+**请求示例**
+
+```javascript
+axios.post('/api/sys/chats/mutes', {
+  userId: 103,
+  conversationId: 1003,
+  reason: '发布违规内容',
+  muteUntil: '2025-01-20T12:00:00'
+})
+```
+
+---
+
+### 分页查询禁言记录
+
+**接口信息**
+- 路径: `GET /api/sys/chats/mutes`
+- 鉴权: 是（权限: `content:chat:query`）
+- 说明: 分页查询禁言记录列表
+
+**请求示例**
+
+```javascript
+axios.get('/api/sys/chats/mutes', {
+  params: { current: 1, size: 20 }
+})
+```
+
+---
+
+### 解除禁言
+
+**接口信息**
+- 路径: `PUT /api/sys/chats/mutes/{id}/release`
+- 鉴权: 是（权限: `content:chat:update`）
+- 说明: 解除指定的禁言记录
+
+**请求示例**
+
+```javascript
+axios.put('/api/sys/chats/mutes/601/release')
+```

@@ -1189,3 +1189,21 @@ axios.delete('/api/sys/files/501', {
 | 上传任务过期后再调用上传接口会怎样 | 服务端先把任务收口为已取消，再返回 `UPLOAD_TASK_EXPIRED` |
 | 秒传检测时任务已过期 | 服务端先将任务收口为 `5(已取消)`，再返回 `UPLOAD_TASK_EXPIRED` |
 | 后台文件权限前缀是什么 | `content:file:query`、`content:file:update`、`content:file:delete` |
+
+---
+
+## 7. 公开文件访问
+
+### 下载文件
+
+**接口信息**
+
+- 路径: `GET /api/public/files/{fileId}`
+- 鉴权: 无（公开接口）
+- 说明: 直接下载文件，返回文件流（非 `Result<>` 包装），浏览器会触发下载或内联显示
+
+**路径参数说明**
+
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `fileId` | Long | 是 | 文件ID |

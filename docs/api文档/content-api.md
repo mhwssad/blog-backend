@@ -1943,3 +1943,729 @@ fetch('/api/sys/articles/105', {
 | 切换置顶 | PUT | /api/sys/articles/{id}/top | content:article:update |
 | 切换推荐 | PUT | /api/sys/articles/{id}/recommend | content:article:update |
 | 删除文章 | DELETE | /api/sys/articles/{id} | content:article:delete |
+
+---
+
+## 九、友情链接
+
+### 公开接口
+
+#### 查询启用的友情链接
+
+**接口信息**
+
+- 路径: `GET /api/public/friend-links`
+- 鉴权: 无（公开接口）
+- 说明: 查询所有启用状态的友情链接，按 sortOrder 排序
+
+**响应字段说明**
+
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| `id` | Long | ID |
+| `name` | String | 站点名称 |
+| `url` | String | 站点地址 |
+| `iconUrl` | String | 图标地址 |
+| `description` | String | 站点描述 |
+
+---
+
+### 后台管理
+
+#### 分页查询友情链接
+
+**接口信息**
+
+- 路径: `GET /api/sys/friend-links`
+- 鉴权: `content:friend-link:query`
+
+**查询参数说明**
+
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `current` | Long | 否 | 页码，默认 `1` |
+| `size` | Long | 否 | 每页条数，默认 `10` |
+| `name` | String | 否 | 站点名称（模糊匹配） |
+| `status` | Integer | 否 | 状态：0-停用，1-启用 |
+
+**响应字段说明**
+
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| `id` | Long | ID |
+| `name` | String | 站点名称 |
+| `url` | String | 站点地址 |
+| `iconUrl` | String | 图标地址 |
+| `description` | String | 站点描述 |
+| `sortOrder` | Integer | 排序值 |
+| `status` | Integer | 状态：0-停用，1-启用 |
+| `createdAt` | DateTime | 创建时间 |
+| `updatedAt` | DateTime | 更新时间 |
+
+---
+
+#### 查询友情链接详情
+
+**接口信息**
+
+- 路径: `GET /api/sys/friend-links/{id}`
+- 鉴权: `content:friend-link:query`
+
+---
+
+#### 创建友情链接
+
+**接口信息**
+
+- 路径: `POST /api/sys/friend-links`
+- 鉴权: `content:friend-link:create`
+
+**请求体字段说明**
+
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `name` | String | 是 | 站点名称（最多 64 字符） |
+| `url` | String | 是 | 站点地址（需以 http:// 或 https:// 开头） |
+| `iconUrl` | String | 否 | 图标地址 |
+| `description` | String | 否 | 站点描述（最多 255 字符） |
+| `sortOrder` | Integer | 否 | 排序值 |
+
+---
+
+#### 更新友情链接
+
+**接口信息**
+
+- 路径: `PUT /api/sys/friend-links/{id}`
+- 鉴权: `content:friend-link:update`
+- 请求体字段: 同创建友情链接
+
+---
+
+#### 更新友情链接状态
+
+**接口信息**
+
+- 路径: `PUT /api/sys/friend-links/{id}/status`
+- 鉴权: `content:friend-link:update`
+
+**请求体字段说明**
+
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `status` | Integer | 是 | 状态：0-停用，1-启用 |
+
+---
+
+#### 删除友情链接
+
+**接口信息**
+
+- 路径: `DELETE /api/sys/friend-links/{id}`
+- 鉴权: `content:friend-link:delete`
+
+---
+
+## 十、后台分类管理
+
+### 分页查询分类树
+
+**接口信息**
+
+- 路径: `GET /api/sys/categories/tree`
+- 鉴权: `content:category:query`
+- 说明: 返回分类树形结构
+
+---
+
+### 查询分类详情
+
+**接口信息**
+
+- 路径: `GET /api/sys/categories/{id}`
+- 鉴权: `content:category:query`
+
+---
+
+### 创建分类
+
+**接口信息**
+
+- 路径: `POST /api/sys/categories`
+- 鉴权: `content:category:create`
+
+**请求体字段说明**
+
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `parentId` | Long | 是 | 父分类 ID，顶级分类传 `0` |
+| `name` | String | 是 | 分类名称 |
+| `code` | String | 是 | 分类编码 |
+| `type` | String | 是 | 分类类型 |
+| `sortOrder` | Integer | 否 | 排序值 |
+| `icon` | String | 否 | 图标 |
+| `description` | String | 否 | 描述 |
+| `status` | Integer | 否 | 状态：0-停用，1-启用 |
+
+---
+
+### 更新分类
+
+**接口信息**
+
+- 路径: `PUT /api/sys/categories/{id}`
+- 鉴权: `content:category:update`
+- 请求体字段: 同创建分类
+
+---
+
+### 更新分类状态
+
+**接口信息**
+
+- 路径: `PUT /api/sys/categories/{id}/status`
+- 鉴权: `content:category:update`
+
+**请求体字段说明**
+
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `status` | Integer | 是 | 状态：0-停用，1-启用 |
+
+---
+
+### 删除分类
+
+**接口信息**
+
+- 路径: `DELETE /api/sys/categories/{id}`
+- 鉴权: `content:category:delete`
+
+---
+
+## 十一、后台标签管理
+
+### 查询标签列表
+
+**接口信息**
+
+- 路径: `GET /api/sys/tags`
+- 鉴权: `content:tag:query`
+- 说明: 返回标签列表
+
+---
+
+### 查询标签详情
+
+**接口信息**
+
+- 路径: `GET /api/sys/tags/{id}`
+- 鉴权: `content:tag:query`
+
+---
+
+### 创建标签
+
+**接口信息**
+
+- 路径: `POST /api/sys/tags`
+- 鉴权: `content:tag:create`
+
+**请求体字段说明**
+
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `name` | String | 是 | 标签名称 |
+| `color` | String | 否 | 标签颜色（十六进制） |
+
+---
+
+### 更新标签
+
+**接口信息**
+
+- 路径: `PUT /api/sys/tags/{id}`
+- 鉴权: `content:tag:update`
+- 请求体字段: 同创建标签
+
+---
+
+### 删除标签
+
+**接口信息**
+
+- 路径: `DELETE /api/sys/tags/{id}`
+- 鉴权: `content:tag:delete`
+
+---
+
+## 十二、用户评论行为
+
+### 点赞评论
+
+**接口信息**
+
+- 路径: `POST /api/user/comments/{id}/likes`
+- 鉴权: 必须登录
+
+---
+
+### 取消点赞评论
+
+**接口信息**
+
+- 路径: `DELETE /api/user/comments/{id}/likes`
+- 鉴权: 必须登录
+
+---
+
+### 创建评论
+
+**接口信息**
+
+- 路径: `POST /api/user/comments`
+- 鉴权: 必须登录
+
+**请求体字段说明**
+
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `targetType` | String | 是 | 目标类型 |
+| `targetId` | Long | 是 | 目标 ID |
+| `content` | String | 是 | 评论内容 |
+| `images` | List\<String\> | 否 | 图片列表 |
+| `rootId` | Long | 否 | 根评论 ID，默认 `0` |
+| `parentId` | Long | 否 | 父评论 ID，默认 `0` |
+
+---
+
+### 删除评论
+
+**接口信息**
+
+- 路径: `DELETE /api/user/comments/{id}`
+- 鉴权: 必须登录
+
+---
+
+## 十三、后台评论管理
+
+### 分页查询评论
+
+**接口信息**
+
+- 路径: `GET /api/sys/comments`
+- 鉴权: `content:comment:query`
+- 说明: 分页查询评论列表
+
+---
+
+### 查询评论详情
+
+**接口信息**
+
+- 路径: `GET /api/sys/comments/{id}`
+- 鉴权: `content:comment:query`
+
+---
+
+### 更新评论状态
+
+**接口信息**
+
+- 路径: `PUT /api/sys/comments/{id}/status`
+- 鉴权: `content:comment:update`
+
+**请求体字段说明**
+
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `status` | Integer | 是 | 状态 |
+
+---
+
+### 删除评论
+
+**接口信息**
+
+- 路径: `DELETE /api/sys/comments/{id}`
+- 鉴权: `content:comment:delete`
+
+---
+
+## 十四、后台收藏管理
+
+### 分页查询收藏夹
+
+**接口信息**
+
+- 路径: `GET /api/sys/collections/folders`
+- 鉴权: `content:collection:query`
+- 说明: 分页查询收藏夹列表
+
+---
+
+### 分页查询收藏记录
+
+**接口信息**
+
+- 路径: `GET /api/sys/collections`
+- 鉴权: `content:collection:query`
+- 说明: 分页查询收藏记录
+
+---
+
+### 删除收藏记录
+
+**接口信息**
+
+- 路径: `DELETE /api/sys/collections/{id}`
+- 鉴权: `content:collection:delete`
+
+---
+
+## 十五、用户足迹
+
+### 分页查询足迹
+
+**接口信息**
+
+- 路径: `GET /api/user/footprints`
+- 鉴权: 必须登录
+- 说明: 分页查询当前用户的浏览足迹
+
+---
+
+### 删除足迹
+
+**接口信息**
+
+- 路径: `DELETE /api/user/footprints/{id}`
+- 鉴权: 必须登录
+
+---
+
+### 清空足迹
+
+**接口信息**
+
+- 路径: `DELETE /api/user/footprints`
+- 鉴权: 必须登录
+- 说明: 清空当前用户全部浏览足迹
+
+---
+
+## 十六、后台足迹管理
+
+### 分页查询足迹
+
+**接口信息**
+
+- 路径: `GET /api/sys/footprints`
+- 鉴权: `content:footprint:query`
+- 说明: 分页查询足迹列表
+
+---
+
+### 删除足迹
+
+**接口信息**
+
+- 路径: `DELETE /api/sys/footprints/{id}`
+- 鉴权: `content:footprint:delete`
+
+---
+
+### 按条件清理足迹
+
+**接口信息**
+
+- 路径: `DELETE /api/sys/footprints`
+- 鉴权: `content:footprint:delete`
+- 说明: 按条件批量清理足迹
+
+---
+
+## 十七、后台互动管理
+
+### 分页查询互动记录
+
+**接口信息**
+
+- 路径: `GET /api/sys/interactions`
+- 鉴权: `content:interaction:query`
+- 说明: 分页查询互动记录（点赞等）
+
+---
+
+### 删除互动记录
+
+**接口信息**
+
+- 路径: `DELETE /api/sys/interactions/{id}`
+- 鉴权: `content:interaction:delete`
+
+---
+
+## 十八、公开文章系列
+
+### 查询作者系列列表
+
+**接口信息**
+
+- 路径: `GET /api/public/authors/{authorId}/series`
+- 鉴权: 无（公开接口）
+- 说明: 返回指定作者的文章系列列表
+
+---
+
+### 查询系列详情
+
+**接口信息**
+
+- 路径: `GET /api/public/article-series/{id}`
+- 鉴权: 无（公开接口）
+
+---
+
+## 十九、用户文章审核
+
+### 提交文章审核
+
+**接口信息**
+
+- 路径: `POST /api/user/articles/{id}/submit-review`
+- 鉴权: 必须登录
+
+**请求体字段说明**
+
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `reviewComment` | String | 否 | 审核备注（最多 512 字符） |
+
+---
+
+### 查询审核日志
+
+**接口信息**
+
+- 路径: `GET /api/user/articles/{id}/review-log`
+- 鉴权: 必须登录
+
+---
+
+## 二十、用户文章管理
+
+### 分页查询我的文章
+
+**接口信息**
+
+- 路径: `GET /api/user/articles`
+- 鉴权: 必须登录
+- 说明: 分页查询当前用户的文章列表
+
+---
+
+### 查询我的文章详情
+
+**接口信息**
+
+- 路径: `GET /api/user/articles/{id}`
+- 鉴权: 必须登录
+
+---
+
+### 配置文章访问名单
+
+**接口信息**
+
+- 路径: `PUT /api/user/articles/{id}/access`
+- 鉴权: 必须登录
+
+**请求体字段说明**
+
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `accessList` | Array | 是 | 访问授权列表 |
+| `accessList[].userId` | Long | 是 | 被授权用户 ID |
+| `accessList[].accessType` | Integer | 否 | 授权类型 |
+| `accessList[].expireTime` | LocalDateTime | 否 | 过期时间 |
+| `accessList[].grantReason` | String | 否 | 授权原因 |
+
+---
+
+## 二十一、用户文章系列
+
+### 查询我的系列列表
+
+**接口信息**
+
+- 路径: `GET /api/user/article-series`
+- 鉴权: 必须登录
+- 说明: 返回当前用户的文章系列列表
+
+---
+
+### 查询我的系列详情
+
+**接口信息**
+
+- 路径: `GET /api/user/article-series/{id}`
+- 鉴权: 必须登录
+
+---
+
+### 创建系列
+
+**接口信息**
+
+- 路径: `POST /api/user/article-series`
+- 鉴权: 必须登录
+
+**请求体字段说明**
+
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `title` | String | 是 | 系列标题（最多 128 字符） |
+| `description` | String | 否 | 系列描述（最多 1024 字符） |
+| `coverImage` | String | 否 | 封面图（最多 512 字符） |
+| `status` | Integer | 否 | 状态 |
+| `visibilityScope` | Integer | 否 | 可见范围 |
+| `sortOrder` | Integer | 否 | 排序值 |
+
+---
+
+### 更新系列
+
+**接口信息**
+
+- 路径: `PUT /api/user/article-series/{id}`
+- 鉴权: 必须登录
+- 请求体字段: 同创建系列
+
+---
+
+### 删除系列
+
+**接口信息**
+
+- 路径: `DELETE /api/user/article-series/{id}`
+- 鉴权: 必须登录
+
+---
+
+### 添加文章到系列
+
+**接口信息**
+
+- 路径: `POST /api/user/article-series/{id}/articles`
+- 鉴权: 必须登录
+
+**请求体字段说明**
+
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `articleId` | Long | 是 | 文章 ID |
+
+---
+
+### 从系列移除文章
+
+**接口信息**
+
+- 路径: `DELETE /api/user/article-series/{id}/articles/{articleId}`
+- 鉴权: 必须登录
+
+---
+
+### 系列内文章排序
+
+**接口信息**
+
+- 路径: `PUT /api/user/article-series/{id}/articles/sort`
+- 鉴权: 必须登录
+
+**请求体字段说明**
+
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `articleIds` | List\<Long\> | 是 | 文章 ID 列表（按顺序排列） |
+
+---
+
+## 二十二、后台文章审核管理
+
+### 分页查询审核记录
+
+**接口信息**
+
+- 路径: `GET /api/sys/article-reviews`
+- 鉴权: `content:article-review:query`
+- 说明: 分页查询文章审核记录
+
+---
+
+### 查询审核详情
+
+**接口信息**
+
+- 路径: `GET /api/sys/article-reviews/{id}`
+- 鉴权: `content:article-review:query`
+
+---
+
+### 通过审核
+
+**接口信息**
+
+- 路径: `PUT /api/sys/article-reviews/{id}/approve`
+- 鉴权: `content:article-review:review`
+
+**请求体字段说明**
+
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `reviewComment` | String | 否 | 审核备注（最多 512 字符） |
+
+---
+
+### 驳回审核
+
+**接口信息**
+
+- 路径: `PUT /api/sys/article-reviews/{id}/reject`
+- 鉴权: `content:article-review:review`
+
+**请求体字段说明**
+
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `reviewComment` | String | 是 | 驳回原因（最多 512 字符） |
+
+---
+
+### 修复审核状态
+
+**接口信息**
+
+- 路径: `PUT /api/sys/article-reviews/{id}/repair-status`
+- 鉴权: `content:article-review:repair`
+
+**请求体字段说明**
+
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| `targetReviewStatus` | Integer | 是 | 目标审核状态 |
+| `reviewComment` | String | 否 | 备注（最多 512 字符） |
+
+---
+
+## 二十三、公开文件访问
+
+### 下载文件
+
+**接口信息**
+
+- 路径: `GET /api/public/files/{fileId}`
+- 鉴权: 无（公开接口）
+- 说明: 返回文件流（非 Result 包装，直接下载）
