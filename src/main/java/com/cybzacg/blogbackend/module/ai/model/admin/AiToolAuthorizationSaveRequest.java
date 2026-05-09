@@ -1,6 +1,10 @@
 package com.cybzacg.blogbackend.module.ai.model.admin;
 
+import com.cybzacg.blogbackend.core.validation.EnumValue;
+import com.cybzacg.blogbackend.enums.ai.AiToolAuthorizationTypeEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -17,6 +21,7 @@ public class AiToolAuthorizationSaveRequest {
     private Long toolId;
 
     @NotBlank(message = "授权类型不能为空")
+    @EnumValue(enumClass = AiToolAuthorizationTypeEnum.class, method = "getCode", message = "授权类型无效")
     @Schema(description = "授权类型 agent/scene/permission/data_scope")
     private String authorizationType;
 
@@ -29,6 +34,8 @@ public class AiToolAuthorizationSaveRequest {
     private String dataScope;
 
     @NotNull(message = "启用状态不能为空")
+    @Min(value = 0, message = "启用状态必须为 0 或 1")
+    @Max(value = 1, message = "启用状态必须为 0 或 1")
     @Schema(description = "启用状态：0-停用/1-启用")
     private Integer enabled;
 }

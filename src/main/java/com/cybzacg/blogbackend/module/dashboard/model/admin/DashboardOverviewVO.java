@@ -1,14 +1,18 @@
 package com.cybzacg.blogbackend.module.dashboard.model.admin;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 后台核心概览指标。
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "后台核心概览指标")
 public class DashboardOverviewVO {
     @Schema(description = "时间范围")

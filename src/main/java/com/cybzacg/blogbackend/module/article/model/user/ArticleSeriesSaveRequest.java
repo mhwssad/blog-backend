@@ -1,6 +1,8 @@
 package com.cybzacg.blogbackend.module.article.model.user;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -24,12 +26,15 @@ public class ArticleSeriesSaveRequest {
     @Schema(description = "系列封面")
     private String coverImage;
 
+    @Min(value = 0, message = "系列状态必须为 0 或 1")
+    @Max(value = 1, message = "系列状态必须为 0 或 1")
     @Schema(description = "系列状态：0-停用，1-正常")
     private Integer status;
 
     @Schema(description = "可见范围：0-公开，1-仅自己可见，3-登录可见")
     private Integer visibilityScope;
 
+    @Min(value = 0, message = "排序值不能为负数")
     @Schema(description = "排序值")
     private Integer sortOrder;
 }

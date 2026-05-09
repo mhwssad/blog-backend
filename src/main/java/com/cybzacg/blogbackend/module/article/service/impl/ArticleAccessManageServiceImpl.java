@@ -55,10 +55,7 @@ public class ArticleAccessManageServiceImpl implements ArticleAccessManageServic
         Set<String> keys = new LinkedHashSet<>();
         Set<Long> userIds = new LinkedHashSet<>();
         for (ArticleAccessItem item : accessList) {
-            ExceptionThrowerCore.throwBusinessIfNull(item.getUserId(), ResultErrorCode.ILLEGAL_ARGUMENT, "授权用户不能为空");
             Integer accessType = CollectionUtils.defaultIfNull(item.getAccessType(), 1);
-            ExceptionThrowerCore.throwBusinessIf(!Integer.valueOf(1).equals(accessType) && !Integer.valueOf(2).equals(accessType),
-                    ResultErrorCode.ILLEGAL_ARGUMENT, "访问类型非法");
             item.setAccessType(accessType);
             String key = item.getUserId() + ":" + accessType;
             ExceptionThrowerCore.throwBusinessIf(!keys.add(key), ResultErrorCode.ILLEGAL_ARGUMENT, "存在重复的访问授权记录");

@@ -1,5 +1,6 @@
 package com.cybzacg.blogbackend.module.auth.rbac.service.impl;
 
+import com.cybzacg.blogbackend.common.constant.AuthConstants;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.auth.SysRole;
@@ -79,6 +80,7 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
     @Transactional(rollbackFor = Exception.class)
     public SysRoleAdminVO updateRole(Long id, SysRoleSaveRequest request) {
         SysRole role = getAvailableRole(id);
+        requireMutableRole(role);
         validateRoleUniqueness(id, request);
         applyRoleFields(role, request);
         sysRoleRepository.updateById(role);
@@ -92,6 +94,7 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
     @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, Integer status) {
         SysRole role = getAvailableRole(id);
+        requireMutableRole(role);
         role.setStatus(status);
         sysRoleRepository.updateById(role);
     }
@@ -102,7 +105,8 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteRole(Long id) {
-        getAvailableRole(id);
+        SysRole role = getAvailableRole(id);
+        requireMutableRole(role);
         sysRoleMenuRepository.deleteByRoleId(id);
         sysUserRoleRepository.deleteByRoleId(id);
         sysRoleRepository.removeById(id);
@@ -126,7 +130,8 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void assignMenus(Long roleId, List<Long> menuIds) {
-        getAvailableRole(roleId);
+        SysRole role = getAvailableRole(roleId);
+        requireMutableRole(role);
         List<Long> distinctMenuIds = validateMenusExist(menuIds);
         sysRoleMenuRepository.deleteByRoleId(roleId);
         if (distinctMenuIds.isEmpty()) {
@@ -169,5 +174,19 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
         SysRole role = sysRoleRepository.getById(id);
         ExceptionThrowerCore.throwBusinessIf(role == null || Integer.valueOf(1).equals(role.getIsDeleted()), ResultErrorCode.ILLEGAL_ARGUMENT, "角色不存在");
         return role;
+    }
+
+    /**
+     * 校验角色是否为系统内置超级管理员角色。
+     *
+     * <p>系统内置超级管理员角色不允许进行资料、状态、删除和菜单授权修改。
+     */
+    private void requireMutableRole(SysRole role) {
+        ExceptionThrowerCore.throwBusinessIf(isSuperAdminRole(role), ResultErrorCode.FORBIDDEN, "超级管理员角色不可修改");
+    }
+
+    private boolean isSuperAdminRole(SysRole role) {
+        return role != null && (Long.valueOf(1L).equals(role.getId())
+                || AuthConstants.SUPER_ADMIN_ROLE_CODE.equals(role.getCode()));
     }
 }

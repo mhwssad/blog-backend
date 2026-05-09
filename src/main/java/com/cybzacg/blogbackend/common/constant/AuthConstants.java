@@ -12,6 +12,8 @@ public final class AuthConstants {
     public static final String TOKEN_TYPE_REFRESH = "refresh";
     public static final String AUTHORITIES = "authorities";
     public static final String USER_ID = "userId";
+    public static final String SUPER_ADMIN_ROLE_CODE = "admin";
+    public static final String ALL_PERMISSION = "*:*:*";
 
     public static final String REDIS_AUTH_TOKEN_PREFIX = "auth:token";
     public static final String REDIS_USER = "user";

@@ -1,12 +1,16 @@
 package com.cybzacg.blogbackend.module.dashboard.model.admin;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 后台看板热门论坛版块指标。
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "后台看板热门论坛版块指标")
 public class DashboardHotSectionVO {
     @Schema(description = "版块ID")

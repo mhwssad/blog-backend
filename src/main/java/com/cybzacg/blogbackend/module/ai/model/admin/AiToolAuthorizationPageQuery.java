@@ -3,10 +3,12 @@ package com.cybzacg.blogbackend.module.ai.model.admin;
 import com.cybzacg.blogbackend.core.web.PageQuery;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * AI 工具授权分页查询。
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 @Schema(description = "AI 工具授权分页查询")
 public class AiToolAuthorizationPageQuery extends PageQuery {

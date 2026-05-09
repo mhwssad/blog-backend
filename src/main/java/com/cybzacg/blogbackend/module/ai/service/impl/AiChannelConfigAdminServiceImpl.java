@@ -116,8 +116,6 @@ public class AiChannelConfigAdminServiceImpl implements AiChannelConfigAdminServ
     public void updateStatus(Long id, Integer status, Long operatorId) {
         AiChannelConfig config = ExceptionThrowerCore.requireNonNull(
                 aiChannelConfigRepository.getById(id), ResultErrorCode.AI_CHANNEL_NOT_FOUND);
-        ExceptionThrowerCore.throwBusinessIf(
-                !AiChannelStatusEnum.contains(status), ResultErrorCode.ILLEGAL_ARGUMENT);
 
         config.setStatus(status);
         config.setUpdatedBy(operatorId);

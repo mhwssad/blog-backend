@@ -7,6 +7,7 @@ import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatConversat
 import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatCreateGroupRequest;
 import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatGroupSearchVO;
 import com.cybzacg.blogbackend.module.chat.member.model.admin.ChatChannelApplicationAdminVO;
+import com.cybzacg.blogbackend.module.chat.member.model.admin.ChatGroupJoinApplicationAdminVO;
 import com.cybzacg.blogbackend.module.chat.member.model.user.*;
 import com.cybzacg.blogbackend.module.chat.message.model.admin.ChatAdminMessageVO;
 import com.cybzacg.blogbackend.module.chat.message.model.user.ChatMessageVO;
@@ -72,6 +73,8 @@ public interface ChatModelConvert {
     ChatChannelApplicationAdminVO toChannelApplicationAdminVO(ChatChannelCreateApplication application);
 
     ChatGroupJoinApplicationVO toGroupJoinApplicationVO(ChatGroupJoinApplication application);
+
+    ChatGroupJoinApplicationAdminVO toGroupJoinApplicationAdminVO(ChatGroupJoinApplication application);
 
     ChatGroupInviteLinkVO toGroupInviteLinkVO(ChatGroupInviteLink inviteLink);
 

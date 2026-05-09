@@ -235,13 +235,6 @@ public class AiToolAdminServiceImpl implements AiToolAdminService {
     }
 
     private void validateToolRequest(AiToolDefinitionSaveRequest request) {
-        AiToolSupport.validateToolSource(request.getSourceType());
-        AiToolSupport.validateRiskLevel(request.getRiskLevel());
-        AiToolSupport.validateEnabled(request.getEnabled());
-        AiToolSupport.validateJsonObjectOrBlank(request.getParametersSchema(),
-                ResultErrorCode.AI_TOOL_SCHEMA_INVALID, "参数 Schema 必须是 JSON 对象");
-        AiToolSupport.validateJsonObjectOrBlank(request.getResultSchema(),
-                ResultErrorCode.AI_TOOL_SCHEMA_INVALID, "返回 Schema 必须是 JSON 对象");
         AiToolSupport.validateJsonArrayOfToolScopes(request.getUseScenarios());
         if (AiToolSourceTypeEnum.MCP.getCode().equalsIgnoreCase(request.getSourceType())) {
             ExceptionThrowerCore.throwBusinessIf(request.getMcpServerId() == null || !StringUtils.hasText(request.getMcpToolName()),
@@ -250,8 +243,6 @@ public class AiToolAdminServiceImpl implements AiToolAdminService {
     }
 
     private void validateAuthorizationRequest(AiToolAuthorizationSaveRequest request) {
-        AiToolSupport.validateAuthorizationType(request.getAuthorizationType());
-        AiToolSupport.validateEnabled(request.getEnabled());
         AiToolSupport.validateDataScope(request.getDataScope());
     }
 

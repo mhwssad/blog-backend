@@ -3,11 +3,13 @@ package com.cybzacg.blogbackend.module.ai.model.admin;
 import com.cybzacg.blogbackend.core.web.PageQuery;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * AI 工具调用日志分页查询。
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "AI 工具调用日志分页查询")
 public class AiToolCallLogPageQuery extends PageQuery {
     @Schema(description = "工具 ID")

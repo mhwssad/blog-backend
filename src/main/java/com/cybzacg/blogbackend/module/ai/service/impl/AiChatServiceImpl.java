@@ -227,7 +227,7 @@ public class AiChatServiceImpl implements AiChatService {
         assistantMessage.setSessionId(sessionId);
         assistantMessage.setUserId(userId);
         assistantMessage.setRoleType(AiConstants.ROLE_TYPE_ASSISTANT);
-        assistantMessage.setContent(callResult.getContent());
+        assistantMessage.setContent(callResult.getContent() != null ? callResult.getContent() : "");
         assistantMessage.setRequestSceneType(request.getRequestSceneType());
         assistantMessage.setRequestTargetId(request.getRequestTargetId());
         assistantMessage.setTokenCount(callResult.getTotalTokens());
@@ -338,7 +338,7 @@ public class AiChatServiceImpl implements AiChatService {
                 assistantMessage.setSessionId(sessionId);
                 assistantMessage.setUserId(userId);
                 assistantMessage.setRoleType(AiConstants.ROLE_TYPE_ASSISTANT);
-                assistantMessage.setContent(fullContent);
+                assistantMessage.setContent(fullContent != null ? fullContent : "");
                 assistantMessage.setRequestSceneType(request.getRequestSceneType());
                 assistantMessage.setRequestTargetId(request.getRequestTargetId());
                 assistantMessage.setResponseStatus(AiMessageResponseStatusEnum.SUCCESS.getValue());

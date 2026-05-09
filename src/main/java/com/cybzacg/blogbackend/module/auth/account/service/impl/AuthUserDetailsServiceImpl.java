@@ -1,6 +1,8 @@
 package com.cybzacg.blogbackend.module.auth.account.service.impl;
 
 import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.domain.auth.SysMenu;
+import com.cybzacg.blogbackend.common.constant.AuthConstants;
 import com.cybzacg.blogbackend.module.auth.account.model.AuthUserDetails;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.account.service.AuthUserDetailsService;
@@ -44,7 +46,7 @@ public class AuthUserDetailsServiceImpl implements AuthUserDetailsService {
         }
 
         List<String> roleCodes = sysRoleRepository.findRoleCodesByUserId(user.getId());
-        List<String> permissions = sysMenuRepository.findPermissionsByUserId(user.getId());
+        List<String> permissions = buildPermissions(roleCodes, user.getId());
         List<GrantedAuthority> authorities = buildAuthorities(roleCodes, permissions);
         return AuthUserDetails.of(user, roleCodes, permissions, authorities);
     }
@@ -84,5 +86,53 @@ public class AuthUserDetailsServiceImpl implements AuthUserDetailsService {
      */
     private String toRoleAuthority(String roleCode) {
         return roleCode.startsWith("ROLE_") ? roleCode : "ROLE_" + roleCode;
+    }
+
+    /**
+     * 超级管理员持有权限通配符，后续新增权限无需再补角色菜单授权即可通过鉴权。
+     */
+    private List<String> buildPermissions(List<String> roleCodes, Long userId) {
+        Set<String> permissionValues = new LinkedHashSet<>();
+        if (hasSuperAdminRole(roleCodes)) {
+            permissionValues.addAll(loadAllPermissions());
+            permissionValues.add(AuthConstants.ALL_PERMISSION);
+        } else {
+            List<String> permissions = sysMenuRepository.findPermissionsByUserId(userId);
+            if (permissions != null) {
+                permissions.stream()
+                        .filter(StringUtils::hasText)
+                        .forEach(permissionValues::add);
+            }
+        }
+        return permissionValues.stream().toList();
+    }
+
+    private boolean hasSuperAdminRole(List<String> roleCodes) {
+        if (roleCodes == null) {
+            return false;
+        }
+        return roleCodes.stream()
+                .filter(StringUtils::hasText)
+                .map(this::normalizeRoleCode)
+                .anyMatch(AuthConstants.SUPER_ADMIN_ROLE_CODE::equals);
+    }
+
+    private String normalizeRoleCode(String roleCode) {
+        return roleCode.startsWith("ROLE_") ? roleCode.substring("ROLE_".length()) : roleCode;
+    }
+
+    /**
+     * 读取当前系统全部菜单权限，用于超级管理员直接构建完整授权集。
+     */
+    private List<String> loadAllPermissions() {
+        List<SysMenu> menus = sysMenuRepository.findAllOrdered();
+        if (menus == null || menus.isEmpty()) {
+            return List.of();
+        }
+        return menus.stream()
+                .map(SysMenu::getPerm)
+                .filter(StringUtils::hasText)
+                .distinct()
+                .toList();
     }
 }

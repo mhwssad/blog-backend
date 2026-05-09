@@ -3,10 +3,12 @@ package com.cybzacg.blogbackend.module.migration.model.admin;
 import com.cybzacg.blogbackend.core.web.PageQuery;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 博客迁移文章记录分页查询。
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 @Schema(description = "博客迁移文章记录分页查询")
 public class BlogMigrationRecordPageQuery extends PageQuery {

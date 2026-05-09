@@ -110,40 +110,92 @@ class SysRoleAdminServiceImplTest {
     @Test
     void updateRoleShouldUpdateAndReturnVO() {
         SysRole role = new SysRole();
-        role.setId(1L);
+        role.setId(8L);
+        role.setCode("editor");
         role.setIsDeleted(0);
 
         SysRoleSaveRequest request = new SysRoleSaveRequest();
         request.setName("updated");
         request.setCode("UPDATED");
 
-        when(sysRoleRepository.getById(1L)).thenReturn(role);
-        when(sysRoleRepository.existsActiveByName("updated", 1L)).thenReturn(false);
-        when(sysRoleRepository.existsActiveByCode("UPDATED", 1L)).thenReturn(false);
-        when(sysRoleMenuRepository.findMenuIdsByRoleId(1L)).thenReturn(List.of(10L));
+        when(sysRoleRepository.getById(8L)).thenReturn(role);
+        when(sysRoleRepository.existsActiveByName("updated", 8L)).thenReturn(false);
+        when(sysRoleRepository.existsActiveByCode("UPDATED", 8L)).thenReturn(false);
+        when(sysRoleMenuRepository.findMenuIdsByRoleId(8L)).thenReturn(List.of(10L));
         SysRoleAdminVO expectedVO = new SysRoleAdminVO();
-        expectedVO.setId(1L);
+        expectedVO.setId(8L);
         when(rbacAdminModelConvert.toRoleVO(role, List.of(10L))).thenReturn(expectedVO);
 
-        SysRoleAdminVO result = sysRoleAdminService.updateRole(1L, request);
+        SysRoleAdminVO result = sysRoleAdminService.updateRole(8L, request);
 
-        assertEquals(1L, result.getId());
+        assertEquals(8L, result.getId());
         verify(sysRoleRepository).updateById(role);
+    }
+
+    @Test
+    void updateRoleShouldRejectSuperAdminRole() {
+        SysRole role = buildSuperAdminRole();
+        SysRoleSaveRequest request = new SysRoleSaveRequest();
+        request.setName("updated");
+        request.setCode("UPDATED");
+
+        when(sysRoleRepository.getById(1L)).thenReturn(role);
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> sysRoleAdminService.updateRole(1L, request));
+
+        assertEquals(ResultErrorCode.FORBIDDEN.getCode(), exception.getCode());
+        assertEquals("超级管理员角色不可修改", exception.getMessage());
+        verify(sysRoleRepository, never()).updateById(any(SysRole.class));
+    }
+
+    @Test
+    void updateStatusShouldRejectSuperAdminRole() {
+        SysRole role = new SysRole();
+        role.setId(99L);
+        role.setCode("admin");
+        role.setIsDeleted(0);
+
+        when(sysRoleRepository.getById(99L)).thenReturn(role);
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> sysRoleAdminService.updateStatus(99L, 0));
+
+        assertEquals(ResultErrorCode.FORBIDDEN.getCode(), exception.getCode());
+        assertEquals("超级管理员角色不可修改", exception.getMessage());
+        verify(sysRoleRepository, never()).updateById(any(SysRole.class));
     }
 
     @Test
     void deleteRoleShouldRemoveRelationsAndDeleteRole() {
         SysRole role = new SysRole();
-        role.setId(1L);
+        role.setId(8L);
+        role.setCode("editor");
         role.setIsDeleted(0);
+
+        when(sysRoleRepository.getById(8L)).thenReturn(role);
+
+        sysRoleAdminService.deleteRole(8L);
+
+        verify(sysRoleMenuRepository).deleteByRoleId(8L);
+        verify(sysUserRoleRepository).deleteByRoleId(8L);
+        verify(sysRoleRepository).removeById(8L);
+    }
+
+    @Test
+    void deleteRoleShouldRejectSuperAdminRole() {
+        SysRole role = buildSuperAdminRole();
 
         when(sysRoleRepository.getById(1L)).thenReturn(role);
 
-        sysRoleAdminService.deleteRole(1L);
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> sysRoleAdminService.deleteRole(1L));
 
-        verify(sysRoleMenuRepository).deleteByRoleId(1L);
-        verify(sysUserRoleRepository).deleteByRoleId(1L);
-        verify(sysRoleRepository).removeById(1L);
+        assertEquals(ResultErrorCode.FORBIDDEN.getCode(), exception.getCode());
+        assertEquals("超级管理员角色不可修改", exception.getMessage());
+        verify(sysRoleMenuRepository, never()).deleteByRoleId(anyLong());
+        verify(sysUserRoleRepository, never()).deleteByRoleId(anyLong());
+        verify(sysRoleRepository, never()).removeById(anyLong());
     }
 
     @Test
@@ -171,6 +223,21 @@ class SysRoleAdminServiceImplTest {
     }
 
     @Test
+    void assignMenusShouldRejectSuperAdminRole() {
+        SysRole role = buildSuperAdminRole();
+
+        when(sysRoleRepository.getById(1L)).thenReturn(role);
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> sysRoleAdminService.assignMenus(1L, List.of(3L, 5L)));
+
+        assertEquals(ResultErrorCode.FORBIDDEN.getCode(), exception.getCode());
+        assertEquals("超级管理员角色不可修改", exception.getMessage());
+        verify(sysRoleMenuRepository, never()).deleteByRoleId(anyLong());
+        verify(sysRoleMenuRepository, never()).saveBatch(anyCollection());
+    }
+
+    @Test
     void assignMenusShouldRejectUnknownMenuId() {
         SysRole role = new SysRole();
         role.setId(8L);
@@ -190,14 +257,23 @@ class SysRoleAdminServiceImplTest {
     @Test
     void assignMenusShouldAllowEmptyMenuList() {
         SysRole role = new SysRole();
-        role.setId(1L);
+        role.setId(8L);
+        role.setCode("editor");
         role.setIsDeleted(0);
 
-        when(sysRoleRepository.getById(1L)).thenReturn(role);
+        when(sysRoleRepository.getById(8L)).thenReturn(role);
 
-        sysRoleAdminService.assignMenus(1L, Collections.emptyList());
+        sysRoleAdminService.assignMenus(8L, Collections.emptyList());
 
-        verify(sysRoleMenuRepository).deleteByRoleId(1L);
+        verify(sysRoleMenuRepository).deleteByRoleId(8L);
         verify(sysRoleMenuRepository, never()).saveBatch(anyCollection());
+    }
+
+    private SysRole buildSuperAdminRole() {
+        SysRole role = new SysRole();
+        role.setId(1L);
+        role.setCode("admin");
+        role.setIsDeleted(0);
+        return role;
     }
 }

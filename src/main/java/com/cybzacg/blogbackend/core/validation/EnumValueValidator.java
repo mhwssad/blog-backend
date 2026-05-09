@@ -12,12 +12,18 @@ import java.lang.reflect.Method;
  */
 public class EnumValueValidator implements ConstraintValidator<EnumValue, Object> {
 
-    /** 保存注解实例，用于后续获取枚举类和校验逻辑 */
     private EnumValue annotation;
+    private Method valueMethod;
 
     @Override
     public void initialize(EnumValue annotation) {
         this.annotation = annotation;
+        try {
+            this.valueMethod = annotation.enumClass().getMethod(annotation.method());
+        } catch (NoSuchMethodException e) {
+            throw new IllegalArgumentException(
+                    annotation.enumClass().getSimpleName() + " 不存在方法 " + annotation.method() + "()", e);
+        }
     }
 
     @Override
@@ -31,9 +37,8 @@ public class EnumValueValidator implements ConstraintValidator<EnumValue, Object
 
         Class<? extends Enum<?>> enumClass = annotation.enumClass();
         try {
-            Method getValue = enumClass.getMethod("getValue");
             for (Enum<?> constant : enumClass.getEnumConstants()) {
-                Object enumValue = getValue.invoke(constant);
+                Object enumValue = valueMethod.invoke(constant);
                 if (match(value, enumValue)) {
                     return true;
                 }

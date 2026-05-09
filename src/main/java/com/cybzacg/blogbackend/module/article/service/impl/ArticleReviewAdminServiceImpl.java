@@ -99,19 +99,6 @@ public class ArticleReviewAdminServiceImpl implements ArticleReviewAdminService 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void repairReviewStatus(Long articleId, ArticleReviewRepairRequest request) {
-        ExceptionThrowerCore.throwBusinessIf(
-                request == null,
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "修正请求不能为空");
-        ExceptionThrowerCore.throwBusinessIf(
-                !StrUtils.hasText(request.getReviewComment()),
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "修正审核状态必须填写说明");
-        ExceptionThrowerCore.throwBusinessIf(
-                !ArticleReviewStatusEnum.contains(request.getTargetReviewStatus()),
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "目标审核状态非法");
-
         BlogArticle article = requireArticle(articleId);
         Integer currentReviewStatus = article.getReviewStatus() == null
                 ? ArticleReviewStatusEnum.NOT_SUBMITTED.getValue()

@@ -1,14 +1,18 @@
 package com.cybzacg.blogbackend.module.dashboard.model.admin;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 后台 AI 统计指标。
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "后台 AI 统计指标")
 public class DashboardAiVO {
     @Schema(description = "时间范围")

@@ -1,6 +1,12 @@
 package com.cybzacg.blogbackend.module.ai.model.admin;
 
+import com.cybzacg.blogbackend.core.validation.EnumValue;
+import com.cybzacg.blogbackend.core.validation.ValidJsonObject;
+import com.cybzacg.blogbackend.enums.ai.AiToolRiskLevelEnum;
+import com.cybzacg.blogbackend.enums.ai.AiToolSourceTypeEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -23,6 +29,7 @@ public class AiToolDefinitionSaveRequest {
     private String toolName;
 
     @NotBlank(message = "来源类型不能为空")
+    @EnumValue(enumClass = AiToolSourceTypeEnum.class, method = "getCode", message = "来源类型无效")
     @Schema(description = "来源类型 builtin/mcp")
     private String sourceType;
 
@@ -35,13 +42,16 @@ public class AiToolDefinitionSaveRequest {
     @Schema(description = "工具描述")
     private String description;
 
+    @ValidJsonObject(message = "参数 Schema 必须是 JSON 对象")
     @Schema(description = "参数 Schema JSON")
     private String parametersSchema;
 
+    @ValidJsonObject(message = "返回 Schema 必须是 JSON 对象")
     @Schema(description = "返回 Schema JSON")
     private String resultSchema;
 
     @NotBlank(message = "风险等级不能为空")
+    @EnumValue(enumClass = AiToolRiskLevelEnum.class, method = "getCode", message = "风险等级无效")
     @Schema(description = "风险等级 low/medium/high")
     private String riskLevel;
 
@@ -49,6 +59,8 @@ public class AiToolDefinitionSaveRequest {
     private String useScenarios;
 
     @NotNull(message = "启用状态不能为空")
+    @Min(value = 0, message = "启用状态必须为 0 或 1")
+    @Max(value = 1, message = "启用状态必须为 0 或 1")
     @Schema(description = "启用状态：0-停用/1-启用")
     private Integer enabled;
 

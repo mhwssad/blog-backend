@@ -44,8 +44,10 @@ import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 认证服务实现。
@@ -238,7 +240,7 @@ public class AuthServiceImpl implements AuthService {
         Authentication authentication = SecurityUtils.requireAuthentication();
         SysUser user = getCurrentSysUser(authentication);
         List<String> roleCodes = sysRoleRepository.findRoleCodesByUserId(user.getId());
-        List<String> permissions = sysMenuRepository.findPermissionsByUserId(user.getId());
+        List<String> permissions = buildCurrentPermissions(roleCodes, user.getId());
         return authModelConvert.toAuthUserInfo(user, roleCodes, permissions);
     }
 
@@ -253,7 +255,10 @@ public class AuthServiceImpl implements AuthService {
             SysUser user = getCurrentSysUser(authentication);
             userId = user.getId();
         }
-        List<SysMenu> menus = sysMenuRepository.findMenusByUserId(userId);
+        List<String> roleCodes = sysRoleRepository.findRoleCodesByUserId(userId);
+        List<SysMenu> menus = isSuperAdmin(roleCodes)
+                ? sysMenuRepository.findAllOrdered()
+                : sysMenuRepository.findMenusByUserId(userId);
         return buildMenuTree(menus);
     }
 
@@ -295,6 +300,43 @@ public class AuthServiceImpl implements AuthService {
             parent.getChildren().add(menu);
         }
         return roots;
+    }
+
+    /**
+     * 超级管理员持有全量权限与通配符，前端据此渲染后台菜单与权限入口。
+     */
+    private List<String> buildCurrentPermissions(List<String> roleCodes, Long userId) {
+        Set<String> dedup = new LinkedHashSet<>();
+        if (isSuperAdmin(roleCodes)) {
+            List<String> allPermissions = sysMenuRepository.findAllOrdered().stream()
+                    .map(SysMenu::getPerm)
+                    .filter(StringUtils::hasText)
+                    .toList();
+            dedup.addAll(allPermissions);
+            dedup.add(AuthConstants.ALL_PERMISSION);
+        } else {
+            List<String> permissions = sysMenuRepository.findPermissionsByUserId(userId);
+            if (permissions != null) {
+                permissions.stream()
+                        .filter(StringUtils::hasText)
+                        .forEach(dedup::add);
+            }
+        }
+        return dedup.stream().toList();
+    }
+
+    private boolean isSuperAdmin(List<String> roleCodes) {
+        if (roleCodes == null) {
+            return false;
+        }
+        return roleCodes.stream()
+                .filter(StringUtils::hasText)
+                .map(this::normalizeRoleCode)
+                .anyMatch(AuthConstants.SUPER_ADMIN_ROLE_CODE::equals);
+    }
+
+    private String normalizeRoleCode(String roleCode) {
+        return roleCode.startsWith("ROLE_") ? roleCode.substring("ROLE_".length()) : roleCode;
     }
 
     private String generateEmailCode() {

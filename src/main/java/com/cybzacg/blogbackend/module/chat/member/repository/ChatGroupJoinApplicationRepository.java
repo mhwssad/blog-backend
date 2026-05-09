@@ -3,6 +3,7 @@ package com.cybzacg.blogbackend.module.chat.member.repository;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.cybzacg.blogbackend.domain.chat.ChatGroupJoinApplication;
+import com.cybzacg.blogbackend.module.chat.member.model.admin.ChatGroupJoinApplicationAdminPageQuery;
 import com.cybzacg.blogbackend.module.chat.member.model.user.ChatGroupJoinApplicationPageQuery;
 
 /**
@@ -24,4 +25,9 @@ public interface ChatGroupJoinApplicationRepository extends IService<ChatGroupJo
      * 分页查询指定会话下的入群申请。
      */
     Page<ChatGroupJoinApplication> pageByConversationId(Long conversationId, ChatGroupJoinApplicationPageQuery query);
+
+    /**
+     * 按后台管理条件分页查询群入群申请。
+     */
+    Page<ChatGroupJoinApplication> pageByAdminConditions(ChatGroupJoinApplicationAdminPageQuery query);
 }

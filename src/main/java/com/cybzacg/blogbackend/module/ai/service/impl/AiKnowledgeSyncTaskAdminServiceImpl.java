@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.domain.ai.AiKnowledgeSyncTask;
 import com.cybzacg.blogbackend.domain.ai.AiKnowledgeEntry;
-import com.cybzacg.blogbackend.enums.ai.AiKnowledgeSourceTypeEnum;
 import com.cybzacg.blogbackend.enums.ai.AiKnowledgeEntryStatusEnum;
 import com.cybzacg.blogbackend.enums.ai.AiKnowledgeSyncTaskStatusEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
@@ -48,9 +47,6 @@ public class AiKnowledgeSyncTaskAdminServiceImpl implements AiKnowledgeSyncTaskA
     @Transactional(rollbackFor = Exception.class)
     public AiKnowledgeSyncTaskVO triggerSync(AiKnowledgeSyncTriggerRequest request, Long operatorId) {
         String sourceType = request.getSourceType();
-        ExceptionThrowerCore.throwBusinessIf(
-                !AiKnowledgeSourceTypeEnum.contains(sourceType),
-                ResultErrorCode.AI_KNOWLEDGE_SOURCE_TYPE_INVALID);
 
         // 同一来源类型不允许并发执行
         AiKnowledgeSyncTask runningTask = aiKnowledgeSyncTaskRepository

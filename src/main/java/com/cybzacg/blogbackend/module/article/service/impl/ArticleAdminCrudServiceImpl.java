@@ -318,7 +318,6 @@ public class ArticleAdminCrudServiceImpl implements ArticleAdminCrudService {
     }
 
     private void validateAuthor(Long authorId) {
-        ExceptionThrowerCore.throwBusinessIfNull(authorId, com.cybzacg.blogbackend.enums.error.ResultErrorCode.ILLEGAL_ARGUMENT, "作者不能为空");
         SysUser author = sysUserRepository.getById(authorId);
         ExceptionThrowerCore.throwBusinessIf(author == null || Integer.valueOf(1).equals(author.getDeletedFlag()),
                 com.cybzacg.blogbackend.enums.error.ResultErrorCode.USER_NOT_FOUND, "作者不存在");

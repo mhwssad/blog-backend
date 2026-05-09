@@ -14,6 +14,7 @@ import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.JsonUtils;
 import org.springframework.util.StringUtils;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -131,7 +132,7 @@ final class AiToolSupport {
             return null;
         }
         if (node.isObject()) {
-            java.util.LinkedHashMap<String, Object> map = new java.util.LinkedHashMap<>();
+            LinkedHashMap<String, Object> map = new LinkedHashMap<>();
             node.fields().forEachRemaining(entry -> {
                 String key = entry.getKey();
                 if (isSensitiveKey(key)) {

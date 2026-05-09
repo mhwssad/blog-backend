@@ -79,7 +79,6 @@ public class AiMcpServerAdminServiceImpl implements AiMcpServerAdminService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AiMcpServerConfigVO createServer(AiMcpServerConfigSaveRequest request, Long operatorId) {
-        validateServerRequest(request);
         ExceptionThrowerCore.throwBusinessIfNotNull(
                 aiMcpServerConfigRepository.findByServerName(request.getServerName()),
                 ResultErrorCode.DATA_ALREADY_EXISTS, "MCP 服务名称已存在");
@@ -95,7 +94,6 @@ public class AiMcpServerAdminServiceImpl implements AiMcpServerAdminService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AiMcpServerConfigVO updateServer(Long id, AiMcpServerConfigSaveRequest request, Long operatorId) {
-        validateServerRequest(request);
         AiMcpServerConfig entity = getServerOrThrow(id);
         AiMcpServerConfig existing = aiMcpServerConfigRepository.findByServerName(request.getServerName());
         ExceptionThrowerCore.throwBusinessIf(existing != null && !existing.getId().equals(id),
@@ -270,17 +268,6 @@ public class AiMcpServerAdminServiceImpl implements AiMcpServerAdminService {
         return ExceptionThrowerCore.requireNonNull(
                 aiMcpServerConfigRepository.getById(id),
                 ResultErrorCode.AI_MCP_SERVER_NOT_FOUND);
-    }
-
-    private void validateServerRequest(AiMcpServerConfigSaveRequest request) {
-        AiToolSupport.validateTransportType(request.getTransportType());
-        AiToolSupport.validateEnabled(request.getEnabled());
-        ExceptionThrowerCore.throwBusinessIf(request.getTimeoutSeconds() == null || request.getTimeoutSeconds() <= 0,
-                ResultErrorCode.ILLEGAL_ARGUMENT, "MCP 超时时间必须大于 0");
-        AiToolSupport.validateJsonObjectOrBlank(request.getConnectionConfigJson(),
-                ResultErrorCode.ILLEGAL_ARGUMENT, "MCP 连接配置必须是 JSON 对象");
-        AiToolSupport.validateJsonObjectOrBlank(request.getAuthConfigJson(),
-                ResultErrorCode.ILLEGAL_ARGUMENT, "MCP 鉴权配置必须是 JSON 对象");
     }
 
     private void recordAudit(Long operatorId, Long targetId, String before, String after) {

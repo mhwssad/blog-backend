@@ -5,9 +5,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.domain.chat.ChatGroupJoinApplication;
 import com.cybzacg.blogbackend.mapper.chat.ChatGroupJoinApplicationMapper;
+import com.cybzacg.blogbackend.module.chat.member.model.admin.ChatGroupJoinApplicationAdminPageQuery;
 import com.cybzacg.blogbackend.module.chat.member.model.user.ChatGroupJoinApplicationPageQuery;
 import com.cybzacg.blogbackend.module.chat.member.repository.ChatGroupJoinApplicationRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 /**
  * 群聊入群申请 Repository 实现。
@@ -35,7 +37,7 @@ public class ChatGroupJoinApplicationRepositoryImpl
      */
     @Override
     public Page<ChatGroupJoinApplication> pageByApplicantUserId(Long applicantUserId, ChatGroupJoinApplicationPageQuery query) {
-        return page(new Page<>(query.getCurrent(), query.getSize()), baseWrapper(query)
+        return page(new Page<>(query.getCurrent(), query.getSize()), baseWrapper(query.getApplyStatus(), null)
                 .eq(ChatGroupJoinApplication::getApplicantUserId, applicantUserId));
     }
 
@@ -44,14 +46,31 @@ public class ChatGroupJoinApplicationRepositoryImpl
      */
     @Override
     public Page<ChatGroupJoinApplication> pageByConversationId(Long conversationId, ChatGroupJoinApplicationPageQuery query) {
-        return page(new Page<>(query.getCurrent(), query.getSize()), baseWrapper(query)
+        return page(new Page<>(query.getCurrent(), query.getSize()), baseWrapper(query.getApplyStatus(), null)
                 .eq(ChatGroupJoinApplication::getConversationId, conversationId));
     }
 
-    private LambdaQueryWrapper<ChatGroupJoinApplication> baseWrapper(ChatGroupJoinApplicationPageQuery query) {
-        return new LambdaQueryWrapper<ChatGroupJoinApplication>()
-                .eq(query.getApplyStatus() != null, ChatGroupJoinApplication::getApplyStatus, query.getApplyStatus())
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Page<ChatGroupJoinApplication> pageByAdminConditions(ChatGroupJoinApplicationAdminPageQuery query) {
+        LambdaQueryWrapper<ChatGroupJoinApplication> wrapper = baseWrapper(query.getApplyStatus(), query.getKeyword())
+                .eq(query.getConversationId() != null, ChatGroupJoinApplication::getConversationId, query.getConversationId())
+                .eq(query.getApplicantUserId() != null, ChatGroupJoinApplication::getApplicantUserId, query.getApplicantUserId());
+        return page(new Page<>(query.getCurrent(), query.getSize()), wrapper);
+    }
+
+    private LambdaQueryWrapper<ChatGroupJoinApplication> baseWrapper(Integer applyStatus, String keyword) {
+        LambdaQueryWrapper<ChatGroupJoinApplication> wrapper = new LambdaQueryWrapper<ChatGroupJoinApplication>()
+                .eq(applyStatus != null, ChatGroupJoinApplication::getApplyStatus, applyStatus)
                 .orderByDesc(ChatGroupJoinApplication::getSubmittedAt)
                 .orderByDesc(ChatGroupJoinApplication::getId);
+        if (StringUtils.hasText(keyword)) {
+            wrapper.and(query -> query.like(ChatGroupJoinApplication::getApplyMessage, keyword)
+                    .or()
+                    .like(ChatGroupJoinApplication::getReviewComment, keyword));
+        }
+        return wrapper;
     }
 }

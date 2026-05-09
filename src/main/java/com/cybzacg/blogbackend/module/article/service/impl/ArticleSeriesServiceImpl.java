@@ -233,24 +233,12 @@ public class ArticleSeriesServiceImpl implements ArticleSeriesService {
     }
 
     private void validateSeriesSaveRequest(ArticleSeriesSaveRequest request) {
-        ExceptionThrowerCore.throwBusinessIf(
-                !StringUtils.hasText(request.getTitle()),
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "系列标题不能为空"
-        );
         normalizeSeriesStatus(request.getStatus());
         normalizeSeriesVisibilityScope(request.getVisibilityScope());
     }
 
     private Integer normalizeSeriesStatus(Integer status) {
-        Integer actualStatus = status == null ? SERIES_STATUS_NORMAL : status;
-        ExceptionThrowerCore.throwBusinessIf(
-                !Integer.valueOf(SERIES_STATUS_DISABLED).equals(actualStatus)
-                        && !Integer.valueOf(SERIES_STATUS_NORMAL).equals(actualStatus),
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "系列状态非法"
-        );
-        return actualStatus;
+        return status == null ? SERIES_STATUS_NORMAL : status;
     }
 
     private Integer normalizeSeriesVisibilityScope(Integer visibilityScope) {

@@ -365,7 +365,14 @@ class AuthServiceImplTest {
         user.setDeletedFlag(0);
 
         List<String> roleCodes = List.of("admin");
-        List<String> permissions = List.of("sys:user:query", "sys:role:assign-menu");
+        List<SysMenu> menus = new ArrayList<>();
+        SysMenu userMenu = new SysMenu();
+        userMenu.setPerm("sys:user:query");
+        menus.add(userMenu);
+        SysMenu roleMenu = new SysMenu();
+        roleMenu.setPerm("sys:role:assign-menu");
+        menus.add(roleMenu);
+        List<String> permissions = List.of("sys:user:query", "sys:role:assign-menu", AuthConstants.ALL_PERMISSION);
         AuthUserInfo expected = AuthUserInfo.builder()
                 .id(12L)
                 .username("demo")
@@ -375,13 +382,64 @@ class AuthServiceImplTest {
 
         when(sysUserRepository.getById(12L)).thenReturn(user);
         when(sysRoleRepository.findRoleCodesByUserId(12L)).thenReturn(roleCodes);
-        when(sysMenuRepository.findPermissionsByUserId(12L)).thenReturn(permissions);
+        when(sysMenuRepository.findAllOrdered()).thenReturn(menus);
         when(authModelConvert.toAuthUserInfo(user, roleCodes, permissions)).thenReturn(expected);
 
         try (MockedStatic<?> securityUtils = SecurityTestUtils.mockAuthentication(authentication, 12L, null)) {
             AuthUserInfo result = authService.getCurrentUser();
             assertEquals(expected, result);
         }
+    }
+
+    @Test
+    void getCurrentUserMenusShouldUseAllMenusForSuperAdmin() {
+        Authentication authentication = mock(Authentication.class);
+        SysUser user = new SysUser();
+        user.setId(21L);
+        user.setDeletedFlag(0);
+
+        SysMenu root = new SysMenu();
+        root.setId(1L);
+        root.setParentId(MenuConstants.ROOT_PARENT_ID);
+        root.setType(MenuConstants.TYPE_CATALOG);
+
+        SysMenu child = new SysMenu();
+        child.setId(2L);
+        child.setParentId(1L);
+        child.setType(MenuConstants.TYPE_MENU);
+
+        SysMenu button = new SysMenu();
+        button.setId(3L);
+        button.setParentId(2L);
+        button.setType(MenuConstants.TYPE_BUTTON);
+
+        AuthMenuInfo rootInfo = AuthMenuInfo.builder()
+                .id(1L)
+                .parentId(MenuConstants.ROOT_PARENT_ID)
+                .children(new ArrayList<>())
+                .build();
+        AuthMenuInfo childInfo = AuthMenuInfo.builder()
+                .id(2L)
+                .parentId(1L)
+                .children(new ArrayList<>())
+                .build();
+
+        when(sysRoleRepository.findRoleCodesByUserId(21L)).thenReturn(List.of("admin"));
+        when(sysMenuRepository.findAllOrdered()).thenReturn(List.of(root, child, button));
+        when(authModelConvert.toAuthMenuInfo(root)).thenReturn(rootInfo);
+        when(authModelConvert.toAuthMenuInfo(child)).thenReturn(childInfo);
+
+        try (MockedStatic<?> securityUtils = SecurityTestUtils.mockAuthentication(authentication, 21L, null)) {
+            List<AuthMenuInfo> result = authService.getCurrentUserMenus();
+
+            assertEquals(1, result.size());
+            assertEquals(1L, result.get(0).getId());
+            assertEquals(1, result.get(0).getChildren().size());
+            assertEquals(2L, result.get(0).getChildren().get(0).getId());
+        }
+
+        verify(sysMenuRepository, never()).findMenusByUserId(anyLong());
+        verify(sysMenuRepository).findAllOrdered();
     }
 
     @Test
