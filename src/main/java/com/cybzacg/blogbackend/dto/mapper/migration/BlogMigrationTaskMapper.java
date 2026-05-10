@@ -1,0 +1,10 @@
+package com.cybzacg.blogbackend.dto.mapper.migration;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.cybzacg.blogbackend.dto.domain.migration.BlogMigrationTask;
+
+/**
+ * BlogMigrationTask Mapper。
+ */
+public interface BlogMigrationTaskMapper extends BaseMapper<BlogMigrationTask> {
+}
