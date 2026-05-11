@@ -26,7 +26,7 @@ public class AiChannelAccountAdminController {
     private final AiChannelAccountAdminService aiChannelAccountAdminService;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('ai:channel-account:query')")
+    @PreAuthorize("@permission.hasPermission('ai:channel-account:query')")
     @Operation(summary = "分页查询渠道账号列表")
     public Result<PageResult<AiChannelAccountVO>> listAccounts(
             @PathVariable Long channelId,
@@ -36,7 +36,7 @@ public class AiChannelAccountAdminController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('ai:channel-account:query')")
+    @PreAuthorize("@permission.hasPermission('ai:channel-account:query')")
     @Operation(summary = "查询渠道账号详情")
     public Result<AiChannelAccountVO> getAccount(
             @PathVariable Long channelId,
@@ -45,7 +45,7 @@ public class AiChannelAccountAdminController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('ai:channel-account:create')")
+    @PreAuthorize("@permission.hasPermission('ai:channel-account:create')")
     @Operation(summary = "创建渠道账号")
     public Result<AiChannelAccountVO> createAccount(
             @PathVariable Long channelId,
@@ -55,7 +55,7 @@ public class AiChannelAccountAdminController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('ai:channel-account:update')")
+    @PreAuthorize("@permission.hasPermission('ai:channel-account:update')")
     @Operation(summary = "更新渠道账号")
     public Result<AiChannelAccountVO> updateAccount(
             @PathVariable Long channelId,
@@ -66,7 +66,7 @@ public class AiChannelAccountAdminController {
     }
 
     @PutMapping("/{id}/status")
-    @PreAuthorize("hasAuthority('ai:channel-account:update')")
+    @PreAuthorize("@permission.hasPermission('ai:channel-account:update')")
     @Operation(summary = "更新渠道账号状态")
     public Result<Void> updateAccountStatus(
             @PathVariable Long channelId,
@@ -78,7 +78,7 @@ public class AiChannelAccountAdminController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ai:channel-account:delete')")
+    @PreAuthorize("@permission.hasPermission('ai:channel-account:delete')")
     @Operation(summary = "删除渠道账号")
     public Result<Void> deleteAccount(
             @PathVariable Long channelId,

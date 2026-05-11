@@ -113,6 +113,83 @@ VALUES (1880, 1850, '0,1850', '会话管理', 'M', 'AiSessionManage', '/admin/ai
        (1881, 1880, '0,1850,1880', '会话查询', 'B', NULL, NULL, NULL, 'ai:session:query', 0, 0, 1, 1, NULL, NULL, NOW(),
         NOW(), NULL);
 
+-- AI Agent 管理 (ID: 1970-1974)
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1970, 1850, '0,1850', 'Agent 管理', 'M', 'AiAgentManage', '/admin/ai/agents', 'admin/ai/AiAgentManage', NULL, 0, 1, 1, 4,
+        'avatar', NULL, NOW(), NOW(), NULL),
+       (1971, 1970, '0,1850,1970', 'Agent 查询', 'B', NULL, NULL, NULL, 'ai:agent:query', 0, 0, 1, 1, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1972, 1970, '0,1850,1970', 'Agent 新增', 'B', NULL, NULL, NULL, 'ai:agent:create', 0, 0, 1, 2, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1973, 1970, '0,1850,1970', 'Agent 修改', 'B', NULL, NULL, NULL, 'ai:agent:update', 0, 0, 1, 3, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1974, 1970, '0,1850,1970', 'Agent 删除', 'B', NULL, NULL, NULL, 'ai:agent:delete', 0, 0, 1, 4, NULL, NULL, NOW(),
+        NOW(), NULL);
+
+-- AI 知识库管理 (ID: 1975-1978)
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1975, 1850, '0,1850', '知识库管理', 'M', 'AiKnowledgeManage', '/admin/ai/knowledge', 'admin/ai/AiKnowledgeManage', NULL, 0, 1, 1, 5,
+        'collection', NULL, NOW(), NOW(), NULL),
+       (1976, 1975, '0,1850,1975', '知识库查询', 'B', NULL, NULL, NULL, 'ai:knowledge:query', 0, 0, 1, 1, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1977, 1975, '0,1850,1975', '知识库修改', 'B', NULL, NULL, NULL, 'ai:knowledge:update', 0, 0, 1, 2, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1978, 1975, '0,1850,1975', '知识库同步', 'B', NULL, NULL, NULL, 'ai:knowledge:sync', 0, 0, 1, 3, NULL, NULL, NOW(),
+        NOW(), NULL);
+
+-- AI MCP 服务管理 (ID: 1980-1984)
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1980, 1850, '0,1850', 'MCP 服务', 'M', 'AiMcpManage', '/admin/ai/mcp', 'admin/ai/AiMcpManage', NULL, 0, 1, 1, 6,
+        'link', NULL, NOW(), NOW(), NULL),
+       (1981, 1980, '0,1850,1980', 'MCP 查询', 'B', NULL, NULL, NULL, 'ai:mcp:query', 0, 0, 1, 1, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1982, 1980, '0,1850,1980', 'MCP 新增', 'B', NULL, NULL, NULL, 'ai:mcp:create', 0, 0, 1, 2, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1983, 1980, '0,1850,1980', 'MCP 修改', 'B', NULL, NULL, NULL, 'ai:mcp:update', 0, 0, 1, 3, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1984, 1980, '0,1850,1980', 'MCP 删除', 'B', NULL, NULL, NULL, 'ai:mcp:delete', 0, 0, 1, 4, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1995, 1980, '0,1850,1980', 'MCP 工具发现', 'B', NULL, NULL, NULL, 'ai:mcp:discover', 0, 0, 1, 5, NULL, NULL, NOW(),
+        NOW(), NULL);
+
+-- AI 工具管理 (ID: 1985-1989)
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1985, 1850, '0,1850', '工具管理', 'M', 'AiToolManage', '/admin/ai/tools', 'admin/ai/AiToolManage', NULL, 0, 1, 1, 7,
+        ' SetUp', NULL, NOW(), NOW(), NULL),
+       (1986, 1985, '0,1850,1985', '工具查询', 'B', NULL, NULL, NULL, 'ai:tool:query', 0, 0, 1, 1, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1987, 1985, '0,1850,1985', '工具新增', 'B', NULL, NULL, NULL, 'ai:tool:create', 0, 0, 1, 2, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1988, 1985, '0,1850,1985', '工具修改', 'B', NULL, NULL, NULL, 'ai:tool:update', 0, 0, 1, 3, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1989, 1985, '0,1850,1985', '工具删除', 'B', NULL, NULL, NULL, 'ai:tool:delete', 0, 0, 1, 4, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1996, 1985, '0,1850,1985', '工具执行', 'B', NULL, NULL, NULL, 'ai:tool:execute', 0, 0, 1, 5, NULL, NULL, NOW(),
+        NOW(), NULL);
+
+-- AI 渠道账号管理 (ID: 1990-1994)
+INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
+                        `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,
+                        `update_time`, `params`)
+VALUES (1990, 1850, '0,1850', '渠道账号', 'M', 'AiChannelAccountManage', '/admin/ai/accounts', 'admin/ai/ChannelAccountManage', NULL, 0, 1, 1, 8,
+        'key', NULL, NOW(), NOW(), NULL),
+       (1991, 1990, '0,1850,1990', '账号查询', 'B', NULL, NULL, NULL, 'ai:channel-account:query', 0, 0, 1, 1, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1992, 1990, '0,1850,1990', '账号新增', 'B', NULL, NULL, NULL, 'ai:channel-account:create', 0, 0, 1, 2, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1993, 1990, '0,1850,1990', '账号修改', 'B', NULL, NULL, NULL, 'ai:channel-account:update', 0, 0, 1, 3, NULL, NULL, NOW(),
+        NOW(), NULL),
+       (1994, 1990, '0,1850,1990', '账号删除', 'B', NULL, NULL, NULL, 'ai:channel-account:delete', 0, 0, 1, 4, NULL, NULL, NOW(),
+        NOW(), NULL);
+
 -- 论坛管理目录
 INSERT INTO `sys_menu` (`id`, `parent_id`, `tree_path`, `name`, `type`, `route_name`, `route_path`, `component`, `perm`,
                         `always_show`, `keep_alive`, `visible`, `sort`, `icon`, `redirect`, `create_time`,

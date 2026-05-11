@@ -100,21 +100,47 @@ public final class SecurityUtils {
     }
 
     public static boolean hasAuthority(String authority) {
-        return StrUtils.hasText(authority) && getAuthoritySet().contains(authority);
+        if (!StrUtils.hasText(authority)) {
+            return false;
+        }
+        Set<String> currentAuthorities = getAuthoritySet();
+        if (currentAuthorities.contains(authority)) {
+            return true;
+        }
+        return currentAuthorities.stream().anyMatch(granted -> matchesPermission(authority, granted));
     }
 
     public static boolean hasAnyAuthority(String... authorities) {
         if (authorities == null || authorities.length == 0) {
             return false;
         }
-
-        Set<String> currentAuthorities = getAuthoritySet();
         for (String authority : authorities) {
-            if (StrUtils.hasText(authority) && currentAuthorities.contains(authority)) {
+            if (hasAuthority(authority)) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * 通配符权限段匹配。按 {@code :} 分段后，授予权限中 {@code *} 段匹配任意值。
+     * 例如 {@code *:*:*} 匹配 {@code sys:user:query}，{@code sys:*:*} 匹配 {@code sys:role:create}。
+     */
+    private static boolean matchesPermission(String required, String granted) {
+        if (!granted.contains("*")) {
+            return false;
+        }
+        String[] requiredParts = required.split(":");
+        String[] grantedParts = granted.split(":");
+        if (requiredParts.length != grantedParts.length) {
+            return false;
+        }
+        for (int i = 0; i < requiredParts.length; i++) {
+            if (!"*".equals(grantedParts[i]) && !requiredParts[i].equals(grantedParts[i])) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static Long extractUserId(Object... candidates) {

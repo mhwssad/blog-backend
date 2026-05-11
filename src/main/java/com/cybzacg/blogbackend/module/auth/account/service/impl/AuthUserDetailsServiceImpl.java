@@ -1,7 +1,6 @@
 package com.cybzacg.blogbackend.module.auth.account.service.impl;
 
 import com.cybzacg.blogbackend.common.constant.AuthConstants;
-import com.cybzacg.blogbackend.dto.domain.auth.SysMenu;
 import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
 import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
 import com.cybzacg.blogbackend.dto.repository.auth.rbac.SysMenuRepository;
@@ -89,12 +88,11 @@ public class AuthUserDetailsServiceImpl implements AuthUserDetailsService {
     }
 
     /**
-     * 超级管理员持有权限通配符，后续新增权限无需再补角色菜单授权即可通过鉴权。
+     * 超级管理员仅持有通配符 {@code *:*:*}，通过段匹配覆盖所有权限，无需逐条加载菜单权限。
      */
     private List<String> buildPermissions(List<String> roleCodes, Long userId) {
         Set<String> permissionValues = new LinkedHashSet<>();
         if (hasSuperAdminRole(roleCodes)) {
-            permissionValues.addAll(loadAllPermissions());
             permissionValues.add(AuthConstants.ALL_PERMISSION);
         } else {
             List<String> permissions = sysMenuRepository.findPermissionsByUserId(userId);
@@ -121,18 +119,4 @@ public class AuthUserDetailsServiceImpl implements AuthUserDetailsService {
         return roleCode.startsWith("ROLE_") ? roleCode.substring("ROLE_".length()) : roleCode;
     }
 
-    /**
-     * 读取当前系统全部菜单权限，用于超级管理员直接构建完整授权集。
-     */
-    private List<String> loadAllPermissions() {
-        List<SysMenu> menus = sysMenuRepository.findAllOrdered();
-        if (menus == null || menus.isEmpty()) {
-            return List.of();
-        }
-        return menus.stream()
-                .map(SysMenu::getPerm)
-                .filter(StrUtils::hasText)
-                .distinct()
-                .toList();
-    }
 }

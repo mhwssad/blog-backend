@@ -2,6 +2,7 @@ package com.cybzacg.blogbackend.dto.mapper.system;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.cybzacg.blogbackend.dto.domain.system.SysLog;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
  * @author liujian
@@ -9,10 +10,5 @@ import com.cybzacg.blogbackend.dto.domain.system.SysLog;
  * @createDate 2026-03-18 18:50:44
  * @Entity generator.domain.SysLog
  */
-public interface SysLogMapper extends BaseMapper<SysLog> {
-
-}
-
-
-
-
+@Mapper
+public interface SysLogMapper extends BaseMapper<SysLog> {}

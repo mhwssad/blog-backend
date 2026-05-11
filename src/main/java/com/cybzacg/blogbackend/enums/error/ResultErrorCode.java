@@ -102,6 +102,7 @@ public enum ResultErrorCode implements ResultCode {
     EMAIL_NOT_BOUND(40132, "该账号未绑定邮箱"),
     NICKNAME_DUPLICATE(40133, "昵称已被占用"),
     CANNOT_MODIFY_SELF(40305, "不能修改自己的角色/状态"),
+    PERMISSION_WILDCARD_NOT_ALLOWED(40306, "通配符权限仅限超级管理员角色，禁止创建"),
     AUDIT_LOG_NOT_FOUND(40402, "审计日志不存在"),
 
     // ========== AI 模块 ==========
