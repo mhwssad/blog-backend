@@ -2,6 +2,7 @@ package com.cybzacg.blogbackend.dto.mapper.auth;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.cybzacg.blogbackend.dto.domain.auth.SysUserRole;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
  * @author liujian
@@ -9,10 +10,5 @@ import com.cybzacg.blogbackend.dto.domain.auth.SysUserRole;
  * @createDate 2026-03-18 18:50:44
  * @Entity generator.domain.SysUserRole
  */
-public interface SysUserRoleMapper extends BaseMapper<SysUserRole> {
-
-}
-
-
-
-
+@Mapper
+public interface SysUserRoleMapper extends BaseMapper<SysUserRole> {}

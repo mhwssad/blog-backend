@@ -5,39 +5,57 @@ import com.cybzacg.blogbackend.dto.domain.chat.ChatConversation;
 import com.cybzacg.blogbackend.module.chat.conversation.model.admin.ChatAdminConversationPageQuery;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatAdminConversationListItem;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatConversationListItem;
-import org.apache.ibatis.annotations.Param;
-
 import java.util.List;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 /**
  * 聊天会话 Mapper。
  */
+@Mapper
 public interface ChatConversationMapper extends BaseMapper<ChatConversation> {
-    Long countConversationPage(@Param("userId") Long userId, @Param("keyword") String keyword);
+    Long countConversationPage(
+        @Param("userId") Long userId,
+        @Param("keyword") String keyword
+    );
 
-    List<ChatConversationListItem> selectConversationPage(@Param("userId") Long userId,
-                                                          @Param("keyword") String keyword,
-                                                          @Param("offset") Long offset,
-                                                          @Param("size") Long size);
+    List<ChatConversationListItem> selectConversationPage(
+        @Param("userId") Long userId,
+        @Param("keyword") String keyword,
+        @Param("offset") Long offset,
+        @Param("size") Long size
+    );
 
-    ChatConversationListItem selectConversationDetail(@Param("conversationId") Long conversationId,
-                                                      @Param("userId") Long userId);
+    ChatConversationListItem selectConversationDetail(
+        @Param("conversationId") Long conversationId,
+        @Param("userId") Long userId
+    );
 
-    Long countSearchableGroupPage(@Param("userId") Long userId,
-                                  @Param("keyword") String keyword,
-                                  @Param("categoryCode") String categoryCode);
+    Long countSearchableGroupPage(
+        @Param("userId") Long userId,
+        @Param("keyword") String keyword,
+        @Param("categoryCode") String categoryCode
+    );
 
-    List<ChatConversationListItem> selectSearchableGroupPage(@Param("userId") Long userId,
-                                                             @Param("keyword") String keyword,
-                                                             @Param("categoryCode") String categoryCode,
-                                                             @Param("offset") Long offset,
-                                                             @Param("size") Long size);
+    List<ChatConversationListItem> selectSearchableGroupPage(
+        @Param("userId") Long userId,
+        @Param("keyword") String keyword,
+        @Param("categoryCode") String categoryCode,
+        @Param("offset") Long offset,
+        @Param("size") Long size
+    );
 
-    Long countAdminConversationPage(@Param("query") ChatAdminConversationPageQuery query);
+    Long countAdminConversationPage(
+        @Param("query") ChatAdminConversationPageQuery query
+    );
 
-    List<ChatAdminConversationListItem> selectAdminConversationPage(@Param("query") ChatAdminConversationPageQuery query,
-                                                                    @Param("offset") Long offset,
-                                                                    @Param("size") Long size);
+    List<ChatAdminConversationListItem> selectAdminConversationPage(
+        @Param("query") ChatAdminConversationPageQuery query,
+        @Param("offset") Long offset,
+        @Param("size") Long size
+    );
 
-    ChatAdminConversationListItem selectAdminConversationDetail(@Param("conversationId") Long conversationId);
+    ChatAdminConversationListItem selectAdminConversationDetail(
+        @Param("conversationId") Long conversationId
+    );
 }

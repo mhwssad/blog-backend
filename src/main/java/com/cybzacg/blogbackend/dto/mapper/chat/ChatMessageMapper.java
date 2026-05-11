@@ -5,40 +5,55 @@ import com.cybzacg.blogbackend.dto.domain.chat.ChatMessage;
 import com.cybzacg.blogbackend.module.chat.message.model.admin.ChatAdminMessagePageQuery;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatAdminMessageItem;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatMessageHistoryItem;
-import org.apache.ibatis.annotations.Param;
-
 import java.util.List;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 /**
  * 聊天消息 Mapper。
  */
+@Mapper
 public interface ChatMessageMapper extends BaseMapper<ChatMessage> {
-    Long countMessagePage(@Param("conversationId") Long conversationId,
-                          @Param("userId") Long userId,
-                          @Param("beforeMessageId") Long beforeMessageId);
+    Long countMessagePage(
+        @Param("conversationId") Long conversationId,
+        @Param("userId") Long userId,
+        @Param("beforeMessageId") Long beforeMessageId
+    );
 
-    List<ChatMessageHistoryItem> selectMessagePage(@Param("conversationId") Long conversationId,
-                                                   @Param("userId") Long userId,
-                                                   @Param("beforeMessageId") Long beforeMessageId,
-                                                   @Param("offset") Long offset,
-                                                   @Param("size") Long size);
+    List<ChatMessageHistoryItem> selectMessagePage(
+        @Param("conversationId") Long conversationId,
+        @Param("userId") Long userId,
+        @Param("beforeMessageId") Long beforeMessageId,
+        @Param("offset") Long offset,
+        @Param("size") Long size
+    );
 
-    ChatMessageHistoryItem selectVisibleMessageById(@Param("conversationId") Long conversationId,
-                                                    @Param("userId") Long userId,
-                                                    @Param("messageId") Long messageId);
+    ChatMessageHistoryItem selectVisibleMessageById(
+        @Param("conversationId") Long conversationId,
+        @Param("userId") Long userId,
+        @Param("messageId") Long messageId
+    );
 
-    List<ChatMessageHistoryItem> selectVisibleMessagesByIds(@Param("conversationId") Long conversationId,
-                                                            @Param("userId") Long userId,
-                                                            @Param("messageIds") List<Long> messageIds);
+    List<ChatMessageHistoryItem> selectVisibleMessagesByIds(
+        @Param("conversationId") Long conversationId,
+        @Param("userId") Long userId,
+        @Param("messageIds") List<Long> messageIds
+    );
 
-    Long countAdminMessagePage(@Param("conversationId") Long conversationId,
-                               @Param("query") ChatAdminMessagePageQuery query);
+    Long countAdminMessagePage(
+        @Param("conversationId") Long conversationId,
+        @Param("query") ChatAdminMessagePageQuery query
+    );
 
-    List<ChatAdminMessageItem> selectAdminMessagePage(@Param("conversationId") Long conversationId,
-                                                      @Param("query") ChatAdminMessagePageQuery query,
-                                                      @Param("offset") Long offset,
-                                                      @Param("size") Long size);
+    List<ChatAdminMessageItem> selectAdminMessagePage(
+        @Param("conversationId") Long conversationId,
+        @Param("query") ChatAdminMessagePageQuery query,
+        @Param("offset") Long offset,
+        @Param("size") Long size
+    );
 
-    List<ChatAdminMessageItem> selectAdminMessagesByIds(@Param("conversationId") Long conversationId,
-                                                        @Param("messageIds") List<Long> messageIds);
+    List<ChatAdminMessageItem> selectAdminMessagesByIds(
+        @Param("conversationId") Long conversationId,
+        @Param("messageIds") List<Long> messageIds
+    );
 }

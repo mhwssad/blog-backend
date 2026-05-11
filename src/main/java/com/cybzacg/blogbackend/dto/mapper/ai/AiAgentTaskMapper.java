@@ -2,9 +2,10 @@ package com.cybzacg.blogbackend.dto.mapper.ai;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.cybzacg.blogbackend.dto.domain.ai.AiAgentTask;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
  * AiAgentTask Mapper。
  */
-public interface AiAgentTaskMapper extends BaseMapper<AiAgentTask> {
-}
+@Mapper
+public interface AiAgentTaskMapper extends BaseMapper<AiAgentTask> {}

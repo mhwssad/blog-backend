@@ -2,9 +2,9 @@ package com.cybzacg.blogbackend.dto.mapper.article;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.cybzacg.blogbackend.dto.domain.article.BlogArticle;
-import org.apache.ibatis.annotations.Param;
-
 import java.util.List;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 /**
  * @author liujian
@@ -12,6 +12,7 @@ import java.util.List;
  * @createDate 2026-03-18 20:46:54
  * @Entity com.cybzacg.blogbackend.domain.BlogArticle
  */
+@Mapper
 public interface BlogArticleMapper extends BaseMapper<BlogArticle> {
     List<BlogArticle> selectAdminPage();
 

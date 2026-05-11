@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cybzacg.blogbackend.dto.mapper.report.SysReportHandleLogMapper">
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.dto.domain.report.SysReportHandleLog">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="reportId" column="report_id" jdbcType="BIGINT"/>
+        <result property="fromStatus" column="from_status" jdbcType="TINYINT"/>
+        <result property="toStatus" column="to_status" jdbcType="TINYINT"/>
+        <result property="actionType" column="action_type" jdbcType="VARCHAR"/>
+        <result property="actionResult" column="action_result" jdbcType="VARCHAR"/>
+        <result property="operatorUserId" column="operator_user_id" jdbcType="BIGINT"/>
+        <result property="actionRemark" column="action_remark" jdbcType="VARCHAR"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id, report_id, from_status, to_status, action_type, action_result,
+        operator_user_id, action_remark, created_at
+    </sql>
+</mapper>

@@ -2,6 +2,7 @@ package com.cybzacg.blogbackend.dto.mapper.config;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.cybzacg.blogbackend.dto.domain.config.SysConfig;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 /**
@@ -10,6 +11,7 @@ import org.apache.ibatis.annotations.Param;
  * @createDate 2026-03-18 18:50:44
  * @Entity generator.domain.SysConfig
  */
+@Mapper
 public interface SysConfigMapper extends BaseMapper<SysConfig> {
     SysConfig selectByConfigKey(@Param("configKey") String configKey);
 }

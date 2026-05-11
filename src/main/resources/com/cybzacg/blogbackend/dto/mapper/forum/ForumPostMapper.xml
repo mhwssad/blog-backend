@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cybzacg.blogbackend.dto.mapper.forum.ForumPostMapper">
+    <update id="incrementLikeCount">
+        update forum_post
+        set like_count = GREATEST(0, like_count + #{delta}),
+            updated_at = now()
+        where id = #{id}
+    </update>
+
+    <update id="incrementReplyCount">
+        update forum_post
+        set reply_count = GREATEST(0, reply_count + #{delta}),
+            updated_at = now()
+        where id = #{id}
+    </update>
+
+    <update id="incrementCollectCount">
+        update forum_post
+        set collect_count = GREATEST(0, collect_count + #{delta}),
+            updated_at = now()
+        where id = #{id}
+    </update>
+
+    <update id="incrementShareCount">
+        update forum_post
+        set share_count = GREATEST(0, share_count + #{delta}),
+            updated_at = now()
+        where id = #{id}
+    </update>
+
+    <update id="incrementViewCount">
+        update forum_post
+        set view_count = GREATEST(0, view_count + #{delta}),
+            updated_at = now()
+        where id = #{id}
+    </update>
+</mapper>

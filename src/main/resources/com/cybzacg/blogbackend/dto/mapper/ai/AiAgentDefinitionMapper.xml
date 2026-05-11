@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cybzacg.blogbackend.dto.mapper.ai.AiAgentDefinitionMapper">
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.dto.domain.ai.AiAgentDefinition">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="description" column="description" jdbcType="VARCHAR"/>
+        <result property="systemPrompt" column="system_prompt" jdbcType="VARCHAR"/>
+        <result property="channelConfigId" column="channel_config_id" jdbcType="BIGINT"/>
+        <result property="dataScopeJson" column="data_scope_json" jdbcType="VARCHAR"/>
+        <result property="enabled" column="enabled" jdbcType="TINYINT"/>
+        <result property="maxTurns" column="max_turns" jdbcType="INTEGER"/>
+        <result property="extraConfigJson" column="extra_config_json" jdbcType="VARCHAR"/>
+        <result property="createdBy" column="created_by" jdbcType="BIGINT"/>
+        <result property="updatedBy" column="updated_by" jdbcType="BIGINT"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id, name, description, system_prompt, channel_config_id, data_scope_json,
+        enabled, max_turns, extra_config_json, created_by, updated_by, created_at, updated_at
+    </sql>
+</mapper>

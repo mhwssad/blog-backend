@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cybzacg.blogbackend.dto.mapper.chat.ChatConversationMemberMapper">
+
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.dto.domain.chat.ChatConversationMember">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="conversationId" column="conversation_id" jdbcType="BIGINT"/>
+        <result property="userId" column="user_id" jdbcType="BIGINT"/>
+        <result property="memberRole" column="member_role" jdbcType="VARCHAR"/>
+        <result property="joinSource" column="join_source" jdbcType="VARCHAR"/>
+        <result property="status" column="status" jdbcType="TINYINT"/>
+        <result property="muteUntil" column="mute_until" jdbcType="TIMESTAMP"/>
+        <result property="joinedAt" column="joined_at" jdbcType="TIMESTAMP"/>
+        <result property="lastReadMessageId" column="last_read_message_id" jdbcType="BIGINT"/>
+        <result property="lastReadAt" column="last_read_at" jdbcType="TIMESTAMP"/>
+        <result property="lastDeliveredMessageId" column="last_delivered_message_id" jdbcType="BIGINT"/>
+        <result property="lastDeliveredAt" column="last_delivered_at" jdbcType="TIMESTAMP"/>
+        <result property="remark" column="remark" jdbcType="VARCHAR"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id
+        , conversation_id, user_id, member_role, join_source, status,
+        mute_until, joined_at, last_read_message_id, last_read_at,
+        last_delivered_message_id, last_delivered_at, remark, created_at, updated_at
+    </sql>
+</mapper>

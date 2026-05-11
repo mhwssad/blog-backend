@@ -2,6 +2,7 @@ package com.cybzacg.blogbackend.dto.mapper.auth;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 /**
@@ -10,19 +11,18 @@ import org.apache.ibatis.annotations.Param;
  * @createDate 2026-03-18 18:50:44
  * @Entity generator.domain.SysUser
  */
+@Mapper
 public interface SysUserMapper extends BaseMapper<SysUser> {
-
     SysUser selectByUsername(@Param("username") String username);
 
     SysUser selectByEmail(@Param("email") String email);
 
     int updateLoginInfo(@Param("userId") Long userId, @Param("ip") String ip);
 
-    int incrementExperiencePoints(@Param("userId") Long userId, @Param("delta") int delta);
+    int incrementExperiencePoints(
+        @Param("userId") Long userId,
+        @Param("delta") int delta
+    );
 
     int updateLevel(@Param("userId") Long userId, @Param("level") int level);
 }
-
-
-
-

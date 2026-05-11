@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cybzacg.blogbackend.dto.mapper.article.BlogArticleReviewLogMapper">
+
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.dto.domain.article.BlogArticleReviewLog">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="articleId" column="article_id" jdbcType="BIGINT"/>
+        <result property="actionType" column="action_type" jdbcType="VARCHAR"/>
+        <result property="fromReviewStatus" column="from_review_status" jdbcType="TINYINT"/>
+        <result property="toReviewStatus" column="to_review_status" jdbcType="TINYINT"/>
+        <result property="operatorUserId" column="operator_user_id" jdbcType="BIGINT"/>
+        <result property="reviewComment" column="review_comment" jdbcType="VARCHAR"/>
+        <result property="operatedAt" column="operated_at" jdbcType="TIMESTAMP"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,
+        article_id, action_type, from_review_status, to_review_status,
+        operator_user_id, review_comment, operated_at, created_at
+    </sql>
+</mapper>

@@ -18,7 +18,10 @@ target/
 *.iws
 *.iml
 *.ipr
+
+### XML files ###
 *.xml
+!src/**/dto/mapper/**/*.xml
 
 ### NetBeans ###
 /nbproject/private/

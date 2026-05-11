@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cybzacg.blogbackend.dto.mapper.ai.AiKnowledgeSourceConfigMapper">
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.dto.domain.ai.AiKnowledgeSourceConfig">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="sourceType" column="source_type" jdbcType="VARCHAR"/>
+        <result property="enabled" column="enabled" jdbcType="TINYINT"/>
+        <result property="syncInterval" column="sync_interval" jdbcType="INTEGER"/>
+        <result property="lastSyncedAt" column="last_synced_at" jdbcType="TIMESTAMP"/>
+        <result property="lastSyncStatus" column="last_sync_status" jdbcType="VARCHAR"/>
+        <result property="configJson" column="config_json" jdbcType="VARCHAR"/>
+        <result property="updatedBy" column="updated_by" jdbcType="BIGINT"/>
+        <result property="remark" column="remark" jdbcType="VARCHAR"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id, source_type, enabled, sync_interval, last_synced_at, last_sync_status,
+        config_json, updated_by, remark, created_at, updated_at
+    </sql>
+</mapper>

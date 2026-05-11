@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cybzacg.blogbackend.dto.mapper.ai.AiAgentTaskMapper">
+    <resultMap id="BaseResultMap" type="com.cybzacg.blogbackend.dto.domain.ai.AiAgentTask">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="userId" column="user_id" jdbcType="BIGINT"/>
+        <result property="agentId" column="agent_id" jdbcType="BIGINT"/>
+        <result property="status" column="status" jdbcType="TINYINT"/>
+        <result property="inputContent" column="input_content" jdbcType="VARCHAR"/>
+        <result property="outputContent" column="output_content" jdbcType="VARCHAR"/>
+        <result property="errorMessage" column="error_message" jdbcType="VARCHAR"/>
+        <result property="tokenCount" column="token_count" jdbcType="INTEGER"/>
+        <result property="startedAt" column="started_at" jdbcType="TIMESTAMP"/>
+        <result property="completedAt" column="completed_at" jdbcType="TIMESTAMP"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id, user_id, agent_id, status, input_content, output_content, error_message,
+        token_count, started_at, completed_at, created_at, updated_at
+    </sql>
+</mapper>
