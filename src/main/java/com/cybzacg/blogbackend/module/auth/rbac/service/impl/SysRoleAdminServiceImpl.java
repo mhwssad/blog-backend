@@ -2,6 +2,7 @@ package com.cybzacg.blogbackend.module.auth.rbac.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.common.constant.AuthConstants;
+import com.cybzacg.blogbackend.common.constant.MenuConstants;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.dto.domain.auth.SysRole;
 import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRoleRepository;
@@ -133,6 +134,7 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
         SysRole role = getAvailableRole(roleId);
         requireMutableRole(role);
         List<Long> distinctMenuIds = validateMenusExist(menuIds);
+        validateNoWildcardMenu(distinctMenuIds);
         sysRoleMenuRepository.deleteByRoleId(roleId);
         if (distinctMenuIds.isEmpty()) {
             return;
@@ -188,5 +190,11 @@ public class SysRoleAdminServiceImpl implements SysRoleAdminService {
     private boolean isSuperAdminRole(SysRole role) {
         return role != null && (Long.valueOf(1L).equals(role.getId())
                 || AuthConstants.SUPER_ADMIN_ROLE_CODE.equals(role.getCode()));
+    }
+
+    private void validateNoWildcardMenu(List<Long> menuIds) {
+        if (menuIds != null && menuIds.contains(MenuConstants.WILDCARD_MENU_ID)) {
+            ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.PERMISSION_WILDCARD_NOT_ALLOWED);
+        }
     }
 }

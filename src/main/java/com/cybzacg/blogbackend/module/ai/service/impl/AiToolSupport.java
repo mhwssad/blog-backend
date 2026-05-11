@@ -128,12 +128,12 @@ final class AiToolSupport {
         }
         if (node.isObject()) {
             LinkedHashMap<String, Object> map = new LinkedHashMap<>();
-            node.fields().forEachRemaining(entry -> {
-                String key = entry.getKey();
+            com.fasterxml.jackson.databind.node.ObjectNode objNode = (com.fasterxml.jackson.databind.node.ObjectNode) node;
+            objNode.fieldNames().forEachRemaining(key -> {
                 if (isSensitiveKey(key)) {
                     map.put(key, "******");
                 } else {
-                    map.put(key, maskNode(entry.getValue()));
+                    map.put(key, maskNode(objNode.get(key)));
                 }
             });
             return map;

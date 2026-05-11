@@ -275,7 +275,8 @@ public class AuthServiceImpl implements AuthService {
 
         Map<Long, AuthMenuInfo> menuMap = new LinkedHashMap<>();
         for (SysMenu menu : menus) {
-            if (MenuConstants.TYPE_BUTTON.equalsIgnoreCase(menu.getType())) {
+            if (MenuConstants.TYPE_BUTTON.equalsIgnoreCase(menu.getType())
+                    && !AuthConstants.ALL_PERMISSION.equals(menu.getPerm())) {
                 continue;
             }
             menuMap.put(menu.getId(), authModelConvert.toAuthMenuInfo(menu));
@@ -297,16 +298,11 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
-     * 超级管理员持有全量权限与通配符，前端据此渲染后台菜单与权限入口。
+     * 超级管理员仅持有通配符 {@code *:*:*}，通过段匹配覆盖所有权限。
      */
     private List<String> buildCurrentPermissions(List<String> roleCodes, Long userId) {
         Set<String> dedup = new LinkedHashSet<>();
         if (isSuperAdmin(roleCodes)) {
-            List<String> allPermissions = sysMenuRepository.findAllOrdered().stream()
-                    .map(SysMenu::getPerm)
-                    .filter(StrUtils::hasText)
-                    .toList();
-            dedup.addAll(allPermissions);
             dedup.add(AuthConstants.ALL_PERMISSION);
         } else {
             List<String> permissions = sysMenuRepository.findPermissionsByUserId(userId);

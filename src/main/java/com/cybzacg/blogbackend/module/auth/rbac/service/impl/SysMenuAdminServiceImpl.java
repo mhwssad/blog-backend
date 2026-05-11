@@ -56,6 +56,7 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
     public SysMenuAdminVO createMenu(SysMenuSaveRequest request) {
         SysMenu parent = validateParent(request.getParentId(), null);
         validateMenuType(request.getType());
+        validatePermNotWildcard(request.getPerm());
 
         SysMenu menu = rbacAdminModelConvert.toMenu(request);
         applyMenuFields(menu, request);
@@ -73,6 +74,7 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
         SysMenu menu = getMenuOrThrow(id);
         SysMenu parent = validateParent(request.getParentId(), id);
         validateMenuType(request.getType());
+        validatePermNotWildcard(request.getPerm());
 
         applyMenuFields(menu, request);
         menu.setTreePath(buildTreePath(parent));
@@ -128,6 +130,15 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
         ExceptionThrowerCore.throwBusinessIf(!MenuConstants.TYPE_CATALOG.equalsIgnoreCase(normalizedType) && !MenuConstants.TYPE_MENU.equalsIgnoreCase(normalizedType) && !MenuConstants.TYPE_BUTTON.equalsIgnoreCase(normalizedType), ResultErrorCode.ILLEGAL_ARGUMENT, "菜单类型非法");
     }
 
+    /**
+     * 通配符权限（含 {@code *}）仅限超级管理员角色，禁止通过菜单管理创建。
+     */
+    private void validatePermNotWildcard(String perm) {
+        if (StrUtils.hasText(perm) && perm.contains("*")) {
+            ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.PERMISSION_WILDCARD_NOT_ALLOWED);
+        }
+    }
+
     private SysMenu getMenuOrThrow(Long id) {
         SysMenu menu = sysMenuRepository.getById(id);
         ExceptionThrowerCore.throwBusinessIfNull(menu, ResultErrorCode.ILLEGAL_ARGUMENT, "菜单不存在");
@@ -163,6 +174,9 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
 
         Map<Long, SysMenuAdminVO> menuMap = new LinkedHashMap<>();
         for (SysMenu menu : menus) {
+            if (MenuConstants.WILDCARD_MENU_ID.equals(menu.getId())) {
+                continue;
+            }
             menuMap.put(menu.getId(), rbacAdminModelConvert.toMenuVO(menu));
         }
 
