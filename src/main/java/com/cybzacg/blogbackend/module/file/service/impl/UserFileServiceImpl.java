@@ -1,12 +1,12 @@
 package com.cybzacg.blogbackend.module.file.service.impl;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.file.FileBusinessInfo;
-import com.cybzacg.blogbackend.domain.file.FileInfo;
+import com.cybzacg.blogbackend.dto.domain.file.FileBusinessInfo;
+import com.cybzacg.blogbackend.dto.domain.file.FileInfo;
+import com.cybzacg.blogbackend.dto.repository.file.FileBusinessInfoRepository;
 import com.cybzacg.blogbackend.enums.file.FileResultCode;
 import com.cybzacg.blogbackend.module.file.model.admin.UserTaskVO;
 import com.cybzacg.blogbackend.module.file.model.user.*;
-import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
 import com.cybzacg.blogbackend.module.file.service.FileUploadService;
 import com.cybzacg.blogbackend.module.file.service.UserFileQueryService;

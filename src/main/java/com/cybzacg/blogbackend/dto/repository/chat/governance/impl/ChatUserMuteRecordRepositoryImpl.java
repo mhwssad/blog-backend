@@ -1,12 +1,12 @@
-package com.cybzacg.blogbackend.module.chat.governance.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.chat.governance.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.chat.ChatUserMuteRecord;
-import com.cybzacg.blogbackend.enums.chat.ChatMuteRecordStatusEnum;
 import com.cybzacg.blogbackend.dto.mapper.chat.ChatUserMuteRecordMapper;
-import com.cybzacg.blogbackend.module.chat.governance.repository.ChatUserMuteRecordRepository;
+import com.cybzacg.blogbackend.dto.repository.chat.governance.ChatUserMuteRecordRepository;
+import com.cybzacg.blogbackend.enums.chat.ChatMuteRecordStatusEnum;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

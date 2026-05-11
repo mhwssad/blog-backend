@@ -1,4 +1,4 @@
-package com.cybzacg.blogbackend.module.auth.account.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.auth.account.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
@@ -6,10 +6,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
 import com.cybzacg.blogbackend.dto.mapper.auth.SysUserMapper;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysUserPageQuery;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
 
 import java.util.Collection;
 import java.util.List;
@@ -53,7 +53,7 @@ public class SysUserRepositoryImpl extends ServiceImpl<SysUserMapper, SysUser>
      */
     @Override
     public boolean existsActiveByIdentity(String identity) {
-        if (!StringUtils.hasText(identity)) {
+        if (!StrUtils.hasText(identity)) {
             return false;
         }
         return exists(new LambdaQueryWrapper<SysUser>()
@@ -70,7 +70,7 @@ public class SysUserRepositoryImpl extends ServiceImpl<SysUserMapper, SysUser>
      */
     @Override
     public boolean existsActiveByField(String fieldName, String value) {
-        if (!StringUtils.hasText(value)) {
+        if (!StrUtils.hasText(value)) {
             return false;
         }
         LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<SysUser>()
@@ -127,10 +127,10 @@ public class SysUserRepositoryImpl extends ServiceImpl<SysUserMapper, SysUser>
     @Override
     public Page<SysUser> pageByAdminConditions(SysUserPageQuery query) {
         return page(new Page<>(query.getCurrent(), query.getSize()), new LambdaQueryWrapper<SysUser>()
-                .like(StringUtils.hasText(query.getUsername()), SysUser::getUsername, query.getUsername())
-                .like(StringUtils.hasText(query.getNickname()), SysUser::getNickname, query.getNickname())
-                .like(StringUtils.hasText(query.getEmail()), SysUser::getEmail, query.getEmail())
-                .like(StringUtils.hasText(query.getPhone()), SysUser::getPhone, query.getPhone())
+                .like(StrUtils.hasText(query.getUsername()), SysUser::getUsername, query.getUsername())
+                .like(StrUtils.hasText(query.getNickname()), SysUser::getNickname, query.getNickname())
+                .like(StrUtils.hasText(query.getEmail()), SysUser::getEmail, query.getEmail())
+                .like(StrUtils.hasText(query.getPhone()), SysUser::getPhone, query.getPhone())
                 .eq(query.getStatus() != null, SysUser::getStatus, query.getStatus())
                 .eq(SysUser::getDeletedFlag, 0)
                 .orderByDesc(SysUser::getCreatedAt));
@@ -143,7 +143,7 @@ public class SysUserRepositoryImpl extends ServiceImpl<SysUserMapper, SysUser>
         if (value == null) {
             return false;
         }
-        if (value instanceof String stringValue && !StringUtils.hasText(stringValue)) {
+        if (value instanceof String stringValue && !StrUtils.hasText(stringValue)) {
             return false;
         }
         return exists(new LambdaQueryWrapper<SysUser>()

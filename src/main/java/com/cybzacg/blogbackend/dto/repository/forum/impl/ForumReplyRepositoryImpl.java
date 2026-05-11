@@ -1,15 +1,15 @@
-package com.cybzacg.blogbackend.module.forum.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.forum.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.forum.ForumReply;
-import com.cybzacg.blogbackend.enums.forum.ForumReplyStatusEnum;
 import com.cybzacg.blogbackend.dto.mapper.forum.ForumReplyMapper;
+import com.cybzacg.blogbackend.dto.repository.forum.ForumReplyRepository;
+import com.cybzacg.blogbackend.enums.forum.ForumReplyStatusEnum;
 import com.cybzacg.blogbackend.module.forum.model.admin.ForumReplyAdminPageQuery;
-import com.cybzacg.blogbackend.module.forum.repository.ForumReplyRepository;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -36,7 +36,7 @@ public class ForumReplyRepositoryImpl extends ServiceImpl<ForumReplyMapper, Foru
                 .eq(query.getPostId() != null, ForumReply::getPostId, query.getPostId())
                 .eq(query.getUserId() != null, ForumReply::getUserId, query.getUserId())
                 .eq(query.getStatus() != null, ForumReply::getStatus, query.getStatus())
-                .and(StringUtils.hasText(query.getKeyword()), w -> w.like(ForumReply::getContent, query.getKeyword()))
+                .and(StrUtils.hasText(query.getKeyword()), w -> w.like(ForumReply::getContent, query.getKeyword()))
                 .orderByAsc(ForumReply::getFloorNo)
                 .orderByAsc(ForumReply::getId);
         return page(new Page<>(query.getCurrent(), query.getSize()), wrapper);

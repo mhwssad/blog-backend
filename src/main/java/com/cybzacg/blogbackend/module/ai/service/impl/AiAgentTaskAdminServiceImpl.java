@@ -2,14 +2,14 @@ package com.cybzacg.blogbackend.module.ai.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.ai.AiAgentDefinition;
-import com.cybzacg.blogbackend.domain.ai.AiAgentTask;
+import com.cybzacg.blogbackend.dto.domain.ai.AiAgentDefinition;
+import com.cybzacg.blogbackend.dto.domain.ai.AiAgentTask;
+import com.cybzacg.blogbackend.dto.repository.ai.AiAgentDefinitionRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiAgentTaskRepository;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.ai.convert.AiModelConvert;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiAgentTaskAdminPageQuery;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiAgentTaskAdminVO;
-import com.cybzacg.blogbackend.module.ai.repository.AiAgentDefinitionRepository;
-import com.cybzacg.blogbackend.module.ai.repository.AiAgentTaskRepository;
 import com.cybzacg.blogbackend.module.ai.service.AiAgentTaskAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PaginationUtils;

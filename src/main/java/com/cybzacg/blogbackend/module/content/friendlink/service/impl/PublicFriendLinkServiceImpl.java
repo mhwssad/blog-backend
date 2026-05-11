@@ -1,8 +1,8 @@
 package com.cybzacg.blogbackend.module.content.friendlink.service.impl;
 
+import com.cybzacg.blogbackend.dto.repository.content.BlogFriendLinkRepository;
 import com.cybzacg.blogbackend.module.content.friendlink.convert.FriendLinkModelConvert;
 import com.cybzacg.blogbackend.module.content.friendlink.model.publics.PublicFriendLinkVO;
-import com.cybzacg.blogbackend.module.content.friendlink.repository.BlogFriendLinkRepository;
 import com.cybzacg.blogbackend.module.content.friendlink.service.PublicFriendLinkService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

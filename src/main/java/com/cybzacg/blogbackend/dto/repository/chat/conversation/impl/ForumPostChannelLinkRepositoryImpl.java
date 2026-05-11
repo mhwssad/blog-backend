@@ -1,9 +1,9 @@
-package com.cybzacg.blogbackend.module.chat.conversation.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.chat.conversation.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.forum.ForumPostChannelLink;
 import com.cybzacg.blogbackend.dto.mapper.forum.ForumPostChannelLinkMapper;
-import com.cybzacg.blogbackend.module.chat.conversation.repository.ForumPostChannelLinkRepository;
+import com.cybzacg.blogbackend.dto.repository.chat.conversation.ForumPostChannelLinkRepository;
 import org.springframework.stereotype.Repository;
 
 /**

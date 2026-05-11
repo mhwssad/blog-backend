@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.file.service;
 
-import com.cybzacg.blogbackend.domain.file.FileBusinessInfo;
-import com.cybzacg.blogbackend.domain.file.FileInfo;
+import com.cybzacg.blogbackend.dto.domain.file.FileBusinessInfo;
+import com.cybzacg.blogbackend.dto.domain.file.FileInfo;
 
 /**
  * 文件域对聊天模块暴露的稳定 facade。

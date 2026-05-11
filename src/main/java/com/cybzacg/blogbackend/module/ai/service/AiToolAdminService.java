@@ -1,16 +1,7 @@
 package com.cybzacg.blogbackend.module.ai.service;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolAuthorizationPageQuery;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolAuthorizationSaveRequest;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolAuthorizationVO;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolCallLogPageQuery;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolCallLogVO;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolDefinitionPageQuery;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolDefinitionSaveRequest;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolDefinitionVO;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolExecuteRequest;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolExecuteVO;
+import com.cybzacg.blogbackend.module.ai.model.admin.*;
 
 /**
  * 后台 AI 工具管理服务。

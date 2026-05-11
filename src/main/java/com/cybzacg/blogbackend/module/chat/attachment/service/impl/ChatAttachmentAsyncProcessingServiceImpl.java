@@ -1,19 +1,19 @@
 package com.cybzacg.blogbackend.module.chat.attachment.service.impl;
 
+import com.cybzacg.blogbackend.common.constant.ChatConstants;
 import com.cybzacg.blogbackend.common.storage.StorageManager;
 import com.cybzacg.blogbackend.common.storage.StorageService;
 import com.cybzacg.blogbackend.config.property.ChatAttachmentProcessingProperties;
-import com.cybzacg.blogbackend.domain.chat.ChatAttachmentProcessTask;
-import com.cybzacg.blogbackend.domain.chat.ChatMessage;
-import com.cybzacg.blogbackend.domain.file.FileInfo;
-import com.cybzacg.blogbackend.module.chat.attachment.repository.ChatAttachmentProcessTaskRepository;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatAttachmentProcessTask;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatMessage;
+import com.cybzacg.blogbackend.dto.domain.file.FileInfo;
+import com.cybzacg.blogbackend.dto.repository.chat.attachment.ChatAttachmentProcessTaskRepository;
+import com.cybzacg.blogbackend.dto.repository.chat.message.ChatMessageRepository;
 import com.cybzacg.blogbackend.module.chat.attachment.service.ChatAttachmentAsyncProcessingService;
 import com.cybzacg.blogbackend.module.chat.attachment.service.ChatAttachmentMetadataResolver;
 import com.cybzacg.blogbackend.module.chat.governance.service.ChatMetricsService;
 import com.cybzacg.blogbackend.module.chat.message.model.user.ChatMessageVO;
-import com.cybzacg.blogbackend.module.chat.message.repository.ChatMessageRepository;
 import com.cybzacg.blogbackend.module.chat.push.service.ChatPushService;
-import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelConvert;
 import com.cybzacg.blogbackend.module.chat.shared.model.common.ChatFilePayloadVO;
 import com.cybzacg.blogbackend.module.chat.shared.model.common.ChatMessagePayloadVO;

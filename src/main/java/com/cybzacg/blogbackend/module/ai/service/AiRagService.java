@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.ai.service;
 
-import com.cybzacg.blogbackend.domain.ai.AiChannelConfig;
+import com.cybzacg.blogbackend.dto.domain.ai.AiChannelConfig;
 import com.cybzacg.blogbackend.module.ai.model.internal.AiRagRetrievalResult;
 
 /**

@@ -1,13 +1,9 @@
 package com.cybzacg.blogbackend.module.forum.convert;
 
-import com.cybzacg.blogbackend.domain.forum.ForumPost;
-import com.cybzacg.blogbackend.domain.forum.ForumReply;
-import com.cybzacg.blogbackend.domain.forum.ForumSection;
-import com.cybzacg.blogbackend.module.forum.model.admin.ForumPostAdminDetailVO;
-import com.cybzacg.blogbackend.module.forum.model.admin.ForumPostAdminVO;
-import com.cybzacg.blogbackend.module.forum.model.admin.ForumReplyAdminVO;
-import com.cybzacg.blogbackend.module.forum.model.admin.ForumSectionAdminVO;
-import com.cybzacg.blogbackend.module.forum.model.admin.ForumSectionSaveRequest;
+import com.cybzacg.blogbackend.dto.domain.forum.ForumPost;
+import com.cybzacg.blogbackend.dto.domain.forum.ForumReply;
+import com.cybzacg.blogbackend.dto.domain.forum.ForumSection;
+import com.cybzacg.blogbackend.module.forum.model.admin.*;
 import com.cybzacg.blogbackend.module.forum.model.publics.ForumSectionVO;
 import com.cybzacg.blogbackend.module.forum.model.publics.PublicForumPostDetailVO;
 import com.cybzacg.blogbackend.module.forum.model.publics.PublicForumPostVO;

@@ -1,8 +1,8 @@
 package com.cybzacg.blogbackend.module.ai.service;
 
-import com.cybzacg.blogbackend.domain.ai.AiChannelConfig;
-import com.cybzacg.blogbackend.domain.ai.AiChatMessage;
-import com.cybzacg.blogbackend.domain.file.FileInfo;
+import com.cybzacg.blogbackend.dto.domain.ai.AiChannelConfig;
+import com.cybzacg.blogbackend.dto.domain.ai.AiChatMessage;
+import com.cybzacg.blogbackend.dto.domain.file.FileInfo;
 import com.cybzacg.blogbackend.module.ai.model.data.AiModelCallResult;
 import com.cybzacg.blogbackend.module.ai.model.data.AiStreamEvent;
 

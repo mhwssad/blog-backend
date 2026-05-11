@@ -1,8 +1,8 @@
 package com.cybzacg.blogbackend.module.chat.governance.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.module.chat.governance.model.admin.ChatMuteCreateRequest;
 import com.cybzacg.blogbackend.module.chat.governance.model.admin.ChatMuteRecordVO;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 /**
  * 统一禁言治理服务。

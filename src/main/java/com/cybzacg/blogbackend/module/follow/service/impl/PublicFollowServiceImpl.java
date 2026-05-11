@@ -1,13 +1,13 @@
 package com.cybzacg.blogbackend.module.follow.service.impl;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
+import com.cybzacg.blogbackend.dto.repository.follow.SysUserFollowRepository;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.follow.convert.FollowModelConvert;
 import com.cybzacg.blogbackend.module.follow.model.publics.PublicFollowPageQuery;
 import com.cybzacg.blogbackend.module.follow.model.publics.PublicFollowUserVO;
-import com.cybzacg.blogbackend.module.follow.repository.SysUserFollowRepository;
 import com.cybzacg.blogbackend.module.follow.service.PublicFollowService;
 import com.cybzacg.blogbackend.utils.CollectionUtils;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;

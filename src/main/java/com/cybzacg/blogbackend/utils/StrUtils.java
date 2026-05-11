@@ -58,6 +58,41 @@ public final class StrUtils {
     }
 
     /**
+     * 判断字符串是否为空白（null、空串或全空白字符）。
+     */
+    public static boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    /**
+     * 判断字符串是否非空白。
+     */
+    public static boolean isNotBlank(String value) {
+        return !isBlank(value);
+    }
+
+    /**
+     * 判断字符串是否为空（null 或空串），不裁剪。
+     */
+    public static boolean isEmpty(String value) {
+        return value == null || value.isEmpty();
+    }
+
+    /**
+     * 判断字符串是否非空。
+     */
+    public static boolean isNotEmpty(String value) {
+        return !isEmpty(value);
+    }
+
+    /**
+     * 空白时返回默认值，否则返回原值（不裁剪）。
+     */
+    public static String defaultIfBlank(String value, String defaultValue) {
+        return isBlank(value) ? defaultValue : value;
+    }
+
+    /**
      * 空安全字符串包含检查。
      *
      * @return source 为空白或不含 keyword 时返回 false

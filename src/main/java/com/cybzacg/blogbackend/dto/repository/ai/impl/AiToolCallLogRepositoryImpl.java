@@ -1,9 +1,9 @@
-package com.cybzacg.blogbackend.module.ai.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.ai.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.ai.AiToolCallLog;
 import com.cybzacg.blogbackend.dto.mapper.ai.AiToolCallLogMapper;
-import com.cybzacg.blogbackend.module.ai.repository.AiToolCallLogRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiToolCallLogRepository;
 import org.springframework.stereotype.Repository;
 
 /**

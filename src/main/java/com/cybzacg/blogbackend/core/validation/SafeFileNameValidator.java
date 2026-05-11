@@ -1,8 +1,8 @@
 package com.cybzacg.blogbackend.core.validation;
 
+import com.cybzacg.blogbackend.utils.StrUtils;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import org.springframework.util.StringUtils;
 
 /**
  * 文件名安全性校验器。
@@ -12,7 +12,7 @@ public class SafeFileNameValidator implements ConstraintValidator<SafeFileName, 
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
-        if (!StringUtils.hasText(value)) {
+        if (!StrUtils.hasText(value)) {
             return true;
         }
         // 禁止路径分隔符和控制字符

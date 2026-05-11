@@ -1,4 +1,4 @@
-package com.cybzacg.blogbackend.module.chat.member.repository;
+package com.cybzacg.blogbackend.dto.repository.chat.member;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.cybzacg.blogbackend.dto.domain.chat.ChatConversationMember;

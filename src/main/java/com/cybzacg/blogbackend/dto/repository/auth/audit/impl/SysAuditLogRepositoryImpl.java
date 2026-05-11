@@ -1,14 +1,14 @@
-package com.cybzacg.blogbackend.module.auth.audit.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.auth.audit.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.system.SysAuditLog;
 import com.cybzacg.blogbackend.dto.mapper.system.SysAuditLogMapper;
+import com.cybzacg.blogbackend.dto.repository.auth.audit.SysAuditLogRepository;
 import com.cybzacg.blogbackend.module.auth.audit.model.admin.SysAuditLogPageQuery;
-import com.cybzacg.blogbackend.module.auth.audit.repository.SysAuditLogRepository;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
 
 @Repository
 public class SysAuditLogRepositoryImpl extends ServiceImpl<SysAuditLogMapper, SysAuditLog>
@@ -20,7 +20,7 @@ public class SysAuditLogRepositoryImpl extends ServiceImpl<SysAuditLogMapper, Sy
                 new LambdaQueryWrapper<SysAuditLog>()
                         .eq(query.getOperatorUserId() != null, SysAuditLog::getOperatorUserId, query.getOperatorUserId())
                         .eq(query.getTargetUserId() != null, SysAuditLog::getTargetUserId, query.getTargetUserId())
-                        .eq(StringUtils.hasText(query.getOperationType()), SysAuditLog::getOperationType, query.getOperationType())
+                        .eq(StrUtils.hasText(query.getOperationType()), SysAuditLog::getOperationType, query.getOperationType())
                         .orderByDesc(SysAuditLog::getCreatedAt));
     }
 }

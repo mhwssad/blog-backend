@@ -1,10 +1,11 @@
 package com.cybzacg.blogbackend.module.chat.message.service.impl;
 
+import com.cybzacg.blogbackend.common.constant.ChatConstants;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.auth.SysUser;
-import com.cybzacg.blogbackend.domain.chat.ChatConversationMember;
-import com.cybzacg.blogbackend.domain.chat.ChatMessage;
-import com.cybzacg.blogbackend.domain.chat.ChatMessageReadCursor;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatConversationMember;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatMessage;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatMessageReadCursor;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.chat.member.model.user.ChatReadStateVO;
 import com.cybzacg.blogbackend.module.chat.message.model.user.ChatEditMessageRequest;
@@ -13,7 +14,6 @@ import com.cybzacg.blogbackend.module.chat.message.model.user.ChatMessagePageQue
 import com.cybzacg.blogbackend.module.chat.message.model.user.ChatMessageVO;
 import com.cybzacg.blogbackend.module.chat.message.service.ChatMessageLifecycleService;
 import com.cybzacg.blogbackend.module.chat.push.service.ChatPushService;
-import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.shared.model.common.ChatReplyMessageVO;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatMessageHistoryItem;
 import com.cybzacg.blogbackend.module.chat.shared.support.ChatPayloadHelper;

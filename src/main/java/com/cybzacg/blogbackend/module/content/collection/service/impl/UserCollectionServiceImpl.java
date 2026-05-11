@@ -2,9 +2,11 @@ package com.cybzacg.blogbackend.module.content.collection.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.article.BlogArticle;
-import com.cybzacg.blogbackend.domain.content.SysCollection;
-import com.cybzacg.blogbackend.domain.content.SysCollectionFolder;
+import com.cybzacg.blogbackend.dto.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.dto.domain.content.SysCollection;
+import com.cybzacg.blogbackend.dto.domain.content.SysCollectionFolder;
+import com.cybzacg.blogbackend.dto.repository.content.SysCollectionFolderRepository;
+import com.cybzacg.blogbackend.dto.repository.content.SysCollectionRepository;
 import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.service.ArticleContentFacadeService;
@@ -13,8 +15,6 @@ import com.cybzacg.blogbackend.module.content.collection.model.user.CollectionFo
 import com.cybzacg.blogbackend.module.content.collection.model.user.CollectionFolderVO;
 import com.cybzacg.blogbackend.module.content.collection.model.user.CollectionSaveRequest;
 import com.cybzacg.blogbackend.module.content.collection.model.user.CollectionVO;
-import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionFolderRepository;
-import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionRepository;
 import com.cybzacg.blogbackend.module.content.collection.service.UserCollectionService;
 import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;

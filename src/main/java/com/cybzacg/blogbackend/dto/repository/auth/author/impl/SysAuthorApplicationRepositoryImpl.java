@@ -1,14 +1,14 @@
-package com.cybzacg.blogbackend.module.auth.author.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.auth.author.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.auth.SysAuthorApplication;
 import com.cybzacg.blogbackend.dto.mapper.auth.SysAuthorApplicationMapper;
+import com.cybzacg.blogbackend.dto.repository.auth.author.SysAuthorApplicationRepository;
 import com.cybzacg.blogbackend.module.auth.author.model.admin.SysAuthorApplicationAdminPageQuery;
-import com.cybzacg.blogbackend.module.auth.author.repository.SysAuthorApplicationRepository;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
 
 /**
  * 作者申请 Repository 实现。
@@ -48,7 +48,7 @@ public class SysAuthorApplicationRepositoryImpl extends ServiceImpl<SysAuthorApp
         return page(new Page<>(query.getCurrent(), query.getSize()), new LambdaQueryWrapper<SysAuthorApplication>()
                 .eq(query.getUserId() != null, SysAuthorApplication::getUserId, query.getUserId())
                 .eq(query.getApplyStatus() != null, SysAuthorApplication::getApplyStatus, query.getApplyStatus())
-                .and(StringUtils.hasText(query.getKeyword()), wrapper -> wrapper
+                .and(StrUtils.hasText(query.getKeyword()), wrapper -> wrapper
                         .like(SysAuthorApplication::getApplyReason, query.getKeyword())
                         .or()
                         .like(SysAuthorApplication::getContentDirection, query.getKeyword())

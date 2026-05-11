@@ -1,15 +1,15 @@
 package com.cybzacg.blogbackend.module.chat.conversation.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.cybzacg.blogbackend.common.constant.ChatConstants;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.chat.ChatConversation;
-import com.cybzacg.blogbackend.domain.chat.ChatConversationMember;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatConversation;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatConversationMember;
+import com.cybzacg.blogbackend.dto.repository.chat.conversation.ChatConversationRepository;
+import com.cybzacg.blogbackend.dto.repository.chat.member.ChatConversationMemberRepository;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatConversationVO;
-import com.cybzacg.blogbackend.module.chat.conversation.repository.ChatConversationRepository;
 import com.cybzacg.blogbackend.module.chat.conversation.service.ChatTopicChannelPublicService;
-import com.cybzacg.blogbackend.module.chat.member.repository.ChatConversationMemberRepository;
-import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;

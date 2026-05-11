@@ -1,10 +1,10 @@
-package com.cybzacg.blogbackend.module.auth.notice.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.auth.notice.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.notice.SysUserNotificationSetting;
 import com.cybzacg.blogbackend.dto.mapper.notice.SysUserNotificationSettingMapper;
-import com.cybzacg.blogbackend.module.auth.notice.repository.SysUserNotificationSettingRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.notice.SysUserNotificationSettingRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;

@@ -1,4 +1,4 @@
-package com.cybzacg.blogbackend.module.chat.governance.repository;
+package com.cybzacg.blogbackend.dto.repository.chat.governance;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;

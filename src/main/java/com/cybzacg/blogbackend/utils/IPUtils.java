@@ -4,7 +4,6 @@ import com.cybzacg.blogbackend.common.constant.HttpHeaderConstants;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.lionsoul.ip2region.xdb.Searcher;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -83,7 +82,7 @@ public class IPUtils {
             log.error("IPUtils ERROR, {}", e.getMessage());
         }
 
-        if (StringUtils.isNotBlank(ip) && ip.indexOf(",") > 0) {
+        if (StrUtils.isNotBlank(ip) && ip.indexOf(",") > 0) {
             ip = ip.substring(0, ip.indexOf(","));
         }
 
@@ -91,7 +90,7 @@ public class IPUtils {
     }
 
     private static boolean checkIp(String ip) {
-        return StringUtils.isEmpty(ip) || HttpHeaderConstants.UNKNOWN.equalsIgnoreCase(ip);
+        return StrUtils.isEmpty(ip) || HttpHeaderConstants.UNKNOWN.equalsIgnoreCase(ip);
     }
 
     /**

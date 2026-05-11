@@ -1,12 +1,12 @@
-package com.cybzacg.blogbackend.module.content.interaction.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.content.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.content.SysInteraction;
 import com.cybzacg.blogbackend.dto.mapper.content.SysInteractionMapper;
+import com.cybzacg.blogbackend.dto.repository.content.SysInteractionRepository;
 import com.cybzacg.blogbackend.module.content.interaction.model.admin.InteractionPageQuery;
-import com.cybzacg.blogbackend.module.content.interaction.repository.SysInteractionRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;

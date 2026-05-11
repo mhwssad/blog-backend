@@ -1,11 +1,14 @@
 package com.cybzacg.blogbackend.module.chat.websocket.model;
 
+import lombok.Getter;
+
 import java.util.Arrays;
 import java.util.Optional;
 
 /**
  * 聊天 WebSocket 消息类型。
  */
+@Getter
 public enum ChatWsMessageType {
     READY("ready"),
     PING("ping"),
@@ -34,7 +37,4 @@ public enum ChatWsMessageType {
                 .findFirst();
     }
 
-    public String getValue() {
-        return value;
-    }
 }

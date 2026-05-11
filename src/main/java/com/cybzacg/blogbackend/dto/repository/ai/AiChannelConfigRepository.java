@@ -1,4 +1,4 @@
-package com.cybzacg.blogbackend.module.ai.repository;
+package com.cybzacg.blogbackend.dto.repository.ai;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.cybzacg.blogbackend.dto.domain.ai.AiChannelConfig;

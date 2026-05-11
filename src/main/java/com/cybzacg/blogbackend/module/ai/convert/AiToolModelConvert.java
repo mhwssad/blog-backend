@@ -1,18 +1,7 @@
 package com.cybzacg.blogbackend.module.ai.convert;
 
-import com.cybzacg.blogbackend.domain.ai.AiMcpServerConfig;
-import com.cybzacg.blogbackend.domain.ai.AiMcpToolSnapshot;
-import com.cybzacg.blogbackend.domain.ai.AiToolAuthorization;
-import com.cybzacg.blogbackend.domain.ai.AiToolCallLog;
-import com.cybzacg.blogbackend.domain.ai.AiToolDefinition;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiMcpServerConfigSaveRequest;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiMcpServerConfigVO;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiMcpToolSnapshotVO;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolAuthorizationSaveRequest;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolAuthorizationVO;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolCallLogVO;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolDefinitionSaveRequest;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolDefinitionVO;
+import com.cybzacg.blogbackend.dto.domain.ai.*;
+import com.cybzacg.blogbackend.module.ai.model.admin.*;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;

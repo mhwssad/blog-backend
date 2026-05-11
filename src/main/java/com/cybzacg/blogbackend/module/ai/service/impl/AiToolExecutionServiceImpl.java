@@ -1,37 +1,35 @@
 package com.cybzacg.blogbackend.module.ai.service.impl;
 
-import com.cybzacg.blogbackend.domain.ai.AiMcpServerConfig;
-import com.cybzacg.blogbackend.domain.ai.AiToolAuthorization;
-import com.cybzacg.blogbackend.domain.ai.AiToolCallLog;
-import com.cybzacg.blogbackend.domain.ai.AiToolDefinition;
 import com.cybzacg.blogbackend.common.constant.RedisConstants;
 import com.cybzacg.blogbackend.common.redis.RedisKeyUtils;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
+import com.cybzacg.blogbackend.dto.domain.ai.AiMcpServerConfig;
+import com.cybzacg.blogbackend.dto.domain.ai.AiToolAuthorization;
+import com.cybzacg.blogbackend.dto.domain.ai.AiToolCallLog;
+import com.cybzacg.blogbackend.dto.domain.ai.AiToolDefinition;
+import com.cybzacg.blogbackend.dto.repository.ai.AiMcpServerConfigRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiToolAuthorizationRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiToolCallLogRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiToolDefinitionRepository;
 import com.cybzacg.blogbackend.enums.ai.AiToolAuthorizationTypeEnum;
 import com.cybzacg.blogbackend.enums.ai.AiToolSourceTypeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiToolExecuteVO;
 import com.cybzacg.blogbackend.module.ai.model.internal.AiToolExecutionContext;
-import com.cybzacg.blogbackend.module.ai.repository.AiMcpServerConfigRepository;
-import com.cybzacg.blogbackend.module.ai.repository.AiToolAuthorizationRepository;
-import com.cybzacg.blogbackend.module.ai.repository.AiToolCallLogRepository;
-import com.cybzacg.blogbackend.module.ai.repository.AiToolDefinitionRepository;
 import com.cybzacg.blogbackend.module.ai.service.AiToolExecutionService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
-import com.cybzacg.blogbackend.utils.JsonUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.service.tool.ToolExecutionResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.time.Duration;
 
 /**
  * AI 工具统一执行服务实现。
@@ -105,7 +103,7 @@ public class AiToolExecutionServiceImpl implements AiToolExecutionService {
                     && Objects.equals(String.valueOf(context.getAgentId()), authorization.getAuthorizationKey());
         }
         if (type == AiToolAuthorizationTypeEnum.SCENE) {
-            return StringUtils.hasText(context.getSceneType())
+            return StrUtils.hasText(context.getSceneType())
                     && context.getSceneType().equalsIgnoreCase(authorization.getAuthorizationKey());
         }
         if (type == AiToolAuthorizationTypeEnum.PERMISSION) {
@@ -113,7 +111,7 @@ public class AiToolExecutionServiceImpl implements AiToolExecutionService {
             return authorities != null && authorities.contains(authorization.getAuthorizationKey());
         }
         if (type == AiToolAuthorizationTypeEnum.DATA_SCOPE) {
-            return StringUtils.hasText(context.getDataScope())
+            return StrUtils.hasText(context.getDataScope())
                     && context.getDataScope().equalsIgnoreCase(authorization.getAuthorizationKey());
         }
         return false;
@@ -124,7 +122,7 @@ public class AiToolExecutionServiceImpl implements AiToolExecutionService {
      */
     private void validateArguments(String arguments, AiToolDefinition tool) {
         AiToolSupport.validateJsonObjectOrBlank(arguments, ResultErrorCode.ILLEGAL_ARGUMENT, "工具入参必须是 JSON 对象");
-        if (!StringUtils.hasText(tool.getParametersSchema())) {
+        if (!StrUtils.hasText(tool.getParametersSchema())) {
             return;
         }
         Map<String, Object> schema = AiToolSupport.parseJsonObject(tool.getParametersSchema(), "工具参数 Schema 无效");
@@ -174,7 +172,7 @@ public class AiToolExecutionServiceImpl implements AiToolExecutionService {
         try (McpClient client = aiMcpClientFactory.createClient(serverConfig)) {
             ToolExecutionRequest request = ToolExecutionRequest.builder()
                     .name(tool.getMcpToolName())
-                    .arguments(StringUtils.hasText(arguments) ? arguments : "{}")
+                    .arguments(StrUtils.hasText(arguments) ? arguments : "{}")
                     .build();
             ToolExecutionResult result = client.executeTool(request);
             ExceptionThrowerCore.throwBusinessIf(result.isError(),

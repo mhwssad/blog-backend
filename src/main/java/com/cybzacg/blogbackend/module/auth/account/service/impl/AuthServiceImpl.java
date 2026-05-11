@@ -6,22 +6,22 @@ import com.cybzacg.blogbackend.common.constant.MenuConstants;
 import com.cybzacg.blogbackend.common.email.EmailService;
 import com.cybzacg.blogbackend.common.redis.RedisKeyUtils;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
-import com.cybzacg.blogbackend.domain.auth.SysMenu;
-import com.cybzacg.blogbackend.domain.auth.SysUser;
-import com.cybzacg.blogbackend.domain.config.SysConfig;
+import com.cybzacg.blogbackend.dto.domain.auth.SysMenu;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.config.SysConfig;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.config.SysConfigRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.rbac.SysMenuRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.rbac.SysRoleRepository;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.enums.experience.ExperienceSourceTypeEnum;
 import com.cybzacg.blogbackend.module.auth.account.authentication.EmailCodeAuthenticationToken;
 import com.cybzacg.blogbackend.module.auth.account.convert.AuthModelConvert;
 import com.cybzacg.blogbackend.module.auth.account.model.*;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.account.service.AuthService;
 import com.cybzacg.blogbackend.module.auth.account.token.TokenManager;
-import com.cybzacg.blogbackend.module.auth.config.repository.SysConfigRepository;
 import com.cybzacg.blogbackend.module.auth.experience.event.XpAwardEvent;
 import com.cybzacg.blogbackend.module.auth.notice.service.UserNotificationPreferenceService;
-import com.cybzacg.blogbackend.module.auth.rbac.repository.SysMenuRepository;
-import com.cybzacg.blogbackend.module.auth.rbac.repository.SysRoleRepository;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PasswordUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
@@ -38,16 +38,10 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.security.SecureRandom;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * 认证服务实现。
@@ -226,7 +220,7 @@ public class AuthServiceImpl implements AuthService {
      */
     @Override
     public void logout(String token) {
-        if (!StringUtils.hasText(token)) {
+        if (!StrUtils.hasText(token)) {
             return;
         }
         tokenManager.invalidateToken(token);
@@ -310,7 +304,7 @@ public class AuthServiceImpl implements AuthService {
         if (isSuperAdmin(roleCodes)) {
             List<String> allPermissions = sysMenuRepository.findAllOrdered().stream()
                     .map(SysMenu::getPerm)
-                    .filter(StringUtils::hasText)
+                    .filter(StrUtils::hasText)
                     .toList();
             dedup.addAll(allPermissions);
             dedup.add(AuthConstants.ALL_PERMISSION);
@@ -318,7 +312,7 @@ public class AuthServiceImpl implements AuthService {
             List<String> permissions = sysMenuRepository.findPermissionsByUserId(userId);
             if (permissions != null) {
                 permissions.stream()
-                        .filter(StringUtils::hasText)
+                        .filter(StrUtils::hasText)
                         .forEach(dedup::add);
             }
         }
@@ -330,7 +324,7 @@ public class AuthServiceImpl implements AuthService {
             return false;
         }
         return roleCodes.stream()
-                .filter(StringUtils::hasText)
+                .filter(StrUtils::hasText)
                 .map(this::normalizeRoleCode)
                 .anyMatch(AuthConstants.SUPER_ADMIN_ROLE_CODE::equals);
     }
@@ -353,7 +347,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private void validateRegisterIdentity(String identity, String message) {
-        if (!StringUtils.hasText(identity)) {
+        if (!StrUtils.hasText(identity)) {
             return;
         }
         boolean exists = sysUserRepository.existsActiveByIdentity(identity);
@@ -401,7 +395,7 @@ public class AuthServiceImpl implements AuthService {
     private void clearLoginFailureState(String account, Long userId) {
         redisOperator.delete(loginFailCountKey(account, userId));
         redisOperator.delete(loginFailLockKey(account, userId));
-        if (StringUtils.hasText(account)) {
+        if (StrUtils.hasText(account)) {
             redisOperator.delete(loginFailCountKey(account, null));
             redisOperator.delete(loginFailLockKey(account, null));
         }
@@ -430,7 +424,7 @@ public class AuthServiceImpl implements AuthService {
     private int resolveIntConfig(String configKey, int defaultValue, int minValue) {
         SysConfig config = sysConfigRepository.findByConfigKey(configKey);
         String configuredValue = config != null ? config.getConfigValue() : String.valueOf(defaultValue);
-        if (!StringUtils.hasText(configuredValue)) {
+        if (!StrUtils.hasText(configuredValue)) {
             return defaultValue;
         }
         try {

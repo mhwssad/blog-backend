@@ -1,11 +1,11 @@
-package com.cybzacg.blogbackend.module.ai.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.ai.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.ai.AiAgentTask;
 import com.cybzacg.blogbackend.dto.mapper.ai.AiAgentTaskMapper;
-import com.cybzacg.blogbackend.module.ai.repository.AiAgentTaskRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiAgentTaskRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;

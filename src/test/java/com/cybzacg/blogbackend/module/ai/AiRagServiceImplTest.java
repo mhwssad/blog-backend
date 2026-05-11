@@ -1,8 +1,8 @@
 package com.cybzacg.blogbackend.module.ai;
 
 import com.cybzacg.blogbackend.config.property.AiRagProperties;
-import com.cybzacg.blogbackend.domain.ai.AiChannelConfig;
-import com.cybzacg.blogbackend.domain.ai.AiKnowledgeChunk;
+import com.cybzacg.blogbackend.dto.domain.ai.AiChannelConfig;
+import com.cybzacg.blogbackend.dto.domain.ai.AiKnowledgeChunk;
 import com.cybzacg.blogbackend.module.ai.model.internal.AiRagHit;
 import com.cybzacg.blogbackend.module.ai.model.internal.AiRagRetrievalResult;
 import com.cybzacg.blogbackend.module.ai.service.AiEmbeddingService;

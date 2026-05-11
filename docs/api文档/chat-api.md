@@ -2372,6 +2372,169 @@ axios.put('/api/sys/chats/conversations/1003/status', {
 
 ---
 
+## 后台入群申请管理
+
+### 分页查询群入群申请
+
+**接口信息**
+- 路径: `GET /api/sys/chats/group-join-applications`
+- 鉴权: 是（权限: `content:chat:query`）
+- 说明: 分页查询所有群聊的入群申请列表
+
+**请求示例**
+
+```javascript
+axios.get('/api/sys/chats/group-join-applications', {
+  params: { current: 1, size: 20 },
+  headers: { Authorization: 'Bearer xxx' }
+})
+```
+
+**查询参数**
+
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
+|-----|------|------|--------|-----|
+| current | Long | 否 | 1 | 页码 |
+| size | Long | 否 | 10 | 每页条数 |
+| applyStatus | Integer | 否 | - | 申请状态：0-待审核，1-已通过，2-已拒绝，3-已取消 |
+| conversationId | Long | 否 | - | 会话ID |
+| applicantUserId | Long | 否 | - | 申请用户ID |
+| keyword | String | 否 | - | 申请附言或审核意见关键字 |
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": {
+    "total": 15,
+    "current": 1,
+    "size": 20,
+    "records": [
+      {
+        "id": 401,
+        "conversationId": 1003,
+        "conversationName": "技术交流群",
+        "conversationAvatar": "https://example.com/avatar/tech-group.jpg",
+        "conversationType": "group",
+        "conversationSceneType": "user_group",
+        "conversationJoinRule": "approval",
+        "conversationStatus": 0,
+        "applicantUserId": 105,
+        "applicantUsername": "zhaoqi",
+        "applicantNickname": "赵七",
+        "applicantAvatar": "https://example.com/avatar/zhaoqi.jpg",
+        "applyMessage": "希望加入群聊学习交流",
+        "applyStatus": 0,
+        "applyStatusLabel": "待审核",
+        "reviewerId": null,
+        "reviewerUsername": null,
+        "reviewerNickname": null,
+        "reviewComment": null,
+        "submittedAt": "2025-01-15T10:30:00",
+        "reviewedAt": null,
+        "createdAt": "2025-01-15T10:30:00",
+        "updatedAt": "2025-01-15T10:30:00"
+      }
+    ]
+  }
+}
+```
+
+**响应字段说明**
+
+| 字段 | 类型 | 说明 |
+|-----|------|-----|
+| id | Long | 申请ID |
+| conversationId | Long | 会话ID |
+| conversationName | String | 会话名称 |
+| conversationAvatar | String | 会话头像 |
+| conversationType | String | 会话类型 |
+| conversationSceneType | String | 业务场景 |
+| conversationJoinRule | String | 加入规则 |
+| conversationStatus | Integer | 会话状态 |
+| applicantUserId | Long | 申请用户ID |
+| applicantUsername | String | 申请用户用户名 |
+| applicantNickname | String | 申请用户昵称 |
+| applicantAvatar | String | 申请用户头像 |
+| applyMessage | String | 申请附言 |
+| applyStatus | Integer | 申请状态：0-待审核，1-已通过，2-已拒绝，3-已取消 |
+| applyStatusLabel | String | 申请状态标签 |
+| reviewerId | Long | 审核人ID |
+| reviewerUsername | String | 审核人用户名 |
+| reviewerNickname | String | 审核人昵称 |
+| reviewComment | String | 审核意见 |
+| submittedAt | LocalDateTime | 提交时间 |
+| reviewedAt | LocalDateTime | 审核时间 |
+| createdAt | LocalDateTime | 创建时间 |
+| updatedAt | LocalDateTime | 更新时间 |
+
+---
+
+### 查询群入群申请详情
+
+**接口信息**
+- 路径: `GET /api/sys/chats/group-join-applications/{id}`
+- 鉴权: 是（权限: `content:chat:query`）
+- 说明: 查询指定入群申请的详细信息
+
+**请求示例**
+
+```javascript
+axios.get('/api/sys/chats/group-join-applications/401', {
+  headers: { Authorization: 'Bearer xxx' }
+})
+```
+
+**响应字段**: 同分页查询中的单条记录结构
+
+---
+
+### 审核群入群申请
+
+**接口信息**
+- 路径: `PUT /api/sys/chats/group-join-applications/{id}/review`
+- 鉴权: 是（权限: `content:chat:update`）
+- 说明: 审核入群申请，通过或拒绝
+
+**请求示例**
+
+```javascript
+// 通过
+axios.put('/api/sys/chats/group-join-applications/401/review', {
+  reviewStatus: 1,
+  reviewComment: '符合条件，予以通过'
+})
+
+// 拒绝
+axios.put('/api/sys/chats/group-join-applications/401/review', {
+  reviewStatus: 2,
+  reviewComment: '不符合群聊加入条件'
+})
+```
+
+**请求体**
+
+| 参数 | 类型 | 必填 | 说明 |
+|-----|------|------|-----|
+| reviewStatus | Integer | 是 | 审核状态：1-通过，2-拒绝 |
+| reviewComment | String | 否 | 审核意见，最大 512 字符 |
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "message": "成功",
+  "timestamp": 1774310400000,
+  "data": null
+}
+```
+
+---
+
 ## 后台禁言管理
 
 ### 创建禁言记录

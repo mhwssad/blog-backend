@@ -1,4 +1,4 @@
-package com.cybzacg.blogbackend.module.follow.repository;
+package com.cybzacg.blogbackend.dto.repository.follow;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.cybzacg.blogbackend.dto.domain.follow.SysUserFollow;

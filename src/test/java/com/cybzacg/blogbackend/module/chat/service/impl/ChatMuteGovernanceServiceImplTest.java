@@ -1,17 +1,9 @@
 package com.cybzacg.blogbackend.module.chat.service.impl;
 
-import com.cybzacg.blogbackend.domain.chat.ChatConversation;
-import com.cybzacg.blogbackend.domain.chat.ChatConversationMember;
-import com.cybzacg.blogbackend.domain.chat.ChatUserMuteRecord;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatUserMuteRecord;
 import com.cybzacg.blogbackend.enums.chat.ChatMuteRecordStatusEnum;
-import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.chat.governance.repository.ChatUserMuteRecordRepository;
-import com.cybzacg.blogbackend.module.chat.governance.service.ChatMuteGovernanceService;
+import com.cybzacg.blogbackend.dto.repository.chat.governance.ChatUserMuteRecordRepository;
 import com.cybzacg.blogbackend.module.chat.governance.service.impl.ChatMuteGovernanceServiceImpl;
-import com.cybzacg.blogbackend.module.chat.message.service.ChatMessageSendService;
-import com.cybzacg.blogbackend.module.chat.message.service.impl.ChatMessageSendServiceImpl;
-import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

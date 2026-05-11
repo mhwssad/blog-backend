@@ -1,12 +1,12 @@
-package com.cybzacg.blogbackend.module.chat.member.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.chat.member.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.chat.ChatGroupInviteLink;
 import com.cybzacg.blogbackend.dto.mapper.chat.ChatGroupInviteLinkMapper;
+import com.cybzacg.blogbackend.dto.repository.chat.member.ChatGroupInviteLinkRepository;
 import com.cybzacg.blogbackend.module.chat.member.model.user.ChatGroupInviteLinkPageQuery;
-import com.cybzacg.blogbackend.module.chat.member.repository.ChatGroupInviteLinkRepository;
 import org.springframework.stereotype.Repository;
 
 /**

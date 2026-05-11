@@ -1,13 +1,13 @@
 package com.cybzacg.blogbackend.module.ai.service.impl;
 
-import com.cybzacg.blogbackend.domain.ai.AiKnowledgeSourceConfig;
+import com.cybzacg.blogbackend.common.constant.AiConstants;
+import com.cybzacg.blogbackend.dto.domain.ai.AiKnowledgeSourceConfig;
+import com.cybzacg.blogbackend.dto.repository.ai.AiKnowledgeSourceConfigRepository;
 import com.cybzacg.blogbackend.enums.ai.AiKnowledgeSourceTypeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.ai.constant.AiConstants;
 import com.cybzacg.blogbackend.module.ai.convert.AiModelConvert;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiKnowledgeSourceConfigSaveRequest;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiKnowledgeSourceConfigVO;
-import com.cybzacg.blogbackend.module.ai.repository.AiKnowledgeSourceConfigRepository;
 import com.cybzacg.blogbackend.module.ai.service.AiKnowledgeSourceConfigAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import lombok.RequiredArgsConstructor;

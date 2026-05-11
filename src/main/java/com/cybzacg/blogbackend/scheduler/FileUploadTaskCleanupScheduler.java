@@ -1,4 +1,4 @@
-package com.cybzacg.blogbackend.module.file.task;
+package com.cybzacg.blogbackend.scheduler;
 
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
 import lombok.RequiredArgsConstructor;

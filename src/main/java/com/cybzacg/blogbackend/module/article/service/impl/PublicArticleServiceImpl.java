@@ -1,37 +1,33 @@
 package com.cybzacg.blogbackend.module.article.service.impl;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.article.BlogArticle;
-import com.cybzacg.blogbackend.domain.article.BlogArticleCategory;
-import com.cybzacg.blogbackend.domain.auth.SysUser;
-import com.cybzacg.blogbackend.domain.content.SysCategory;
-import com.cybzacg.blogbackend.domain.content.SysTag;
+import com.cybzacg.blogbackend.dto.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.dto.domain.article.BlogArticleCategory;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.content.SysCategory;
+import com.cybzacg.blogbackend.dto.domain.content.SysTag;
+import com.cybzacg.blogbackend.dto.repository.article.BlogArticleCategoryRepository;
+import com.cybzacg.blogbackend.dto.repository.article.BlogArticleRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
+import com.cybzacg.blogbackend.dto.repository.content.*;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.convert.ArticleModelConvert;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleCardVO;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleDetailVO;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticlePageQuery;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleCategoryRepository;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
 import com.cybzacg.blogbackend.module.article.service.ArticleSeriesService;
 import com.cybzacg.blogbackend.module.article.service.ArticleStatusMachine;
 import com.cybzacg.blogbackend.module.article.service.PublicArticleService;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionRepository;
 import com.cybzacg.blogbackend.module.content.footprint.service.UserFootprintService;
-import com.cybzacg.blogbackend.module.content.interaction.repository.SysInteractionRepository;
 import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.publics.PublicCategoryTreeVO;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.publics.PublicTagVO;
-import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysCategoryRepository;
-import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysTagRelationRepository;
-import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysTagRepository;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -189,7 +185,7 @@ public class PublicArticleServiceImpl implements PublicArticleService {
     }
 
     private String buildAuthorName(SysUser user) {
-        return StringUtils.hasText(user.getNickname()) ? user.getNickname() : user.getUsername();
+        return StrUtils.hasText(user.getNickname()) ? user.getNickname() : user.getUsername();
     }
 
 }

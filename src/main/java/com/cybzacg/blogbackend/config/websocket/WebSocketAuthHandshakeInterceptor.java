@@ -5,6 +5,7 @@ import com.cybzacg.blogbackend.common.constant.WebSocketConstants;
 import com.cybzacg.blogbackend.config.property.WebSocketProperties;
 import com.cybzacg.blogbackend.module.auth.account.token.TokenManager;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -14,7 +15,6 @@ import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
-import org.springframework.util.StringUtils;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -47,7 +47,7 @@ public class WebSocketAuthHandshakeInterceptor implements HandshakeInterceptor {
                                    WebSocketHandler wsHandler,
                                    Map<String, Object> attributes) {
         String token = resolveToken(request);
-        if (!StringUtils.hasText(token) || !tokenManager.validateToken(token)) {
+        if (!StrUtils.hasText(token) || !tokenManager.validateToken(token)) {
             log.warn("WebSocket 握手鉴权失败: uri={}", sanitizeUri(request.getURI()));
             response.setStatusCode(HttpStatus.UNAUTHORIZED);
             return false;
@@ -76,12 +76,12 @@ public class WebSocketAuthHandshakeInterceptor implements HandshakeInterceptor {
 
     private String resolveToken(ServerHttpRequest request) {
         String token = request.getHeaders().getFirst(HttpHeaderConstants.AUTHORIZATION);
-        if (StringUtils.hasText(token)) {
+        if (StrUtils.hasText(token)) {
             return token;
         }
         if (request instanceof ServletServerHttpRequest servletRequest) {
             token = servletRequest.getServletRequest().getParameter(webSocketProperties.getTokenQueryParam());
-            if (StringUtils.hasText(token)) {
+            if (StrUtils.hasText(token)) {
                 return token;
             }
         }

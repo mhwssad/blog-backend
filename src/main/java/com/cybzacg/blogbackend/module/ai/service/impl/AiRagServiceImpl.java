@@ -1,8 +1,8 @@
 package com.cybzacg.blogbackend.module.ai.service.impl;
 
 import com.cybzacg.blogbackend.config.property.AiRagProperties;
-import com.cybzacg.blogbackend.domain.ai.AiChannelConfig;
-import com.cybzacg.blogbackend.domain.ai.AiKnowledgeChunk;
+import com.cybzacg.blogbackend.dto.domain.ai.AiChannelConfig;
+import com.cybzacg.blogbackend.dto.domain.ai.AiKnowledgeChunk;
 import com.cybzacg.blogbackend.enums.ai.AiDataScopeEnum;
 import com.cybzacg.blogbackend.module.ai.model.common.AiRagReferenceVO;
 import com.cybzacg.blogbackend.module.ai.model.internal.AiRagHit;
@@ -11,10 +11,10 @@ import com.cybzacg.blogbackend.module.ai.service.AiEmbeddingService;
 import com.cybzacg.blogbackend.module.ai.service.AiRagService;
 import com.cybzacg.blogbackend.module.ai.service.AiVectorStore;
 import com.cybzacg.blogbackend.utils.JsonUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Locale;
@@ -33,7 +33,7 @@ public class AiRagServiceImpl implements AiRagService {
     @Override
     public AiRagRetrievalResult retrieve(AiChannelConfig channelConfig, String question) {
         AiRagRetrievalResult result = new AiRagRetrievalResult();
-        if (!Boolean.TRUE.equals(ragProperties.getEnabled()) || !StringUtils.hasText(question)
+        if (!Boolean.TRUE.equals(ragProperties.getEnabled()) || !StrUtils.hasText(question)
                 || !allowsRag(channelConfig)) {
             return result;
         }
@@ -55,10 +55,10 @@ public class AiRagServiceImpl implements AiRagService {
     @Override
     public String enrichSystemPrompt(String systemPrompt, AiRagRetrievalResult retrievalResult) {
         if (retrievalResult == null || !retrievalResult.isEnabled()
-                || !StringUtils.hasText(retrievalResult.getContextText())) {
+                || !StrUtils.hasText(retrievalResult.getContextText())) {
             return systemPrompt;
         }
-        String basePrompt = StringUtils.hasText(systemPrompt) ? systemPrompt : "";
+        String basePrompt = StrUtils.hasText(systemPrompt) ? systemPrompt : "";
         return basePrompt + """
 
                 你可以参考以下知识库片段回答用户问题。
@@ -72,7 +72,7 @@ public class AiRagServiceImpl implements AiRagService {
     }
 
     private boolean allowsRag(AiChannelConfig channelConfig) {
-        if (channelConfig == null || !StringUtils.hasText(channelConfig.getDataScopeJson())) {
+        if (channelConfig == null || !StrUtils.hasText(channelConfig.getDataScopeJson())) {
             return true;
         }
         try {
@@ -82,7 +82,7 @@ public class AiRagServiceImpl implements AiRagService {
                 return true;
             }
             Set<String> normalized = scopes.stream()
-                    .filter(StringUtils::hasText)
+                    .filter(StrUtils::hasText)
                     .map(item -> item.trim().toLowerCase(Locale.ROOT))
                     .collect(java.util.stream.Collectors.toSet());
             return normalized.contains(AiDataScopeEnum.PUBLIC_ARTICLES.getCode())

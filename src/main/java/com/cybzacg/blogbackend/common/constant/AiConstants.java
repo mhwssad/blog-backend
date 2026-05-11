@@ -1,4 +1,4 @@
-package com.cybzacg.blogbackend.module.ai.constant;
+package com.cybzacg.blogbackend.common.constant;
 
 /**
  * AI 模块常量。

@@ -5,14 +5,14 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.file.FileInfo;
+import com.cybzacg.blogbackend.dto.mapper.file.FileInfoMapper;
+import com.cybzacg.blogbackend.dto.repository.file.FileInfoRepository;
 import com.cybzacg.blogbackend.enums.file.FileCategoryEnum;
 import com.cybzacg.blogbackend.enums.file.FileReferenceTypeEnum;
 import com.cybzacg.blogbackend.enums.file.FileStatusEnum;
-import com.cybzacg.blogbackend.dto.mapper.file.FileInfoMapper;
 import com.cybzacg.blogbackend.module.file.model.admin.FileAdminPageQuery;
-import com.cybzacg.blogbackend.dto.repository.file.FileInfoRepository;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -65,7 +65,7 @@ public class FileInfoRepositoryImpl extends ServiceImpl<FileInfoMapper, FileInfo
         return list(new LambdaQueryWrapper<FileInfo>()
                 .select(FileInfo::getId)
                 .eq(status != null, FileInfo::getStatus, status)
-                .and(StringUtils.hasText(keyword), wrapper -> wrapper.like(FileInfo::getOriginalName, keyword)
+                .and(StrUtils.hasText(keyword), wrapper -> wrapper.like(FileInfo::getOriginalName, keyword)
                         .or()
                         .like(FileInfo::getFileName, keyword)))
                 .stream()
@@ -86,14 +86,14 @@ public class FileInfoRepositoryImpl extends ServiceImpl<FileInfoMapper, FileInfo
                 .eq(query.getUploadUserId() != null, FileInfo::getUploadUserId, query.getUploadUserId())
                 .eq(query.getStatus() != null, FileInfo::getStatus, query.getStatus())
                 .eq(query.getIsPublic() != null, FileInfo::getIsPublic, query.getIsPublic())
-                .eq(StringUtils.hasText(query.getCategory()), FileInfo::getCategory, FileCategoryEnum.normalize(query.getCategory()))
-                .and(StringUtils.hasText(query.getKeyword()), w -> w.like(FileInfo::getOriginalName, query.getKeyword())
+                .eq(StrUtils.hasText(query.getCategory()), FileInfo::getCategory, FileCategoryEnum.normalize(query.getCategory()))
+                .and(StrUtils.hasText(query.getKeyword()), w -> w.like(FileInfo::getOriginalName, query.getKeyword())
                         .or()
                         .like(FileInfo::getFileName, query.getKeyword()))
                 .orderByDesc(FileInfo::getUpdatedAt)
                 .orderByDesc(FileInfo::getId);
         // 按引用类型反查：仅保留在 file_business_info 中存在对应引用类型的文件
-        if (StringUtils.hasText(query.getReferenceType())) {
+        if (StrUtils.hasText(query.getReferenceType())) {
             String type = FileReferenceTypeEnum.normalize(query.getReferenceType());
             wrapper.inSql(FileInfo::getId, "select distinct file_id from file_business_info where reference_type='" + type + "'");
         }

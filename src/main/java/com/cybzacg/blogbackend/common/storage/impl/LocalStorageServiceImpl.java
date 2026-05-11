@@ -10,8 +10,8 @@ import com.cybzacg.blogbackend.exception.StorageException;
 import com.cybzacg.blogbackend.utils.FileUtils;
 import com.cybzacg.blogbackend.utils.InputStreamUtils;
 import com.cybzacg.blogbackend.utils.PathUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
 import java.net.URI;
@@ -35,7 +35,7 @@ public class LocalStorageServiceImpl implements StorageService {
      */
     public LocalStorageServiceImpl(StorageProperties.Storage storageConfig, FileUploadProperties fileUploadProperties) {
         this.basePath = storageConfig.getBucketName();
-        this.baseUrl = StringUtils.defaultIfBlank(storageConfig.getBaseUrl(), "");
+        this.baseUrl = StrUtils.defaultIfBlank(storageConfig.getBaseUrl(), "");
         this.fileUploadProperties = fileUploadProperties;
 
         // 初始化存储目录
@@ -150,7 +150,7 @@ public class LocalStorageServiceImpl implements StorageService {
      * @return 实际的文件路径
      */
     private String extractObjectName(String objectName) {
-        if (StringUtils.isBlank(objectName)) {
+        if (StrUtils.isBlank(objectName)) {
             return objectName;
         }
 
@@ -174,7 +174,7 @@ public class LocalStorageServiceImpl implements StorageService {
         }
 
         // 如果配置了 baseUrl 且 objectName 包含 baseUrl，则提取路径部分
-        if (StringUtils.isNotBlank(baseUrl) && objectName.startsWith(baseUrl)) {
+        if (StrUtils.isNotBlank(baseUrl) && objectName.startsWith(baseUrl)) {
             String path = objectName.substring(baseUrl.length());
 
             // 移除路径开头的 /
@@ -195,7 +195,7 @@ public class LocalStorageServiceImpl implements StorageService {
     @Override
     public String getUrl(String objectName) {
         // 如果配置了 baseUrl，则使用 baseUrl
-        if (StringUtils.isNotBlank(baseUrl)) {
+        if (StrUtils.isNotBlank(baseUrl)) {
             // 确保 baseUrl 不以 / 结尾，objectName 不以 / 开头
             String normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
             String normalizedObjectName = objectName.startsWith("/") ? objectName.substring(1) : objectName;

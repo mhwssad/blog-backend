@@ -1,14 +1,13 @@
 package com.cybzacg.blogbackend.module.ai;
 
-import com.cybzacg.blogbackend.domain.ai.AiChannelAccount;
-import com.cybzacg.blogbackend.domain.ai.AiChannelConfig;
-import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+import com.cybzacg.blogbackend.dto.domain.ai.AiChannelAccount;
+import com.cybzacg.blogbackend.dto.domain.ai.AiChannelConfig;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.ai.convert.AiModelConvert;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiChannelAccountSaveRequest;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiChannelAccountVO;
-import com.cybzacg.blogbackend.module.ai.repository.AiChannelAccountRepository;
-import com.cybzacg.blogbackend.module.ai.repository.AiChannelConfigRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiChannelAccountRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiChannelConfigRepository;
 import com.cybzacg.blogbackend.module.ai.service.impl.AiChannelAccountAdminServiceImpl;
 import com.cybzacg.blogbackend.module.auth.account.service.SuperAdminVerifier;
 import com.cybzacg.blogbackend.module.auth.account.service.TwoFactorService;

@@ -1,16 +1,16 @@
 package com.cybzacg.blogbackend.module.ai.service.impl;
 
 import com.cybzacg.blogbackend.config.property.AiRagProperties;
-import com.cybzacg.blogbackend.domain.ai.AiKnowledgeChunk;
-import com.cybzacg.blogbackend.domain.ai.AiKnowledgeEntry;
+import com.cybzacg.blogbackend.dto.domain.ai.AiKnowledgeChunk;
+import com.cybzacg.blogbackend.dto.domain.ai.AiKnowledgeEntry;
 import com.cybzacg.blogbackend.module.ai.service.AiEmbeddingService;
 import com.cybzacg.blogbackend.module.ai.service.AiKnowledgeChunkService;
 import com.cybzacg.blogbackend.module.ai.service.AiVectorStore;
 import com.cybzacg.blogbackend.utils.FileUtils;
 import com.cybzacg.blogbackend.utils.JsonUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -29,7 +29,7 @@ public class AiKnowledgeChunkServiceImpl implements AiKnowledgeChunkService {
 
     @Override
     public int rebuildChunks(AiKnowledgeEntry entry) {
-        if (entry == null || entry.getId() == null || !StringUtils.hasText(entry.getContentSnapshot())) {
+        if (entry == null || entry.getId() == null || !StrUtils.hasText(entry.getContentSnapshot())) {
             if (entry != null && entry.getId() != null) {
                 aiVectorStore.deleteByEntryId(entry.getId());
             }
@@ -72,7 +72,7 @@ public class AiKnowledgeChunkServiceImpl implements AiKnowledgeChunkService {
      * 按字符数切分文本，并保留轻量 overlap，适配中文内容。
      */
     List<String> splitText(String text) {
-        if (!StringUtils.hasText(text)) {
+        if (!StrUtils.hasText(text)) {
             return List.of();
         }
         String normalized = text.replace("\r\n", "\n").trim();
@@ -91,7 +91,7 @@ public class AiKnowledgeChunkServiceImpl implements AiKnowledgeChunkService {
             }
             start = Math.max(end - overlap, start + 1);
         }
-        return chunks.stream().filter(StringUtils::hasText).toList();
+        return chunks.stream().filter(StrUtils::hasText).toList();
     }
 
     private String sha256(String text) {

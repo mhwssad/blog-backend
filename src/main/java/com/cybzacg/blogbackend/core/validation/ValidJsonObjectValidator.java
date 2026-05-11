@@ -1,10 +1,10 @@
 package com.cybzacg.blogbackend.core.validation;
 
 import com.cybzacg.blogbackend.utils.JsonUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import org.springframework.util.StringUtils;
 
 /**
  * {@link ValidJsonObject} 校验器，非空字符串必须是可解析的 JSON 对象。
@@ -13,7 +13,7 @@ public class ValidJsonObjectValidator implements ConstraintValidator<ValidJsonOb
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
-        if (!StringUtils.hasText(value)) {
+        if (!StrUtils.hasText(value)) {
             return true;
         }
         try {

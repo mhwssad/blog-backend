@@ -12,10 +12,10 @@ import com.cybzacg.blogbackend.module.chat.websocket.model.ChatWsMembersUpdatedP
 import com.cybzacg.blogbackend.module.chat.websocket.model.ChatWsMessageDeletedPayload;
 import com.cybzacg.blogbackend.module.chat.websocket.model.ChatWsMessageType;
 import com.cybzacg.blogbackend.utils.JsonUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -119,7 +119,7 @@ public class ChatPushServiceImpl implements ChatPushService {
      */
     void handleClusterEvent(ChatPushEventEnvelope event) {
         if (event == null
-                || !StringUtils.hasText(event.getType())
+                || !StrUtils.hasText(event.getType())
                 || event.getUserIds() == null
                 || event.getUserIds().isEmpty()
                 || localNodeId.equals(event.getOriginNodeId())) {

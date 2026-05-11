@@ -1,13 +1,13 @@
 package com.cybzacg.blogbackend.module.file.service.impl;
 
-import com.cybzacg.blogbackend.domain.file.FileBusinessInfo;
-import com.cybzacg.blogbackend.domain.file.FileInfo;
+import com.cybzacg.blogbackend.dto.domain.file.FileBusinessInfo;
+import com.cybzacg.blogbackend.dto.domain.file.FileInfo;
+import com.cybzacg.blogbackend.dto.repository.file.FileBusinessInfoRepository;
+import com.cybzacg.blogbackend.dto.repository.file.FileInfoRepository;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.enums.file.FileReferenceTypeEnum;
 import com.cybzacg.blogbackend.enums.file.FileStatusEnum;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
-import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
 import com.cybzacg.blogbackend.module.file.service.FileChatFacadeService;
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;

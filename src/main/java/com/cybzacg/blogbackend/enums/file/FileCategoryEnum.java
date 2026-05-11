@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.enums.file;
 
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.Getter;
-import org.springframework.util.StringUtils;
 
 /**
  * 文件分类枚举。
@@ -23,7 +23,7 @@ public enum FileCategoryEnum {
     }
 
     public static FileCategoryEnum fromValue(String value) {
-        if (!StringUtils.hasText(value)) {
+        if (!StrUtils.hasText(value)) {
             return null;
         }
         for (FileCategoryEnum item : values()) {

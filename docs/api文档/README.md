@@ -60,6 +60,7 @@
 | 频道申请 | `chat-api.md` | 用户频道申请、后台审批 |
 | 聊天大厅 | `chat-api.md` | 大厅频道、后台管理 |
 | 聊台治理 / 禁言 | `chat-api.md` | 后台禁言管理、聊天治理 |
+| 后台入群申请审核 | `chat-api.md` | 后台入群申请管理 |
 | WebSocket 实时通信 | `websocket-api.md` | 连接、心跳、收发消息 |
 
 ### AI 与数据

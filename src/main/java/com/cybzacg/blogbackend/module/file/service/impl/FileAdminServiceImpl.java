@@ -3,23 +3,24 @@ package com.cybzacg.blogbackend.module.file.service.impl;
 import com.cybzacg.blogbackend.common.storage.StorageManager;
 import com.cybzacg.blogbackend.common.storage.StorageService;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.file.FileInfo;
-import com.cybzacg.blogbackend.domain.file.FileUploadTask;
+import com.cybzacg.blogbackend.dto.domain.file.FileInfo;
+import com.cybzacg.blogbackend.dto.domain.file.FileUploadTask;
+import com.cybzacg.blogbackend.dto.repository.file.FileBusinessInfoRepository;
+import com.cybzacg.blogbackend.dto.repository.file.FileChunkRepository;
+import com.cybzacg.blogbackend.dto.repository.file.FileInfoRepository;
+import com.cybzacg.blogbackend.dto.repository.file.FileUploadTaskRepository;
 import com.cybzacg.blogbackend.enums.file.FileResultCode;
 import com.cybzacg.blogbackend.enums.file.FileStatusEnum;
 import com.cybzacg.blogbackend.module.file.convert.FileModelConvert;
 import com.cybzacg.blogbackend.module.file.model.admin.*;
-import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
-import com.cybzacg.blogbackend.module.file.repository.FileChunkRepository;
-import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
-import com.cybzacg.blogbackend.module.file.repository.FileUploadTaskRepository;
 import com.cybzacg.blogbackend.module.file.service.FileAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * 后台文件管理服务实现。

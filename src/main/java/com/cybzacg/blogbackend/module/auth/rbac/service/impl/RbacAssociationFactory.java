@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.auth.rbac.service.impl;
 
-import com.cybzacg.blogbackend.domain.auth.SysRoleMenu;
-import com.cybzacg.blogbackend.domain.auth.SysUserRole;
+import com.cybzacg.blogbackend.dto.domain.auth.SysRoleMenu;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUserRole;
 import org.springframework.stereotype.Component;
 
 /**

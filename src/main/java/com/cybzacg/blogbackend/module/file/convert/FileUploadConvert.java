@@ -1,12 +1,11 @@
 package com.cybzacg.blogbackend.module.file.convert;
 
-import com.cybzacg.blogbackend.domain.file.FileBusinessInfo;
-import com.cybzacg.blogbackend.domain.file.FileChunk;
-import com.cybzacg.blogbackend.domain.file.FileInfo;
-import com.cybzacg.blogbackend.domain.file.FileUploadTask;
+import com.cybzacg.blogbackend.dto.domain.file.FileBusinessInfo;
+import com.cybzacg.blogbackend.dto.domain.file.FileChunk;
+import com.cybzacg.blogbackend.dto.domain.file.FileInfo;
+import com.cybzacg.blogbackend.dto.domain.file.FileUploadTask;
 import com.cybzacg.blogbackend.enums.file.FileCategoryEnum;
 import com.cybzacg.blogbackend.enums.file.FileReferenceTypeEnum;
-import com.cybzacg.blogbackend.enums.file.FileStatusEnum;
 import com.cybzacg.blogbackend.module.file.model.user.UserUploadInitRequest;
 import com.cybzacg.blogbackend.utils.CollectionUtils;
 import org.mapstruct.*;

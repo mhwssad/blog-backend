@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.auth;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.account.service.SuperAdminVerifier;
-import com.cybzacg.blogbackend.module.auth.rbac.repository.SysRoleRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.rbac.SysRoleRepository;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

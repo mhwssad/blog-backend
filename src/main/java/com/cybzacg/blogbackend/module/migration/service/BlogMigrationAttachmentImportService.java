@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.migration.service;
 
-import com.cybzacg.blogbackend.domain.migration.BlogMigrationTask;
+import com.cybzacg.blogbackend.dto.domain.migration.BlogMigrationTask;
 import com.cybzacg.blogbackend.module.migration.model.data.BlogMigrationAttachmentItem;
 import com.cybzacg.blogbackend.module.migration.model.internal.BlogMigrationDownloadedAttachment;
 

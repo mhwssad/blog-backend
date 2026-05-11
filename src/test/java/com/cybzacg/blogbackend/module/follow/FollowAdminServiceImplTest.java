@@ -6,7 +6,7 @@ import com.cybzacg.blogbackend.module.follow.model.admin.FollowAdminPageQuery;
 import com.cybzacg.blogbackend.module.follow.model.admin.FollowAdminRelationVO;
 import com.cybzacg.blogbackend.module.follow.model.admin.FollowRelationCleanRequest;
 import com.cybzacg.blogbackend.module.follow.model.data.FollowAdminRelationItem;
-import com.cybzacg.blogbackend.module.follow.repository.SysUserFollowRepository;
+import com.cybzacg.blogbackend.dto.repository.follow.SysUserFollowRepository;
 import com.cybzacg.blogbackend.module.follow.service.impl.FollowAdminServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

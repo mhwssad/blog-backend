@@ -2,7 +2,7 @@ package com.cybzacg.blogbackend.module.auth;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
 import com.cybzacg.blogbackend.module.auth.account.convert.UserProfileModelConvert;
 import com.cybzacg.blogbackend.module.auth.account.model.user.PublicUserSearchVO;
 import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;

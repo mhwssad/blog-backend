@@ -1,8 +1,8 @@
 package com.cybzacg.blogbackend.module.ai;
 
-import com.cybzacg.blogbackend.domain.ai.AiChannelConfig;
-import com.cybzacg.blogbackend.domain.ai.AiChatMessage;
-import com.cybzacg.blogbackend.domain.file.FileInfo;
+import com.cybzacg.blogbackend.dto.domain.ai.AiChannelConfig;
+import com.cybzacg.blogbackend.dto.domain.ai.AiChatMessage;
+import com.cybzacg.blogbackend.dto.domain.file.FileInfo;
 import com.cybzacg.blogbackend.module.ai.service.AiTokenBudgetService;
 import com.cybzacg.blogbackend.module.ai.service.impl.AiTokenBudgetServiceImpl;
 import org.junit.jupiter.api.BeforeEach;

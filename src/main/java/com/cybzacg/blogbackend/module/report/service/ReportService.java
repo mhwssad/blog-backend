@@ -1,6 +1,7 @@
 package com.cybzacg.blogbackend.module.report.service;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
+import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.report.model.user.ReportCreateRequest;
 import com.cybzacg.blogbackend.module.report.model.user.ReportVO;
 

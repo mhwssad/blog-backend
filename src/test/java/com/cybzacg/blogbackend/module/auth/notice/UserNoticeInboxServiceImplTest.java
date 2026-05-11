@@ -1,14 +1,14 @@
 package com.cybzacg.blogbackend.module.auth.notice;
 
 import com.cybzacg.blogbackend.common.constant.NoticeConstants;
-import com.cybzacg.blogbackend.domain.notice.SysNotice;
-import com.cybzacg.blogbackend.domain.notice.SysUserNotice;
+import com.cybzacg.blogbackend.dto.domain.notice.SysNotice;
+import com.cybzacg.blogbackend.dto.domain.notice.SysUserNotice;
 import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.notice.convert.SysNoticeModelConvert;
-import com.cybzacg.blogbackend.module.auth.notice.repository.SysNoticeRepository;
-import com.cybzacg.blogbackend.module.auth.notice.repository.SysUserNoticeRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.notice.SysNoticeRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.notice.SysUserNoticeRepository;
 import com.cybzacg.blogbackend.module.auth.notice.service.UserNotificationPreferenceService;
 import com.cybzacg.blogbackend.module.auth.notice.service.impl.SysNoticeFactory;
 import com.cybzacg.blogbackend.module.auth.notice.service.impl.UserNoticeInboxServiceImpl;

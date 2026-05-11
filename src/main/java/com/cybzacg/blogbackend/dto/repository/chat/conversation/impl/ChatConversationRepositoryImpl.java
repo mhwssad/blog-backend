@@ -1,12 +1,12 @@
-package com.cybzacg.blogbackend.module.chat.conversation.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.chat.conversation.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.cybzacg.blogbackend.common.constant.ChatConstants;
 import com.cybzacg.blogbackend.dto.domain.chat.ChatConversation;
 import com.cybzacg.blogbackend.dto.mapper.chat.ChatConversationMapper;
+import com.cybzacg.blogbackend.dto.repository.chat.conversation.ChatConversationRepository;
 import com.cybzacg.blogbackend.module.chat.conversation.model.admin.ChatAdminConversationPageQuery;
-import com.cybzacg.blogbackend.module.chat.conversation.repository.ChatConversationRepository;
-import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatAdminConversationListItem;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatConversationListItem;
 import org.springframework.stereotype.Repository;

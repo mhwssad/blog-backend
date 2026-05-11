@@ -2,10 +2,10 @@ package com.cybzacg.blogbackend.module.auth.account.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.account.convert.UserProfileModelConvert;
 import com.cybzacg.blogbackend.module.auth.account.model.user.PublicUserSearchVO;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.account.service.PublicUserSearchService;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
 import lombok.RequiredArgsConstructor;

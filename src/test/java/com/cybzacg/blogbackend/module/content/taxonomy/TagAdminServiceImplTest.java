@@ -1,13 +1,13 @@
 package com.cybzacg.blogbackend.module.content.taxonomy;
 
-import com.cybzacg.blogbackend.domain.content.SysTag;
+import com.cybzacg.blogbackend.dto.domain.content.SysTag;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.admin.TagSaveRequest;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.admin.TagVO;
-import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysTagRelationRepository;
-import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysTagRepository;
+import com.cybzacg.blogbackend.dto.repository.content.SysTagRelationRepository;
+import com.cybzacg.blogbackend.dto.repository.content.SysTagRepository;
 import com.cybzacg.blogbackend.module.content.taxonomy.service.impl.TagAdminServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

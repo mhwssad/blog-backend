@@ -3,11 +3,11 @@ package com.cybzacg.blogbackend.dto.repository.chat.message.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.cybzacg.blogbackend.common.constant.ChatConstants;
 import com.cybzacg.blogbackend.dto.domain.chat.ChatMessageRecipient;
 import com.cybzacg.blogbackend.dto.mapper.chat.ChatMessageRecipientMapper;
-import com.cybzacg.blogbackend.module.chat.message.model.admin.ChatAdminMessageReceiptPageQuery;
 import com.cybzacg.blogbackend.dto.repository.chat.message.ChatMessageRecipientRepository;
-import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
+import com.cybzacg.blogbackend.module.chat.message.model.admin.ChatAdminMessageReceiptPageQuery;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;

@@ -1,14 +1,14 @@
 package com.cybzacg.blogbackend.module.auth.author;
 
-import com.cybzacg.blogbackend.domain.auth.SysAuthorApplication;
+import com.cybzacg.blogbackend.dto.domain.auth.SysAuthorApplication;
 import com.cybzacg.blogbackend.enums.auth.AuthorApplicationStatusEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.author.convert.AuthorApplicationModelConvert;
 import com.cybzacg.blogbackend.module.auth.author.model.admin.SysAuthorApplicationAdminReviewRequest;
 import com.cybzacg.blogbackend.module.auth.author.model.admin.SysAuthorApplicationRepairRequest;
-import com.cybzacg.blogbackend.module.auth.author.repository.SysAuthorApplicationRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.author.SysAuthorApplicationRepository;
 import com.cybzacg.blogbackend.module.auth.author.service.AuthorPermissionService;
 import com.cybzacg.blogbackend.module.auth.author.service.impl.SysAuthorApplicationAdminServiceImpl;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;

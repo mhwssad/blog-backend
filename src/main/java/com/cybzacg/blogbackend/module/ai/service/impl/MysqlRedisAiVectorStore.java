@@ -1,14 +1,14 @@
 package com.cybzacg.blogbackend.module.ai.service.impl;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.cybzacg.blogbackend.common.constant.RedisConstants;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
 import com.cybzacg.blogbackend.config.property.AiRagProperties;
-import com.cybzacg.blogbackend.domain.ai.AiKnowledgeChunk;
+import com.cybzacg.blogbackend.dto.domain.ai.AiKnowledgeChunk;
+import com.cybzacg.blogbackend.dto.repository.ai.AiKnowledgeChunkRepository;
 import com.cybzacg.blogbackend.module.ai.model.internal.AiRagHit;
-import com.cybzacg.blogbackend.module.ai.repository.AiKnowledgeChunkRepository;
 import com.cybzacg.blogbackend.module.ai.service.AiVectorStore;
 import com.cybzacg.blogbackend.utils.JsonUtils;
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

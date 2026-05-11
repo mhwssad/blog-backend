@@ -2,11 +2,11 @@ package com.cybzacg.blogbackend.module.ai;
 
 import com.cybzacg.blogbackend.common.constant.ConfigConstants;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
-import com.cybzacg.blogbackend.domain.ai.AiChannelConfig;
+import com.cybzacg.blogbackend.dto.domain.ai.AiChannelConfig;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.ai.model.user.AiQuotaVO;
-import com.cybzacg.blogbackend.module.ai.repository.AiChannelConfigRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiChannelConfigRepository;
 import com.cybzacg.blogbackend.module.ai.service.impl.AiQuotaServiceImpl;
 import com.cybzacg.blogbackend.module.auth.config.service.SysConfigService;
 import com.cybzacg.blogbackend.module.auth.experience.service.UserExperienceService;

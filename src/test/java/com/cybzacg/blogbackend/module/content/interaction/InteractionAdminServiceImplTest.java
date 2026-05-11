@@ -2,13 +2,13 @@ package com.cybzacg.blogbackend.module.content.interaction;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.content.SysComment;
-import com.cybzacg.blogbackend.domain.content.SysInteraction;
+import com.cybzacg.blogbackend.dto.domain.content.SysComment;
+import com.cybzacg.blogbackend.dto.domain.content.SysInteraction;
 import com.cybzacg.blogbackend.module.article.service.ArticleContentFacadeService;
-import com.cybzacg.blogbackend.module.content.comment.repository.SysCommentRepository;
+import com.cybzacg.blogbackend.dto.repository.comment.SysCommentRepository;
 import com.cybzacg.blogbackend.module.content.interaction.model.admin.InteractionPageQuery;
 import com.cybzacg.blogbackend.module.content.interaction.model.admin.InteractionVO;
-import com.cybzacg.blogbackend.module.content.interaction.repository.SysInteractionRepository;
+import com.cybzacg.blogbackend.dto.repository.content.SysInteractionRepository;
 import com.cybzacg.blogbackend.module.content.interaction.service.impl.InteractionAdminServiceImpl;
 import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import org.junit.jupiter.api.BeforeEach;

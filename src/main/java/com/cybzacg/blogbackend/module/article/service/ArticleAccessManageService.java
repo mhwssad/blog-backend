@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.article.service;
 
-import com.cybzacg.blogbackend.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.dto.domain.article.BlogArticle;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleAccessItem;
 
 import java.util.List;

@@ -19,7 +19,7 @@ import java.util.Properties;
  */
 @Configuration
 @EnableTransactionManagement
-@MapperScan("com.cybzacg.blogbackend.mapper")
+@MapperScan("com.cybzacg.blogbackend.dto.mapper")
 public class MybatisConfig {
 
     @Value("${app.db-type:mysql}")

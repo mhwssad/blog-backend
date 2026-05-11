@@ -1,12 +1,12 @@
-package com.cybzacg.blogbackend.module.ai.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.ai.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.ai.AiChatSession;
 import com.cybzacg.blogbackend.dto.mapper.ai.AiChatSessionMapper;
+import com.cybzacg.blogbackend.dto.repository.ai.AiChatSessionRepository;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiSessionPageQuery;
-import com.cybzacg.blogbackend.module.ai.repository.AiChatSessionRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

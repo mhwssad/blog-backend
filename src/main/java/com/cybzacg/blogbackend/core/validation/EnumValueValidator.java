@@ -1,8 +1,8 @@
 package com.cybzacg.blogbackend.core.validation;
 
+import com.cybzacg.blogbackend.utils.StrUtils;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
 
@@ -31,7 +31,7 @@ public class EnumValueValidator implements ConstraintValidator<EnumValue, Object
         if (value == null) {
             return true;
         }
-        if (value instanceof String s && !StringUtils.hasText(s)) {
+        if (value instanceof String s && !StrUtils.hasText(s)) {
             return true;
         }
 

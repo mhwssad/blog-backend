@@ -1,12 +1,12 @@
 package com.cybzacg.blogbackend.module.auth.author.service.impl;
 
-import com.cybzacg.blogbackend.domain.auth.SysRole;
-import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.auth.SysRole;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRoleRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.rbac.SysRoleRepository;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRoleRepository;
 import com.cybzacg.blogbackend.module.auth.author.service.AuthorPermissionService;
-import com.cybzacg.blogbackend.module.auth.rbac.repository.SysRoleRepository;
 import com.cybzacg.blogbackend.module.auth.rbac.service.impl.RbacAssociationFactory;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import lombok.RequiredArgsConstructor;

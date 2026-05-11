@@ -5,11 +5,11 @@ import com.cybzacg.blogbackend.core.web.Result;
 import com.cybzacg.blogbackend.module.auth.account.model.*;
 import com.cybzacg.blogbackend.module.auth.account.service.AuthService;
 import com.cybzacg.blogbackend.utils.RequestContextUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -61,7 +61,7 @@ public class AuthController {
     @Operation(summary = "退出登录")
     public Result<Void> logout(@RequestBody(required = false) LogoutRequest request,
                                @RequestHeader(value = HttpHeaderConstants.AUTHORIZATION, required = false) String authorization) {
-        String token = request != null && StringUtils.hasText(request.getAccessToken())
+        String token = request != null && StrUtils.hasText(request.getAccessToken())
                 ? request.getAccessToken()
                 : authorization;
         authService.logout(token);

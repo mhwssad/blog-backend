@@ -1,4 +1,4 @@
-package com.cybzacg.blogbackend.module.chat.shared.constant;
+package com.cybzacg.blogbackend.common.constant;
 
 /**
  * 聊天模块常量。

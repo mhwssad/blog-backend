@@ -1,12 +1,13 @@
-package com.cybzacg.blogbackend.module.report.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.report.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.report.SysReportHandleLog;
 import com.cybzacg.blogbackend.dto.mapper.report.SysReportHandleLogMapper;
-import com.cybzacg.blogbackend.module.report.repository.SysReportHandleLogRepository;
-import java.util.List;
+import com.cybzacg.blogbackend.dto.repository.report.SysReportHandleLogRepository;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 /**
  * SysReportHandleLog Repository 实现。

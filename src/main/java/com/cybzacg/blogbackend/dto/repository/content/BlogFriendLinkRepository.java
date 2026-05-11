@@ -1,4 +1,4 @@
-package com.cybzacg.blogbackend.module.content.friendlink.repository;
+package com.cybzacg.blogbackend.dto.repository.content;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.cybzacg.blogbackend.dto.domain.content.BlogFriendLink;

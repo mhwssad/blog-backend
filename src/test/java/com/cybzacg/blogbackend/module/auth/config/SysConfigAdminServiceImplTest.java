@@ -2,14 +2,14 @@ package com.cybzacg.blogbackend.module.auth.config;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.config.SysConfig;
+import com.cybzacg.blogbackend.dto.domain.config.SysConfig;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.config.convert.SysConfigModelConvert;
 import com.cybzacg.blogbackend.module.auth.config.model.admin.SysConfigAdminVO;
 import com.cybzacg.blogbackend.module.auth.config.model.admin.SysConfigPageQuery;
 import com.cybzacg.blogbackend.module.auth.config.model.admin.SysConfigSaveRequest;
-import com.cybzacg.blogbackend.module.auth.config.repository.SysConfigRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.config.SysConfigRepository;
 import com.cybzacg.blogbackend.module.auth.config.service.SysConfigService;
 import com.cybzacg.blogbackend.module.auth.config.service.impl.SysConfigAdminServiceImpl;
 import org.junit.jupiter.api.BeforeEach;

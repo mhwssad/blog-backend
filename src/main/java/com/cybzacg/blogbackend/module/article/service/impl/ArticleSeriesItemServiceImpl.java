@@ -1,17 +1,17 @@
 package com.cybzacg.blogbackend.module.article.service.impl;
 
-import com.cybzacg.blogbackend.domain.article.BlogArticle;
-import com.cybzacg.blogbackend.domain.article.BlogArticleSeries;
-import com.cybzacg.blogbackend.domain.article.BlogArticleSeriesItem;
+import com.cybzacg.blogbackend.dto.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.dto.domain.article.BlogArticleSeries;
+import com.cybzacg.blogbackend.dto.domain.article.BlogArticleSeriesItem;
+import com.cybzacg.blogbackend.dto.repository.article.BlogArticleRepository;
+import com.cybzacg.blogbackend.dto.repository.article.BlogArticleSeriesItemRepository;
+import com.cybzacg.blogbackend.dto.repository.article.BlogArticleSeriesRepository;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.convert.ArticleSeriesModelConvert;
 import com.cybzacg.blogbackend.module.article.model.common.ArticleSeriesArticleVO;
 import com.cybzacg.blogbackend.module.article.model.user.ArticleSeriesArticleRequest;
 import com.cybzacg.blogbackend.module.article.model.user.ArticleSeriesSortRequest;
 import com.cybzacg.blogbackend.module.article.model.user.UserArticleSeriesDetailVO;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleSeriesItemRepository;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleSeriesRepository;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
 import com.cybzacg.blogbackend.module.article.service.ArticleSeriesItemService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;

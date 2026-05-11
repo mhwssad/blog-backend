@@ -1,15 +1,15 @@
-package com.cybzacg.blogbackend.module.auth.audit.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.auth.audit.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.system.SysLog;
 import com.cybzacg.blogbackend.dto.mapper.system.SysLogMapper;
+import com.cybzacg.blogbackend.dto.repository.auth.audit.SysLogRepository;
 import com.cybzacg.blogbackend.module.auth.audit.model.admin.SysLogCleanRequest;
 import com.cybzacg.blogbackend.module.auth.audit.model.admin.SysLogPageQuery;
-import com.cybzacg.blogbackend.module.auth.audit.repository.SysLogRepository;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 
@@ -84,10 +84,10 @@ public class SysLogRepositoryImpl extends ServiceImpl<SysLogMapper, SysLog>
                                                              LocalDateTime createTimeStart,
                                                              LocalDateTime createTimeEnd) {
         return new LambdaQueryWrapper<SysLog>()
-                .like(StringUtils.hasText(module), SysLog::getModule, module)
-                .like(StringUtils.hasText(requestMethod), SysLog::getRequestMethod, requestMethod)
-                .like(StringUtils.hasText(requestUri), SysLog::getRequestUri, requestUri)
-                .like(StringUtils.hasText(ip), SysLog::getIp, ip)
+                .like(StrUtils.hasText(module), SysLog::getModule, module)
+                .like(StrUtils.hasText(requestMethod), SysLog::getRequestMethod, requestMethod)
+                .like(StrUtils.hasText(requestUri), SysLog::getRequestUri, requestUri)
+                .like(StrUtils.hasText(ip), SysLog::getIp, ip)
                 .eq(createBy != null, SysLog::getCreateBy, createBy)
                 .ge(createTimeStart != null, SysLog::getCreateTime, createTimeStart)
                 .le(createTimeEnd != null, SysLog::getCreateTime, createTimeEnd);

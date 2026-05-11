@@ -1,19 +1,19 @@
 package com.cybzacg.blogbackend.module.ai.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.cybzacg.blogbackend.common.constant.AiConstants;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.ai.AiKnowledgeSyncTask;
-import com.cybzacg.blogbackend.domain.ai.AiKnowledgeEntry;
+import com.cybzacg.blogbackend.dto.domain.ai.AiKnowledgeEntry;
+import com.cybzacg.blogbackend.dto.domain.ai.AiKnowledgeSyncTask;
+import com.cybzacg.blogbackend.dto.repository.ai.AiKnowledgeEntryRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiKnowledgeSyncTaskRepository;
 import com.cybzacg.blogbackend.enums.ai.AiKnowledgeEntryStatusEnum;
 import com.cybzacg.blogbackend.enums.ai.AiKnowledgeSyncTaskStatusEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.ai.constant.AiConstants;
 import com.cybzacg.blogbackend.module.ai.convert.AiModelConvert;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiKnowledgeSyncTaskPageQuery;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiKnowledgeSyncTaskVO;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiKnowledgeSyncTriggerRequest;
-import com.cybzacg.blogbackend.module.ai.repository.AiKnowledgeSyncTaskRepository;
-import com.cybzacg.blogbackend.module.ai.repository.AiKnowledgeEntryRepository;
 import com.cybzacg.blogbackend.module.ai.service.AiKnowledgeChunkService;
 import com.cybzacg.blogbackend.module.ai.service.AiKnowledgeSourceExtractor;
 import com.cybzacg.blogbackend.module.ai.service.AiKnowledgeSyncTaskAdminService;

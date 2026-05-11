@@ -1,21 +1,24 @@
 package com.cybzacg.blogbackend.module.chat;
 
 import com.cybzacg.blogbackend.common.constant.ConfigConstants;
-import com.cybzacg.blogbackend.domain.auth.SysUser;
-import com.cybzacg.blogbackend.domain.chat.ChatConversation;
-import com.cybzacg.blogbackend.domain.chat.ChatConversationMember;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatConversation;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatConversationMember;
+import com.cybzacg.blogbackend.dto.repository.chat.message.ChatMessageReadCursorRepository;
+import com.cybzacg.blogbackend.dto.repository.chat.message.ChatMessageRecipientRepository;
+import com.cybzacg.blogbackend.dto.repository.chat.message.ChatMessageRepository;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.config.service.SysConfigService;
 import com.cybzacg.blogbackend.module.auth.experience.service.UserExperienceService;
 import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatConversationVO;
 import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatCreateGroupRequest;
-import com.cybzacg.blogbackend.module.chat.conversation.repository.ChatConversationRepository;
-import com.cybzacg.blogbackend.module.chat.member.repository.ChatConversationMemberRepository;
+import com.cybzacg.blogbackend.dto.repository.chat.conversation.ChatConversationRepository;
+import com.cybzacg.blogbackend.dto.repository.chat.member.ChatConversationMemberRepository;
 import com.cybzacg.blogbackend.module.chat.member.service.impl.ChatGroupManageServiceImpl;
 import com.cybzacg.blogbackend.module.chat.push.service.ChatNotificationService;
 import com.cybzacg.blogbackend.module.chat.push.service.ChatPushService;
-import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
+import com.cybzacg.blogbackend.common.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelConvert;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatConversationListItem;
 import com.cybzacg.blogbackend.module.chat.shared.support.ChatMemberHelper;
@@ -48,11 +51,11 @@ class ChatGroupManageServiceImplTest {
     @Mock
     private ChatConversationMemberRepository chatConversationMemberRepository;
     @Mock
-    private com.cybzacg.blogbackend.module.chat.message.repository.ChatMessageRepository chatMessageRepository;
+    private ChatMessageRepository chatMessageRepository;
     @Mock
-    private com.cybzacg.blogbackend.module.chat.message.repository.ChatMessageRecipientRepository chatMessageRecipientRepository;
+    private ChatMessageRecipientRepository chatMessageRecipientRepository;
     @Mock
-    private com.cybzacg.blogbackend.module.chat.message.repository.ChatMessageReadCursorRepository chatMessageReadCursorRepository;
+    private ChatMessageReadCursorRepository chatMessageReadCursorRepository;
     @Mock
     private SysUserRepository sysUserRepository;
     @Mock

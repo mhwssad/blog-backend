@@ -1,4 +1,4 @@
-package com.cybzacg.blogbackend.module.auth.rbac.repository;
+package com.cybzacg.blogbackend.dto.repository.auth.rbac;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;

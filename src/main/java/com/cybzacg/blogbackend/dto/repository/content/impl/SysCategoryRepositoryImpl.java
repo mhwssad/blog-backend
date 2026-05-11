@@ -1,10 +1,10 @@
-package com.cybzacg.blogbackend.module.content.taxonomy.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.content.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.content.SysCategory;
 import com.cybzacg.blogbackend.dto.mapper.content.SysCategoryMapper;
-import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysCategoryRepository;
+import com.cybzacg.blogbackend.dto.repository.content.SysCategoryRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;

@@ -3,47 +3,41 @@ package com.cybzacg.blogbackend.module.article.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.common.constant.ConfigConstants;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.article.BlogArticle;
-import com.cybzacg.blogbackend.domain.article.BlogArticleCategory;
-import com.cybzacg.blogbackend.domain.auth.SysUser;
-import com.cybzacg.blogbackend.domain.content.*;
-import com.cybzacg.blogbackend.domain.file.FileBusinessInfo;
-import com.cybzacg.blogbackend.domain.file.FileInfo;
-import com.cybzacg.blogbackend.enums.article.ArticleVisibilityScopeEnum;
-import com.cybzacg.blogbackend.enums.experience.ExperienceSourceTypeEnum;
-import com.cybzacg.blogbackend.module.article.convert.ArticleModelConvert;
-import com.cybzacg.blogbackend.module.article.model.admin.*;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleAccessRepository;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleCategoryRepository;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
-import com.cybzacg.blogbackend.module.article.service.*;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.auth.author.service.AuthorPermissionService;
-import com.cybzacg.blogbackend.module.auth.config.service.SysConfigService;
+import com.cybzacg.blogbackend.dto.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.dto.domain.article.BlogArticleCategory;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.content.*;
+import com.cybzacg.blogbackend.dto.domain.file.FileBusinessInfo;
+import com.cybzacg.blogbackend.dto.domain.file.FileInfo;
+import com.cybzacg.blogbackend.dto.repository.article.BlogArticleAccessRepository;
+import com.cybzacg.blogbackend.dto.repository.article.BlogArticleCategoryRepository;
+import com.cybzacg.blogbackend.dto.repository.article.BlogArticleRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
+import com.cybzacg.blogbackend.dto.repository.comment.SysCommentRepository;
+import com.cybzacg.blogbackend.dto.repository.content.*;
+import com.cybzacg.blogbackend.dto.repository.file.FileBusinessInfoRepository;
+import com.cybzacg.blogbackend.dto.repository.file.FileInfoRepository;
 import com.cybzacg.blogbackend.enums.ai.AiKnowledgeSourceTypeEnum;
 import com.cybzacg.blogbackend.enums.ai.ContentChangeAction;
+import com.cybzacg.blogbackend.enums.article.ArticleVisibilityScopeEnum;
+import com.cybzacg.blogbackend.enums.experience.ExperienceSourceTypeEnum;
 import com.cybzacg.blogbackend.module.ai.event.ContentChangeEvent;
+import com.cybzacg.blogbackend.module.article.convert.ArticleModelConvert;
+import com.cybzacg.blogbackend.module.article.model.admin.*;
+import com.cybzacg.blogbackend.module.article.service.*;
+import com.cybzacg.blogbackend.module.auth.author.service.AuthorPermissionService;
+import com.cybzacg.blogbackend.module.auth.config.service.SysConfigService;
 import com.cybzacg.blogbackend.module.auth.experience.event.XpAwardEvent;
-import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionFolderRepository;
-import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionRepository;
-import com.cybzacg.blogbackend.module.content.comment.repository.SysCommentRepository;
-import com.cybzacg.blogbackend.module.content.footprint.repository.SysUserFootprintRepository;
-import com.cybzacg.blogbackend.module.content.interaction.repository.SysInteractionRepository;
-import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysCategoryRepository;
-import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysTagRelationRepository;
-import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysTagRepository;
-import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
-import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.IdCollectionUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -290,7 +284,7 @@ public class ArticleAdminCrudServiceImpl implements ArticleAdminCrudService {
 
         ExceptionThrowerCore.throwBusinessIf(
                 Integer.valueOf(0).equals(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(request.getIsOriginal(), 1))
-                        && !StringUtils.hasText(request.getSourceUrl()),
+                        && !StrUtils.hasText(request.getSourceUrl()),
                 com.cybzacg.blogbackend.enums.error.ResultErrorCode.ILLEGAL_ARGUMENT,
                 "转载文章必须提供原文链接");
 
@@ -496,7 +490,7 @@ public class ArticleAdminCrudServiceImpl implements ArticleAdminCrudService {
 
     private void syncArticleAttachments(Long articleId, String content, String coverImage) {
         Set<String> imageUrls = extractImageUrls(content);
-        if (StringUtils.hasText(coverImage)) {
+        if (StrUtils.hasText(coverImage)) {
             imageUrls.add(coverImage.trim());
         }
         Set<Long> newFileIds = imageUrls.isEmpty()
@@ -543,7 +537,7 @@ public class ArticleAdminCrudServiceImpl implements ArticleAdminCrudService {
     }
 
     private Set<String> extractImageUrls(String content) {
-        if (!StringUtils.hasText(content)) {
+        if (!StrUtils.hasText(content)) {
             return Set.of();
         }
         Set<String> urls = new LinkedHashSet<>();
@@ -587,6 +581,6 @@ public class ArticleAdminCrudServiceImpl implements ArticleAdminCrudService {
         if (user == null) {
             return null;
         }
-        return StringUtils.hasText(user.getNickname()) ? user.getNickname() : user.getUsername();
+        return StrUtils.hasText(user.getNickname()) ? user.getNickname() : user.getUsername();
     }
 }

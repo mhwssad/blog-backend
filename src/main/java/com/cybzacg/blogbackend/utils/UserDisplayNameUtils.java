@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.utils;
 
-import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
 
 /**
  * 用户显示名工具类。

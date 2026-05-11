@@ -1,14 +1,14 @@
 package com.cybzacg.blogbackend.module.ai;
 
-import com.cybzacg.blogbackend.domain.ai.AiKnowledgeEntry;
-import com.cybzacg.blogbackend.domain.ai.AiKnowledgeSourceConfig;
+import com.cybzacg.blogbackend.dto.domain.ai.AiKnowledgeEntry;
+import com.cybzacg.blogbackend.dto.domain.ai.AiKnowledgeSourceConfig;
 import com.cybzacg.blogbackend.enums.ai.AiKnowledgeEntryStatusEnum;
 import com.cybzacg.blogbackend.enums.ai.AiKnowledgeSourceTypeEnum;
 import com.cybzacg.blogbackend.enums.ai.ContentChangeAction;
 import com.cybzacg.blogbackend.module.ai.convert.AiModelConvert;
 import com.cybzacg.blogbackend.module.ai.event.ContentChangeEvent;
-import com.cybzacg.blogbackend.module.ai.repository.AiKnowledgeEntryRepository;
-import com.cybzacg.blogbackend.module.ai.repository.AiKnowledgeSourceConfigRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiKnowledgeEntryRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiKnowledgeSourceConfigRepository;
 import com.cybzacg.blogbackend.module.ai.service.impl.AiKnowledgeEntryAdminServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

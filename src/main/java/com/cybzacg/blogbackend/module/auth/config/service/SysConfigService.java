@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.auth.config.service;
 
-import com.cybzacg.blogbackend.domain.config.SysConfig;
+import com.cybzacg.blogbackend.dto.domain.config.SysConfig;
 
 /**
  * 系统配置服务接口。

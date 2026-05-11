@@ -4,13 +4,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.file.FileBusinessInfo;
+import com.cybzacg.blogbackend.dto.mapper.file.FileBusinessInfoMapper;
+import com.cybzacg.blogbackend.dto.repository.file.FileBusinessInfoRepository;
 import com.cybzacg.blogbackend.enums.file.FileCategoryEnum;
 import com.cybzacg.blogbackend.enums.file.FileReferenceTypeEnum;
-import com.cybzacg.blogbackend.dto.mapper.file.FileBusinessInfoMapper;
 import com.cybzacg.blogbackend.module.file.model.user.UserFilePageQuery;
-import com.cybzacg.blogbackend.dto.repository.file.FileBusinessInfoRepository;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
 
 import java.util.Collection;
 import java.util.List;
@@ -77,8 +77,8 @@ public class FileBusinessInfoRepositoryImpl extends ServiceImpl<FileBusinessInfo
     public Page<FileBusinessInfo> pageByUserAndFilters(Long userId, UserFilePageQuery query, Collection<Long> fileIds) {
         return page(new Page<>(query.getCurrent(), query.getSize()), new LambdaQueryWrapper<FileBusinessInfo>()
                 .eq(FileBusinessInfo::getUserId, userId)
-                .eq(StringUtils.hasText(query.getCategory()), FileBusinessInfo::getCategory, FileCategoryEnum.normalize(query.getCategory()))
-                .eq(StringUtils.hasText(query.getReferenceType()), FileBusinessInfo::getReferenceType, FileReferenceTypeEnum.normalize(query.getReferenceType()))
+                .eq(StrUtils.hasText(query.getCategory()), FileBusinessInfo::getCategory, FileCategoryEnum.normalize(query.getCategory()))
+                .eq(StrUtils.hasText(query.getReferenceType()), FileBusinessInfo::getReferenceType, FileReferenceTypeEnum.normalize(query.getReferenceType()))
                 .in(fileIds != null, FileBusinessInfo::getFileId, fileIds)
                 .orderByDesc(FileBusinessInfo::getCreatedAt)
                 .orderByDesc(FileBusinessInfo::getId));

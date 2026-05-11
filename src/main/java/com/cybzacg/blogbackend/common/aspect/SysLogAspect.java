@@ -1,11 +1,12 @@
 package com.cybzacg.blogbackend.common.aspect;
 
 import com.cybzacg.blogbackend.common.annotation.DisableSysLog;
-import com.cybzacg.blogbackend.domain.system.SysLog;
-import com.cybzacg.blogbackend.module.auth.audit.repository.SysLogRepository;
+import com.cybzacg.blogbackend.dto.domain.system.SysLog;
+import com.cybzacg.blogbackend.dto.repository.auth.audit.SysLogRepository;
 import com.cybzacg.blogbackend.utils.IPUtils;
 import com.cybzacg.blogbackend.utils.JsonUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.ServletRequest;
@@ -21,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -154,7 +154,7 @@ public class SysLogAspect {
      * 目前仅记录后台接口和用户行为接口，并排除日志管理自身，避免递归写日志。
      */
     private boolean shouldLogUri(String uri) {
-        if (!StringUtils.hasText(uri)) {
+        if (!StrUtils.hasText(uri)) {
             return false;
         }
         if (uri.startsWith("/api/sys/logs")) {
@@ -184,7 +184,7 @@ public class SysLogAspect {
      */
     private String resolveModule(Class<?> targetClass) {
         Tag tag = AnnotatedElementUtils.findMergedAnnotation(targetClass, Tag.class);
-        if (tag != null && StringUtils.hasText(tag.name())) {
+        if (tag != null && StrUtils.hasText(tag.name())) {
             return tag.name();
         }
         return targetClass.getSimpleName();
@@ -195,7 +195,7 @@ public class SysLogAspect {
      */
     private String resolveContent(Method method, HttpServletRequest request) {
         Operation operation = AnnotatedElementUtils.findMergedAnnotation(method, Operation.class);
-        if (operation != null && StringUtils.hasText(operation.summary())) {
+        if (operation != null && StrUtils.hasText(operation.summary())) {
             return operation.summary();
         }
         return request.getMethod() + " " + request.getRequestURI();
@@ -205,11 +205,11 @@ public class SysLogAspect {
      * 将 IP 解析出的地区信息拆成省份和城市落库。
      */
     private void fillRegion(SysLog sysLog, String ip) {
-        if (!StringUtils.hasText(ip)) {
+        if (!StrUtils.hasText(ip)) {
             return;
         }
         String region = IPUtils.getRegion(ip);
-        if (!StringUtils.hasText(region) || "未知".equals(region)) {
+        if (!StrUtils.hasText(region) || "未知".equals(region)) {
             return;
         }
         String[] parts = region.split("\\|");
@@ -223,7 +223,7 @@ public class SysLogAspect {
      * ip2region 对未知值会返回 0 / 未知 / 内网IP，这里统一转成 null。
      */
     private String normalizeRegionPart(String value) {
-        if (!StringUtils.hasText(value) || "0".equals(value) || "内网IP".equals(value) || "未知".equals(value)) {
+        if (!StrUtils.hasText(value) || "0".equals(value) || "内网IP".equals(value) || "未知".equals(value)) {
             return null;
         }
         return value;
@@ -233,7 +233,7 @@ public class SysLogAspect {
      * 解析 User-Agent，尽量提取出浏览器、版本和操作系统，失败时允许为空或 Unknown。
      */
     private void fillUserAgent(SysLog sysLog, String userAgent) {
-        if (!StringUtils.hasText(userAgent)) {
+        if (!StrUtils.hasText(userAgent)) {
             return;
         }
         String lower = userAgent.toLowerCase(Locale.ROOT);
@@ -360,7 +360,7 @@ public class SysLogAspect {
     private String serializeResponse(Object result, Throwable throwable) {
         if (throwable != null) {
             String message = throwable.getClass().getSimpleName();
-            if (StringUtils.hasText(throwable.getMessage())) {
+            if (StrUtils.hasText(throwable.getMessage())) {
                 message += ": " + throwable.getMessage();
             }
             return truncate(message, MAX_RESPONSE_LENGTH);
@@ -411,7 +411,7 @@ public class SysLogAspect {
     }
 
     private boolean isSensitiveField(String fieldName) {
-        if (!StringUtils.hasText(fieldName)) {
+        if (!StrUtils.hasText(fieldName)) {
             return false;
         }
         return SENSITIVE_FIELDS.contains(fieldName.replace("_", "").toLowerCase(Locale.ROOT));
@@ -432,7 +432,7 @@ public class SysLogAspect {
      * 日志字段统一截断，防止请求体或响应体过大。
      */
     private String truncate(String value, int maxLength) {
-        if (!StringUtils.hasText(value) || value.length() <= maxLength) {
+        if (!StrUtils.hasText(value) || value.length() <= maxLength) {
             return value;
         }
         return value.substring(0, maxLength) + "...";

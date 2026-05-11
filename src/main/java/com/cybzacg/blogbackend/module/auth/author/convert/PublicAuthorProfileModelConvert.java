@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.auth.author.convert;
 
-import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
 import com.cybzacg.blogbackend.module.auth.author.model.publics.PublicAuthorProfileVO;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;

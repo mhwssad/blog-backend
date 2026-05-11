@@ -7,7 +7,6 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.util.StringUtils;
 
 import java.security.Principal;
 import java.util.Collections;
@@ -79,10 +78,10 @@ public final class SecurityUtils {
         if (principal instanceof AuthUserPrincipal userPrincipal) {
             return userPrincipal.getUsername();
         }
-        if (principal instanceof Principal principalInfo && StringUtils.hasText(principalInfo.getName())) {
+        if (principal instanceof Principal principalInfo && StrUtils.hasText(principalInfo.getName())) {
             return principalInfo.getName();
         }
-        return StringUtils.hasText(authentication.getName()) ? authentication.getName() : null;
+        return StrUtils.hasText(authentication.getName()) ? authentication.getName() : null;
     }
 
     public static Set<String> getAuthoritySet() {
@@ -96,12 +95,12 @@ public final class SecurityUtils {
 
         return authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .filter(StringUtils::hasText)
+                .filter(StrUtils::hasText)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
     public static boolean hasAuthority(String authority) {
-        return StringUtils.hasText(authority) && getAuthoritySet().contains(authority);
+        return StrUtils.hasText(authority) && getAuthoritySet().contains(authority);
     }
 
     public static boolean hasAnyAuthority(String... authorities) {
@@ -111,7 +110,7 @@ public final class SecurityUtils {
 
         Set<String> currentAuthorities = getAuthoritySet();
         for (String authority : authorities) {
-            if (StringUtils.hasText(authority) && currentAuthorities.contains(authority)) {
+            if (StrUtils.hasText(authority) && currentAuthorities.contains(authority)) {
                 return true;
             }
         }

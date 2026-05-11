@@ -1,18 +1,19 @@
 package com.cybzacg.blogbackend.module.file.service.impl;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.file.FileBusinessInfo;
-import com.cybzacg.blogbackend.domain.file.FileInfo;
-import com.cybzacg.blogbackend.domain.file.FileUploadTask;
+import com.cybzacg.blogbackend.dto.domain.file.FileBusinessInfo;
+import com.cybzacg.blogbackend.dto.domain.file.FileInfo;
+import com.cybzacg.blogbackend.dto.domain.file.FileUploadTask;
+import com.cybzacg.blogbackend.dto.repository.file.FileBusinessInfoRepository;
+import com.cybzacg.blogbackend.dto.repository.file.FileInfoRepository;
+import com.cybzacg.blogbackend.dto.repository.file.FileUploadTaskRepository;
 import com.cybzacg.blogbackend.module.file.convert.FileModelConvert;
 import com.cybzacg.blogbackend.module.file.model.user.UserFilePageQuery;
 import com.cybzacg.blogbackend.module.file.model.user.UserFileTaskPageQuery;
 import com.cybzacg.blogbackend.module.file.model.user.UserFileTaskVO;
 import com.cybzacg.blogbackend.module.file.model.user.UserFileVO;
-import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
-import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
-import com.cybzacg.blogbackend.module.file.repository.FileUploadTaskRepository;
 import com.cybzacg.blogbackend.module.file.service.UserFileQueryService;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -41,7 +42,7 @@ public class UserFileQueryServiceImpl implements UserFileQueryService {
 
         // 根据关键字或状态筛选文件ID集合（若无需筛选条件则不查）
         Set<Long> fileIds = null;
-        if (org.springframework.util.StringUtils.hasText(query.getKeyword()) || query.getStatus() != null) {
+        if (StrUtils.hasText(query.getKeyword()) || query.getStatus() != null) {
             fileIds = fileInfoRepository.findIdsByStatusAndKeyword(query.getStatus(), query.getKeyword());
             // 筛选结果为空，直接返回空分页结果
             if (fileIds.isEmpty()) {

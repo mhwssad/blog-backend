@@ -1,12 +1,12 @@
-package com.cybzacg.blogbackend.module.content.footprint.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.content.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.content.SysUserFootprint;
 import com.cybzacg.blogbackend.dto.mapper.content.SysUserFootprintMapper;
+import com.cybzacg.blogbackend.dto.repository.content.SysUserFootprintRepository;
 import com.cybzacg.blogbackend.module.content.footprint.model.admin.FootprintPageQuery;
-import com.cybzacg.blogbackend.module.content.footprint.repository.SysUserFootprintRepository;
 import org.springframework.stereotype.Repository;
 
 /**

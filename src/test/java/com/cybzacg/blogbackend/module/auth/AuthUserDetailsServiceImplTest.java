@@ -1,11 +1,11 @@
 package com.cybzacg.blogbackend.module.auth;
 
-import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
 import com.cybzacg.blogbackend.module.auth.account.model.AuthUserDetails;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.account.service.impl.AuthUserDetailsServiceImpl;
-import com.cybzacg.blogbackend.module.auth.rbac.repository.SysMenuRepository;
-import com.cybzacg.blogbackend.module.auth.rbac.repository.SysRoleRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.rbac.SysMenuRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.rbac.SysRoleRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

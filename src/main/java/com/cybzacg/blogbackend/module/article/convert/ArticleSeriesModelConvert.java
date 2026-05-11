@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.article.convert;
 
-import com.cybzacg.blogbackend.domain.article.BlogArticle;
-import com.cybzacg.blogbackend.domain.article.BlogArticleSeries;
+import com.cybzacg.blogbackend.dto.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.dto.domain.article.BlogArticleSeries;
 import com.cybzacg.blogbackend.module.article.model.common.ArticleSeriesArticleVO;
 import com.cybzacg.blogbackend.module.article.model.common.ArticleSeriesSummaryVO;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleSeriesDetailVO;

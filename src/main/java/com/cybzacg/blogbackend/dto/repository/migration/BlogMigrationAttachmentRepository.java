@@ -1,4 +1,4 @@
-package com.cybzacg.blogbackend.module.migration.repository;
+package com.cybzacg.blogbackend.dto.repository.migration;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.cybzacg.blogbackend.dto.domain.migration.BlogMigrationAttachment;

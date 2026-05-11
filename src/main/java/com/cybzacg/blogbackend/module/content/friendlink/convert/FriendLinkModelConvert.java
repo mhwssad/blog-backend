@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.content.friendlink.convert;
 
-import com.cybzacg.blogbackend.domain.content.BlogFriendLink;
+import com.cybzacg.blogbackend.dto.domain.content.BlogFriendLink;
 import com.cybzacg.blogbackend.module.content.friendlink.model.admin.FriendLinkSaveRequest;
 import com.cybzacg.blogbackend.module.content.friendlink.model.admin.FriendLinkVO;
 import com.cybzacg.blogbackend.module.content.friendlink.model.publics.PublicFriendLinkVO;

@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.auth.account.convert;
 
-import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
 import com.cybzacg.blogbackend.module.auth.account.model.user.PublicUserSearchVO;
 import com.cybzacg.blogbackend.module.auth.account.model.user.UserProfileUpdateRequest;
 import com.cybzacg.blogbackend.module.auth.account.model.user.UserProfileVO;

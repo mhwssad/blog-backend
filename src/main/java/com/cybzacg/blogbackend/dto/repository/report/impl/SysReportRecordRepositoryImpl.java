@@ -1,13 +1,14 @@
-package com.cybzacg.blogbackend.module.report.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.report.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.report.SysReportRecord;
 import com.cybzacg.blogbackend.dto.mapper.report.SysReportRecordMapper;
-import com.cybzacg.blogbackend.module.report.repository.SysReportRecordRepository;
-import java.time.LocalDateTime;
+import com.cybzacg.blogbackend.dto.repository.report.SysReportRecordRepository;
 import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
 
 /**
  * SysReportRecord Repository 实现。

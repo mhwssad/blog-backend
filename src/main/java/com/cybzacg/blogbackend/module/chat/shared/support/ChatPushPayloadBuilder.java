@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.chat.shared.support;
 
-import com.cybzacg.blogbackend.domain.chat.ChatConversation;
-import com.cybzacg.blogbackend.domain.chat.ChatConversationMember;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatConversation;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatConversationMember;
 import com.cybzacg.blogbackend.module.chat.member.model.user.ChatMemberVO;
 import com.cybzacg.blogbackend.module.chat.websocket.model.ChatWsConversationUpdatedPayload;
 import com.cybzacg.blogbackend.module.chat.websocket.model.ChatWsMembersUpdatedPayload;

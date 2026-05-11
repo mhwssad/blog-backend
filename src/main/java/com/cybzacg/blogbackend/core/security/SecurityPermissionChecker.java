@@ -1,8 +1,8 @@
 package com.cybzacg.blogbackend.core.security;
 
 import com.cybzacg.blogbackend.utils.SecurityUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 /**
  * Spring Security 权限校验组件
@@ -53,11 +53,11 @@ public class SecurityPermissionChecker {
 
     public boolean isCurrentUsername(String username) {
         String currentUsername = SecurityUtils.getUsername();
-        return StringUtils.hasText(username) && username.equals(currentUsername);
+        return StrUtils.hasText(username) && username.equals(currentUsername);
     }
 
     private String toRoleAuthority(String roleCode) {
-        if (!StringUtils.hasText(roleCode)) {
+        if (!StrUtils.hasText(roleCode)) {
             return roleCode;
         }
         return roleCode.startsWith(ROLE_PREFIX) ? roleCode : ROLE_PREFIX + roleCode;

@@ -1,19 +1,19 @@
 package com.cybzacg.blogbackend.module.auth.account.service.impl;
 
-import com.cybzacg.blogbackend.domain.auth.SysUser;
-import com.cybzacg.blogbackend.domain.auth.SysMenu;
 import com.cybzacg.blogbackend.common.constant.AuthConstants;
+import com.cybzacg.blogbackend.dto.domain.auth.SysMenu;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.rbac.SysMenuRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.rbac.SysRoleRepository;
 import com.cybzacg.blogbackend.module.auth.account.model.AuthUserDetails;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.account.service.AuthUserDetailsService;
-import com.cybzacg.blogbackend.module.auth.rbac.repository.SysMenuRepository;
-import com.cybzacg.blogbackend.module.auth.rbac.repository.SysRoleRepository;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -66,13 +66,13 @@ public class AuthUserDetailsServiceImpl implements AuthUserDetailsService {
         Set<String> authorityValues = new LinkedHashSet<>();
         if (roleCodes != null) {
             roleCodes.stream()
-                    .filter(StringUtils::hasText)
+                    .filter(StrUtils::hasText)
                     .map(this::toRoleAuthority)
                     .forEach(authorityValues::add);
         }
         if (permissions != null) {
             permissions.stream()
-                    .filter(StringUtils::hasText)
+                    .filter(StrUtils::hasText)
                     .forEach(authorityValues::add);
         }
         return authorityValues.stream()
@@ -100,7 +100,7 @@ public class AuthUserDetailsServiceImpl implements AuthUserDetailsService {
             List<String> permissions = sysMenuRepository.findPermissionsByUserId(userId);
             if (permissions != null) {
                 permissions.stream()
-                        .filter(StringUtils::hasText)
+                        .filter(StrUtils::hasText)
                         .forEach(permissionValues::add);
             }
         }
@@ -112,7 +112,7 @@ public class AuthUserDetailsServiceImpl implements AuthUserDetailsService {
             return false;
         }
         return roleCodes.stream()
-                .filter(StringUtils::hasText)
+                .filter(StrUtils::hasText)
                 .map(this::normalizeRoleCode)
                 .anyMatch(AuthConstants.SUPER_ADMIN_ROLE_CODE::equals);
     }
@@ -131,7 +131,7 @@ public class AuthUserDetailsServiceImpl implements AuthUserDetailsService {
         }
         return menus.stream()
                 .map(SysMenu::getPerm)
-                .filter(StringUtils::hasText)
+                .filter(StrUtils::hasText)
                 .distinct()
                 .toList();
     }

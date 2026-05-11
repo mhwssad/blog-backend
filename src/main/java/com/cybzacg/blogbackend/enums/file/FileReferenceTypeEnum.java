@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.enums.file;
 
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.Getter;
-import org.springframework.util.StringUtils;
 
 /**
  * 文件业务引用类型。
@@ -22,7 +22,7 @@ public enum FileReferenceTypeEnum {
     }
 
     public static FileReferenceTypeEnum fromValue(String value) {
-        if (!StringUtils.hasText(value)) {
+        if (!StrUtils.hasText(value)) {
             return null;
         }
         for (FileReferenceTypeEnum item : values()) {

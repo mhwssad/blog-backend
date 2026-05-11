@@ -1,12 +1,7 @@
 package com.cybzacg.blogbackend.module.ai.service;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiMcpDiscoverResultVO;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiMcpHealthVO;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiMcpServerConfigPageQuery;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiMcpServerConfigSaveRequest;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiMcpServerConfigVO;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiMcpToolSnapshotVO;
+import com.cybzacg.blogbackend.module.ai.model.admin.*;
 
 import java.util.List;
 

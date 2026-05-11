@@ -3,19 +3,19 @@ package com.cybzacg.blogbackend.module.content.friendlink.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.content.BlogFriendLink;
+import com.cybzacg.blogbackend.dto.domain.content.BlogFriendLink;
+import com.cybzacg.blogbackend.dto.repository.content.BlogFriendLinkRepository;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.content.friendlink.convert.FriendLinkModelConvert;
 import com.cybzacg.blogbackend.module.content.friendlink.model.admin.FriendLinkPageQuery;
 import com.cybzacg.blogbackend.module.content.friendlink.model.admin.FriendLinkSaveRequest;
 import com.cybzacg.blogbackend.module.content.friendlink.model.admin.FriendLinkVO;
-import com.cybzacg.blogbackend.module.content.friendlink.repository.BlogFriendLinkRepository;
 import com.cybzacg.blogbackend.module.content.friendlink.service.FriendLinkAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -28,7 +28,7 @@ public class FriendLinkAdminServiceImpl implements FriendLinkAdminService {
     @Override
     public PageResult<FriendLinkVO> page(FriendLinkPageQuery query) {
         LambdaQueryWrapper<BlogFriendLink> wrapper = new LambdaQueryWrapper<BlogFriendLink>()
-                .like(StringUtils.hasText(query.getName()), BlogFriendLink::getName, query.getName())
+                .like(StrUtils.hasText(query.getName()), BlogFriendLink::getName, query.getName())
                 .eq(query.getStatus() != null, BlogFriendLink::getStatus, query.getStatus())
                 .orderByAsc(BlogFriendLink::getSortOrder)
                 .orderByDesc(BlogFriendLink::getId);

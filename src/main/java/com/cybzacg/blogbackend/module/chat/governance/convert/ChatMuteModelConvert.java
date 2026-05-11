@@ -1,7 +1,6 @@
 package com.cybzacg.blogbackend.module.chat.governance.convert;
 
-import com.cybzacg.blogbackend.domain.chat.ChatUserMuteRecord;
-import com.cybzacg.blogbackend.enums.chat.ChatMuteRecordStatusEnum;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatUserMuteRecord;
 import com.cybzacg.blogbackend.module.chat.governance.model.admin.ChatMuteCreateRequest;
 import com.cybzacg.blogbackend.module.chat.governance.model.admin.ChatMuteRecordVO;
 import org.mapstruct.Mapper;

@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.file.service;
 
-import com.cybzacg.blogbackend.domain.file.FileInfo;
+import com.cybzacg.blogbackend.dto.domain.file.FileInfo;
 import com.cybzacg.blogbackend.module.file.model.admin.UserTaskVO;
 import com.cybzacg.blogbackend.module.file.model.user.UserUploadInitRequest;
 

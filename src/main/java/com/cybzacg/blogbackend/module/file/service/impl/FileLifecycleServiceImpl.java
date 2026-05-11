@@ -3,21 +3,21 @@ package com.cybzacg.blogbackend.module.file.service.impl;
 import com.cybzacg.blogbackend.common.storage.MediaAssetPathUtils;
 import com.cybzacg.blogbackend.common.storage.StorageManager;
 import com.cybzacg.blogbackend.common.storage.StorageService;
-import com.cybzacg.blogbackend.domain.file.FileInfo;
-import com.cybzacg.blogbackend.domain.file.FileUploadTask;
+import com.cybzacg.blogbackend.dto.domain.file.FileInfo;
+import com.cybzacg.blogbackend.dto.domain.file.FileUploadTask;
+import com.cybzacg.blogbackend.dto.repository.file.FileBusinessInfoRepository;
+import com.cybzacg.blogbackend.dto.repository.file.FileChunkRepository;
+import com.cybzacg.blogbackend.dto.repository.file.FileInfoRepository;
+import com.cybzacg.blogbackend.dto.repository.file.FileUploadTaskRepository;
 import com.cybzacg.blogbackend.enums.file.FileResultCode;
 import com.cybzacg.blogbackend.enums.file.FileStatusEnum;
 import com.cybzacg.blogbackend.enums.storage.TaskStatusEnum;
-import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
-import com.cybzacg.blogbackend.module.file.repository.FileChunkRepository;
-import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
-import com.cybzacg.blogbackend.module.file.repository.FileUploadTaskRepository;
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -213,7 +213,7 @@ public class FileLifecycleServiceImpl implements FileLifecycleService {
         // 删除分片元数据记录
         fileChunkRepository.deleteByUploadTaskId(task.getId());
         // 无 uploadId 说明从未真正使用过临时目录，跳过
-        if (!StringUtils.hasText(task.getUploadId())) {
+        if (!StrUtils.hasText(task.getUploadId())) {
             return;
         }
         try {
@@ -255,7 +255,7 @@ public class FileLifecycleServiceImpl implements FileLifecycleService {
      */
     private void deleteDerivedMediaAsset(StorageService storageService, String objectPath) {
         // 路径为空直接跳过
-        if (!StringUtils.hasText(objectPath)) {
+        if (!StrUtils.hasText(objectPath)) {
             return;
         }
         try {

@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.ai.service;
 
-import com.cybzacg.blogbackend.domain.ai.AiChannelAccount;
-import com.cybzacg.blogbackend.domain.ai.AiChannelConfig;
+import com.cybzacg.blogbackend.dto.domain.ai.AiChannelAccount;
+import com.cybzacg.blogbackend.dto.domain.ai.AiChannelConfig;
 
 /**
  * AI 账号池服务。

@@ -1,4 +1,4 @@
-package com.cybzacg.blogbackend.module.forum.repository;
+package com.cybzacg.blogbackend.dto.repository.forum;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;

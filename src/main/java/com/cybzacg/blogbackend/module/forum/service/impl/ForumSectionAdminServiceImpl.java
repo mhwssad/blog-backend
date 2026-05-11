@@ -2,15 +2,15 @@ package com.cybzacg.blogbackend.module.forum.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.forum.ForumSection;
+import com.cybzacg.blogbackend.dto.domain.forum.ForumSection;
+import com.cybzacg.blogbackend.dto.repository.forum.ForumPostRepository;
+import com.cybzacg.blogbackend.dto.repository.forum.ForumSectionRepository;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.enums.forum.ForumVisibilityScopeEnum;
 import com.cybzacg.blogbackend.module.forum.convert.ForumModelConvert;
 import com.cybzacg.blogbackend.module.forum.model.admin.ForumSectionAdminVO;
 import com.cybzacg.blogbackend.module.forum.model.admin.ForumSectionPageQuery;
 import com.cybzacg.blogbackend.module.forum.model.admin.ForumSectionSaveRequest;
-import com.cybzacg.blogbackend.module.forum.repository.ForumPostRepository;
-import com.cybzacg.blogbackend.module.forum.repository.ForumSectionRepository;
 import com.cybzacg.blogbackend.module.forum.service.ForumSectionAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PaginationUtils;

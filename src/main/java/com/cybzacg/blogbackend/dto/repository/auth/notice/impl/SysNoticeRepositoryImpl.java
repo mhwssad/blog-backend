@@ -1,4 +1,4 @@
-package com.cybzacg.blogbackend.module.auth.notice.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.auth.notice.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -6,11 +6,11 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.common.constant.NoticeConstants;
 import com.cybzacg.blogbackend.dto.domain.notice.SysNotice;
 import com.cybzacg.blogbackend.dto.mapper.notice.SysNoticeMapper;
+import com.cybzacg.blogbackend.dto.repository.auth.notice.SysNoticeRepository;
 import com.cybzacg.blogbackend.module.auth.notice.model.admin.SysNoticePageQuery;
 import com.cybzacg.blogbackend.module.auth.notice.model.admin.UserNoticePageQuery;
-import com.cybzacg.blogbackend.module.auth.notice.repository.SysNoticeRepository;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
 
 import java.util.Collection;
 import java.util.List;
@@ -29,7 +29,7 @@ public class SysNoticeRepositoryImpl extends ServiceImpl<SysNoticeMapper, SysNot
     @Override
     public Page<SysNotice> pageByAdminConditions(SysNoticePageQuery query) {
         return page(new Page<>(query.getCurrent(), query.getSize()), new LambdaQueryWrapper<SysNotice>()
-                .like(StringUtils.hasText(query.getTitle()), SysNotice::getTitle, query.getTitle())
+                .like(StrUtils.hasText(query.getTitle()), SysNotice::getTitle, query.getTitle())
                 .eq(query.getPublishStatus() != null, SysNotice::getPublishStatus, query.getPublishStatus())
                 .eq(query.getTargetType() != null, SysNotice::getTargetType, query.getTargetType())
                 .eq(SysNotice::getIsDeleted, 0)
@@ -55,7 +55,7 @@ public class SysNoticeRepositoryImpl extends ServiceImpl<SysNoticeMapper, SysNot
         LambdaQueryWrapper<SysNotice> wrapper = new LambdaQueryWrapper<SysNotice>()
                 .eq(SysNotice::getIsDeleted, 0)
                 .eq(SysNotice::getPublishStatus, NoticeConstants.PUBLISH_STATUS_PUBLISHED)
-                .like(StringUtils.hasText(query.getTitle()), SysNotice::getTitle, query.getTitle());
+                .like(StrUtils.hasText(query.getTitle()), SysNotice::getTitle, query.getTitle());
 
         if (query.getIsRead() == null) {
             // 不区分已读/未读：全局通知 + 用户定向通知

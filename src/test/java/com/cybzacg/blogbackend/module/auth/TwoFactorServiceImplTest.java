@@ -4,7 +4,7 @@ import com.cybzacg.blogbackend.common.constant.AuthConstants;
 import com.cybzacg.blogbackend.common.email.EmailService;
 import com.cybzacg.blogbackend.common.redis.RedisKeyUtils;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.account.service.impl.TwoFactorServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

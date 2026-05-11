@@ -1,25 +1,26 @@
 package com.cybzacg.blogbackend.module.file.service.impl;
 
 import com.cybzacg.blogbackend.common.storage.StorageManager;
-import com.cybzacg.blogbackend.domain.article.BlogArticle;
-import com.cybzacg.blogbackend.domain.file.FileBusinessInfo;
-import com.cybzacg.blogbackend.domain.file.FileInfo;
+import com.cybzacg.blogbackend.dto.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.dto.domain.file.FileBusinessInfo;
+import com.cybzacg.blogbackend.dto.domain.file.FileInfo;
+import com.cybzacg.blogbackend.dto.repository.article.BlogArticleRepository;
+import com.cybzacg.blogbackend.dto.repository.file.FileBusinessInfoRepository;
+import com.cybzacg.blogbackend.dto.repository.file.FileInfoRepository;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.enums.file.FileReferenceTypeEnum;
 import com.cybzacg.blogbackend.enums.file.FileStatusEnum;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
 import com.cybzacg.blogbackend.module.file.model.data.FileContentVO;
-import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
-import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
 import com.cybzacg.blogbackend.module.file.service.PublicFileAccessService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
-import java.io.InputStream;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.io.InputStream;
+import java.util.List;
 
 /**
  * 公开文件访问服务实现。

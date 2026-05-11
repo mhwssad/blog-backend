@@ -1,21 +1,21 @@
 package com.cybzacg.blogbackend.module.chat.member.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.cybzacg.blogbackend.common.constant.ChatConstants;
 import com.cybzacg.blogbackend.common.constant.ConfigConstants;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.auth.SysUser;
-import com.cybzacg.blogbackend.domain.chat.ChatChannelCreateApplication;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatChannelCreateApplication;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
+import com.cybzacg.blogbackend.dto.repository.chat.member.ChatChannelCreateApplicationRepository;
 import com.cybzacg.blogbackend.enums.chat.ChatChannelApplicationStatusEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.config.service.SysConfigService;
 import com.cybzacg.blogbackend.module.auth.experience.service.UserExperienceService;
 import com.cybzacg.blogbackend.module.chat.member.model.user.ChatChannelApplicationPageQuery;
 import com.cybzacg.blogbackend.module.chat.member.model.user.ChatChannelApplicationSubmitRequest;
 import com.cybzacg.blogbackend.module.chat.member.model.user.ChatChannelApplicationVO;
-import com.cybzacg.blogbackend.module.chat.member.repository.ChatChannelCreateApplicationRepository;
 import com.cybzacg.blogbackend.module.chat.member.service.UserChatChannelApplicationService;
-import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelConvert;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PaginationUtils;

@@ -1,18 +1,18 @@
-package com.cybzacg.blogbackend.module.forum.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.forum.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.forum.ForumPost;
+import com.cybzacg.blogbackend.dto.mapper.forum.ForumPostMapper;
+import com.cybzacg.blogbackend.dto.repository.forum.ForumPostRepository;
 import com.cybzacg.blogbackend.enums.forum.ForumPostStatusEnum;
 import com.cybzacg.blogbackend.enums.forum.ForumVisibilityScopeEnum;
-import com.cybzacg.blogbackend.dto.mapper.forum.ForumPostMapper;
 import com.cybzacg.blogbackend.module.forum.model.admin.ForumPostAdminPageQuery;
 import com.cybzacg.blogbackend.module.forum.model.publics.ForumPostPageQuery;
 import com.cybzacg.blogbackend.module.forum.model.user.UserForumPostPageQuery;
-import com.cybzacg.blogbackend.module.forum.repository.ForumPostRepository;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
 
 import java.util.Collection;
 import java.util.List;
@@ -35,7 +35,7 @@ public class ForumPostRepositoryImpl extends ServiceImpl<ForumPostMapper, ForumP
                 .eq(query.getAuthorId() != null, ForumPost::getAuthorId, query.getAuthorId())
                 .ge(query.getCreatedAtStart() != null, ForumPost::getCreatedAt, query.getCreatedAtStart())
                 .le(query.getCreatedAtEnd() != null, ForumPost::getCreatedAt, query.getCreatedAtEnd())
-                .and(StringUtils.hasText(query.getKeyword()), w -> w.like(ForumPost::getTitle, query.getKeyword())
+                .and(StrUtils.hasText(query.getKeyword()), w -> w.like(ForumPost::getTitle, query.getKeyword())
                         .or()
                         .like(ForumPost::getContent, query.getKeyword()));
         applyPublicSort(wrapper, query.getSort());
@@ -48,7 +48,7 @@ public class ForumPostRepositoryImpl extends ServiceImpl<ForumPostMapper, ForumP
                 .eq(ForumPost::getAuthorId, authorId)
                 .eq(query.getSectionId() != null, ForumPost::getSectionId, query.getSectionId())
                 .eq(query.getStatus() != null, ForumPost::getStatus, query.getStatus())
-                .and(StringUtils.hasText(query.getKeyword()), w -> w.like(ForumPost::getTitle, query.getKeyword())
+                .and(StrUtils.hasText(query.getKeyword()), w -> w.like(ForumPost::getTitle, query.getKeyword())
                         .or()
                         .like(ForumPost::getContent, query.getKeyword()))
                 .orderByDesc(ForumPost::getUpdatedAt)
@@ -65,7 +65,7 @@ public class ForumPostRepositoryImpl extends ServiceImpl<ForumPostMapper, ForumP
                 .eq(query.getIsEssence() != null, ForumPost::getIsEssence, query.getIsEssence())
                 .ge(query.getCreatedAtStart() != null, ForumPost::getCreatedAt, query.getCreatedAtStart())
                 .le(query.getCreatedAtEnd() != null, ForumPost::getCreatedAt, query.getCreatedAtEnd())
-                .and(StringUtils.hasText(query.getKeyword()), w -> w.like(ForumPost::getTitle, query.getKeyword())
+                .and(StrUtils.hasText(query.getKeyword()), w -> w.like(ForumPost::getTitle, query.getKeyword())
                         .or()
                         .like(ForumPost::getContent, query.getKeyword()))
                 .orderByDesc(ForumPost::getIsTop)

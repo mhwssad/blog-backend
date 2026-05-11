@@ -1,12 +1,7 @@
 package com.cybzacg.blogbackend.module.migration.service;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.module.migration.model.admin.BlogMigrationCreateRequest;
-import com.cybzacg.blogbackend.module.migration.model.admin.BlogMigrationPrecheckResultVO;
-import com.cybzacg.blogbackend.module.migration.model.admin.BlogMigrationRecordPageQuery;
-import com.cybzacg.blogbackend.module.migration.model.admin.BlogMigrationRecordVO;
-import com.cybzacg.blogbackend.module.migration.model.admin.BlogMigrationTaskPageQuery;
-import com.cybzacg.blogbackend.module.migration.model.admin.BlogMigrationTaskVO;
+import com.cybzacg.blogbackend.module.migration.model.admin.*;
 import org.springframework.web.multipart.MultipartFile;
 
 /**

@@ -1,18 +1,18 @@
 package com.cybzacg.blogbackend.module.ai.service.impl;
 
-import com.cybzacg.blogbackend.domain.ai.AiKnowledgeEntry;
-import com.cybzacg.blogbackend.domain.article.BlogArticle;
-import com.cybzacg.blogbackend.domain.auth.SysUser;
-import com.cybzacg.blogbackend.domain.forum.ForumPost;
+import com.cybzacg.blogbackend.dto.domain.ai.AiKnowledgeEntry;
+import com.cybzacg.blogbackend.dto.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.forum.ForumPost;
+import com.cybzacg.blogbackend.dto.repository.article.BlogArticleRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
+import com.cybzacg.blogbackend.dto.repository.forum.ForumPostRepository;
 import com.cybzacg.blogbackend.enums.ai.AiKnowledgeEntryStatusEnum;
 import com.cybzacg.blogbackend.enums.ai.AiKnowledgeSourceTypeEnum;
 import com.cybzacg.blogbackend.module.ai.service.AiKnowledgeSourceExtractor;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.forum.repository.ForumPostRepository;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -44,7 +44,7 @@ public class AiKnowledgeSourceExtractorImpl implements AiKnowledgeSourceExtracto
         if (type == AiKnowledgeSourceTypeEnum.AUTHOR_PROFILE) {
             return sysUserRepository.listPublicProfilesForRag(DEFAULT_EXTRACT_LIMIT).stream()
                     .map(this::fromUserProfile)
-                    .filter(entry -> StringUtils.hasText(entry.getContentSnapshot()))
+                    .filter(entry -> StrUtils.hasText(entry.getContentSnapshot()))
                     .toList();
         }
         return List.of();
@@ -94,7 +94,7 @@ public class AiKnowledgeSourceExtractorImpl implements AiKnowledgeSourceExtracto
     }
 
     private AiKnowledgeEntry fromUserProfile(SysUser user) {
-        String title = StringUtils.hasText(user.getNickname()) ? user.getNickname() : user.getUsername();
+        String title = StrUtils.hasText(user.getNickname()) ? user.getNickname() : user.getUsername();
         AiKnowledgeEntry entry = baseEntry(
                 AiKnowledgeSourceTypeEnum.AUTHOR_PROFILE.getCode(),
                 user.getId(),
@@ -111,7 +111,7 @@ public class AiKnowledgeSourceExtractorImpl implements AiKnowledgeSourceExtracto
         AiKnowledgeEntry entry = new AiKnowledgeEntry();
         entry.setSourceType(sourceType);
         entry.setSourceId(sourceId);
-        entry.setTitle(StringUtils.hasText(title) ? title : "未命名知识");
+        entry.setTitle(StrUtils.hasText(title) ? title : "未命名知识");
         entry.setSourceUrl(sourceUrl);
         entry.setAuthorId(authorId);
         entry.setStatus(AiKnowledgeEntryStatusEnum.ACTIVE.getValue());
@@ -120,7 +120,7 @@ public class AiKnowledgeSourceExtractorImpl implements AiKnowledgeSourceExtracto
 
     private String joinText(String title, String summary, String content) {
         return List.of(title, summary, content).stream()
-                .filter(StringUtils::hasText)
+                .filter(StrUtils::hasText)
                 .map(String::trim)
                 .reduce((left, right) -> left + "\n\n" + right)
                 .orElse("");

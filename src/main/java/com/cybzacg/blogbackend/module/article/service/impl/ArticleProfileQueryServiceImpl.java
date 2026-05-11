@@ -1,8 +1,8 @@
 package com.cybzacg.blogbackend.module.article.service.impl;
 
+import com.cybzacg.blogbackend.dto.repository.article.BlogArticleRepository;
+import com.cybzacg.blogbackend.dto.repository.article.BlogArticleSeriesRepository;
 import com.cybzacg.blogbackend.module.article.model.internal.AuthorPublicProfileStats;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleSeriesRepository;
 import com.cybzacg.blogbackend.module.article.service.ArticleProfileQueryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

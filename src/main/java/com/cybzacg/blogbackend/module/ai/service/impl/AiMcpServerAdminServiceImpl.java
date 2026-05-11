@@ -3,40 +3,34 @@ package com.cybzacg.blogbackend.module.ai.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.ai.AiMcpServerConfig;
-import com.cybzacg.blogbackend.domain.ai.AiMcpToolSnapshot;
-import com.cybzacg.blogbackend.domain.ai.AiToolDefinition;
+import com.cybzacg.blogbackend.dto.domain.ai.AiMcpServerConfig;
+import com.cybzacg.blogbackend.dto.domain.ai.AiMcpToolSnapshot;
+import com.cybzacg.blogbackend.dto.domain.ai.AiToolDefinition;
+import com.cybzacg.blogbackend.dto.repository.ai.AiMcpServerConfigRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiMcpToolSnapshotRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiToolDefinitionRepository;
 import com.cybzacg.blogbackend.enums.SysAuditOperationType;
 import com.cybzacg.blogbackend.enums.ai.AiToolRiskLevelEnum;
 import com.cybzacg.blogbackend.enums.ai.AiToolSourceTypeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.ai.convert.AiToolModelConvert;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiMcpDiscoverResultVO;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiMcpHealthVO;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiMcpServerConfigPageQuery;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiMcpServerConfigSaveRequest;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiMcpServerConfigVO;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiMcpToolSnapshotVO;
-import com.cybzacg.blogbackend.module.ai.repository.AiMcpServerConfigRepository;
-import com.cybzacg.blogbackend.module.ai.repository.AiMcpToolSnapshotRepository;
-import com.cybzacg.blogbackend.module.ai.repository.AiToolDefinitionRepository;
+import com.cybzacg.blogbackend.module.ai.model.admin.*;
 import com.cybzacg.blogbackend.module.ai.service.AiMcpServerAdminService;
 import com.cybzacg.blogbackend.module.auth.audit.model.common.SysAuditLogCreateRequest;
 import com.cybzacg.blogbackend.module.auth.audit.service.SysAuditLogService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.JsonUtils;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.mcp.client.McpClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 后台 MCP 服务管理实现。
@@ -61,8 +55,8 @@ public class AiMcpServerAdminServiceImpl implements AiMcpServerAdminService {
         long size = PaginationUtils.normalizeSize(query.getSize(), 20L, 100L);
         Page<AiMcpServerConfig> page = aiMcpServerConfigRepository.page(new Page<>(current, size),
                 new LambdaQueryWrapper<AiMcpServerConfig>()
-                        .like(StringUtils.hasText(query.getServerName()), AiMcpServerConfig::getServerName, query.getServerName())
-                        .eq(StringUtils.hasText(query.getTransportType()), AiMcpServerConfig::getTransportType, query.getTransportType())
+                        .like(StrUtils.hasText(query.getServerName()), AiMcpServerConfig::getServerName, query.getServerName())
+                        .eq(StrUtils.hasText(query.getTransportType()), AiMcpServerConfig::getTransportType, query.getTransportType())
                         .eq(query.getEnabled() != null, AiMcpServerConfig::getEnabled, query.getEnabled())
                         .orderByDesc(AiMcpServerConfig::getId));
         List<AiMcpServerConfigVO> records = page.getRecords().stream()

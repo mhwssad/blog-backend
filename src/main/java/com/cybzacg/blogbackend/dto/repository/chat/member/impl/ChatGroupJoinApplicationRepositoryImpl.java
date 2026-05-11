@@ -1,15 +1,15 @@
-package com.cybzacg.blogbackend.module.chat.member.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.chat.member.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.chat.ChatGroupJoinApplication;
 import com.cybzacg.blogbackend.dto.mapper.chat.ChatGroupJoinApplicationMapper;
+import com.cybzacg.blogbackend.dto.repository.chat.member.ChatGroupJoinApplicationRepository;
 import com.cybzacg.blogbackend.module.chat.member.model.admin.ChatGroupJoinApplicationAdminPageQuery;
 import com.cybzacg.blogbackend.module.chat.member.model.user.ChatGroupJoinApplicationPageQuery;
-import com.cybzacg.blogbackend.module.chat.member.repository.ChatGroupJoinApplicationRepository;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
 
 /**
  * 群聊入群申请 Repository 实现。
@@ -66,7 +66,7 @@ public class ChatGroupJoinApplicationRepositoryImpl
                 .eq(applyStatus != null, ChatGroupJoinApplication::getApplyStatus, applyStatus)
                 .orderByDesc(ChatGroupJoinApplication::getSubmittedAt)
                 .orderByDesc(ChatGroupJoinApplication::getId);
-        if (StringUtils.hasText(keyword)) {
+        if (StrUtils.hasText(keyword)) {
             wrapper.and(query -> query.like(ChatGroupJoinApplication::getApplyMessage, keyword)
                     .or()
                     .like(ChatGroupJoinApplication::getReviewComment, keyword));

@@ -1,13 +1,13 @@
 package com.cybzacg.blogbackend.module.content.collection;
 
-import com.cybzacg.blogbackend.domain.article.BlogArticle;
-import com.cybzacg.blogbackend.domain.content.SysCollection;
-import com.cybzacg.blogbackend.domain.content.SysCollectionFolder;
+import com.cybzacg.blogbackend.dto.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.dto.domain.content.SysCollection;
+import com.cybzacg.blogbackend.dto.domain.content.SysCollectionFolder;
 import com.cybzacg.blogbackend.module.article.service.ArticleContentFacadeService;
 import com.cybzacg.blogbackend.module.auth.notice.service.NotificationDeliveryService;
 import com.cybzacg.blogbackend.module.content.collection.model.user.CollectionSaveRequest;
-import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionFolderRepository;
-import com.cybzacg.blogbackend.module.content.collection.repository.SysCollectionRepository;
+import com.cybzacg.blogbackend.dto.repository.content.SysCollectionFolderRepository;
+import com.cybzacg.blogbackend.dto.repository.content.SysCollectionRepository;
 import com.cybzacg.blogbackend.module.content.collection.service.impl.UserCollectionServiceImpl;
 import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;

@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.chat.attachment.service;
 
-import com.cybzacg.blogbackend.domain.file.FileInfo;
+import com.cybzacg.blogbackend.dto.domain.file.FileInfo;
 
 import java.util.List;
 

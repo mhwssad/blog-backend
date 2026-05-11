@@ -1,19 +1,19 @@
 package com.cybzacg.blogbackend.module.chat.member.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.cybzacg.blogbackend.common.constant.ChatConstants;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.chat.ChatConversation;
-import com.cybzacg.blogbackend.domain.chat.ChatConversationMember;
-import com.cybzacg.blogbackend.domain.chat.ChatGroupInviteLink;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatConversation;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatConversationMember;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatGroupInviteLink;
+import com.cybzacg.blogbackend.dto.repository.chat.conversation.ChatConversationRepository;
+import com.cybzacg.blogbackend.dto.repository.chat.member.ChatConversationMemberRepository;
+import com.cybzacg.blogbackend.dto.repository.chat.member.ChatGroupInviteLinkRepository;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.chat.conversation.repository.ChatConversationRepository;
 import com.cybzacg.blogbackend.module.chat.member.model.user.ChatGroupInviteLinkCreateRequest;
 import com.cybzacg.blogbackend.module.chat.member.model.user.ChatGroupInviteLinkPageQuery;
 import com.cybzacg.blogbackend.module.chat.member.model.user.ChatGroupInviteLinkVO;
-import com.cybzacg.blogbackend.module.chat.member.repository.ChatConversationMemberRepository;
-import com.cybzacg.blogbackend.module.chat.member.repository.ChatGroupInviteLinkRepository;
 import com.cybzacg.blogbackend.module.chat.member.service.UserChatGroupInviteLinkService;
-import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelConvert;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PaginationUtils;

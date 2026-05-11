@@ -3,10 +3,14 @@ package com.cybzacg.blogbackend.module.file.service.impl;
 import com.cybzacg.blogbackend.common.storage.StorageManager;
 import com.cybzacg.blogbackend.common.storage.StorageService;
 import com.cybzacg.blogbackend.config.property.FileUploadProperties;
-import com.cybzacg.blogbackend.domain.file.FileBusinessInfo;
-import com.cybzacg.blogbackend.domain.file.FileChunk;
-import com.cybzacg.blogbackend.domain.file.FileInfo;
-import com.cybzacg.blogbackend.domain.file.FileUploadTask;
+import com.cybzacg.blogbackend.dto.domain.file.FileBusinessInfo;
+import com.cybzacg.blogbackend.dto.domain.file.FileChunk;
+import com.cybzacg.blogbackend.dto.domain.file.FileInfo;
+import com.cybzacg.blogbackend.dto.domain.file.FileUploadTask;
+import com.cybzacg.blogbackend.dto.repository.file.FileBusinessInfoRepository;
+import com.cybzacg.blogbackend.dto.repository.file.FileChunkRepository;
+import com.cybzacg.blogbackend.dto.repository.file.FileInfoRepository;
+import com.cybzacg.blogbackend.dto.repository.file.FileUploadTaskRepository;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.enums.file.FileCategoryEnum;
 import com.cybzacg.blogbackend.enums.file.FileReferenceTypeEnum;
@@ -18,21 +22,17 @@ import com.cybzacg.blogbackend.module.file.convert.FileModelConvert;
 import com.cybzacg.blogbackend.module.file.convert.FileUploadConvert;
 import com.cybzacg.blogbackend.module.file.model.admin.UserTaskVO;
 import com.cybzacg.blogbackend.module.file.model.user.UserUploadInitRequest;
-import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
-import com.cybzacg.blogbackend.module.file.repository.FileChunkRepository;
-import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
-import com.cybzacg.blogbackend.module.file.repository.FileUploadTaskRepository;
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
 import com.cybzacg.blogbackend.module.file.service.FileUploadService;
 import com.cybzacg.blogbackend.utils.CollectionUtils;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.FileUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.io.InputStream;
 import java.security.DigestInputStream;
@@ -202,7 +202,7 @@ public class FileUploadServiceImpl implements FileUploadService {
         // 前端未传 MD5 时，在上传过程中通过 DigestInputStream 自动计算
         MessageDigest md5Digest = null;
         InputStream uploadStream = inputStream;
-        if (!StringUtils.hasText(normalizedMd5)) {
+        if (!StrUtils.hasText(normalizedMd5)) {
             try {
                 md5Digest = MessageDigest.getInstance("MD5");
                 uploadStream = new DigestInputStream(inputStream, md5Digest);
@@ -314,7 +314,7 @@ public class FileUploadServiceImpl implements FileUploadService {
 
         // 规范化 MD5，若未配置 MD5 校验则允许为空
         String md5 = FileUtils.normalizeMd5(task.getFileMd5());
-        ExceptionThrowerCore.throwBusinessIf(Boolean.TRUE.equals(fileUploadProperties.getEnableMd5Check()) && !StringUtils.hasText(md5), FileResultCode.FILE_MD5_REQUIRED, "缺少文件MD5，无法完成上传");
+        ExceptionThrowerCore.throwBusinessIf(Boolean.TRUE.equals(fileUploadProperties.getEnableMd5Check()) && !StrUtils.hasText(md5), FileResultCode.FILE_MD5_REQUIRED, "缺少文件MD5，无法完成上传");
 
         // 合并前再次尝试复用已有文件（覆盖场景下可能存在）
         FileInfo existing = tryFindExistingFile(md5, task.getFileSize());
@@ -339,9 +339,9 @@ public class FileUploadServiceImpl implements FileUploadService {
         }
 
         // 分片合并后，如果前端未传 MD5，从已合并的文件中计算
-        if (!StringUtils.hasText(md5)) {
+        if (!StrUtils.hasText(md5)) {
             md5 = computeMd5FromStorage(storageService, targetObjectName);
-            if (!StringUtils.hasText(md5)) {
+            if (!StrUtils.hasText(md5)) {
                 log.error("[完成分片上传] MD5 计算失败，taskId={}", taskId);
                 markTaskFailed(task, FileResultCode.FILE_MD5_REQUIRED, "无法计算文件MD5");
                 ExceptionThrowerCore.throwBusinessEx(FileResultCode.FILE_MD5_REQUIRED);
@@ -398,7 +398,7 @@ public class FileUploadServiceImpl implements FileUploadService {
      * 任一参数为空或 MD5 不合法时直接返回 null，不发起查询。
      */
     private FileInfo tryFindExistingFile(String md5, Long fileSize) {
-        if (!StringUtils.hasText(md5)) {
+        if (!StrUtils.hasText(md5)) {
             return null;
         }
         FileInfo file = fileInfoRepository.findByMd5AndStatus(md5, FileStatusEnum.NORMAL.getValue());
@@ -415,7 +415,7 @@ public class FileUploadServiceImpl implements FileUploadService {
      * 根据 MD5 查找文件记录，不限制状态，用于冲突处理时的兜底查询。
      */
     private FileInfo findFileByMd5(String md5) {
-        if (!StringUtils.hasText(md5)) {
+        if (!StrUtils.hasText(md5)) {
             return null;
         }
         return fileInfoRepository.findByMd5(md5);
@@ -537,7 +537,7 @@ public class FileUploadServiceImpl implements FileUploadService {
      * 清理指定存储节点上的指定对象，若存储服务不可用则忽略。
      */
     private void cleanupUploadedObject(String storageKey, String objectName) {
-        if (!StringUtils.hasText(storageKey) || !StringUtils.hasText(objectName)) {
+        if (!StrUtils.hasText(storageKey) || !StrUtils.hasText(objectName)) {
             return;
         }
         try {
@@ -610,7 +610,7 @@ public class FileUploadServiceImpl implements FileUploadService {
     private void markTaskFailed(FileUploadTask task, FileResultCode resultCode, String message) {
         task.setTaskStatus(TaskStatusEnum.FAILED.getValue());
         task.setErrorCode(resultCode == null ? null : String.valueOf(resultCode.getCode()));
-        task.setErrorMessage(FileUtils.truncate(StringUtils.hasText(message) ? message : (resultCode == null ? null : resultCode.getMessage()), 240));
+        task.setErrorMessage(FileUtils.truncate(StrUtils.hasText(message) ? message : (resultCode == null ? null : resultCode.getMessage()), 240));
         fileUploadTaskRepository.updateById(task);
     }
 
@@ -623,7 +623,7 @@ public class FileUploadServiceImpl implements FileUploadService {
             return;
         }
         fileChunkRepository.deleteByUploadTaskId(task.getId());
-        if (!StringUtils.hasText(task.getUploadId())) {
+        if (!StrUtils.hasText(task.getUploadId())) {
             return;
         }
         try {
@@ -694,7 +694,7 @@ public class FileUploadServiceImpl implements FileUploadService {
         }
         String ext = FileUtils.getExtension(request.getOriginalName());
         ExceptionThrowerCore.throwBusinessIfNot(isAllowedExtension(ext), FileResultCode.FILE_EXTENSION_NOT_ALLOWED);
-        ExceptionThrowerCore.throwBusinessIf(Boolean.TRUE.equals(fileUploadProperties.getEnableMd5Check()) && !StringUtils.hasText(request.getFileMd5()), FileResultCode.FILE_MD5_REQUIRED);
+        ExceptionThrowerCore.throwBusinessIf(Boolean.TRUE.equals(fileUploadProperties.getEnableMd5Check()) && !StrUtils.hasText(request.getFileMd5()), FileResultCode.FILE_MD5_REQUIRED);
         validateChunkRequest(request);
     }
 
@@ -703,7 +703,7 @@ public class FileUploadServiceImpl implements FileUploadService {
      * 若允许列表为空或扩展名为空，则默认允许。
      */
     private boolean isAllowedExtension(String ext) {
-        if (!StringUtils.hasText(ext)) {
+        if (!StrUtils.hasText(ext)) {
             return true;
         }
         List<String> allowed = fileUploadProperties.getAllowedExtensions();
@@ -712,7 +712,7 @@ public class FileUploadServiceImpl implements FileUploadService {
         }
         String normalized = ext.toLowerCase(Locale.ROOT);
         for (String item : allowed) {
-            if (StringUtils.hasText(item) && normalized.equalsIgnoreCase(item.trim())) {
+            if (StrUtils.hasText(item) && normalized.equalsIgnoreCase(item.trim())) {
                 return true;
             }
         }
@@ -789,7 +789,7 @@ public class FileUploadServiceImpl implements FileUploadService {
         String ext = FileUtils.normalizeExt(FileUtils.getExtension(originalName));
         String datePath = LocalDate.now(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
         String uuid = UUID.randomUUID().toString().replace("-", "");
-        String suffix = StringUtils.hasText(ext) ? ("." + ext) : "";
+        String suffix = StrUtils.hasText(ext) ? ("." + ext) : "";
         return normalizedCategory + "/" + datePath + "/" + uuid + suffix;
     }
 

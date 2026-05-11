@@ -2,21 +2,21 @@ package com.cybzacg.blogbackend.module.migration.service.impl;
 
 import com.cybzacg.blogbackend.common.storage.StorageManager;
 import com.cybzacg.blogbackend.common.storage.StorageService;
-import com.cybzacg.blogbackend.domain.file.FileInfo;
-import com.cybzacg.blogbackend.domain.migration.BlogMigrationTask;
+import com.cybzacg.blogbackend.dto.domain.file.FileInfo;
+import com.cybzacg.blogbackend.dto.domain.migration.BlogMigrationTask;
+import com.cybzacg.blogbackend.dto.repository.file.FileInfoRepository;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.enums.file.FileStatusEnum;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
 import com.cybzacg.blogbackend.module.migration.model.data.BlogMigrationAttachmentItem;
 import com.cybzacg.blogbackend.module.migration.model.internal.BlogMigrationDownloadedAttachment;
 import com.cybzacg.blogbackend.module.migration.service.BlogMigrationAttachmentImportService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.FileUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -122,18 +122,18 @@ public class BlogMigrationAttachmentImportServiceImpl implements BlogMigrationAt
     }
 
     private String resolveFileName(BlogMigrationAttachmentItem attachmentItem) {
-        if (StringUtils.hasText(attachmentItem.getOriginalName())) {
+        if (StrUtils.hasText(attachmentItem.getOriginalName())) {
             return FileUtils.getFileName(attachmentItem.getOriginalName().trim());
         }
         String path = URI.create(attachmentItem.getUrl()).getPath();
         String guessed = FileUtils.getFileName(path);
-        return StringUtils.hasText(guessed) ? guessed : "attachment.bin";
+        return StrUtils.hasText(guessed) ? guessed : "attachment.bin";
     }
 
     private String buildObjectName(Long taskId, String fileName) {
         String date = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
         String extension = FileUtils.normalizeExt(FileUtils.getExtension(fileName));
-        String suffix = StringUtils.hasText(extension) ? "." + extension : "";
+        String suffix = StrUtils.hasText(extension) ? "." + extension : "";
         return "migration/" + taskId + "/" + date + "/" + UUID.randomUUID() + suffix;
     }
 }

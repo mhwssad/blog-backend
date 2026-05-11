@@ -5,14 +5,14 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.dto.mapper.article.BlogArticleMapper;
+import com.cybzacg.blogbackend.dto.repository.article.BlogArticleRepository;
 import com.cybzacg.blogbackend.enums.article.ArticleReviewStatusEnum;
 import com.cybzacg.blogbackend.enums.article.ArticleVisibilityScopeEnum;
-import com.cybzacg.blogbackend.dto.mapper.article.BlogArticleMapper;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleAdminPageQuery;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticlePageQuery;
-import com.cybzacg.blogbackend.dto.repository.article.BlogArticleRepository;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,7 +32,7 @@ public class BlogArticleRepositoryImpl extends ServiceImpl<BlogArticleMapper, Bl
     public Page<BlogArticle> pageAdminArticles(ArticleAdminPageQuery query, Set<Long> filteredArticleIds) {
         LambdaQueryWrapper<BlogArticle> wrapper = new LambdaQueryWrapper<>();
         // 关键字同时匹配标题和摘要
-        if (StringUtils.hasText(query.getKeyword())) {
+        if (StrUtils.hasText(query.getKeyword())) {
             wrapper.and(w -> w.like(BlogArticle::getTitle, query.getKeyword())
                     .or()
                     .like(BlogArticle::getSummary, query.getKeyword()));
@@ -62,7 +62,7 @@ public class BlogArticleRepositoryImpl extends ServiceImpl<BlogArticleMapper, Bl
                 .in("review_status", 0, 2)
                 .eq("visibility_scope", 0)
                 .eq("access_level", 0)
-                .and(StringUtils.hasText(query.getKeyword()), w -> w.like("title", query.getKeyword())
+                .and(StrUtils.hasText(query.getKeyword()), w -> w.like("title", query.getKeyword())
                         .or()
                         .like("summary", query.getKeyword()))
                 .and(filteredArticleIds != null, w -> w.in("id", filteredArticleIds))

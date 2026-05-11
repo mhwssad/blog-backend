@@ -1,16 +1,16 @@
 package com.cybzacg.blogbackend.module.ai.service.impl;
 
-import com.cybzacg.blogbackend.domain.ai.AiMcpServerConfig;
+import com.cybzacg.blogbackend.dto.domain.ai.AiMcpServerConfig;
 import com.cybzacg.blogbackend.enums.ai.AiMcpTransportTypeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.client.transport.http.StreamableHttpMcpTransport;
 import dev.langchain4j.mcp.client.transport.stdio.StdioMcpTransport;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import java.time.Duration;
 import java.util.List;
@@ -82,7 +82,7 @@ public class AiMcpClientFactory {
                                                           Map<String, Object> auth,
                                                           Duration timeout) {
         String url = String.valueOf(connection.getOrDefault("url", ""));
-        ExceptionThrowerCore.throwBusinessIf(!StringUtils.hasText(url),
+        ExceptionThrowerCore.throwBusinessIf(!StrUtils.hasText(url),
                 ResultErrorCode.ILLEGAL_ARGUMENT, "http MCP 连接配置必须包含 url");
 
         StreamableHttpMcpTransport.Builder builder = StreamableHttpMcpTransport.builder()
@@ -106,7 +106,7 @@ public class AiMcpClientFactory {
             headerMap.forEach((key, value) -> headers.put(String.valueOf(key), String.valueOf(value)));
         }
         String bearerToken = String.valueOf(auth.getOrDefault("bearerToken", ""));
-        if (StringUtils.hasText(bearerToken)) {
+        if (StrUtils.hasText(bearerToken)) {
             headers.put("Authorization", "Bearer " + bearerToken);
         }
         return headers;

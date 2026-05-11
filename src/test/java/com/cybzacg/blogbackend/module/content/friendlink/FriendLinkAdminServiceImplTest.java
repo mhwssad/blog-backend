@@ -1,12 +1,12 @@
 package com.cybzacg.blogbackend.module.content.friendlink;
 
-import com.cybzacg.blogbackend.domain.content.BlogFriendLink;
+import com.cybzacg.blogbackend.dto.domain.content.BlogFriendLink;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.content.friendlink.convert.FriendLinkModelConvert;
 import com.cybzacg.blogbackend.module.content.friendlink.model.admin.FriendLinkSaveRequest;
 import com.cybzacg.blogbackend.module.content.friendlink.model.admin.FriendLinkVO;
-import com.cybzacg.blogbackend.module.content.friendlink.repository.BlogFriendLinkRepository;
+import com.cybzacg.blogbackend.dto.repository.content.BlogFriendLinkRepository;
 import com.cybzacg.blogbackend.module.content.friendlink.service.impl.FriendLinkAdminServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

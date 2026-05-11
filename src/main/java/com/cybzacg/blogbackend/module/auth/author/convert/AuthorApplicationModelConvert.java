@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.auth.author.convert;
 
-import com.cybzacg.blogbackend.domain.auth.SysAuthorApplication;
-import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.auth.SysAuthorApplication;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
 import com.cybzacg.blogbackend.enums.auth.AuthorApplicationStatusEnum;
 import com.cybzacg.blogbackend.module.auth.author.model.admin.SysAuthorApplicationAdminVO;
 import com.cybzacg.blogbackend.module.auth.author.model.user.UserAuthorApplicationSubmitRequest;

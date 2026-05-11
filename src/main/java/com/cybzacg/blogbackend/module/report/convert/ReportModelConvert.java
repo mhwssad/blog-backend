@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.report.convert;
 
-import com.cybzacg.blogbackend.domain.report.SysReportHandleLog;
-import com.cybzacg.blogbackend.domain.report.SysReportRecord;
+import com.cybzacg.blogbackend.dto.domain.report.SysReportHandleLog;
+import com.cybzacg.blogbackend.dto.domain.report.SysReportRecord;
 import com.cybzacg.blogbackend.module.report.model.admin.ReportAdminVO;
 import com.cybzacg.blogbackend.module.report.model.common.ReportHandleLogVO;
 import com.cybzacg.blogbackend.module.report.model.user.ReportCreateRequest;

@@ -1,10 +1,10 @@
-package com.cybzacg.blogbackend.module.auth.rbac.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.auth.rbac.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.auth.SysMenu;
 import com.cybzacg.blogbackend.dto.mapper.auth.SysMenuMapper;
-import com.cybzacg.blogbackend.module.auth.rbac.repository.SysMenuRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.rbac.SysMenuRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;

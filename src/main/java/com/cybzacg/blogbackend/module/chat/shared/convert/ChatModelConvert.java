@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.chat.shared.convert;
 
-import com.cybzacg.blogbackend.domain.chat.*;
+import com.cybzacg.blogbackend.dto.domain.chat.*;
 import com.cybzacg.blogbackend.module.chat.conversation.model.admin.ChatAdminConversationVO;
 import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatConversationLastMessageVO;
 import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatConversationVO;

@@ -23,7 +23,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
@@ -49,7 +48,7 @@ public class JwtTokenManager implements TokenManager {
     void init() {
         SecurityProperties.SessionConfig session = getSessionConfig();
         SecurityProperties.JwtConfig jwtConfig = session.getJwt();
-        if (jwtConfig == null || !StringUtils.hasText(jwtConfig.getSecretKey())) {
+        if (jwtConfig == null || !StrUtils.hasText(jwtConfig.getSecretKey())) {
             throw new IllegalStateException("JWT 密钥未配置");
         }
 
@@ -62,7 +61,7 @@ public class JwtTokenManager implements TokenManager {
     @Override
     public AuthenticationToken generateToken(Authentication authentication) {
         String username = resolveUsername(authentication);
-        if (!StringUtils.hasText(username)) {
+        if (!StrUtils.hasText(username)) {
             throw new IllegalArgumentException("认证信息不能为空");
         }
 
@@ -135,7 +134,7 @@ public class JwtTokenManager implements TokenManager {
             }
             String blacklistKey = RedisKeyUtils.build(AuthConstants.TOKEN_BLACKLIST_PREFIX, userId);
             String blacklistedAt = redisOperator.get(blacklistKey, String.class);
-            if (!StringUtils.hasText(blacklistedAt)) {
+            if (!StrUtils.hasText(blacklistedAt)) {
                 return false;
             }
             long blacklistTime = Long.parseLong(blacklistedAt);
@@ -213,7 +212,7 @@ public class JwtTokenManager implements TokenManager {
         return collection.stream()
                 .filter(String.class::isInstance)
                 .map(String.class::cast)
-                .filter(StringUtils::hasText)
+                .filter(StrUtils::hasText)
                 .map(SimpleGrantedAuthority::new)
                 .toList();
     }
@@ -228,7 +227,7 @@ public class JwtTokenManager implements TokenManager {
 
         return authorities.stream()
                 .map(GrantedAuthority::getAuthority)
-                .filter(StringUtils::hasText)
+                .filter(StrUtils::hasText)
                 .distinct()
                 .toList();
     }

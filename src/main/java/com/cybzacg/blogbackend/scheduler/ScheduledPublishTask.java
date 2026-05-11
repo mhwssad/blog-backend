@@ -1,10 +1,10 @@
-package com.cybzacg.blogbackend.module.article.task;
+package com.cybzacg.blogbackend.scheduler;
 
-import com.cybzacg.blogbackend.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.dto.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.dto.repository.article.BlogArticleRepository;
 import com.cybzacg.blogbackend.enums.ai.AiKnowledgeSourceTypeEnum;
 import com.cybzacg.blogbackend.enums.ai.ContentChangeAction;
 import com.cybzacg.blogbackend.module.ai.event.ContentChangeEvent;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
 import com.cybzacg.blogbackend.module.article.service.ArticleStatusMachine;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

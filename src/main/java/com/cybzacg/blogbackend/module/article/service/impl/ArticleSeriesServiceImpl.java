@@ -1,9 +1,13 @@
 package com.cybzacg.blogbackend.module.article.service.impl;
 
-import com.cybzacg.blogbackend.domain.article.BlogArticle;
-import com.cybzacg.blogbackend.domain.article.BlogArticleSeries;
-import com.cybzacg.blogbackend.domain.article.BlogArticleSeriesItem;
-import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.dto.domain.article.BlogArticleSeries;
+import com.cybzacg.blogbackend.dto.domain.article.BlogArticleSeriesItem;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.repository.article.BlogArticleRepository;
+import com.cybzacg.blogbackend.dto.repository.article.BlogArticleSeriesItemRepository;
+import com.cybzacg.blogbackend.dto.repository.article.BlogArticleSeriesRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
 import com.cybzacg.blogbackend.enums.article.ArticleVisibilityScopeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.convert.ArticleSeriesModelConvert;
@@ -12,21 +16,17 @@ import com.cybzacg.blogbackend.module.article.model.common.ArticleSeriesSummaryV
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleSeriesDetailVO;
 import com.cybzacg.blogbackend.module.article.model.publics.PublicArticleSeriesVO;
 import com.cybzacg.blogbackend.module.article.model.user.*;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleSeriesItemRepository;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleSeriesRepository;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
 import com.cybzacg.blogbackend.module.article.service.ArticleSeriesItemService;
 import com.cybzacg.blogbackend.module.article.service.ArticleSeriesService;
 import com.cybzacg.blogbackend.module.article.service.ArticleStatusMachine;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.author.service.AuthorPermissionService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.*;
 
@@ -316,6 +316,6 @@ public class ArticleSeriesServiceImpl implements ArticleSeriesService {
         if (user == null) {
             return null;
         }
-        return StringUtils.hasText(user.getNickname()) ? user.getNickname() : user.getUsername();
+        return StrUtils.hasText(user.getNickname()) ? user.getNickname() : user.getUsername();
     }
 }

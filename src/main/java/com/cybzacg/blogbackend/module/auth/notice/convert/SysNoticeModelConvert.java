@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.auth.notice.convert;
 
 import com.cybzacg.blogbackend.common.constant.NoticeConstants;
-import com.cybzacg.blogbackend.domain.notice.SysNotice;
+import com.cybzacg.blogbackend.dto.domain.notice.SysNotice;
 import com.cybzacg.blogbackend.module.auth.notice.model.admin.SysNoticeAdminVO;
 import com.cybzacg.blogbackend.module.auth.notice.model.admin.UserNoticeVO;
 import org.mapstruct.Mapper;

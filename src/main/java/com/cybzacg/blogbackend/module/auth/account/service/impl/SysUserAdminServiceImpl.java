@@ -2,11 +2,12 @@ package com.cybzacg.blogbackend.module.auth.account.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRoleRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.rbac.SysRoleRepository;
 import com.cybzacg.blogbackend.enums.SysAuditOperationType;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRoleRepository;
 import com.cybzacg.blogbackend.module.auth.account.service.SuperAdminVerifier;
 import com.cybzacg.blogbackend.module.auth.account.service.SysUserAdminService;
 import com.cybzacg.blogbackend.module.auth.account.service.TwoFactorService;
@@ -18,18 +19,12 @@ import com.cybzacg.blogbackend.module.auth.rbac.convert.RbacAdminModelConvert;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysUserAdminVO;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysUserPageQuery;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysUserSaveRequest;
-import com.cybzacg.blogbackend.module.auth.rbac.repository.SysRoleRepository;
 import com.cybzacg.blogbackend.module.auth.rbac.service.impl.RbacAssociationFactory;
-import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
-import com.cybzacg.blogbackend.utils.IdCollectionUtils;
-import com.cybzacg.blogbackend.utils.JsonUtils;
-import com.cybzacg.blogbackend.utils.PasswordUtils;
-import com.cybzacg.blogbackend.utils.StrUtils;
+import com.cybzacg.blogbackend.utils.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -303,12 +298,12 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
                 ResultErrorCode.ILLEGAL_ARGUMENT,
                 "用户名已存在");
         ExceptionThrowerCore.throwBusinessIf(
-                StringUtils.hasText(request.getEmail())
+                StrUtils.hasText(request.getEmail())
                         && sysUserRepository.existsActiveByEmail(StrUtils.normalize(request.getEmail()), currentUserId),
                 ResultErrorCode.ILLEGAL_ARGUMENT,
                 "邮箱已存在");
         ExceptionThrowerCore.throwBusinessIf(
-                StringUtils.hasText(request.getPhone())
+                StrUtils.hasText(request.getPhone())
                         && sysUserRepository.existsActiveByPhone(StrUtils.normalize(request.getPhone()), currentUserId),
                 ResultErrorCode.ILLEGAL_ARGUMENT,
                 "手机号已存在");

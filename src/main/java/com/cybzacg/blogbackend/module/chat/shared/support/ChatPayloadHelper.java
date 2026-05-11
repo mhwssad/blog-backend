@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.chat.shared.support;
 
-import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
+import com.cybzacg.blogbackend.common.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.shared.model.common.ChatFilePayloadVO;
 import com.cybzacg.blogbackend.module.chat.shared.model.common.ChatMessagePayloadVO;
 import com.cybzacg.blogbackend.module.chat.shared.model.common.ChatReplyMessageVO;

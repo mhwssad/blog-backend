@@ -2,11 +2,7 @@ package com.cybzacg.blogbackend.module.ai.controller;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.core.web.Result;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiKnowledgeEntryPageQuery;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiKnowledgeEntryVO;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiKnowledgeSyncTaskPageQuery;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiKnowledgeSyncTaskVO;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiKnowledgeSyncTriggerRequest;
+import com.cybzacg.blogbackend.module.ai.model.admin.*;
 import com.cybzacg.blogbackend.module.ai.service.AiKnowledgeEntryAdminService;
 import com.cybzacg.blogbackend.module.ai.service.AiKnowledgeSyncTaskAdminService;
 import com.cybzacg.blogbackend.utils.SecurityUtils;

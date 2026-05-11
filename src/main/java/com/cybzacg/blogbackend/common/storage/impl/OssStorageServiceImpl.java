@@ -10,9 +10,9 @@ import com.cybzacg.blogbackend.enums.error.StorageResultCode;
 import com.cybzacg.blogbackend.enums.storage.StorageType;
 import com.cybzacg.blogbackend.exception.StorageException;
 import com.cybzacg.blogbackend.utils.InputStreamUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -41,12 +41,12 @@ public class OssStorageServiceImpl implements StorageService {
     public OssStorageServiceImpl(StorageProperties.Storage storageConfig, FileUploadProperties fileUploadProperties) {
         this.fileUploadProperties = fileUploadProperties;
         this.bucketName = storageConfig.getBucketName();
-        this.baseUrl = StringUtils.defaultIfBlank(storageConfig.getBaseUrl(), "");
+        this.baseUrl = StrUtils.defaultIfBlank(storageConfig.getBaseUrl(), "");
 
         // 初始化 OSS 客户端
-        if (StringUtils.isNotBlank(storageConfig.getEndpoint())
-                && StringUtils.isNotBlank(storageConfig.getAccessKey())
-                && StringUtils.isNotBlank(storageConfig.getAccessKeySecret())) {
+        if (StrUtils.isNotBlank(storageConfig.getEndpoint())
+                && StrUtils.isNotBlank(storageConfig.getAccessKey())
+                && StrUtils.isNotBlank(storageConfig.getAccessKeySecret())) {
             this.ossClient = new OSSClientBuilder().build(
                     storageConfig.getEndpoint(),
                     storageConfig.getAccessKey(),
@@ -81,7 +81,7 @@ public class OssStorageServiceImpl implements StorageService {
             PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, objectName, inputStream);
 
             // 设置内容类型
-            if (StringUtils.isNotBlank(contentType)) {
+            if (StrUtils.isNotBlank(contentType)) {
                 ObjectMetadata metadata = new ObjectMetadata();
                 metadata.setContentType(contentType);
                 putObjectRequest.setMetadata(metadata);
@@ -167,7 +167,7 @@ public class OssStorageServiceImpl implements StorageService {
     @Override
     public String getUrl(String objectName) {
         // 如果配置了 baseUrl，则使用 baseUrl
-        if (StringUtils.isNotBlank(baseUrl)) {
+        if (StrUtils.isNotBlank(baseUrl)) {
             // 确保 baseUrl 不以 / 结尾，objectName 不以 / 开头
             String normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
             String normalizedObjectName = objectName.startsWith("/") ? objectName.substring(1) : objectName;

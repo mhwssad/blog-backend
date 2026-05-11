@@ -1,10 +1,9 @@
-package com.cybzacg.blogbackend.module.forum.repository;
+package com.cybzacg.blogbackend.dto.repository.forum;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.cybzacg.blogbackend.module.forum.model.admin.ForumReplyAdminPageQuery;
-
 import com.cybzacg.blogbackend.dto.domain.forum.ForumReply;
+import com.cybzacg.blogbackend.module.forum.model.admin.ForumReplyAdminPageQuery;
 
 import java.util.List;
 

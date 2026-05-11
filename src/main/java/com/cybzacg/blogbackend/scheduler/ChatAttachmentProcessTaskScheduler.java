@@ -1,4 +1,4 @@
-package com.cybzacg.blogbackend.module.chat.attachment.task;
+package com.cybzacg.blogbackend.scheduler;
 
 import com.cybzacg.blogbackend.module.chat.attachment.service.ChatAttachmentAsyncProcessingService;
 import lombok.RequiredArgsConstructor;

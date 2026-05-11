@@ -1,12 +1,12 @@
 package com.cybzacg.blogbackend.module.content.taxonomy.service.impl;
 
-import com.cybzacg.blogbackend.domain.content.SysTag;
+import com.cybzacg.blogbackend.dto.domain.content.SysTag;
+import com.cybzacg.blogbackend.dto.repository.content.SysTagRelationRepository;
+import com.cybzacg.blogbackend.dto.repository.content.SysTagRepository;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.admin.TagSaveRequest;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.admin.TagVO;
-import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysTagRelationRepository;
-import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysTagRepository;
 import com.cybzacg.blogbackend.module.content.taxonomy.service.TagAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.StrUtils;

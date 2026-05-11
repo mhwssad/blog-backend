@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.auth.experience.convert;
 
-import com.cybzacg.blogbackend.domain.auth.UserExperienceLog;
+import com.cybzacg.blogbackend.dto.domain.auth.UserExperienceLog;
 import com.cybzacg.blogbackend.module.auth.experience.model.admin.ExperienceLogVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

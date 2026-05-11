@@ -2,30 +2,30 @@ package com.cybzacg.blogbackend.module.ai.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.cybzacg.blogbackend.common.constant.AiConstants;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.ai.AiAgentDefinition;
+import com.cybzacg.blogbackend.dto.domain.ai.AiAgentDefinition;
+import com.cybzacg.blogbackend.dto.repository.ai.AiAgentDefinitionRepository;
 import com.cybzacg.blogbackend.enums.SysAuditOperationType;
 import com.cybzacg.blogbackend.enums.ai.AiDataScopeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.ai.constant.AiConstants;
 import com.cybzacg.blogbackend.module.ai.convert.AiModelConvert;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiAgentDefinitionPageQuery;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiAgentDefinitionSaveRequest;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiAgentDefinitionVO;
-import com.cybzacg.blogbackend.module.ai.repository.AiAgentDefinitionRepository;
 import com.cybzacg.blogbackend.module.ai.service.AiAgentDefinitionAdminService;
 import com.cybzacg.blogbackend.module.auth.audit.model.common.SysAuditLogCreateRequest;
 import com.cybzacg.blogbackend.module.auth.audit.service.SysAuditLogService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.JsonUtils;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Objects;
@@ -151,7 +151,7 @@ public class AiAgentDefinitionAdminServiceImpl implements AiAgentDefinitionAdmin
      * 校验 Agent 数据读取范围，确保只使用 AI 统一数据范围枚举声明的能力。
      */
     private void validateDataScopeJson(String dataScopeJson) {
-        if (!StringUtils.hasText(dataScopeJson)) {
+        if (!StrUtils.hasText(dataScopeJson)) {
             return;
         }
         List<String> scopes;
@@ -169,7 +169,7 @@ public class AiAgentDefinitionAdminServiceImpl implements AiAgentDefinitionAdmin
     }
 
     private boolean isValidDataScope(String scope) {
-        if (!StringUtils.hasText(scope)) {
+        if (!StrUtils.hasText(scope)) {
             return false;
         }
         if (AiDataScopeEnum.fromCode(scope) != null) {

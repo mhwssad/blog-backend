@@ -1,4 +1,4 @@
-package com.cybzacg.blogbackend.module.migration.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.migration.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -6,8 +6,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.migration.BlogMigrationRecord;
 import com.cybzacg.blogbackend.dto.mapper.migration.BlogMigrationRecordMapper;
+import com.cybzacg.blogbackend.dto.repository.migration.BlogMigrationRecordRepository;
 import com.cybzacg.blogbackend.module.migration.model.admin.BlogMigrationRecordPageQuery;
-import com.cybzacg.blogbackend.module.migration.repository.BlogMigrationRecordRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

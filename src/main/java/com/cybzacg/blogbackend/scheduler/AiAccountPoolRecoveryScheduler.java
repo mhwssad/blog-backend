@@ -1,4 +1,4 @@
-package com.cybzacg.blogbackend.module.ai.scheduler;
+package com.cybzacg.blogbackend.scheduler;
 
 import com.cybzacg.blogbackend.common.constant.RedisConstants;
 import com.cybzacg.blogbackend.common.redis.RedisKeyUtils;

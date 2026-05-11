@@ -1,10 +1,10 @@
-package com.cybzacg.blogbackend.module.ai.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.ai.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.ai.AiMessageAttachment;
 import com.cybzacg.blogbackend.dto.mapper.ai.AiMessageAttachmentMapper;
-import com.cybzacg.blogbackend.module.ai.repository.AiMessageAttachmentRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiMessageAttachmentRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;

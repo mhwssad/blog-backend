@@ -1,12 +1,12 @@
 package com.cybzacg.blogbackend.module.report;
 
-import com.cybzacg.blogbackend.domain.report.SysReportRecord;
+import com.cybzacg.blogbackend.dto.domain.report.SysReportRecord;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.report.convert.ReportModelConvert;
 import com.cybzacg.blogbackend.module.report.model.user.ReportCreateRequest;
 import com.cybzacg.blogbackend.module.report.model.user.ReportVO;
-import com.cybzacg.blogbackend.module.report.repository.SysReportRecordRepository;
+import com.cybzacg.blogbackend.dto.repository.report.SysReportRecordRepository;
 import com.cybzacg.blogbackend.module.report.service.impl.ReportServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

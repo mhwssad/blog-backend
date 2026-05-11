@@ -2,13 +2,13 @@ package com.cybzacg.blogbackend.module.content.footprint.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.article.BlogArticle;
-import com.cybzacg.blogbackend.domain.content.SysUserFootprint;
+import com.cybzacg.blogbackend.dto.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.dto.domain.content.SysUserFootprint;
+import com.cybzacg.blogbackend.dto.repository.content.SysUserFootprintRepository;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.service.ArticleContentFacadeService;
 import com.cybzacg.blogbackend.module.content.footprint.model.user.UserFootprintPageQuery;
 import com.cybzacg.blogbackend.module.content.footprint.model.user.UserFootprintVO;
-import com.cybzacg.blogbackend.module.content.footprint.repository.SysUserFootprintRepository;
 import com.cybzacg.blogbackend.module.content.footprint.service.UserFootprintService;
 import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;

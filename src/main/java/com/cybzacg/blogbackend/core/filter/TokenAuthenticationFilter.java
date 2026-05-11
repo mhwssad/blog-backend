@@ -5,6 +5,7 @@ import com.cybzacg.blogbackend.core.util.HttpServletResponseUtils;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.auth.account.token.TokenManager;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,7 +16,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -30,7 +30,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                                     @NotNull HttpServletResponse response,
                                     @NotNull FilterChain filterChain) throws ServletException, IOException {
         String token = request.getHeader(HttpHeaderConstants.AUTHORIZATION);
-        if (!StringUtils.hasText(token) || SecurityContextHolder.getContext().getAuthentication() != null) {
+        if (!StrUtils.hasText(token) || SecurityContextHolder.getContext().getAuthentication() != null) {
             filterChain.doFilter(request, response);
             return;
         }

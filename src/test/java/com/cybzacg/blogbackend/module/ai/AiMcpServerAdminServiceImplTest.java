@@ -1,15 +1,15 @@
 package com.cybzacg.blogbackend.module.ai;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
-import com.cybzacg.blogbackend.domain.ai.AiMcpServerConfig;
-import com.cybzacg.blogbackend.domain.ai.AiMcpToolSnapshot;
-import com.cybzacg.blogbackend.domain.ai.AiToolDefinition;
+import com.cybzacg.blogbackend.dto.domain.ai.AiMcpServerConfig;
+import com.cybzacg.blogbackend.dto.domain.ai.AiMcpToolSnapshot;
+import com.cybzacg.blogbackend.dto.domain.ai.AiToolDefinition;
 import com.cybzacg.blogbackend.module.ai.convert.AiToolModelConvert;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiMcpDiscoverResultVO;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiMcpHealthVO;
-import com.cybzacg.blogbackend.module.ai.repository.AiMcpServerConfigRepository;
-import com.cybzacg.blogbackend.module.ai.repository.AiMcpToolSnapshotRepository;
-import com.cybzacg.blogbackend.module.ai.repository.AiToolDefinitionRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiMcpServerConfigRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiMcpToolSnapshotRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiToolDefinitionRepository;
 import com.cybzacg.blogbackend.module.ai.service.impl.AiMcpClientFactory;
 import com.cybzacg.blogbackend.module.ai.service.impl.AiMcpServerAdminServiceImpl;
 import com.cybzacg.blogbackend.module.auth.audit.service.SysAuditLogService;

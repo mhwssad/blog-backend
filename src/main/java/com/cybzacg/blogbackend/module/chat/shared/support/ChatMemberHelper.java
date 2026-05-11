@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.chat.shared.support;
 
-import com.cybzacg.blogbackend.domain.chat.ChatConversationMember;
-import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
+import com.cybzacg.blogbackend.common.constant.ChatConstants;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatConversationMember;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;

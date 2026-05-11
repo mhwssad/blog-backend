@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.auth.notice.service.impl;
 
-import com.cybzacg.blogbackend.domain.notice.SysUserNotificationSetting;
+import com.cybzacg.blogbackend.dto.domain.notice.SysUserNotificationSetting;
 import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.auth.notice.model.user.UserNotificationSettingBatchUpdateRequest;

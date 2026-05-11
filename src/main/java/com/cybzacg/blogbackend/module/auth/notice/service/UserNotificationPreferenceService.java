@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.auth.notice.service;
 
-import com.cybzacg.blogbackend.domain.notice.SysUserNotificationSetting;
+import com.cybzacg.blogbackend.dto.domain.notice.SysUserNotificationSetting;
 import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
 
 import java.util.Map;

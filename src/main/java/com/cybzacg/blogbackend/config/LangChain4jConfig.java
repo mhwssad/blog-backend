@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.config;
 
+import com.cybzacg.blogbackend.common.constant.AiConstants;
 import com.cybzacg.blogbackend.config.property.LangChain4jProperties;
-import com.cybzacg.blogbackend.module.ai.constant.AiConstants;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;

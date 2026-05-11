@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.migration.convert;
 
-import com.cybzacg.blogbackend.domain.migration.BlogMigrationRecord;
-import com.cybzacg.blogbackend.domain.migration.BlogMigrationTask;
+import com.cybzacg.blogbackend.dto.domain.migration.BlogMigrationRecord;
+import com.cybzacg.blogbackend.dto.domain.migration.BlogMigrationTask;
 import com.cybzacg.blogbackend.module.migration.model.admin.BlogMigrationRecordVO;
 import com.cybzacg.blogbackend.module.migration.model.admin.BlogMigrationTaskVO;
 import org.mapstruct.Mapper;

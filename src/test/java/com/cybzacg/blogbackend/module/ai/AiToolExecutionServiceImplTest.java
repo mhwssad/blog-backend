@@ -1,18 +1,17 @@
 package com.cybzacg.blogbackend.module.ai;
 
-import com.cybzacg.blogbackend.domain.ai.AiMcpServerConfig;
-import com.cybzacg.blogbackend.domain.ai.AiToolAuthorization;
-import com.cybzacg.blogbackend.domain.ai.AiToolCallLog;
-import com.cybzacg.blogbackend.domain.ai.AiToolDefinition;
+import com.cybzacg.blogbackend.dto.domain.ai.AiMcpServerConfig;
+import com.cybzacg.blogbackend.dto.domain.ai.AiToolAuthorization;
+import com.cybzacg.blogbackend.dto.domain.ai.AiToolDefinition;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiToolExecuteVO;
 import com.cybzacg.blogbackend.module.ai.model.internal.AiToolExecutionContext;
-import com.cybzacg.blogbackend.module.ai.repository.AiMcpServerConfigRepository;
-import com.cybzacg.blogbackend.module.ai.repository.AiToolAuthorizationRepository;
-import com.cybzacg.blogbackend.module.ai.repository.AiToolCallLogRepository;
-import com.cybzacg.blogbackend.module.ai.repository.AiToolDefinitionRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiMcpServerConfigRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiToolAuthorizationRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiToolCallLogRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiToolDefinitionRepository;
 import com.cybzacg.blogbackend.module.ai.service.impl.AiMcpClientFactory;
 import com.cybzacg.blogbackend.module.ai.service.impl.AiToolExecutionServiceImpl;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
@@ -22,7 +21,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockedConstruction;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;

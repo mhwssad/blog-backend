@@ -1,15 +1,15 @@
 package com.cybzacg.blogbackend.module.article.service.impl;
 
-import com.cybzacg.blogbackend.domain.article.BlogArticle;
-import com.cybzacg.blogbackend.domain.article.BlogArticleAccess;
-import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.dto.domain.article.BlogArticleAccess;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.repository.article.BlogArticleAccessRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
 import com.cybzacg.blogbackend.enums.article.ArticleVisibilityScopeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.convert.ArticleModelConvert;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleAccessItem;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleAccessRepository;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessManageService;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.utils.CollectionUtils;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import lombok.RequiredArgsConstructor;

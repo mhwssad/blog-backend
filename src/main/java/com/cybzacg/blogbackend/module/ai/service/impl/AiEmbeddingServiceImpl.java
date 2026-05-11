@@ -1,12 +1,12 @@
 package com.cybzacg.blogbackend.module.ai.service.impl;
 
 import com.cybzacg.blogbackend.module.ai.service.AiEmbeddingService;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.onnx.allminilml6v2q.AllMiniLmL6V2QuantizedEmbeddingModel;
 import dev.langchain4j.model.output.Response;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -19,7 +19,7 @@ public class AiEmbeddingServiceImpl implements AiEmbeddingService {
 
     @Override
     public List<Float> embed(String text) {
-        if (!StringUtils.hasText(text)) {
+        if (!StrUtils.hasText(text)) {
             return List.of();
         }
         Response<Embedding> response = embeddingModel.embed(text);
@@ -30,6 +30,6 @@ public class AiEmbeddingServiceImpl implements AiEmbeddingService {
     @Override
     public String modelName() {
         String modelName = embeddingModel.modelName();
-        return StringUtils.hasText(modelName) ? modelName : "all-minilm-l6-v2-q";
+        return StrUtils.hasText(modelName) ? modelName : "all-minilm-l6-v2-q";
     }
 }

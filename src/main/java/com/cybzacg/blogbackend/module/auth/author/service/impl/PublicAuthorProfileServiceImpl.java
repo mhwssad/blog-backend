@@ -1,10 +1,10 @@
 package com.cybzacg.blogbackend.module.auth.author.service.impl;
 
-import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.article.model.internal.AuthorPublicProfileStats;
 import com.cybzacg.blogbackend.module.article.service.ArticleProfileQueryService;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.author.convert.PublicAuthorProfileModelConvert;
 import com.cybzacg.blogbackend.module.auth.author.model.publics.PublicAuthorProfileVO;
 import com.cybzacg.blogbackend.module.auth.author.service.AuthorPermissionService;

@@ -3,13 +3,12 @@ package com.cybzacg.blogbackend.module.auth.config.service.impl;
 import com.cybzacg.blogbackend.common.constant.ConfigConstants;
 import com.cybzacg.blogbackend.common.redis.RedisKeyUtils;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
-import com.cybzacg.blogbackend.domain.config.SysConfig;
-import com.cybzacg.blogbackend.module.auth.config.repository.SysConfigRepository;
+import com.cybzacg.blogbackend.dto.domain.config.SysConfig;
+import com.cybzacg.blogbackend.dto.repository.auth.config.SysConfigRepository;
 import com.cybzacg.blogbackend.module.auth.config.service.SysConfigService;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 /**
  * 系统配置服务实现。
@@ -28,7 +27,7 @@ public class SysConfigServiceImpl implements SysConfigService {
     @Override
     public SysConfig getByConfigKey(String configKey) {
         String normalizedKey = StrUtils.normalize(configKey);
-        return StringUtils.hasText(normalizedKey) ? sysConfigRepository.findByConfigKey(normalizedKey) : null;
+        return StrUtils.hasText(normalizedKey) ? sysConfigRepository.findByConfigKey(normalizedKey) : null;
     }
 
     /**
@@ -37,7 +36,7 @@ public class SysConfigServiceImpl implements SysConfigService {
     @Override
     public String getValueByKey(String configKey) {
         String normalizedKey = StrUtils.normalize(configKey);
-        if (!StringUtils.hasText(normalizedKey)) {
+        if (!StrUtils.hasText(normalizedKey)) {
             return null;
         }
         String cacheKey = buildCacheKey(normalizedKey);
@@ -73,10 +72,10 @@ public class SysConfigServiceImpl implements SysConfigService {
         SysConfig existing = sysConfigRepository.getById(config.getId());
         boolean updated = sysConfigRepository.updateById(config);
         if (updated) {
-            if (existing != null && StringUtils.hasText(existing.getConfigKey())) {
+            if (existing != null && StrUtils.hasText(existing.getConfigKey())) {
                 evictConfigCache(existing.getConfigKey());
             }
-            if (StringUtils.hasText(config.getConfigKey())) {
+            if (StrUtils.hasText(config.getConfigKey())) {
                 evictConfigCache(config.getConfigKey());
             }
         }
@@ -89,7 +88,7 @@ public class SysConfigServiceImpl implements SysConfigService {
     @Override
     public void evictConfigCache(String configKey) {
         String normalizedKey = StrUtils.normalize(configKey);
-        if (!StringUtils.hasText(normalizedKey)) {
+        if (!StrUtils.hasText(normalizedKey)) {
             return;
         }
         redisOperator.delete(buildCacheKey(normalizedKey));

@@ -2,7 +2,6 @@ package com.cybzacg.blogbackend.utils;
 
 import com.cybzacg.blogbackend.enums.error.ResultCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import org.springframework.util.StringUtils;
 
 import java.util.function.Supplier;
 
@@ -185,11 +184,11 @@ public class ExceptionThrowerCore {
     }
 
     public static void throwBusinessIfBlank(String value, ResultCode resultCode) {
-        throwBusinessIf(!StringUtils.hasText(value), resultCode);
+        throwBusinessIf(!StrUtils.hasText(value), resultCode);
     }
 
     public static void throwBusinessIfBlank(String value, ResultCode resultCode, String message) {
-        throwBusinessIf(!StringUtils.hasText(value), resultCode, message);
+        throwBusinessIf(!StrUtils.hasText(value), resultCode, message);
     }
 
     public static <T> T requireNonNull(T obj, ResultCode resultCode) {

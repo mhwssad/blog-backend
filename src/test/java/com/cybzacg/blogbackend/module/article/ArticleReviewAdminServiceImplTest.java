@@ -1,8 +1,8 @@
 package com.cybzacg.blogbackend.module.article;
 
 
-import com.cybzacg.blogbackend.domain.article.BlogArticle;
-import com.cybzacg.blogbackend.domain.article.BlogArticleReviewLog;
+import com.cybzacg.blogbackend.dto.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.dto.domain.article.BlogArticleReviewLog;
 import com.cybzacg.blogbackend.enums.article.ArticleReviewActionEnum;
 import com.cybzacg.blogbackend.enums.article.ArticleReviewStatusEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
@@ -10,13 +10,13 @@ import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.article.convert.ArticleModelConvert;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleReviewDecisionRequest;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleReviewRepairRequest;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleCategoryRepository;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleRepository;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleReviewLogRepository;
+import com.cybzacg.blogbackend.dto.repository.article.BlogArticleCategoryRepository;
+import com.cybzacg.blogbackend.dto.repository.article.BlogArticleRepository;
+import com.cybzacg.blogbackend.dto.repository.article.BlogArticleReviewLogRepository;
 import com.cybzacg.blogbackend.module.article.service.ArticleAccessControlService;
 import com.cybzacg.blogbackend.module.article.service.impl.ArticleReviewAdminServiceImpl;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysTagRelationRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
+import com.cybzacg.blogbackend.dto.repository.content.SysTagRelationRepository;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import org.junit.jupiter.api.BeforeEach;

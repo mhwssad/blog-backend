@@ -1,11 +1,11 @@
-package com.cybzacg.blogbackend.module.ai.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.ai.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.ai.AiKnowledgeChunk;
 import com.cybzacg.blogbackend.dto.mapper.ai.AiKnowledgeChunkMapper;
-import com.cybzacg.blogbackend.module.ai.repository.AiKnowledgeChunkRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiKnowledgeChunkRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

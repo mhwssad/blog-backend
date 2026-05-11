@@ -1,14 +1,14 @@
-package com.cybzacg.blogbackend.module.chat.member.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.chat.member.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.chat.ChatChannelCreateApplication;
 import com.cybzacg.blogbackend.dto.mapper.chat.ChatChannelCreateApplicationMapper;
+import com.cybzacg.blogbackend.dto.repository.chat.member.ChatChannelCreateApplicationRepository;
 import com.cybzacg.blogbackend.module.chat.member.model.admin.ChatChannelApplicationAdminPageQuery;
-import com.cybzacg.blogbackend.module.chat.member.repository.ChatChannelCreateApplicationRepository;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
 
 /**
  * 频道创建申请 Repository 实现。
@@ -49,7 +49,7 @@ public class ChatChannelCreateApplicationRepositoryImpl
         LambdaQueryWrapper<ChatChannelCreateApplication> wrapper = new LambdaQueryWrapper<ChatChannelCreateApplication>()
                 .eq(query.getApplicantUserId() != null, ChatChannelCreateApplication::getApplicantUserId, query.getApplicantUserId())
                 .eq(query.getApplyStatus() != null, ChatChannelCreateApplication::getApplyStatus, query.getApplyStatus())
-                .like(StringUtils.hasText(query.getKeyword()), ChatChannelCreateApplication::getDesiredName, query.getKeyword())
+                .like(StrUtils.hasText(query.getKeyword()), ChatChannelCreateApplication::getDesiredName, query.getKeyword())
                 .orderByDesc(ChatChannelCreateApplication::getSubmittedAt)
                 .orderByDesc(ChatChannelCreateApplication::getId);
         return page(new Page<>(query.getCurrent(), query.getSize()), wrapper);

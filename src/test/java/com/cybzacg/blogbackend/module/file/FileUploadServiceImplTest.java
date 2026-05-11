@@ -3,9 +3,10 @@ package com.cybzacg.blogbackend.module.file;
 import com.cybzacg.blogbackend.common.storage.StorageManager;
 import com.cybzacg.blogbackend.common.storage.StorageService;
 import com.cybzacg.blogbackend.config.property.FileUploadProperties;
-import com.cybzacg.blogbackend.domain.file.FileBusinessInfo;
-import com.cybzacg.blogbackend.domain.file.FileInfo;
-import com.cybzacg.blogbackend.domain.file.FileUploadTask;
+import com.cybzacg.blogbackend.dto.domain.file.FileBusinessInfo;
+import com.cybzacg.blogbackend.dto.domain.file.FileChunk;
+import com.cybzacg.blogbackend.dto.domain.file.FileInfo;
+import com.cybzacg.blogbackend.dto.domain.file.FileUploadTask;
 import com.cybzacg.blogbackend.enums.file.FileCategoryEnum;
 import com.cybzacg.blogbackend.enums.file.FileResultCode;
 import com.cybzacg.blogbackend.enums.storage.TaskStatusEnum;
@@ -14,10 +15,10 @@ import com.cybzacg.blogbackend.module.file.convert.FileModelConvert;
 import com.cybzacg.blogbackend.module.file.convert.FileUploadConvert;
 import com.cybzacg.blogbackend.module.file.model.admin.UserTaskVO;
 import com.cybzacg.blogbackend.module.file.model.user.UserUploadInitRequest;
-import com.cybzacg.blogbackend.module.file.repository.FileBusinessInfoRepository;
-import com.cybzacg.blogbackend.module.file.repository.FileChunkRepository;
-import com.cybzacg.blogbackend.module.file.repository.FileInfoRepository;
-import com.cybzacg.blogbackend.module.file.repository.FileUploadTaskRepository;
+import com.cybzacg.blogbackend.dto.repository.file.FileBusinessInfoRepository;
+import com.cybzacg.blogbackend.dto.repository.file.FileChunkRepository;
+import com.cybzacg.blogbackend.dto.repository.file.FileInfoRepository;
+import com.cybzacg.blogbackend.dto.repository.file.FileUploadTaskRepository;
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
 import com.cybzacg.blogbackend.module.file.service.impl.FileUploadServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +29,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -118,7 +118,7 @@ class FileUploadServiceImplTest {
         when(fileChunkRepository.findByTaskIdAndChunkNumber(1L, 2)).thenReturn(null);
         when(fileChunkRepository.countByTaskIdAndStatus(1L, 2)).thenReturn(1L);
         when(fileUploadConvert.toFileChunk(anyLong(), anyInt(), anyLong(), anyString())).thenAnswer(invocation -> {
-            com.cybzacg.blogbackend.domain.file.FileChunk chunk = new com.cybzacg.blogbackend.domain.file.FileChunk();
+            FileChunk chunk = new FileChunk();
             chunk.setUploadTaskId(invocation.getArgument(0));
             chunk.setChunkNumber(invocation.getArgument(1));
             chunk.setChunkSize(invocation.getArgument(2));

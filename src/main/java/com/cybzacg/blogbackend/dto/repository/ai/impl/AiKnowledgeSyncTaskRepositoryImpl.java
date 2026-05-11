@@ -1,12 +1,12 @@
-package com.cybzacg.blogbackend.module.ai.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.ai.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.ai.AiKnowledgeSyncTask;
-import com.cybzacg.blogbackend.enums.ai.AiKnowledgeSyncTaskStatusEnum;
 import com.cybzacg.blogbackend.dto.mapper.ai.AiKnowledgeSyncTaskMapper;
-import com.cybzacg.blogbackend.module.ai.repository.AiKnowledgeSyncTaskRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiKnowledgeSyncTaskRepository;
+import com.cybzacg.blogbackend.enums.ai.AiKnowledgeSyncTaskStatusEnum;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -33,4 +33,6 @@ public class AiKnowledgeSyncTaskRepositoryImpl
                 .eq(sourceType != null, AiKnowledgeSyncTask::getSourceType, sourceType)
                 .eq(status != null, AiKnowledgeSyncTask::getStatus, status)
                 .orderByDesc(AiKnowledgeSyncTask::getId);
-        return page(new Page<>(current, size), wrapper
+        return page(new Page<>(current, size), wrapper);
+    }
+}

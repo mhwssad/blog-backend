@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.ai.model.data;
 
-import com.cybzacg.blogbackend.domain.file.FileInfo;
+import com.cybzacg.blogbackend.dto.domain.file.FileInfo;
 import lombok.Data;
 
 import java.util.List;

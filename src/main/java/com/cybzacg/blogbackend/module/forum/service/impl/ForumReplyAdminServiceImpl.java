@@ -2,20 +2,20 @@ package com.cybzacg.blogbackend.module.forum.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.auth.SysUser;
-import com.cybzacg.blogbackend.domain.forum.ForumPost;
-import com.cybzacg.blogbackend.domain.forum.ForumReply;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.forum.ForumPost;
+import com.cybzacg.blogbackend.dto.domain.forum.ForumReply;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
+import com.cybzacg.blogbackend.dto.repository.forum.ForumPostRepository;
+import com.cybzacg.blogbackend.dto.repository.forum.ForumReplyRepository;
 import com.cybzacg.blogbackend.enums.SysAuditOperationType;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.enums.forum.ForumReplyStatusEnum;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.audit.model.common.SysAuditLogCreateRequest;
 import com.cybzacg.blogbackend.module.auth.audit.service.SysAuditLogService;
 import com.cybzacg.blogbackend.module.forum.convert.ForumModelConvert;
 import com.cybzacg.blogbackend.module.forum.model.admin.ForumReplyAdminPageQuery;
 import com.cybzacg.blogbackend.module.forum.model.admin.ForumReplyAdminVO;
-import com.cybzacg.blogbackend.module.forum.repository.ForumPostRepository;
-import com.cybzacg.blogbackend.module.forum.repository.ForumReplyRepository;
 import com.cybzacg.blogbackend.module.forum.service.ForumReplyAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
@@ -24,7 +24,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**

@@ -3,7 +3,6 @@ package com.cybzacg.blogbackend.module.file.model.user;
 import com.cybzacg.blogbackend.core.validation.EnumValue;
 import com.cybzacg.blogbackend.core.web.PageQuery;
 import com.cybzacg.blogbackend.enums.storage.TaskStatusEnum;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

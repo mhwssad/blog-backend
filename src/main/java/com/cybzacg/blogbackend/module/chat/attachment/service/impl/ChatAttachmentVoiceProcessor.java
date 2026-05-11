@@ -1,10 +1,10 @@
 package com.cybzacg.blogbackend.module.chat.attachment.service.impl;
 
+import com.cybzacg.blogbackend.common.constant.ChatConstants;
 import com.cybzacg.blogbackend.common.storage.MediaAssetPathUtils;
 import com.cybzacg.blogbackend.common.storage.StorageService;
-import com.cybzacg.blogbackend.domain.file.FileInfo;
+import com.cybzacg.blogbackend.dto.domain.file.FileInfo;
 import com.cybzacg.blogbackend.module.chat.attachment.service.ChatAttachmentMetadataResolver;
-import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.shared.model.common.ChatFilePayloadVO;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.extern.slf4j.Slf4j;

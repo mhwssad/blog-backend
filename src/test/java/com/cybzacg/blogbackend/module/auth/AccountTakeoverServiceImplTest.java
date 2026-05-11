@@ -3,7 +3,7 @@ package com.cybzacg.blogbackend.module.auth;
 import com.cybzacg.blogbackend.common.constant.AuthConstants;
 import com.cybzacg.blogbackend.common.redis.RedisKeyUtils;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
-import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
 import com.cybzacg.blogbackend.enums.SysAuditOperationType;
 import com.cybzacg.blogbackend.module.auth.account.model.AuthUserDetails;
 import com.cybzacg.blogbackend.module.auth.account.model.admin.AccountTakeoverResponse;

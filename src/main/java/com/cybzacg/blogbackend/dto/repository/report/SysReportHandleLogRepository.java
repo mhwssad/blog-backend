@@ -1,4 +1,4 @@
-package com.cybzacg.blogbackend.module.report.repository;
+package com.cybzacg.blogbackend.dto.repository.report;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.cybzacg.blogbackend.dto.domain.report.SysReportHandleLog;

@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.auth.notice.service.impl;
 
 import com.cybzacg.blogbackend.common.constant.NoticeConstants;
-import com.cybzacg.blogbackend.domain.notice.SysUserNotice;
+import com.cybzacg.blogbackend.dto.domain.notice.SysUserNotice;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;

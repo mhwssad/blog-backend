@@ -1,18 +1,18 @@
 package com.cybzacg.blogbackend.module.chat.governance.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.cybzacg.blogbackend.domain.auth.SysUser;
-import com.cybzacg.blogbackend.domain.chat.ChatConversation;
-import com.cybzacg.blogbackend.domain.chat.ChatUserMuteRecord;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatConversation;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatUserMuteRecord;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
+import com.cybzacg.blogbackend.dto.repository.chat.conversation.ChatConversationRepository;
+import com.cybzacg.blogbackend.dto.repository.chat.governance.ChatUserMuteRecordRepository;
 import com.cybzacg.blogbackend.enums.chat.ChatMuteRecordStatusEnum;
 import com.cybzacg.blogbackend.enums.chat.ChatMuteScopeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
-import com.cybzacg.blogbackend.module.chat.conversation.repository.ChatConversationRepository;
 import com.cybzacg.blogbackend.module.chat.governance.convert.ChatMuteModelConvert;
 import com.cybzacg.blogbackend.module.chat.governance.model.admin.ChatMuteCreateRequest;
 import com.cybzacg.blogbackend.module.chat.governance.model.admin.ChatMuteRecordVO;
-import com.cybzacg.blogbackend.module.chat.governance.repository.ChatUserMuteRecordRepository;
 import com.cybzacg.blogbackend.module.chat.governance.service.ChatMuteGovernanceService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import lombok.RequiredArgsConstructor;

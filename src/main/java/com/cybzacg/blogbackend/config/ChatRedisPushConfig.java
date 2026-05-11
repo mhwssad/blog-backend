@@ -1,4 +1,4 @@
-package com.cybzacg.blogbackend.module.chat.push.config;
+package com.cybzacg.blogbackend.config;
 
 import com.cybzacg.blogbackend.common.constant.RedisConstants;
 import com.cybzacg.blogbackend.module.chat.push.service.impl.ChatPushRedisSubscriber;

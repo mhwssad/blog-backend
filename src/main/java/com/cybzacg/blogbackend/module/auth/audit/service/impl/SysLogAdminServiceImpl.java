@@ -1,15 +1,16 @@
 package com.cybzacg.blogbackend.module.auth.audit.service.impl;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.system.SysLog;
+import com.cybzacg.blogbackend.dto.domain.system.SysLog;
+import com.cybzacg.blogbackend.dto.repository.auth.audit.SysLogRepository;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.auth.audit.convert.SysLogModelConvert;
 import com.cybzacg.blogbackend.module.auth.audit.model.admin.SysLogAdminVO;
 import com.cybzacg.blogbackend.module.auth.audit.model.admin.SysLogCleanRequest;
 import com.cybzacg.blogbackend.module.auth.audit.model.admin.SysLogPageQuery;
-import com.cybzacg.blogbackend.module.auth.audit.repository.SysLogRepository;
 import com.cybzacg.blogbackend.module.auth.audit.service.SysLogAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +20,8 @@ import java.util.List;
 /**
  * 系统日志后台管理服务实现。
  *
- * <p>负责日志分页查询、详情查看、单条删除和按条件批量清理。
+ * <p>
+ * 负责日志分页查询、详情查看、单条删除和按条件批量清理。
  */
 @Service
 @RequiredArgsConstructor
@@ -66,15 +68,16 @@ public class SysLogAdminServiceImpl implements SysLogAdminService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public long cleanLogs(SysLogCleanRequest request) {
-        ExceptionThrowerCore.throwBusinessIfNot(hasAnyCondition(request), ResultErrorCode.ILLEGAL_ARGUMENT, "清理日志必须至少指定一个条件");
+        ExceptionThrowerCore.throwBusinessIfNot(hasAnyCondition(request), ResultErrorCode.ILLEGAL_ARGUMENT,
+                "清理日志必须至少指定一个条件");
         return sysLogRepository.removeByConditions(request);
     }
 
     private boolean hasAnyCondition(SysLogCleanRequest request) {
-        return org.springframework.util.StringUtils.hasText(request.getModule())
-                || org.springframework.util.StringUtils.hasText(request.getRequestMethod())
-                || org.springframework.util.StringUtils.hasText(request.getRequestUri())
-                || org.springframework.util.StringUtils.hasText(request.getIp())
+        return StrUtils.hasText(request.getModule())
+                || StrUtils.hasText(request.getRequestMethod())
+                || StrUtils.hasText(request.getRequestUri())
+                || StrUtils.hasText(request.getIp())
                 || request.getCreateBy() != null
                 || request.getCreateTimeStart() != null
                 || request.getCreateTimeEnd() != null;

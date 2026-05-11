@@ -2,7 +2,8 @@ package com.cybzacg.blogbackend.module.ai.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.ai.AiChannelConfig;
+import com.cybzacg.blogbackend.dto.domain.ai.AiChannelConfig;
+import com.cybzacg.blogbackend.dto.repository.ai.AiChannelConfigRepository;
 import com.cybzacg.blogbackend.enums.SysAuditOperationType;
 import com.cybzacg.blogbackend.enums.ai.AiChannelStatusEnum;
 import com.cybzacg.blogbackend.enums.ai.AiDataScopeEnum;
@@ -10,7 +11,6 @@ import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.ai.convert.AiModelConvert;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiChannelConfigSaveRequest;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiChannelConfigVO;
-import com.cybzacg.blogbackend.module.ai.repository.AiChannelConfigRepository;
 import com.cybzacg.blogbackend.module.ai.service.AiChannelConfigAdminService;
 import com.cybzacg.blogbackend.module.auth.account.service.SuperAdminVerifier;
 import com.cybzacg.blogbackend.module.auth.account.service.TwoFactorService;

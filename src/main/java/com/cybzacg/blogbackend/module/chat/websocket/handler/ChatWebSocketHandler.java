@@ -13,10 +13,10 @@ import com.cybzacg.blogbackend.module.chat.websocket.model.ChatWsMessageType;
 import com.cybzacg.blogbackend.module.chat.websocket.model.ChatWsRequest;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.JsonUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -64,7 +64,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             session.sendMessage(messageCodec.buildJsonError(null));
             return;
         }
-        if (request == null || !StringUtils.hasText(request.getType())) {
+        if (request == null || !StrUtils.hasText(request.getType())) {
             session.sendMessage(messageCodec.buildIllegalArgument(null, "WebSocket 消息缺少 type"));
             return;
         }

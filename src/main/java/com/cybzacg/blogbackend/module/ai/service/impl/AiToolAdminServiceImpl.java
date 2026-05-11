@@ -3,27 +3,18 @@ package com.cybzacg.blogbackend.module.ai.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.ai.AiToolAuthorization;
-import com.cybzacg.blogbackend.domain.ai.AiToolCallLog;
-import com.cybzacg.blogbackend.domain.ai.AiToolDefinition;
+import com.cybzacg.blogbackend.dto.domain.ai.AiToolAuthorization;
+import com.cybzacg.blogbackend.dto.domain.ai.AiToolCallLog;
+import com.cybzacg.blogbackend.dto.domain.ai.AiToolDefinition;
+import com.cybzacg.blogbackend.dto.repository.ai.AiToolAuthorizationRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiToolCallLogRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiToolDefinitionRepository;
 import com.cybzacg.blogbackend.enums.SysAuditOperationType;
 import com.cybzacg.blogbackend.enums.ai.AiToolSourceTypeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.ai.convert.AiToolModelConvert;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolAuthorizationPageQuery;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolAuthorizationSaveRequest;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolAuthorizationVO;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolCallLogPageQuery;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolCallLogVO;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolDefinitionPageQuery;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolDefinitionSaveRequest;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolDefinitionVO;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolExecuteRequest;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolExecuteVO;
+import com.cybzacg.blogbackend.module.ai.model.admin.*;
 import com.cybzacg.blogbackend.module.ai.model.internal.AiToolExecutionContext;
-import com.cybzacg.blogbackend.module.ai.repository.AiToolAuthorizationRepository;
-import com.cybzacg.blogbackend.module.ai.repository.AiToolCallLogRepository;
-import com.cybzacg.blogbackend.module.ai.repository.AiToolDefinitionRepository;
 import com.cybzacg.blogbackend.module.ai.service.AiToolAdminService;
 import com.cybzacg.blogbackend.module.ai.service.AiToolExecutionService;
 import com.cybzacg.blogbackend.module.auth.audit.model.common.SysAuditLogCreateRequest;
@@ -31,10 +22,10 @@ import com.cybzacg.blogbackend.module.auth.audit.service.SysAuditLogService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -58,9 +49,9 @@ public class AiToolAdminServiceImpl implements AiToolAdminService {
         long size = PaginationUtils.normalizeSize(query.getSize(), 20L, 100L);
         Page<AiToolDefinition> page = aiToolDefinitionRepository.page(new Page<>(current, size),
                 new LambdaQueryWrapper<AiToolDefinition>()
-                        .eq(StringUtils.hasText(query.getToolCode()), AiToolDefinition::getToolCode, query.getToolCode())
-                        .like(StringUtils.hasText(query.getToolName()), AiToolDefinition::getToolName, query.getToolName())
-                        .eq(StringUtils.hasText(query.getSourceType()), AiToolDefinition::getSourceType, query.getSourceType())
+                        .eq(StrUtils.hasText(query.getToolCode()), AiToolDefinition::getToolCode, query.getToolCode())
+                        .like(StrUtils.hasText(query.getToolName()), AiToolDefinition::getToolName, query.getToolName())
+                        .eq(StrUtils.hasText(query.getSourceType()), AiToolDefinition::getSourceType, query.getSourceType())
                         .eq(query.getEnabled() != null, AiToolDefinition::getEnabled, query.getEnabled())
                         .orderByDesc(AiToolDefinition::getId));
         List<AiToolDefinitionVO> records = page.getRecords().stream()
@@ -174,9 +165,9 @@ public class AiToolAdminServiceImpl implements AiToolAdminService {
         Page<AiToolAuthorization> page = aiToolAuthorizationRepository.page(new Page<>(current, size),
                 new LambdaQueryWrapper<AiToolAuthorization>()
                         .eq(query.getToolId() != null, AiToolAuthorization::getToolId, query.getToolId())
-                        .eq(StringUtils.hasText(query.getAuthorizationType()),
+                        .eq(StrUtils.hasText(query.getAuthorizationType()),
                                 AiToolAuthorization::getAuthorizationType, query.getAuthorizationType())
-                        .eq(StringUtils.hasText(query.getAuthorizationKey()),
+                        .eq(StrUtils.hasText(query.getAuthorizationKey()),
                                 AiToolAuthorization::getAuthorizationKey, query.getAuthorizationKey())
                         .eq(query.getEnabled() != null, AiToolAuthorization::getEnabled, query.getEnabled())
                         .orderByDesc(AiToolAuthorization::getId));
@@ -237,7 +228,7 @@ public class AiToolAdminServiceImpl implements AiToolAdminService {
     private void validateToolRequest(AiToolDefinitionSaveRequest request) {
         AiToolSupport.validateJsonArrayOfToolScopes(request.getUseScenarios());
         if (AiToolSourceTypeEnum.MCP.getCode().equalsIgnoreCase(request.getSourceType())) {
-            ExceptionThrowerCore.throwBusinessIf(request.getMcpServerId() == null || !StringUtils.hasText(request.getMcpToolName()),
+            ExceptionThrowerCore.throwBusinessIf(request.getMcpServerId() == null || !StrUtils.hasText(request.getMcpToolName()),
                     ResultErrorCode.ILLEGAL_ARGUMENT, "MCP 工具必须指定服务 ID 和原始工具名");
         }
     }

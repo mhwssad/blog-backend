@@ -1,18 +1,13 @@
 package com.cybzacg.blogbackend.module.ai.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.cybzacg.blogbackend.enums.ai.AiDataScopeEnum;
-import com.cybzacg.blogbackend.enums.ai.AiMcpTransportTypeEnum;
-import com.cybzacg.blogbackend.enums.ai.AiToolAuthorizationTypeEnum;
-import com.cybzacg.blogbackend.enums.ai.AiToolRiskLevelEnum;
-import com.cybzacg.blogbackend.enums.ai.AiToolScopeEnum;
-import com.cybzacg.blogbackend.enums.ai.AiToolSourceTypeEnum;
+import com.cybzacg.blogbackend.enums.ai.*;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.JsonUtils;
-import org.springframework.util.StringUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -53,7 +48,7 @@ final class AiToolSupport {
     }
 
     static void validateJsonObjectOrBlank(String json, ResultErrorCode errorCode, String message) {
-        if (!StringUtils.hasText(json)) {
+        if (!StrUtils.hasText(json)) {
             return;
         }
         try {
@@ -65,7 +60,7 @@ final class AiToolSupport {
     }
 
     static void validateJsonArrayOfToolScopes(String json) {
-        if (!StringUtils.hasText(json)) {
+        if (!StrUtils.hasText(json)) {
             return;
         }
         List<String> scopes;
@@ -81,7 +76,7 @@ final class AiToolSupport {
     }
 
     static void validateDataScope(String dataScope) {
-        if (!StringUtils.hasText(dataScope)) {
+        if (!StrUtils.hasText(dataScope)) {
             return;
         }
         ExceptionThrowerCore.throwBusinessIf(
@@ -91,7 +86,7 @@ final class AiToolSupport {
 
     static Map<String, Object> parseJsonObject(String json, String message) {
         validateJsonObjectOrBlank(json, ResultErrorCode.ILLEGAL_ARGUMENT, message);
-        if (!StringUtils.hasText(json)) {
+        if (!StrUtils.hasText(json)) {
             return Map.of();
         }
         try {
@@ -103,7 +98,7 @@ final class AiToolSupport {
     }
 
     static String maskJson(String json) {
-        if (!StringUtils.hasText(json)) {
+        if (!StrUtils.hasText(json)) {
             return null;
         }
         try {
@@ -115,7 +110,7 @@ final class AiToolSupport {
     }
 
     static String summarize(String value) {
-        if (!StringUtils.hasText(value)) {
+        if (!StrUtils.hasText(value)) {
             return value;
         }
         String masked = value

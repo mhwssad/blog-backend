@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.auth.audit.convert;
 
-import com.cybzacg.blogbackend.domain.system.SysAuditLog;
+import com.cybzacg.blogbackend.dto.domain.system.SysAuditLog;
 import com.cybzacg.blogbackend.enums.SysAuditOperationType;
 import com.cybzacg.blogbackend.module.auth.audit.model.admin.SysAuditLogAdminVO;
 import com.cybzacg.blogbackend.module.auth.audit.model.common.SysAuditLogCreateRequest;

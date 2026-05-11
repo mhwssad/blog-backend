@@ -1,20 +1,19 @@
 package com.cybzacg.blogbackend.module.auth.rbac.service.impl;
 
 import com.cybzacg.blogbackend.common.constant.MenuConstants;
-import com.cybzacg.blogbackend.domain.auth.SysMenu;
+import com.cybzacg.blogbackend.dto.domain.auth.SysMenu;
+import com.cybzacg.blogbackend.dto.repository.auth.rbac.SysMenuRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.rbac.SysRoleMenuRepository;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.auth.rbac.convert.RbacAdminModelConvert;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysMenuAdminVO;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysMenuSaveRequest;
-import com.cybzacg.blogbackend.module.auth.rbac.repository.SysMenuRepository;
-import com.cybzacg.blogbackend.module.auth.rbac.repository.SysRoleMenuRepository;
 import com.cybzacg.blogbackend.module.auth.rbac.service.SysMenuAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -112,7 +111,7 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
     }
 
     private boolean isDescendant(SysMenu menu, Long currentMenuId) {
-        if (!StringUtils.hasText(menu.getTreePath())) {
+        if (!StrUtils.hasText(menu.getTreePath())) {
             return false;
         }
         String[] segments = menu.getTreePath().split(",");
@@ -139,7 +138,7 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
         if (parent == null) {
             return String.valueOf(MenuConstants.ROOT_PARENT_ID);
         }
-        if (!StringUtils.hasText(parent.getTreePath())) {
+        if (!StrUtils.hasText(parent.getTreePath())) {
             return String.valueOf(parent.getId());
         }
         return parent.getTreePath() + "," + parent.getId();

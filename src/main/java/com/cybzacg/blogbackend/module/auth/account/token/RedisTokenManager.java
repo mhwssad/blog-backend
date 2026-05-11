@@ -21,7 +21,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import java.security.SecureRandom;
 import java.time.Duration;
@@ -43,7 +42,7 @@ public class RedisTokenManager implements TokenManager {
      */
     @Override
     public AuthenticationToken generateToken(Authentication authentication) {
-        if (authentication == null || !StringUtils.hasText(authentication.getName())) {
+        if (authentication == null || !StrUtils.hasText(authentication.getName())) {
             throw new IllegalArgumentException("认证信息不能为空");
         }
 
@@ -189,7 +188,7 @@ public class RedisTokenManager implements TokenManager {
 
     private void invalidateAccessToken(String accessToken, AccessTokenState tokenState) {
         redisOperator.delete(accessTokenKey(accessToken));
-        if (StringUtils.hasText(tokenState.getRefreshToken())) {
+        if (StrUtils.hasText(tokenState.getRefreshToken())) {
             redisOperator.delete(refreshTokenKey(tokenState.getRefreshToken()));
         }
         redisOperator.setRemove(usernameSessionKey(tokenState.getUsername()), accessToken);
@@ -199,7 +198,7 @@ public class RedisTokenManager implements TokenManager {
     }
 
     private void invalidateSessionsByUsername(String username) {
-        if (!StringUtils.hasText(username)) {
+        if (!StrUtils.hasText(username)) {
             return;
         }
         invalidateSessions(usernameSessionKey(username));
@@ -220,7 +219,7 @@ public class RedisTokenManager implements TokenManager {
         List<SimpleGrantedAuthority> authorities = tokenState.getAuthorities() == null
                 ? List.of()
                 : tokenState.getAuthorities().stream()
-                .filter(StringUtils::hasText)
+                .filter(StrUtils::hasText)
                 .map(SimpleGrantedAuthority::new)
                 .toList();
         return UsernamePasswordAuthenticationToken.authenticated(principal, null, authorities);
@@ -240,7 +239,7 @@ public class RedisTokenManager implements TokenManager {
         }
         return authorities.stream()
                 .map(GrantedAuthority::getAuthority)
-                .filter(StringUtils::hasText)
+                .filter(StrUtils::hasText)
                 .distinct()
                 .toList();
     }

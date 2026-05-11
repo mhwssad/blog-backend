@@ -1,20 +1,19 @@
 package com.cybzacg.blogbackend.module.content.taxonomy.service.impl;
 
-import com.cybzacg.blogbackend.domain.content.SysCategory;
+import com.cybzacg.blogbackend.dto.domain.content.SysCategory;
+import com.cybzacg.blogbackend.dto.repository.article.BlogArticleCategoryRepository;
+import com.cybzacg.blogbackend.dto.repository.content.SysCategoryRepository;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleCategoryRepository;
 import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.admin.CategoryAdminVO;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.admin.CategorySaveRequest;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.admin.CategoryTreeVO;
-import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysCategoryRepository;
 import com.cybzacg.blogbackend.module.content.taxonomy.service.CategoryAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -111,7 +110,7 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
      * 校验分类请求是否合法，目前仅允许维护文章分类，且分类编码需唯一。
      */
     private void validateRequest(CategorySaveRequest request, Long currentId) {
-        ExceptionThrowerCore.throwBusinessIf(!StringUtils.hasText(request.getType()) || !ARTICLE_TYPE.equals(StrUtils.trim(request.getType())), ResultErrorCode.ILLEGAL_ARGUMENT, "当前仅支持文章分类");
+        ExceptionThrowerCore.throwBusinessIf(!StrUtils.hasText(request.getType()) || !ARTICLE_TYPE.equals(StrUtils.trim(request.getType())), ResultErrorCode.ILLEGAL_ARGUMENT, "当前仅支持文章分类");
         boolean duplicated = sysCategoryRepository.existsByTypeAndCodeExcludingId(
                 StrUtils.trim(request.getType()),
                 StrUtils.trim(request.getCode()),
@@ -136,7 +135,7 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
      * 判断候选父分类是否属于当前分类的后代，防止分类树形成环。
      */
     private boolean isDescendant(SysCategory parent, Long currentId) {
-        if (!StringUtils.hasText(parent.getAncestors())) {
+        if (!StrUtils.hasText(parent.getAncestors())) {
             return false;
         }
         String[] segments = parent.getAncestors().split(",");
@@ -160,7 +159,7 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
     }
 
     private String buildAncestors(SysCategory parent) {
-        if (!StringUtils.hasText(parent.getAncestors())) {
+        if (!StrUtils.hasText(parent.getAncestors())) {
             return String.valueOf(parent.getId());
         }
         return parent.getAncestors() + "," + parent.getId();

@@ -3,16 +3,14 @@ package com.cybzacg.blogbackend.module.auth.config;
 import com.cybzacg.blogbackend.common.constant.ConfigConstants;
 import com.cybzacg.blogbackend.common.redis.RedisKeyUtils;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
-import com.cybzacg.blogbackend.domain.config.SysConfig;
-import com.cybzacg.blogbackend.module.auth.config.repository.SysConfigRepository;
+import com.cybzacg.blogbackend.dto.domain.config.SysConfig;
+import com.cybzacg.blogbackend.dto.repository.auth.config.SysConfigRepository;
 import com.cybzacg.blogbackend.module.auth.config.service.impl.SysConfigServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;

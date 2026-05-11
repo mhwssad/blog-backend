@@ -1,11 +1,11 @@
 package com.cybzacg.blogbackend.module.auth.account.service.impl;
 
-import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.auth.account.convert.UserProfileModelConvert;
 import com.cybzacg.blogbackend.module.auth.account.model.user.UserProfileUpdateRequest;
 import com.cybzacg.blogbackend.module.auth.account.model.user.UserProfileVO;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.account.service.UserProfileService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PasswordUtils;

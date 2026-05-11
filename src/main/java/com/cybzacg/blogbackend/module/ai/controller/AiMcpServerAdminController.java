@@ -2,12 +2,7 @@ package com.cybzacg.blogbackend.module.ai.controller;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.core.web.Result;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiMcpDiscoverResultVO;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiMcpHealthVO;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiMcpServerConfigPageQuery;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiMcpServerConfigSaveRequest;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiMcpServerConfigVO;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiMcpToolSnapshotVO;
+import com.cybzacg.blogbackend.module.ai.model.admin.*;
 import com.cybzacg.blogbackend.module.ai.service.AiMcpServerAdminService;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;

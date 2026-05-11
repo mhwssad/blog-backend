@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.ai.service;
 
-import com.cybzacg.blogbackend.domain.ai.AiKnowledgeChunk;
+import com.cybzacg.blogbackend.dto.domain.ai.AiKnowledgeChunk;
 import com.cybzacg.blogbackend.module.ai.model.internal.AiRagHit;
 
 import java.util.List;

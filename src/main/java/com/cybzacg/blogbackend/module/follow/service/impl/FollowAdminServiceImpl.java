@@ -1,12 +1,12 @@
 package com.cybzacg.blogbackend.module.follow.service.impl;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
+import com.cybzacg.blogbackend.dto.repository.follow.SysUserFollowRepository;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.follow.convert.FollowModelConvert;
 import com.cybzacg.blogbackend.module.follow.model.admin.FollowAdminPageQuery;
 import com.cybzacg.blogbackend.module.follow.model.admin.FollowAdminRelationVO;
 import com.cybzacg.blogbackend.module.follow.model.admin.FollowRelationCleanRequest;
-import com.cybzacg.blogbackend.module.follow.repository.SysUserFollowRepository;
 import com.cybzacg.blogbackend.module.follow.service.FollowAdminService;
 import com.cybzacg.blogbackend.utils.CollectionUtils;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;

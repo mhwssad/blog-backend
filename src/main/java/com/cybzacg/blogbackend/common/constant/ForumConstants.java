@@ -1,4 +1,4 @@
-package com.cybzacg.blogbackend.module.forum.constant;
+package com.cybzacg.blogbackend.common.constant;
 
 /**
  * 论坛模块常量。

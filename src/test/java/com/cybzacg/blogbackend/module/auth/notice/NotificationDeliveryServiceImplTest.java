@@ -1,10 +1,10 @@
 package com.cybzacg.blogbackend.module.auth.notice;
 
-import com.cybzacg.blogbackend.domain.notice.SysNotice;
-import com.cybzacg.blogbackend.domain.notice.SysUserNotice;
+import com.cybzacg.blogbackend.dto.domain.notice.SysNotice;
+import com.cybzacg.blogbackend.dto.domain.notice.SysUserNotice;
 import com.cybzacg.blogbackend.enums.auth.NotificationTypeEnum;
-import com.cybzacg.blogbackend.module.auth.notice.repository.SysNoticeRepository;
-import com.cybzacg.blogbackend.module.auth.notice.repository.SysUserNoticeRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.notice.SysNoticeRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.notice.SysUserNoticeRepository;
 import com.cybzacg.blogbackend.module.auth.notice.service.NotificationDeliveryService;
 import com.cybzacg.blogbackend.module.auth.notice.service.UserNotificationPreferenceService;
 import com.cybzacg.blogbackend.module.auth.notice.service.impl.NotificationDeliveryServiceImpl;

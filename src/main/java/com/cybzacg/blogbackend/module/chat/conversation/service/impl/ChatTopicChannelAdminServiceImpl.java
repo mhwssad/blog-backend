@@ -1,17 +1,17 @@
 package com.cybzacg.blogbackend.module.chat.conversation.service.impl;
 
-import com.cybzacg.blogbackend.domain.auth.SysUser;
-import com.cybzacg.blogbackend.domain.chat.ChatConversation;
-import com.cybzacg.blogbackend.domain.chat.ChatConversationMember;
+import com.cybzacg.blogbackend.common.constant.ChatConstants;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatConversation;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatConversationMember;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
+import com.cybzacg.blogbackend.dto.repository.chat.conversation.ChatConversationRepository;
+import com.cybzacg.blogbackend.dto.repository.chat.member.ChatConversationMemberRepository;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.chat.conversation.model.admin.ChatAdminConversationVO;
 import com.cybzacg.blogbackend.module.chat.conversation.model.admin.ChatTopicChannelSaveRequest;
-import com.cybzacg.blogbackend.module.chat.conversation.repository.ChatConversationRepository;
 import com.cybzacg.blogbackend.module.chat.conversation.service.ChatTopicChannelAdminService;
-import com.cybzacg.blogbackend.module.chat.member.repository.ChatConversationMemberRepository;
 import com.cybzacg.blogbackend.module.chat.push.service.ChatNotificationService;
-import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelConvert;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatAdminConversationListItem;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;

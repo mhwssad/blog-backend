@@ -1,7 +1,6 @@
 package com.cybzacg.blogbackend.module.follow.model.publics;
 
 import com.cybzacg.blogbackend.core.web.PageQuery;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

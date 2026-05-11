@@ -1,4 +1,4 @@
-package com.cybzacg.blogbackend.module.auth.experience.repository;
+package com.cybzacg.blogbackend.dto.repository.auth.experience;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;

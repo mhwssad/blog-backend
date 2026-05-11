@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.content.shared.convert;
 
-import com.cybzacg.blogbackend.domain.article.BlogArticle;
-import com.cybzacg.blogbackend.domain.content.*;
+import com.cybzacg.blogbackend.dto.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.dto.domain.content.*;
 import com.cybzacg.blogbackend.module.content.collection.model.admin.CollectionVO;
 import com.cybzacg.blogbackend.module.content.collection.model.user.CollectionFolderSaveRequest;
 import com.cybzacg.blogbackend.module.content.collection.model.user.CollectionFolderVO;

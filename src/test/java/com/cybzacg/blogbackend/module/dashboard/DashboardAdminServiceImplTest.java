@@ -2,7 +2,7 @@ package com.cybzacg.blogbackend.module.dashboard;
 
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.mapper.dashboard.DashboardMetricsMapper;
+import com.cybzacg.blogbackend.dto.mapper.dashboard.DashboardMetricsMapper;
 import com.cybzacg.blogbackend.module.dashboard.model.admin.*;
 import com.cybzacg.blogbackend.module.dashboard.service.impl.DashboardAdminServiceImpl;
 import org.junit.jupiter.api.BeforeEach;

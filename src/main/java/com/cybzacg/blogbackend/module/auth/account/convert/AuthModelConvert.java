@@ -1,7 +1,7 @@
 package com.cybzacg.blogbackend.module.auth.account.convert;
 
-import com.cybzacg.blogbackend.domain.auth.SysMenu;
-import com.cybzacg.blogbackend.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.auth.SysMenu;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
 import com.cybzacg.blogbackend.module.auth.account.model.AuthMenuInfo;
 import com.cybzacg.blogbackend.module.auth.account.model.AuthRegisterRequest;
 import com.cybzacg.blogbackend.module.auth.account.model.AuthUserInfo;

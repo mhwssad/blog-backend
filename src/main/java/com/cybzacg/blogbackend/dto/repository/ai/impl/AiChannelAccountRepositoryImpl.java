@@ -1,11 +1,11 @@
-package com.cybzacg.blogbackend.module.ai.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.ai.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.ai.AiChannelAccount;
 import com.cybzacg.blogbackend.dto.mapper.ai.AiChannelAccountMapper;
-import com.cybzacg.blogbackend.module.ai.repository.AiChannelAccountRepository;
+import com.cybzacg.blogbackend.dto.repository.ai.AiChannelAccountRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;

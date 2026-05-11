@@ -1,14 +1,14 @@
-package com.cybzacg.blogbackend.module.follow.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.follow.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.follow.SysUserFollow;
 import com.cybzacg.blogbackend.dto.mapper.follow.SysUserFollowMapper;
+import com.cybzacg.blogbackend.dto.repository.follow.SysUserFollowRepository;
 import com.cybzacg.blogbackend.module.follow.model.admin.FollowAdminPageQuery;
 import com.cybzacg.blogbackend.module.follow.model.data.FollowAdminRelationItem;
 import com.cybzacg.blogbackend.module.follow.model.data.FollowRelationUserItem;
 import com.cybzacg.blogbackend.module.follow.model.data.PublicFollowUserItem;
-import com.cybzacg.blogbackend.module.follow.repository.SysUserFollowRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

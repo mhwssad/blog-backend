@@ -2,13 +2,13 @@ package com.cybzacg.blogbackend.module.ai.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.ai.AiUsageLog;
+import com.cybzacg.blogbackend.dto.domain.ai.AiUsageLog;
+import com.cybzacg.blogbackend.dto.repository.ai.AiUsageLogRepository;
 import com.cybzacg.blogbackend.enums.ai.AiUsageSuccessStatusEnum;
 import com.cybzacg.blogbackend.module.ai.convert.AiModelConvert;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiUsageLogPageQuery;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiUsageLogVO;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiUsageStatsVO;
-import com.cybzacg.blogbackend.module.ai.repository.AiUsageLogRepository;
 import com.cybzacg.blogbackend.module.ai.service.AiUsageLogService;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
 import lombok.RequiredArgsConstructor;

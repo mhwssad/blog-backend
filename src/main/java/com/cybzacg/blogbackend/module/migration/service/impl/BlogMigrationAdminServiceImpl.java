@@ -1,16 +1,22 @@
 package com.cybzacg.blogbackend.module.migration.service.impl;
 
-import cn.idev.excel.FastExcel;
 import cn.idev.excel.ExcelWriter;
+import cn.idev.excel.FastExcel;
 import cn.idev.excel.write.metadata.WriteSheet;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.auth.SysUser;
-import com.cybzacg.blogbackend.domain.content.SysCategory;
-import com.cybzacg.blogbackend.domain.content.SysTag;
-import com.cybzacg.blogbackend.domain.migration.BlogMigrationAttachment;
-import com.cybzacg.blogbackend.domain.migration.BlogMigrationRecord;
-import com.cybzacg.blogbackend.domain.migration.BlogMigrationTask;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.content.SysCategory;
+import com.cybzacg.blogbackend.dto.domain.content.SysTag;
+import com.cybzacg.blogbackend.dto.domain.migration.BlogMigrationAttachment;
+import com.cybzacg.blogbackend.dto.domain.migration.BlogMigrationRecord;
+import com.cybzacg.blogbackend.dto.domain.migration.BlogMigrationTask;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
+import com.cybzacg.blogbackend.dto.repository.content.SysCategoryRepository;
+import com.cybzacg.blogbackend.dto.repository.content.SysTagRepository;
+import com.cybzacg.blogbackend.dto.repository.migration.BlogMigrationAttachmentRepository;
+import com.cybzacg.blogbackend.dto.repository.migration.BlogMigrationRecordRepository;
+import com.cybzacg.blogbackend.dto.repository.migration.BlogMigrationTaskRepository;
 import com.cybzacg.blogbackend.enums.article.ArticleVisibilityScopeEnum;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.enums.migration.BlogMigrationAttachmentStatusEnum;
@@ -20,36 +26,21 @@ import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleDetailVO;
 import com.cybzacg.blogbackend.module.article.model.admin.ArticleSaveRequest;
 import com.cybzacg.blogbackend.module.article.service.ArticleAdminService;
-import com.cybzacg.blogbackend.module.auth.account.repository.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.author.service.AuthorPermissionService;
-import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysCategoryRepository;
-import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysTagRepository;
 import com.cybzacg.blogbackend.module.migration.convert.BlogMigrationModelConvert;
-import com.cybzacg.blogbackend.module.migration.model.admin.BlogMigrationCreateRequest;
-import com.cybzacg.blogbackend.module.migration.model.admin.BlogMigrationPrecheckResultVO;
-import com.cybzacg.blogbackend.module.migration.model.admin.BlogMigrationRecordPageQuery;
-import com.cybzacg.blogbackend.module.migration.model.admin.BlogMigrationRecordVO;
-import com.cybzacg.blogbackend.module.migration.model.admin.BlogMigrationTaskPageQuery;
-import com.cybzacg.blogbackend.module.migration.model.admin.BlogMigrationTaskVO;
+import com.cybzacg.blogbackend.module.migration.model.admin.*;
 import com.cybzacg.blogbackend.module.migration.model.data.BlogMigrationAttachmentItem;
 import com.cybzacg.blogbackend.module.migration.model.data.BlogMigrationImportFile;
 import com.cybzacg.blogbackend.module.migration.model.data.BlogMigrationPostItem;
 import com.cybzacg.blogbackend.module.migration.model.internal.BlogMigrationDownloadedAttachment;
-import com.cybzacg.blogbackend.module.migration.repository.BlogMigrationAttachmentRepository;
-import com.cybzacg.blogbackend.module.migration.repository.BlogMigrationRecordRepository;
-import com.cybzacg.blogbackend.module.migration.repository.BlogMigrationTaskRepository;
 import com.cybzacg.blogbackend.module.migration.service.BlogMigrationAdminService;
 import com.cybzacg.blogbackend.module.migration.service.BlogMigrationAttachmentImportService;
-import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
-import com.cybzacg.blogbackend.utils.FileUtils;
-import com.cybzacg.blogbackend.utils.JsonUtils;
-import com.cybzacg.blogbackend.utils.PaginationUtils;
+import com.cybzacg.blogbackend.utils.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
@@ -57,16 +48,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -223,7 +205,7 @@ public class BlogMigrationAdminServiceImpl implements BlogMigrationAdminService 
     public PageResult<BlogMigrationTaskVO> pageTasks(BlogMigrationTaskPageQuery query) {
         query.setCurrent(PaginationUtils.normalizeCurrent(query.getCurrent()));
         query.setSize(PaginationUtils.normalizeSize(query.getSize(), 20L, 100L));
-        if (StringUtils.hasText(query.getSourcePlatform())) {
+        if (StrUtils.hasText(query.getSourcePlatform())) {
             query.setSourcePlatform(normalizeSourcePlatform(query.getSourcePlatform()));
         }
         Page<BlogMigrationTask> page = blogMigrationTaskRepository.pageByQuery(query);
@@ -357,7 +339,7 @@ public class BlogMigrationAdminServiceImpl implements BlogMigrationAdminService 
     private Map<String, Integer> countIdempotentKeys(BlogMigrationImportFile importFile) {
         Map<String, Integer> duplicateMap = new HashMap<>();
         for (BlogMigrationPostItem postItem : safePosts(importFile)) {
-            if (postItem == null || !StringUtils.hasText(postItem.getExternalPostId())) {
+            if (postItem == null || !StrUtils.hasText(postItem.getExternalPostId())) {
                 continue;
             }
             duplicateMap.merge(buildIdempotentKey(importFile.getSourcePlatform(), postItem.getExternalPostId()), 1, Integer::sum);
@@ -369,7 +351,7 @@ public class BlogMigrationAdminServiceImpl implements BlogMigrationAdminService 
                                                      BlogMigrationPostItem postItem, Integer status,
                                                      Long articleId, String errorMessage) {
         String externalPostId = postItem == null ? null : postItem.getExternalPostId();
-        String idempotentKey = StringUtils.hasText(externalPostId)
+        String idempotentKey = StrUtils.hasText(externalPostId)
                 ? buildIdempotentKey(sourcePlatform, externalPostId)
                 : normalizeSourcePlatform(sourcePlatform) + ":invalid:" + System.nanoTime();
         BlogMigrationRecord record = blogMigrationRecordRepository.findByTaskIdAndIdempotentKey(task.getId(), idempotentKey);
@@ -397,13 +379,13 @@ public class BlogMigrationAdminServiceImpl implements BlogMigrationAdminService 
         if (postItem == null) {
             return "文章数据为空";
         }
-        if (!StringUtils.hasText(postItem.getExternalPostId())) {
+        if (!StrUtils.hasText(postItem.getExternalPostId())) {
             return "外部文章ID不能为空";
         }
         if (duplicateMap.getOrDefault(buildIdempotentKey(sourcePlatform, postItem.getExternalPostId()), 0) > 1) {
             return "外部文章ID重复";
         }
-        if (!StringUtils.hasText(postItem.getTitle())) {
+        if (!StrUtils.hasText(postItem.getTitle())) {
             return "文章标题不能为空";
         }
         String categoryError = validateCategories(postItem.getCategoryCodes());
@@ -428,7 +410,7 @@ public class BlogMigrationAdminServiceImpl implements BlogMigrationAdminService 
         List<SysCategory> categories = sysCategoryRepository.listByTypeStatusAndCodes(ARTICLE_TARGET_TYPE, 1, normalized);
         Set<String> existingCodes = categories.stream()
                 .map(SysCategory::getCode)
-                .filter(StringUtils::hasText)
+                .filter(StrUtils::hasText)
                 .collect(Collectors.toSet());
         return existingCodes.containsAll(normalized) ? null : "分类不存在或未启用";
     }
@@ -441,17 +423,17 @@ public class BlogMigrationAdminServiceImpl implements BlogMigrationAdminService 
         List<SysTag> tags = sysTagRepository.listByNames(normalized);
         Set<String> existingNames = tags.stream()
                 .map(SysTag::getName)
-                .filter(StringUtils::hasText)
+                .filter(StrUtils::hasText)
                 .collect(Collectors.toSet());
         return existingNames.containsAll(normalized) ? null : "标签不存在";
     }
 
     private boolean hasInvalidAttachmentUrl(BlogMigrationPostItem postItem) {
-        if (StringUtils.hasText(postItem.getCoverImageUrl()) && !isHttpUrl(postItem.getCoverImageUrl())) {
+        if (StrUtils.hasText(postItem.getCoverImageUrl()) && !isHttpUrl(postItem.getCoverImageUrl())) {
             return true;
         }
         for (BlogMigrationAttachmentItem attachmentItem : safeAttachmentItems(postItem)) {
-            if (attachmentItem != null && StringUtils.hasText(attachmentItem.getUrl()) && !isHttpUrl(attachmentItem.getUrl())) {
+            if (attachmentItem != null && StrUtils.hasText(attachmentItem.getUrl()) && !isHttpUrl(attachmentItem.getUrl())) {
                 return true;
             }
         }
@@ -546,7 +528,7 @@ public class BlogMigrationAdminServiceImpl implements BlogMigrationAdminService 
     }
 
     private String replaceExternalUrls(String value, Map<String, BlogMigrationDownloadedAttachment> downloaded) {
-        if (!StringUtils.hasText(value) || downloaded.isEmpty()) {
+        if (!StrUtils.hasText(value) || downloaded.isEmpty()) {
             return value;
         }
         String result = value;
@@ -585,11 +567,11 @@ public class BlogMigrationAdminServiceImpl implements BlogMigrationAdminService 
     private List<BlogMigrationAttachmentItem> collectAttachmentItems(BlogMigrationPostItem postItem) {
         Map<String, BlogMigrationAttachmentItem> items = new LinkedHashMap<>();
         for (BlogMigrationAttachmentItem item : safeAttachmentItems(postItem)) {
-            if (item != null && StringUtils.hasText(item.getUrl())) {
+            if (item != null && StrUtils.hasText(item.getUrl())) {
                 items.putIfAbsent(item.getUrl().trim(), normalizeAttachmentItem(item));
             }
         }
-        if (StringUtils.hasText(postItem.getCoverImageUrl())) {
+        if (StrUtils.hasText(postItem.getCoverImageUrl())) {
             BlogMigrationAttachmentItem cover = new BlogMigrationAttachmentItem();
             cover.setUrl(postItem.getCoverImageUrl().trim());
             cover.setOriginalName("cover");
@@ -614,7 +596,7 @@ public class BlogMigrationAdminServiceImpl implements BlogMigrationAdminService 
             return List.of();
         }
         return values.stream()
-                .filter(StringUtils::hasText)
+                .filter(StrUtils::hasText)
                 .map(String::trim)
                 .collect(Collectors.toCollection(LinkedHashSet::new))
                 .stream()
@@ -646,7 +628,7 @@ public class BlogMigrationAdminServiceImpl implements BlogMigrationAdminService 
     private String buildErrorSummary(List<BlogMigrationRecordVO> errors) {
         return errors.stream()
                 .map(BlogMigrationRecordVO::getErrorMessage)
-                .filter(StringUtils::hasText)
+                .filter(StrUtils::hasText)
                 .limit(3)
                 .collect(Collectors.joining("; "));
     }

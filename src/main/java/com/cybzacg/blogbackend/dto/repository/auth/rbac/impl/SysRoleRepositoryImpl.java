@@ -1,4 +1,4 @@
-package com.cybzacg.blogbackend.module.auth.rbac.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.auth.rbac.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
@@ -6,10 +6,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.auth.SysRole;
 import com.cybzacg.blogbackend.dto.mapper.auth.SysRoleMapper;
+import com.cybzacg.blogbackend.dto.repository.auth.rbac.SysRoleRepository;
 import com.cybzacg.blogbackend.module.auth.rbac.model.admin.SysRolePageQuery;
-import com.cybzacg.blogbackend.module.auth.rbac.repository.SysRoleRepository;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
 
 import java.util.Collection;
 import java.util.List;
@@ -51,7 +51,7 @@ public class SysRoleRepositoryImpl extends ServiceImpl<SysRoleMapper, SysRole>
      */
     @Override
     public SysRole findByCode(String code) {
-        if (!StringUtils.hasText(code)) {
+        if (!StrUtils.hasText(code)) {
             return null;
         }
         return getOne(new LambdaQueryWrapper<SysRole>()
@@ -79,8 +79,8 @@ public class SysRoleRepositoryImpl extends ServiceImpl<SysRoleMapper, SysRole>
     @Override
     public Page<SysRole> pageByAdminConditions(SysRolePageQuery query) {
         return page(new Page<>(query.getCurrent(), query.getSize()), new LambdaQueryWrapper<SysRole>()
-                .like(StringUtils.hasText(query.getName()), SysRole::getName, query.getName())
-                .like(StringUtils.hasText(query.getCode()), SysRole::getCode, query.getCode())
+                .like(StrUtils.hasText(query.getName()), SysRole::getName, query.getName())
+                .like(StrUtils.hasText(query.getCode()), SysRole::getCode, query.getCode())
                 .eq(query.getStatus() != null, SysRole::getStatus, query.getStatus())
                 .eq(SysRole::getIsDeleted, 0)
                 .orderByAsc(SysRole::getSort)
@@ -94,7 +94,7 @@ public class SysRoleRepositoryImpl extends ServiceImpl<SysRoleMapper, SysRole>
         if (value == null) {
             return false;
         }
-        if (value instanceof String stringValue && !StringUtils.hasText(stringValue)) {
+        if (value instanceof String stringValue && !StrUtils.hasText(stringValue)) {
             return false;
         }
         return exists(new LambdaQueryWrapper<SysRole>()

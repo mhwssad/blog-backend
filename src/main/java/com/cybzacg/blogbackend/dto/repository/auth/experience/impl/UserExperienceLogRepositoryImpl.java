@@ -1,4 +1,4 @@
-package com.cybzacg.blogbackend.module.auth.experience.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.auth.experience.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.auth.UserExperienceLog;
 import com.cybzacg.blogbackend.dto.mapper.auth.UserExperienceLogMapper;
-import com.cybzacg.blogbackend.module.auth.experience.repository.UserExperienceLogRepository;
+import com.cybzacg.blogbackend.dto.repository.auth.experience.UserExperienceLogRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;

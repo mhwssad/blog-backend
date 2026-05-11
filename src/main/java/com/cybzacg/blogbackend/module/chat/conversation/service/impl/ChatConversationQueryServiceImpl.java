@@ -1,15 +1,15 @@
 package com.cybzacg.blogbackend.module.chat.conversation.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.cybzacg.blogbackend.common.constant.ChatConstants;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.auth.SysUser;
-import com.cybzacg.blogbackend.domain.chat.ChatConversation;
-import com.cybzacg.blogbackend.domain.chat.ChatMessage;
+import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatConversation;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatMessage;
 import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatConversationPageQuery;
 import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatConversationVO;
 import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatLobbyMessageVO;
 import com.cybzacg.blogbackend.module.chat.conversation.service.ChatConversationQueryService;
-import com.cybzacg.blogbackend.module.chat.shared.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatConversationListItem;
 import com.cybzacg.blogbackend.module.chat.shared.support.ChatServiceSupport;
 import com.cybzacg.blogbackend.utils.PaginationUtils;

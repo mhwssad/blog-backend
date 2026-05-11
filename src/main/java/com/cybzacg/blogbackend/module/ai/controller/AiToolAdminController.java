@@ -2,16 +2,7 @@ package com.cybzacg.blogbackend.module.ai.controller;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.core.web.Result;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolAuthorizationPageQuery;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolAuthorizationSaveRequest;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolAuthorizationVO;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolCallLogPageQuery;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolCallLogVO;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolDefinitionPageQuery;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolDefinitionSaveRequest;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolDefinitionVO;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolExecuteRequest;
-import com.cybzacg.blogbackend.module.ai.model.admin.AiToolExecuteVO;
+import com.cybzacg.blogbackend.module.ai.model.admin.*;
 import com.cybzacg.blogbackend.module.ai.service.AiToolAdminService;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;

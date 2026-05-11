@@ -1,4 +1,4 @@
-package com.cybzacg.blogbackend.module.content.comment.repository;
+package com.cybzacg.blogbackend.dto.repository.comment;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;

@@ -1,8 +1,8 @@
 package com.cybzacg.blogbackend.module.chat.push.service;
 
-import com.cybzacg.blogbackend.domain.chat.ChatConversation;
-import com.cybzacg.blogbackend.domain.chat.ChatConversationMember;
-import com.cybzacg.blogbackend.domain.chat.ChatMessage;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatConversation;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatConversationMember;
+import com.cybzacg.blogbackend.dto.domain.chat.ChatMessage;
 
 import java.util.Collection;
 

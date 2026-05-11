@@ -1,6 +1,6 @@
 package com.cybzacg.blogbackend.module.ai.service;
 
-import com.cybzacg.blogbackend.domain.ai.AiKnowledgeEntry;
+import com.cybzacg.blogbackend.dto.domain.ai.AiKnowledgeEntry;
 
 /**
  * AI 知识条目分块服务。

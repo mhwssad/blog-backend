@@ -1,14 +1,14 @@
-package com.cybzacg.blogbackend.module.auth.config.repository.impl;
+package com.cybzacg.blogbackend.dto.repository.auth.config.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cybzacg.blogbackend.dto.domain.config.SysConfig;
 import com.cybzacg.blogbackend.dto.mapper.config.SysConfigMapper;
+import com.cybzacg.blogbackend.dto.repository.auth.config.SysConfigRepository;
 import com.cybzacg.blogbackend.module.auth.config.model.admin.SysConfigPageQuery;
-import com.cybzacg.blogbackend.module.auth.config.repository.SysConfigRepository;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
 
 /**
  * 系统配置 Repository 实现，基于 MyBatis-Plus。
@@ -30,7 +30,7 @@ public class SysConfigRepositoryImpl extends ServiceImpl<SysConfigMapper, SysCon
      */
     @Override
     public boolean existsActiveByConfigKey(String configKey, Long excludeId) {
-        if (!StringUtils.hasText(configKey)) {
+        if (!StrUtils.hasText(configKey)) {
             return false;
         }
         return exists(new LambdaQueryWrapper<SysConfig>()
@@ -45,8 +45,8 @@ public class SysConfigRepositoryImpl extends ServiceImpl<SysConfigMapper, SysCon
     @Override
     public Page<SysConfig> pageByAdminConditions(SysConfigPageQuery query) {
         return page(new Page<>(query.getCurrent(), query.getSize()), new LambdaQueryWrapper<SysConfig>()
-                .like(StringUtils.hasText(query.getConfigName()), SysConfig::getConfigName, query.getConfigName())
-                .like(StringUtils.hasText(query.getConfigKey()), SysConfig::getConfigKey, query.getConfigKey())
+                .like(StrUtils.hasText(query.getConfigName()), SysConfig::getConfigName, query.getConfigName())
+                .like(StrUtils.hasText(query.getConfigKey()), SysConfig::getConfigKey, query.getConfigKey())
                 .ge(query.getCreateTimeStart() != null, SysConfig::getCreateTime, query.getCreateTimeStart())
                 .le(query.getCreateTimeEnd() != null, SysConfig::getCreateTime, query.getCreateTimeEnd())
                 .eq(SysConfig::getIsDeleted, 0)

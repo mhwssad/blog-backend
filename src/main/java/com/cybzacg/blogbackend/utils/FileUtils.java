@@ -1,6 +1,5 @@
 package com.cybzacg.blogbackend.utils;
 
-import org.springframework.util.StringUtils;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -833,7 +832,7 @@ public class FileUtils {
      * @return 空或空白输入返回 null，否则返回 trim + lowercase 结果
      */
     public static String normalizeMd5(String md5) {
-        if (!StringUtils.hasText(md5)) {
+        if (!StrUtils.hasText(md5)) {
             return null;
         }
         return md5.trim().toLowerCase(Locale.ROOT);
@@ -848,7 +847,7 @@ public class FileUtils {
         if (ext == null) {
             return null;
         }
-        if (!StringUtils.hasText(ext)) {
+        if (!StrUtils.hasText(ext)) {
             return "";
         }
         return ext.trim().toLowerCase(Locale.ROOT);
@@ -860,7 +859,7 @@ public class FileUtils {
      * @return 空或空白输入原样返回，否则截断到 maxLen 字符
      */
     public static String truncate(String value, int maxLen) {
-        if (!StringUtils.hasText(value)) {
+        if (!StrUtils.hasText(value)) {
             return value;
         }
         String trimmed = value.trim();

@@ -1,7 +1,6 @@
 package com.cybzacg.blogbackend.module.auth.audit.model.admin;
 
 import com.cybzacg.blogbackend.core.web.PageQuery;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

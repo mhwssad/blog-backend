@@ -1,4 +1,4 @@
-package com.cybzacg.blogbackend.module.chat.attachment.repository;
+package com.cybzacg.blogbackend.dto.repository.chat.attachment;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.cybzacg.blogbackend.dto.domain.chat.ChatAttachmentProcessTask;

@@ -1,13 +1,13 @@
 package com.cybzacg.blogbackend.module.content.taxonomy;
 
-import com.cybzacg.blogbackend.domain.content.SysCategory;
+import com.cybzacg.blogbackend.dto.domain.content.SysCategory;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.module.article.repository.BlogArticleCategoryRepository;
+import com.cybzacg.blogbackend.dto.repository.article.BlogArticleCategoryRepository;
 import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.admin.CategoryAdminVO;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.admin.CategorySaveRequest;
-import com.cybzacg.blogbackend.module.content.taxonomy.repository.SysCategoryRepository;
+import com.cybzacg.blogbackend.dto.repository.content.SysCategoryRepository;
 import com.cybzacg.blogbackend.module.content.taxonomy.service.impl.CategoryAdminServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

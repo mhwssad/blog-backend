@@ -2,21 +2,22 @@ package com.cybzacg.blogbackend.module.report.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
-import com.cybzacg.blogbackend.domain.report.SysReportRecord;
+import com.cybzacg.blogbackend.dto.domain.report.SysReportRecord;
+import com.cybzacg.blogbackend.dto.repository.report.SysReportRecordRepository;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.enums.report.ReportRecordStatusEnum;
 import com.cybzacg.blogbackend.enums.report.ReportTargetTypeEnum;
 import com.cybzacg.blogbackend.module.report.convert.ReportModelConvert;
 import com.cybzacg.blogbackend.module.report.model.user.ReportCreateRequest;
 import com.cybzacg.blogbackend.module.report.model.user.ReportVO;
-import com.cybzacg.blogbackend.module.report.repository.SysReportRecordRepository;
 import com.cybzacg.blogbackend.module.report.service.ReportService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
-import java.time.LocalDateTime;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 用户侧举报服务实现。

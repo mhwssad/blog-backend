@@ -1,16 +1,16 @@
 package com.cybzacg.blogbackend.module.content.comment;
 
-import com.cybzacg.blogbackend.domain.article.BlogArticle;
-import com.cybzacg.blogbackend.domain.content.SysComment;
-import com.cybzacg.blogbackend.domain.content.SysInteraction;
+import com.cybzacg.blogbackend.dto.domain.article.BlogArticle;
+import com.cybzacg.blogbackend.dto.domain.content.SysComment;
+import com.cybzacg.blogbackend.dto.domain.content.SysInteraction;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.article.service.ArticleContentFacadeService;
 import com.cybzacg.blogbackend.module.auth.notice.service.NotificationDeliveryService;
 import com.cybzacg.blogbackend.module.content.comment.model.user.CommentSaveRequest;
-import com.cybzacg.blogbackend.module.content.comment.repository.SysCommentRepository;
+import com.cybzacg.blogbackend.dto.repository.comment.SysCommentRepository;
 import com.cybzacg.blogbackend.module.content.comment.service.impl.UserCommentServiceImpl;
-import com.cybzacg.blogbackend.module.content.interaction.repository.SysInteractionRepository;
+import com.cybzacg.blogbackend.dto.repository.content.SysInteractionRepository;
 import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
 import org.junit.jupiter.api.BeforeEach;
