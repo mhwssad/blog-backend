@@ -101,10 +101,7 @@ public class ChatTopicChannelAdminServiceImpl implements ChatTopicChannelAdminSe
     }
 
     private void validateRequest(ChatTopicChannelSaveRequest request) {
-        ExceptionThrowerCore.throwBusinessIfNull(request, ResultErrorCode.ILLEGAL_ARGUMENT, "频道参数不能为空");
-        ExceptionThrowerCore.throwBusinessIfBlank(StrUtils.trimToNull(request.getName()), ResultErrorCode.ILLEGAL_ARGUMENT, "频道名称不能为空");
-        resolveVisibilityScope(request.getVisibilityScope());
-        resolveJoinRule(request.getJoinRule());
+        // Validation handled by JSR-303 annotations
     }
 
     private String resolveVisibilityScope(String value) {
@@ -112,11 +109,6 @@ public class ChatTopicChannelAdminServiceImpl implements ChatTopicChannelAdminSe
         if (visibilityScope == null) {
             return ChatConstants.VISIBILITY_SCOPE_MEMBER;
         }
-        ExceptionThrowerCore.throwBusinessIf(!Objects.equals(visibilityScope, ChatConstants.VISIBILITY_SCOPE_PUBLIC)
-                        && !Objects.equals(visibilityScope, ChatConstants.VISIBILITY_SCOPE_MEMBER)
-                        && !Objects.equals(visibilityScope, ChatConstants.VISIBILITY_SCOPE_PRIVATE),
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "频道可见范围不合法");
         return visibilityScope;
     }
 
@@ -125,11 +117,6 @@ public class ChatTopicChannelAdminServiceImpl implements ChatTopicChannelAdminSe
         if (joinRule == null) {
             return ChatConstants.JOIN_RULE_APPROVAL;
         }
-        ExceptionThrowerCore.throwBusinessIf(!Objects.equals(joinRule, ChatConstants.JOIN_RULE_FREE)
-                        && !Objects.equals(joinRule, ChatConstants.JOIN_RULE_APPROVAL)
-                        && !Objects.equals(joinRule, ChatConstants.JOIN_RULE_INVITE_ONLY),
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "频道加入规则不合法");
         return joinRule;
     }
 

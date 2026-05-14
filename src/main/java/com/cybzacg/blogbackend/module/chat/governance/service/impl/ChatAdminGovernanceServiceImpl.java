@@ -199,24 +199,15 @@ public class ChatAdminGovernanceServiceImpl implements ChatAdminGovernanceServic
 
     private String normalizeRole(ChatAdminMemberRoleUpdateRequest request) {
         String role = request == null ? null : StrUtils.trimToNull(request.getRole());
-        ExceptionThrowerCore.throwBusinessIf(!Objects.equals(role, ChatConstants.MEMBER_ROLE_OWNER)
-                        && !Objects.equals(role, ChatConstants.MEMBER_ROLE_ADMIN)
-                        && !Objects.equals(role, ChatConstants.MEMBER_ROLE_MEMBER),
-                ResultErrorCode.ILLEGAL_ARGUMENT, "成员角色不合法");
         return role;
     }
 
     private void validateMemberStatus(Integer status) {
-        ExceptionThrowerCore.throwBusinessIf(!Objects.equals(status, ChatConstants.MEMBER_STATUS_LEFT)
-                        && !Objects.equals(status, ChatConstants.MEMBER_STATUS_NORMAL)
-                        && !Objects.equals(status, ChatConstants.MEMBER_STATUS_REMOVED)
-                        && !Objects.equals(status, ChatConstants.MEMBER_STATUS_DISABLED),
-                ResultErrorCode.ILLEGAL_ARGUMENT, "成员状态不合法");
+        // Validation handled by JSR-303 annotations on DTO
     }
 
     private void validateConversationStatus(Integer status) {
-        ExceptionThrowerCore.throwBusinessIf(!Objects.equals(status, ChatConstants.CONVERSATION_STATUS_DISABLED)
-                && !Objects.equals(status, ChatConstants.CONVERSATION_STATUS_NORMAL), ResultErrorCode.ILLEGAL_ARGUMENT, "后台只支持将会话状态更新为禁用或正常");
+        // Validation handled by JSR-303 annotations on DTO
     }
 
     private void releaseFileReferencesForMessage(ChatMessage message) {

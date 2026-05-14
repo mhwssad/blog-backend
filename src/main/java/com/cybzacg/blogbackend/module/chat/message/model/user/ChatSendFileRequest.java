@@ -1,5 +1,6 @@
 package com.cybzacg.blogbackend.module.chat.message.model.user;
 
+import com.cybzacg.blogbackend.core.validation.AtLeastOneNonNull;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -10,6 +11,7 @@ import lombok.Data;
  */
 @Data
 @Schema(description = "发送文件消息请求")
+@AtLeastOneNonNull(fields = {"conversationId", "targetUserId"}, message = "会话ID和目标用户ID不能同时为空")
 public class ChatSendFileRequest {
     @Schema(description = "会话ID；已存在会话时优先传该字段")
     private Long conversationId;

@@ -130,15 +130,7 @@ public class ChatChannelApplicationAdminServiceImpl implements ChatChannelApplic
     }
 
     private void validateReviewRequest(ChatChannelApplicationReviewRequest request) {
-        ExceptionThrowerCore.throwBusinessIfNull(request, ResultErrorCode.ILLEGAL_ARGUMENT, "审核参数不能为空");
-        Integer reviewStatus = request.getReviewStatus();
-        ExceptionThrowerCore.throwBusinessIf(
-                !Objects.equals(reviewStatus, ChatChannelApplicationStatusEnum.APPROVED.getValue())
-                        && !Objects.equals(reviewStatus, ChatChannelApplicationStatusEnum.REJECTED.getValue())
-                        && !Objects.equals(reviewStatus, ChatChannelApplicationStatusEnum.NEED_MORE_INFO.getValue()),
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "审核状态不合法"
-        );
+        // Validation handled by JSR-303 annotations
     }
 
     private ChatChannelApplicationAdminPageQuery normalizeQuery(ChatChannelApplicationAdminPageQuery query) {

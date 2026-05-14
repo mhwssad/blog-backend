@@ -46,7 +46,6 @@ public class ChatGroupManageServiceImpl implements ChatGroupManageService {
     public ChatConversationVO createGroup(Long userId, ChatCreateGroupRequest request) {
         validateCreateGroupPermission(userId);
         validateCreateGroupCountLimit(userId);
-        validateCreateGroupOptions(request);
         List<Long> memberUserIds = s.normalizeMemberIds(request.getMemberUserIds(), userId);
         ExceptionThrowerCore.throwBusinessIf(memberUserIds.isEmpty(), ResultErrorCode.ILLEGAL_ARGUMENT, "群成员不能为空");
         s.requireActiveUsers(memberUserIds, true);
@@ -123,7 +122,6 @@ public class ChatGroupManageServiceImpl implements ChatGroupManageService {
     @Transactional(rollbackFor = Exception.class)
     public ChatConversationVO transferGroupOwner(Long userId, Long conversationId, ChatTransferGroupOwnerRequest request) {
         ChatServiceSupport.ConversationAccessContext context = s.requireGroupOwner(userId, conversationId);
-        ExceptionThrowerCore.throwBusinessIf(request == null || request.getTargetUserId() == null, ResultErrorCode.ILLEGAL_ARGUMENT, "新群主用户ID不能为空");
         ExceptionThrowerCore.throwBusinessIf(Objects.equals(request.getTargetUserId(), userId), ResultErrorCode.ILLEGAL_ARGUMENT, "不能把群主转让给自己");
         ChatConversationMember targetMember = s.requireActiveGroupMember(conversationId, request.getTargetUserId());
         context.selfMember().setMemberRole(ChatConstants.MEMBER_ROLE_ADMIN);
@@ -238,23 +236,6 @@ public class ChatGroupManageServiceImpl implements ChatGroupManageService {
         ExceptionThrowerCore.throwBusinessIf(currentCount >= maxCount,
                 ResultErrorCode.FORBIDDEN,
                 "当前创建群聊数量已达上限");
-    }
-
-    private void validateCreateGroupOptions(ChatCreateGroupRequest request) {
-        ExceptionThrowerCore.throwBusinessIf(request == null, ResultErrorCode.ILLEGAL_ARGUMENT, "创建群聊参数不能为空");
-        String visibilityScope = StrUtils.trimToNull(request.getVisibilityScope());
-        ExceptionThrowerCore.throwBusinessIf(visibilityScope != null
-                        && !Objects.equals(visibilityScope, ChatConstants.VISIBILITY_SCOPE_PUBLIC)
-                        && !Objects.equals(visibilityScope, ChatConstants.VISIBILITY_SCOPE_PRIVATE),
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "群可见范围不合法");
-        String joinRule = StrUtils.trimToNull(request.getJoinRule());
-        ExceptionThrowerCore.throwBusinessIf(joinRule != null
-                        && !Objects.equals(joinRule, ChatConstants.JOIN_RULE_FREE)
-                        && !Objects.equals(joinRule, ChatConstants.JOIN_RULE_APPROVAL)
-                        && !Objects.equals(joinRule, ChatConstants.JOIN_RULE_INVITE_ONLY),
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "群加入规则不合法");
     }
 
     private void normalizeGroupConversationOptions(ChatConversation conversation) {

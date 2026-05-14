@@ -3,6 +3,7 @@ package com.cybzacg.blogbackend.module.chat.conversation.model.admin;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 /**
@@ -11,6 +12,7 @@ import lombok.Data;
 @Data
 @Schema(description = "大厅频道设置更新请求")
 public class ChatLobbySettingsUpdateRequest {
+    @Size(max = 512, message = "大厅公告长度不能超过512")
     @Schema(description = "大厅公告")
     private String announcement;
 

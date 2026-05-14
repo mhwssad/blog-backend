@@ -112,12 +112,7 @@ public class ChatGroupJoinApplicationAdminServiceImpl implements ChatGroupJoinAp
     }
 
     private void validateReviewRequest(ChatGroupJoinApplicationReviewRequest request) {
-        ExceptionThrowerCore.throwBusinessIfNull(request, ResultErrorCode.ILLEGAL_ARGUMENT, "审核参数不能为空");
-        Integer reviewStatus = request.getReviewStatus();
-        ExceptionThrowerCore.throwBusinessIf(!Objects.equals(reviewStatus, ChatGroupJoinApplicationStatusEnum.APPROVED.getValue())
-                        && !Objects.equals(reviewStatus, ChatGroupJoinApplicationStatusEnum.REJECTED.getValue()),
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "审核状态不合法");
+        // Validation handled by JSR-303 annotations
     }
 
     private ChatGroupJoinApplicationAdminPageQuery normalizeQuery(ChatGroupJoinApplicationAdminPageQuery query) {

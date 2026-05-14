@@ -1,6 +1,8 @@
 package com.cybzacg.blogbackend.module.chat.member.model.admin;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -12,6 +14,8 @@ import lombok.Data;
 @Schema(description = "后台群入群申请审核请求")
 public class ChatGroupJoinApplicationReviewRequest {
     @NotNull(message = "审核状态不能为空")
+    @Min(value = 1, message = "审核状态必须为 1 或 2")
+    @Max(value = 2, message = "审核状态必须为 1 或 2")
     @Schema(description = "审核状态：1-通过，2-拒绝", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer reviewStatus;
 

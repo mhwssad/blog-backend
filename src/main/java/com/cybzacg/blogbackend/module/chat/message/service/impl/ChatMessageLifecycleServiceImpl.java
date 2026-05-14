@@ -45,8 +45,6 @@ public class ChatMessageLifecycleServiceImpl implements ChatMessageLifecycleServ
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ChatMessageVO editMessage(Long userId, Long messageId, ChatEditMessageRequest request) {
-        ExceptionThrowerCore.throwBusinessIf(request == null, ResultErrorCode.ILLEGAL_ARGUMENT, "编辑参数不能为空");
-        ExceptionThrowerCore.throwBusinessIfBlank(StrUtils.trimToNull(request.getContent()), ResultErrorCode.ILLEGAL_ARGUMENT, "消息内容不能为空");
         ChatMessage message = requireEditableOwnTextMessage(userId, messageId);
         message.setContent(StrUtils.trim(request.getContent()));
         s.getMessageRepository().updateById(message);

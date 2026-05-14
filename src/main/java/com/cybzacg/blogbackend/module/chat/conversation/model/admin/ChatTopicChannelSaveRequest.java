@@ -3,6 +3,7 @@ package com.cybzacg.blogbackend.module.chat.conversation.model.admin;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -33,9 +34,11 @@ public class ChatTopicChannelSaveRequest {
     @Schema(description = "频道分类编码")
     private String categoryCode;
 
+    @Pattern(regexp = "public|member|private", message = "频道可见范围不合法")
     @Schema(description = "可见范围：public/member/private，默认 member")
     private String visibilityScope;
 
+    @Pattern(regexp = "free|approval|invite_only", message = "频道加入规则不合法")
     @Schema(description = "加入规则：free/approval/invite_only，默认 approval")
     private String joinRule;
 

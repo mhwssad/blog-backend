@@ -138,9 +138,6 @@ public class UserChatChannelApplicationServiceImpl implements UserChatChannelApp
         if (normalized == null) {
             return ChatConstants.SCENE_TYPE_TOPIC_CHANNEL;
         }
-        ExceptionThrowerCore.throwBusinessIf(!Objects.equals(normalized, ChatConstants.SCENE_TYPE_TOPIC_CHANNEL),
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "当前仅支持申请主题频道");
         return normalized;
     }
 

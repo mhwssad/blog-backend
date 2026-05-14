@@ -2,6 +2,7 @@ package com.cybzacg.blogbackend.module.chat.member.model.user;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -16,6 +17,7 @@ public class ChatChannelApplicationSubmitRequest {
     @Schema(description = "期望频道名称", requiredMode = Schema.RequiredMode.REQUIRED)
     private String desiredName;
 
+    @Pattern(regexp = "topic_channel", message = "当前仅支持申请主题频道")
     @Size(max = 32, message = "频道场景长度不能超过32")
     @Schema(description = "期望频道场景，当前默认 topic_channel")
     private String desiredSceneType;

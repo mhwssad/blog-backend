@@ -134,15 +134,11 @@ public class ChatMuteGovernanceServiceImpl implements ChatMuteGovernanceService 
     // ==================== 私有辅助方法 ====================
 
     private void validateScope(String scope) {
-        ExceptionThrowerCore.throwBusinessIf(!ChatMuteScopeEnum.contains(scope),
-                ResultErrorCode.CHAT_MUTE_SCOPE_INVALID);
+        // Validation handled by JSR-303 annotations on DTO
     }
 
     private void validateConversationRequirement(String scope, Long conversationId) {
-        boolean requiresConversation = ChatMuteScopeEnum.TOPIC_CHANNEL.code.equals(scope)
-                || ChatMuteScopeEnum.GROUP.code.equals(scope);
-        ExceptionThrowerCore.throwBusinessIf(requiresConversation && conversationId == null,
-                ResultErrorCode.CHAT_MUTE_CONVERSATION_REQUIRED);
+        // Validation handled by JSR-303 annotations on DTO
     }
 
     private SysUser requireUser(Long userId) {
