@@ -50,4 +50,13 @@ public class SysTagRepositoryImpl extends ServiceImpl<SysTagMapper, SysTag> impl
         return list(new LambdaQueryWrapper<SysTag>()
                 .in(SysTag::getName, names));
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public SysTag findByName(String name) {
+        return getOne(new LambdaQueryWrapper<SysTag>()
+                .eq(SysTag::getName, name));
+    }
 }

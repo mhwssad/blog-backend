@@ -9,16 +9,17 @@ import com.cybzacg.blogbackend.dto.repository.chat.conversation.ChatConversation
 import com.cybzacg.blogbackend.module.chat.conversation.model.admin.ChatAdminConversationPageQuery;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatAdminConversationListItem;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatConversationListItem;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
+import org.springframework.stereotype.Repository;
 
 /**
  * 聊天会话 Repository 实现。
  */
 @Repository
-public class ChatConversationRepositoryImpl extends ServiceImpl<ChatConversationMapper, ChatConversation>
-        implements ChatConversationRepository {
+public class ChatConversationRepositoryImpl
+    extends ServiceImpl<ChatConversationMapper, ChatConversation>
+    implements ChatConversationRepository
+{
 
     /**
      * {@inheritDoc}
@@ -32,7 +33,12 @@ public class ChatConversationRepositoryImpl extends ServiceImpl<ChatConversation
      * {@inheritDoc}
      */
     @Override
-    public List<ChatConversationListItem> selectConversationPage(Long userId, String keyword, Long offset, Long size) {
+    public List<ChatConversationListItem> selectConversationPage(
+        Long userId,
+        String keyword,
+        Long offset,
+        Long size
+    ) {
         return baseMapper.selectConversationPage(userId, keyword, offset, size);
     }
 
@@ -40,31 +46,61 @@ public class ChatConversationRepositoryImpl extends ServiceImpl<ChatConversation
      * {@inheritDoc}
      */
     @Override
-    public ChatConversationListItem selectConversationDetail(Long conversationId, Long userId) {
-        return baseMapper.selectConversationDetail(conversationId, userId);
+    public ChatConversationListItem selectConversationDetail(
+        Long conversationId,
+        Long userId,
+        String keyword
+    ) {
+        return baseMapper.selectConversationDetail(
+            conversationId,
+            userId,
+            keyword
+        );
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Long countSearchableGroupPage(Long userId, String keyword, String categoryCode) {
-        return baseMapper.countSearchableGroupPage(userId, keyword, categoryCode);
+    public Long countSearchableGroupPage(
+        Long userId,
+        String keyword,
+        String categoryCode
+    ) {
+        return baseMapper.countSearchableGroupPage(
+            userId,
+            keyword,
+            categoryCode
+        );
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<ChatConversationListItem> selectSearchableGroupPage(Long userId, String keyword, String categoryCode, Long offset, Long size) {
-        return baseMapper.selectSearchableGroupPage(userId, keyword, categoryCode, offset, size);
+    public List<ChatConversationListItem> selectSearchableGroupPage(
+        Long userId,
+        String keyword,
+        String categoryCode,
+        Long offset,
+        Long size
+    ) {
+        return baseMapper.selectSearchableGroupPage(
+            userId,
+            keyword,
+            categoryCode,
+            offset,
+            size
+        );
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Long countAdminConversationPage(ChatAdminConversationPageQuery query) {
+    public Long countAdminConversationPage(
+        ChatAdminConversationPageQuery query
+    ) {
         return baseMapper.countAdminConversationPage(query);
     }
 
@@ -72,7 +108,11 @@ public class ChatConversationRepositoryImpl extends ServiceImpl<ChatConversation
      * {@inheritDoc}
      */
     @Override
-    public List<ChatAdminConversationListItem> selectAdminConversationPage(ChatAdminConversationPageQuery query, Long offset, Long size) {
+    public List<ChatAdminConversationListItem> selectAdminConversationPage(
+        ChatAdminConversationPageQuery query,
+        Long offset,
+        Long size
+    ) {
         return baseMapper.selectAdminConversationPage(query, offset, size);
     }
 
@@ -80,7 +120,9 @@ public class ChatConversationRepositoryImpl extends ServiceImpl<ChatConversation
      * {@inheritDoc}
      */
     @Override
-    public ChatAdminConversationListItem selectAdminConversationDetail(Long conversationId) {
+    public ChatAdminConversationListItem selectAdminConversationDetail(
+        Long conversationId
+    ) {
         return baseMapper.selectAdminConversationDetail(conversationId);
     }
 
@@ -89,10 +131,13 @@ public class ChatConversationRepositoryImpl extends ServiceImpl<ChatConversation
      */
     @Override
     public ChatConversation findBySinglePairKey(String singlePairKey) {
-        return getOne(new LambdaQueryWrapper<ChatConversation>()
+        return getOne(
+            new LambdaQueryWrapper<ChatConversation>()
                 .eq(ChatConversation::getSinglePairKey, singlePairKey)
                 .orderByDesc(ChatConversation::getId)
-                .last("limit 1"), false);
+                .last("limit 1"),
+            false
+        );
     }
 
     /**
@@ -100,10 +145,13 @@ public class ChatConversationRepositoryImpl extends ServiceImpl<ChatConversation
      */
     @Override
     public ChatConversation findGlobalConversation() {
-        return getOne(new LambdaQueryWrapper<ChatConversation>()
+        return getOne(
+            new LambdaQueryWrapper<ChatConversation>()
                 .eq(ChatConversation::getIsAllSite, 1)
                 .orderByDesc(ChatConversation::getId)
-                .last("limit 1"), false);
+                .last("limit 1"),
+            false
+        );
     }
 
     /**
@@ -114,10 +162,18 @@ public class ChatConversationRepositoryImpl extends ServiceImpl<ChatConversation
         if (ownerId == null) {
             return 0L;
         }
-        return count(new LambdaQueryWrapper<ChatConversation>()
+        return count(
+            new LambdaQueryWrapper<ChatConversation>()
                 .eq(ChatConversation::getOwnerId, ownerId)
-                .eq(ChatConversation::getConversationType, ChatConstants.CONVERSATION_TYPE_GROUP)
+                .eq(
+                    ChatConversation::getConversationType,
+                    ChatConstants.CONVERSATION_TYPE_GROUP
+                )
                 .eq(ChatConversation::getIsAllSite, 0)
-                .eq(ChatConversation::getStatus, ChatConstants.CONVERSATION_STATUS_NORMAL));
+                .eq(
+                    ChatConversation::getStatus,
+                    ChatConstants.CONVERSATION_STATUS_NORMAL
+                )
+        );
     }
 }

@@ -37,4 +37,12 @@ public interface SysTagRepository extends IService<SysTag> {
      * 按名称集合查询标签。
      */
     List<SysTag> listByNames(List<String> names);
+
+    /**
+     * 按名称查询标签。
+     *
+     * @param name 标签名称
+     * @return 标签，不存在时返回 null
+     */
+    SysTag findByName(String name);
 }
