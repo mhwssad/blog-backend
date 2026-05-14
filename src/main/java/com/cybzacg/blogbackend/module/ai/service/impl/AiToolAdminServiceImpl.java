@@ -226,7 +226,6 @@ public class AiToolAdminServiceImpl implements AiToolAdminService {
     }
 
     private void validateToolRequest(AiToolDefinitionSaveRequest request) {
-        AiToolSupport.validateJsonArrayOfToolScopes(request.getUseScenarios());
         if (AiToolSourceTypeEnum.MCP.getCode().equalsIgnoreCase(request.getSourceType())) {
             ExceptionThrowerCore.throwBusinessIf(request.getMcpServerId() == null || !StrUtils.hasText(request.getMcpToolName()),
                     ResultErrorCode.ILLEGAL_ARGUMENT, "MCP 工具必须指定服务 ID 和原始工具名");
@@ -234,7 +233,7 @@ public class AiToolAdminServiceImpl implements AiToolAdminService {
     }
 
     private void validateAuthorizationRequest(AiToolAuthorizationSaveRequest request) {
-        AiToolSupport.validateDataScope(request.getDataScope());
+        // dataScope 校验已由 @ValidDataScope 注解完成
     }
 
     private void recordAudit(Long operatorId, SysAuditOperationType operationType, String targetType,

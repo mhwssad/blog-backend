@@ -1,6 +1,7 @@
 package com.cybzacg.blogbackend.module.ai.model.admin;
 
 import com.cybzacg.blogbackend.core.validation.EnumValue;
+import com.cybzacg.blogbackend.core.validation.ValidDataScope;
 import com.cybzacg.blogbackend.enums.ai.AiToolAuthorizationTypeEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
@@ -26,6 +27,7 @@ public class AiToolAuthorizationSaveRequest {
     @Schema(description = "授权键")
     private String authorizationKey;
 
+    @ValidDataScope
     @Schema(description = "数据范围")
     private String dataScope;
 

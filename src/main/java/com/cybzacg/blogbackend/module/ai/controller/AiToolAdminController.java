@@ -78,7 +78,7 @@ public class AiToolAdminController {
     @PreAuthorize("@permission.hasPermission('ai:tool:execute')")
     public Result<AiToolExecuteVO> executeTool(
             @PathVariable Long id,
-            @RequestBody AiToolExecuteRequest request) {
+            @Valid @RequestBody AiToolExecuteRequest request) {
         Long operatorId = SecurityUtils.requireUserId();
         return Result.success(aiToolAdminService.executeTool(id, request, operatorId));
     }

@@ -2,6 +2,7 @@ package com.cybzacg.blogbackend.module.ai.model.admin;
 
 import com.cybzacg.blogbackend.core.validation.EnumValue;
 import com.cybzacg.blogbackend.core.validation.ValidJsonObject;
+import com.cybzacg.blogbackend.core.validation.ValidToolScopeArray;
 import com.cybzacg.blogbackend.enums.ai.AiToolRiskLevelEnum;
 import com.cybzacg.blogbackend.enums.ai.AiToolSourceTypeEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -32,6 +33,7 @@ public class AiToolDefinitionSaveRequest {
     @Schema(description = "MCP 服务 ID")
     private Long mcpServerId;
 
+    @Size(max = 128, message = "MCP 原始工具名最多128个字符")
     @Schema(description = "MCP 原始工具名")
     private String mcpToolName;
 
@@ -51,6 +53,7 @@ public class AiToolDefinitionSaveRequest {
     @Schema(description = "风险等级 low/medium/high")
     private String riskLevel;
 
+    @ValidToolScopeArray
     @Schema(description = "适用场景 JSON 数组")
     private String useScenarios;
 

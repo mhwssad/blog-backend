@@ -1,6 +1,5 @@
 package com.cybzacg.blogbackend.module.ai.service.impl;
 
-import com.cybzacg.blogbackend.enums.ai.*;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.JsonUtils;
@@ -10,7 +9,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -27,26 +25,6 @@ final class AiToolSupport {
                 ResultErrorCode.AI_TOOL_STATUS_INVALID);
     }
 
-    static void validateToolSource(String sourceType) {
-        ExceptionThrowerCore.throwBusinessIf(!AiToolSourceTypeEnum.contains(sourceType),
-                ResultErrorCode.AI_TOOL_SOURCE_INVALID);
-    }
-
-    static void validateRiskLevel(String riskLevel) {
-        ExceptionThrowerCore.throwBusinessIf(!AiToolRiskLevelEnum.contains(riskLevel),
-                ResultErrorCode.AI_TOOL_RISK_INVALID);
-    }
-
-    static void validateTransportType(String transportType) {
-        ExceptionThrowerCore.throwBusinessIf(!AiMcpTransportTypeEnum.contains(transportType),
-                ResultErrorCode.AI_MCP_TRANSPORT_INVALID);
-    }
-
-    static void validateAuthorizationType(String authorizationType) {
-        ExceptionThrowerCore.throwBusinessIf(!AiToolAuthorizationTypeEnum.contains(authorizationType),
-                ResultErrorCode.ILLEGAL_ARGUMENT, "工具授权类型无效");
-    }
-
     static void validateJsonObjectOrBlank(String json, ResultErrorCode errorCode, String message) {
         if (!StrUtils.hasText(json)) {
             return;
@@ -57,31 +35,6 @@ final class AiToolSupport {
         } catch (JsonProcessingException e) {
             ExceptionThrowerCore.throwBusiness(errorCode, message, e);
         }
-    }
-
-    static void validateJsonArrayOfToolScopes(String json) {
-        if (!StrUtils.hasText(json)) {
-            return;
-        }
-        List<String> scopes;
-        try {
-            scopes = JsonUtils.getObjectMapper().readValue(json, new TypeReference<>() {
-            });
-        } catch (JsonProcessingException e) {
-            ExceptionThrowerCore.throwBusiness(ResultErrorCode.ILLEGAL_ARGUMENT, "适用场景必须是字符串数组 JSON", e);
-            return;
-        }
-        ExceptionThrowerCore.throwBusinessIf(scopes == null || scopes.stream().anyMatch(scope -> !AiToolScopeEnum.contains(scope)),
-                ResultErrorCode.ILLEGAL_ARGUMENT, "适用场景包含未知配置");
-    }
-
-    static void validateDataScope(String dataScope) {
-        if (!StrUtils.hasText(dataScope)) {
-            return;
-        }
-        ExceptionThrowerCore.throwBusinessIf(
-                AiDataScopeEnum.fromCode(dataScope) == null && !isDataScopeName(dataScope),
-                ResultErrorCode.ILLEGAL_ARGUMENT, "数据范围无效");
     }
 
     static Map<String, Object> parseJsonObject(String json, String message) {
@@ -159,14 +112,5 @@ final class AiToolSupport {
         String lower = key.toLowerCase();
         return lower.contains("key") || lower.contains("token")
                 || lower.contains("secret") || lower.contains("password");
-    }
-
-    private static boolean isDataScopeName(String dataScope) {
-        try {
-            AiDataScopeEnum.valueOf(dataScope);
-            return true;
-        } catch (IllegalArgumentException e) {
-            return false;
-        }
     }
 }
