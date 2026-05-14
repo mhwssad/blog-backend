@@ -60,38 +60,37 @@ public class PublicFileAccessServiceImpl implements PublicFileAccessService {
         );
         if (refs != null && !refs.isEmpty()) {
             Long currentUserId = SecurityUtils.getUserId();
-            boolean hasAccess = false;
+            // 文件上传者直接放行，无需检查关联文章权限
+            boolean isUploader = refs.stream()
+                .anyMatch(r -> currentUserId != null && currentUserId.equals(r.getUserId()));
+            if (isUploader) {
+                return buildFileContent(fileInfo);
+            }
             String articleRefType =
                 FileReferenceTypeEnum.ARTICLE_ATTACHMENT.getValue();
-            // 遍历关联文章，检查用户是否有文章访问权限
-            for (FileBusinessInfo ref : refs) {
-                if (
-                    !articleRefType.equals(ref.getReferenceType()) ||
-                    ref.getReferenceId() == null
-                ) {
-                    continue;
+            // 只筛选关联了真实文章（referenceId > 0）的记录
+            List<FileBusinessInfo> articleRefs = refs.stream()
+                .filter(r -> articleRefType.equals(r.getReferenceType())
+                    && r.getReferenceId() != null && r.getReferenceId() > 0)
+                .toList();
+            if (!articleRefs.isEmpty()) {
+                boolean hasAccess = false;
+                for (FileBusinessInfo ref : articleRefs) {
+                    BlogArticle article = blogArticleRepository.getById(
+                        ref.getReferenceId()
+                    );
+                    if (
+                        article != null &&
+                        articleAccessControlService.canAccessArticle(
+                            article,
+                            currentUserId
+                        )
+                    ) {
+                        hasAccess = true;
+                        break;
+                    }
                 }
-                BlogArticle article = blogArticleRepository.getById(
-                    ref.getReferenceId()
-                );
-                if (
-                    article != null &&
-                    articleAccessControlService.canAccessArticle(
-                        article,
-                        currentUserId
-                    )
-                ) {
-                    hasAccess = true;
-                    break;
-                }
-            }
-
-            // 无任何文章引用授予访问权限时，拒绝访问
-            if (!hasAccess) {
-                boolean hasArticleRefs = refs
-                    .stream()
-                    .anyMatch(r -> articleRefType.equals(r.getReferenceType()));
-                if (hasArticleRefs) {
+                if (!hasAccess) {
                     ExceptionThrowerCore.throwBusinessEx(
                         ResultErrorCode.FORBIDDEN,
                         "当前用户无权访问该文件的关联文章"
@@ -100,7 +99,13 @@ public class PublicFileAccessServiceImpl implements PublicFileAccessService {
             }
         }
 
-        // 解析对象名用于存储下载
+        return buildFileContent(fileInfo);
+    }
+
+    /**
+     * 从存储服务获取文件内容并组装为 VO。
+     */
+    private FileContentVO buildFileContent(FileInfo fileInfo) {
         String objectName = resolveObjectName(fileInfo);
         try {
             InputStream inputStream = storageManager.download(objectName);
@@ -122,7 +127,7 @@ public class PublicFileAccessServiceImpl implements PublicFileAccessService {
         } catch (Exception e) {
             log.error(
                 "文件读取失败: fileId={}, objectName={}",
-                fileId,
+                fileInfo.getId(),
                 objectName,
                 e
             );

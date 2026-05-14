@@ -6,10 +6,7 @@ import cn.idev.excel.write.metadata.WriteSheet;
 import com.cybzacg.blogbackend.common.constant.RedisConstants;
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
 import com.cybzacg.blogbackend.dto.mapper.dashboard.DashboardMetricsMapper;
-import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.module.dashboard.model.admin.*;
-import com.cybzacg.blogbackend.module.dashboard.service.DashboardAdminService;
-import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
+import com.cybzacg.blogbackend.module.dashboard.model.admin.*;import com.cybzacg.blogbackend.module.dashboard.service.DashboardAdminService;
 import com.cybzacg.blogbackend.utils.JsonUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +36,6 @@ public class DashboardAdminServiceImpl implements DashboardAdminService {
     private static final String RANGE_MONTH = "month";
     private static final String RANGE_ALL = "all";
     private static final String RANGE_CUSTOM = "custom";
-    private static final long MAX_CUSTOM_RANGE_DAYS = 366L;
     private static final int HOT_SECTION_LIMIT = 5;
     private static final Duration CACHE_TTL = Duration.ofSeconds(60);
 
@@ -295,28 +291,12 @@ public class DashboardAdminServiceImpl implements DashboardAdminService {
             }
             case RANGE_ALL -> new DashboardRange(RANGE_ALL, null, null);
             case RANGE_CUSTOM -> resolveCustomRange(safeQuery);
-            default -> throwIllegalRangeType();
+            default -> throw new IllegalArgumentException("Unexpected range type: " + rangeType);
         };
     }
 
     private DashboardRange resolveCustomRange(DashboardRangeQuery query) {
-        LocalDateTime startTime = query.getStartTime();
-        LocalDateTime endTime = query.getEndTime();
-        ExceptionThrowerCore.throwBusinessIf(startTime == null || endTime == null,
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "自定义时间范围必须同时传入 startTime 和 endTime");
-        ExceptionThrowerCore.throwBusinessIf(!startTime.isBefore(endTime),
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "开始时间必须早于结束时间");
-        ExceptionThrowerCore.throwBusinessIf(Duration.between(startTime, endTime).toDays() > MAX_CUSTOM_RANGE_DAYS,
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "自定义时间范围不能超过366天");
-        return new DashboardRange(RANGE_CUSTOM, startTime, endTime);
-    }
-
-    private DashboardRange throwIllegalRangeType() {
-        ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.ILLEGAL_ARGUMENT, "时间范围类型仅支持 today/week/month/all/custom");
-        return null;
+        return new DashboardRange(RANGE_CUSTOM, query.getStartTime(), query.getEndTime());
     }
 
     private long count(Long value) {

@@ -11,6 +11,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,42 +33,42 @@ public class DashboardAdminController {
     @GetMapping("/overview")
     @Operation(summary = "核心概览")
     @PreAuthorize("@permission.hasPermission('sys:dashboard:query')")
-    public Result<DashboardOverviewVO> getOverview(DashboardRangeQuery query) {
+    public Result<DashboardOverviewVO> getOverview(@Valid DashboardRangeQuery query) {
         return Result.success(dashboardAdminService.getOverview(query));
     }
 
     @GetMapping("/content")
     @Operation(summary = "内容统计")
     @PreAuthorize("@permission.hasPermission('sys:dashboard:query')")
-    public Result<DashboardContentVO> getContent(DashboardRangeQuery query) {
+    public Result<DashboardContentVO> getContent(@Valid DashboardRangeQuery query) {
         return Result.success(dashboardAdminService.getContent(query));
     }
 
     @GetMapping("/community")
     @Operation(summary = "社区统计")
     @PreAuthorize("@permission.hasPermission('sys:dashboard:query')")
-    public Result<DashboardCommunityVO> getCommunity(DashboardRangeQuery query) {
+    public Result<DashboardCommunityVO> getCommunity(@Valid DashboardRangeQuery query) {
         return Result.success(dashboardAdminService.getCommunity(query));
     }
 
     @GetMapping("/ai")
     @Operation(summary = "AI 调用统计")
     @PreAuthorize("@permission.hasPermission('sys:dashboard:query')")
-    public Result<DashboardAiVO> getAi(DashboardRangeQuery query) {
+    public Result<DashboardAiVO> getAi(@Valid DashboardRangeQuery query) {
         return Result.success(dashboardAdminService.getAi(query));
     }
 
     @GetMapping("/governance")
     @Operation(summary = "治理统计")
     @PreAuthorize("@permission.hasPermission('sys:dashboard:query')")
-    public Result<DashboardGovernanceVO> getGovernance(DashboardRangeQuery query) {
+    public Result<DashboardGovernanceVO> getGovernance(@Valid DashboardRangeQuery query) {
         return Result.success(dashboardAdminService.getGovernance(query));
     }
 
     @GetMapping("/export")
     @Operation(summary = "导出运营看板统计")
     @PreAuthorize("@permission.hasPermission('sys:dashboard:query')")
-    public ResponseEntity<byte[]> exportDashboard(DashboardRangeQuery query) {
+    public ResponseEntity<byte[]> exportDashboard(@Valid DashboardRangeQuery query) {
         byte[] content = dashboardAdminService.exportDashboard(query);
         String fileName = "dashboard-" + LocalDate.now() + ".xlsx";
         String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20");
