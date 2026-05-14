@@ -1,5 +1,6 @@
 package com.cybzacg.blogbackend.module.auth.audit.model.admin;
 
+import com.cybzacg.blogbackend.core.validation.AtLeastOneNonNull;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -8,6 +9,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDateTime;
 
 @Data
+@AtLeastOneNonNull(fields = {"module", "requestMethod", "requestUri", "ip", "createBy", "createTimeStart", "createTimeEnd"}, message = "清理日志必须至少指定一个条件")
 @Schema(description = "日志清理请求")
 public class SysLogCleanRequest {
     @Schema(description = "日志模块")

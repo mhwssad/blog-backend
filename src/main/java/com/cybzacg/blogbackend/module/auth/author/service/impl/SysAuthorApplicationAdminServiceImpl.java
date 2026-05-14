@@ -104,7 +104,6 @@ public class SysAuthorApplicationAdminServiceImpl implements SysAuthorApplicatio
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void repairApplication(Long id, SysAuthorApplicationRepairRequest request) {
-        validateRepairRequest(request);
         SysAuthorApplication application = requireApplication(id);
         ExceptionThrowerCore.throwBusinessIf(
                 Objects.equals(application.getApplyStatus(), request.getTargetStatus()),
@@ -127,7 +126,6 @@ public class SysAuthorApplicationAdminServiceImpl implements SysAuthorApplicatio
     }
 
     private void validateReviewRequest(SysAuthorApplicationAdminReviewRequest request) {
-        ExceptionThrowerCore.throwBusinessIfNull(request, ResultErrorCode.ILLEGAL_ARGUMENT, "审核参数不能为空");
         Integer reviewStatus = request.getReviewStatus();
         ExceptionThrowerCore.throwBusinessIf(
                 !Objects.equals(reviewStatus, AuthorApplicationStatusEnum.APPROVED.getValue())
@@ -135,20 +133,6 @@ public class SysAuthorApplicationAdminServiceImpl implements SysAuthorApplicatio
                         && !Objects.equals(reviewStatus, AuthorApplicationStatusEnum.NEED_MORE_INFO.getValue()),
                 ResultErrorCode.ILLEGAL_ARGUMENT,
                 "审核状态不合法"
-        );
-    }
-
-    private void validateRepairRequest(SysAuthorApplicationRepairRequest request) {
-        ExceptionThrowerCore.throwBusinessIfNull(request, ResultErrorCode.ILLEGAL_ARGUMENT, "修正参数不能为空");
-        ExceptionThrowerCore.throwBusinessIf(
-                !AuthorApplicationStatusEnum.contains(request.getTargetStatus()),
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "目标状态不合法"
-        );
-        ExceptionThrowerCore.throwBusinessIf(
-                trimToNull(request.getReviewComment()) == null,
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "修正作者申请状态必须填写备注"
         );
     }
 

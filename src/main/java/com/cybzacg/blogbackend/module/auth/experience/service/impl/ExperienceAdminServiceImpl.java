@@ -92,10 +92,8 @@ public class ExperienceAdminServiceImpl implements ExperienceAdminService {
         ExceptionThrowerCore.throwBusinessIfNull(user, ResultErrorCode.USER_NOT_FOUND);
 
         if ("level".equals(request.getAdjustType())) {
-            ExceptionThrowerCore.throwBusinessIf(request.getValue() < 1 || request.getValue() > 10,
-                    ResultErrorCode.ILLEGAL_ARGUMENT, "等级必须在 1-10 之间");
             sysUserRepository.updateLevel(userId, request.getValue());
-        } else if ("experience".equals(request.getAdjustType())) {
+        } else {
             sysUserRepository.incrementExperiencePoints(userId, request.getValue());
             SysUser updated = sysUserRepository.getById(userId);
             if (updated != null) {
@@ -104,8 +102,6 @@ public class ExperienceAdminServiceImpl implements ExperienceAdminService {
                     sysUserRepository.updateLevel(userId, newLevel);
                 }
             }
-        } else {
-            ExceptionThrowerCore.throwBusinessEx("不支持的调整类型: " + request.getAdjustType());
         }
     }
 

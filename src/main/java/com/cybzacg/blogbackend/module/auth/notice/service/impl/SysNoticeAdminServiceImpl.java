@@ -154,11 +154,9 @@ public class SysNoticeAdminServiceImpl implements SysNoticeAdminService {
 
     private List<Long> validateTargetUsers(SysNoticeSaveRequest request) {
         Integer targetType = request.getTargetType();
-        ExceptionThrowerCore.throwBusinessIf(!Objects.equals(NoticeConstants.TARGET_ALL, targetType) && !Objects.equals(NoticeConstants.TARGET_SPECIFIED, targetType), ResultErrorCode.ILLEGAL_ARGUMENT, "通知目标类型非法");
         if (Objects.equals(NoticeConstants.TARGET_ALL, targetType)) {
             return List.of();
         }
-        ExceptionThrowerCore.throwBusinessIf(request.getTargetUserIds() == null || request.getTargetUserIds().isEmpty(), ResultErrorCode.ILLEGAL_ARGUMENT, "指定用户通知至少选择一个目标用户");
         List<Long> distinctUserIds = IdCollectionUtils.distinctNonNullIds(
                 request.getTargetUserIds(),
                 ResultErrorCode.ILLEGAL_ARGUMENT,

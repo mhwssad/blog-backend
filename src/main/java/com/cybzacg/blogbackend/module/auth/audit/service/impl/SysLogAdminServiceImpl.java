@@ -10,7 +10,6 @@ import com.cybzacg.blogbackend.module.auth.audit.model.admin.SysLogCleanRequest;
 import com.cybzacg.blogbackend.module.auth.audit.model.admin.SysLogPageQuery;
 import com.cybzacg.blogbackend.module.auth.audit.service.SysLogAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
-import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,19 +67,7 @@ public class SysLogAdminServiceImpl implements SysLogAdminService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public long cleanLogs(SysLogCleanRequest request) {
-        ExceptionThrowerCore.throwBusinessIfNot(hasAnyCondition(request), ResultErrorCode.ILLEGAL_ARGUMENT,
-                "清理日志必须至少指定一个条件");
         return sysLogRepository.removeByConditions(request);
-    }
-
-    private boolean hasAnyCondition(SysLogCleanRequest request) {
-        return StrUtils.hasText(request.getModule())
-                || StrUtils.hasText(request.getRequestMethod())
-                || StrUtils.hasText(request.getRequestUri())
-                || StrUtils.hasText(request.getIp())
-                || request.getCreateBy() != null
-                || request.getCreateTimeStart() != null
-                || request.getCreateTimeEnd() != null;
     }
 
     private SysLog getLogOrThrow(Long id) {

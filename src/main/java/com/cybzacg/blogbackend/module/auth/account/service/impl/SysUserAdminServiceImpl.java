@@ -76,7 +76,6 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public SysUserAdminVO createUser(SysUserSaveRequest request) {
-        ExceptionThrowerCore.throwBusinessIfBlank(request.getPassword(), ResultErrorCode.ILLEGAL_ARGUMENT, "新增用户时密码不能为空");
         validateUserUniqueness(null, request);
 
         SysUser user = rbacAdminModelConvert.toUser(request);
@@ -282,10 +281,12 @@ public class SysUserAdminServiceImpl implements SysUserAdminService {
         sysAuditLogService.record(request);
     }
 
+    private static final String DEFAULT_PASSWORD = "Blog@2026";
+
     private void applyUserFields(SysUser user, SysUserSaveRequest request, boolean includePassword) {
         rbacAdminModelConvert.updateUser(request, user);
         if (includePassword) {
-            user.setPassword(passwordEncoder.encode(request.getPassword()));
+            user.setPassword(passwordEncoder.encode(DEFAULT_PASSWORD));
             user.setUserLevel(1);
             user.setExperiencePoints(0);
             user.setLevelUpdatedAt(null);

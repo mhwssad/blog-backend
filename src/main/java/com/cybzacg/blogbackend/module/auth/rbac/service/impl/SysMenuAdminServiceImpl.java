@@ -45,6 +45,7 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
      */
     @Override
     public SysMenuAdminVO getMenu(Long id) {
+        rejectWildcardMenu(id);
         return rbacAdminModelConvert.toMenuVO(getMenuOrThrow(id));
     }
 
@@ -55,8 +56,6 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
     @Transactional(rollbackFor = Exception.class)
     public SysMenuAdminVO createMenu(SysMenuSaveRequest request) {
         SysMenu parent = validateParent(request.getParentId(), null);
-        validateMenuType(request.getType());
-        validatePermNotWildcard(request.getPerm());
 
         SysMenu menu = rbacAdminModelConvert.toMenu(request);
         applyMenuFields(menu, request);
@@ -71,10 +70,9 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public SysMenuAdminVO updateMenu(Long id, SysMenuSaveRequest request) {
+        rejectWildcardMenu(id);
         SysMenu menu = getMenuOrThrow(id);
         SysMenu parent = validateParent(request.getParentId(), id);
-        validateMenuType(request.getType());
-        validatePermNotWildcard(request.getPerm());
 
         applyMenuFields(menu, request);
         menu.setTreePath(buildTreePath(parent));
@@ -89,6 +87,7 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteMenu(Long id) {
+        rejectWildcardMenu(id);
         getMenuOrThrow(id);
         boolean hasChildren = sysMenuRepository.existsByParentId(id);
         ExceptionThrowerCore.throwBusinessIf(hasChildren, ResultErrorCode.ILLEGAL_ARGUMENT, "当前菜单存在子菜单，无法删除");
@@ -125,16 +124,11 @@ public class SysMenuAdminServiceImpl implements SysMenuAdminService {
         return false;
     }
 
-    private void validateMenuType(String type) {
-        String normalizedType = StrUtils.normalize(type);
-        ExceptionThrowerCore.throwBusinessIf(!MenuConstants.TYPE_CATALOG.equalsIgnoreCase(normalizedType) && !MenuConstants.TYPE_MENU.equalsIgnoreCase(normalizedType) && !MenuConstants.TYPE_BUTTON.equalsIgnoreCase(normalizedType), ResultErrorCode.ILLEGAL_ARGUMENT, "菜单类型非法");
-    }
-
     /**
-     * 通配符权限（含 {@code *}）仅限超级管理员角色，禁止通过菜单管理创建。
+     * 通配符菜单禁止查看、修改和删除。
      */
-    private void validatePermNotWildcard(String perm) {
-        if (StrUtils.hasText(perm) && perm.contains("*")) {
+    private void rejectWildcardMenu(Long id) {
+        if (MenuConstants.WILDCARD_MENU_ID.equals(id)) {
             ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.PERMISSION_WILDCARD_NOT_ALLOWED);
         }
     }

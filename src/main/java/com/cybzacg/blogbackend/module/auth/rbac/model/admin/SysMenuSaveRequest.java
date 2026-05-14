@@ -1,8 +1,10 @@
 package com.cybzacg.blogbackend.module.auth.rbac.model.admin;
 
+import com.cybzacg.blogbackend.core.validation.NoWildcard;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 @Data
@@ -20,6 +22,7 @@ public class SysMenuSaveRequest {
     private String name;
 
     @NotBlank(message = "菜单类型不能为空")
+    @Pattern(regexp = "C|M|B", flags = Pattern.Flag.CASE_INSENSITIVE, message = "菜单类型非法")
     @Schema(description = "菜单类型")
     private String type;
 
@@ -32,6 +35,7 @@ public class SysMenuSaveRequest {
     @Schema(description = "组件路径")
     private String component;
 
+    @NoWildcard
     @Schema(description = "权限标识")
     private String perm;
 

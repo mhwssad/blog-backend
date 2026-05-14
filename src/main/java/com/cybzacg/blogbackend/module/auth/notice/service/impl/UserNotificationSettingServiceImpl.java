@@ -48,7 +48,6 @@ public class UserNotificationSettingServiceImpl implements UserNotificationSetti
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateMySettings(UserNotificationSettingBatchUpdateRequest request) {
-        ExceptionThrowerCore.throwBusinessIfNull(request, ResultErrorCode.ILLEGAL_ARGUMENT, "通知设置参数不能为空");
         Long userId = SecurityUtils.requireUserId();
         Map<NotificationTypeEnum, Boolean> updates = new LinkedHashMap<>();
         request.getSettings().forEach(item -> updates.put(resolveType(item.getType()), item.getEnabled()));
@@ -61,7 +60,6 @@ public class UserNotificationSettingServiceImpl implements UserNotificationSetti
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateMySetting(String type, UserNotificationSettingStatusUpdateRequest request) {
-        ExceptionThrowerCore.throwBusinessIfNull(request, ResultErrorCode.ILLEGAL_ARGUMENT, "通知设置参数不能为空");
         Long userId = SecurityUtils.requireUserId();
         userNotificationPreferenceService.updateSettings(userId, Map.of(resolveType(type), request.getEnabled()));
     }
