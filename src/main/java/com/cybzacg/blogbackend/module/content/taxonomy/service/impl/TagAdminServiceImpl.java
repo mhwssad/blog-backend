@@ -48,12 +48,16 @@ public class TagAdminServiceImpl implements TagAdminService {
     }
 
     /**
-     * 创建标签，校验名称唯一后持久化。
+     * 创建标签，若同名标签已存在则直接返回。
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public TagVO createTag(TagSaveRequest request) {
-        validateNameUnique(null, request.getName());
+        String trimmedName = StrUtils.trim(request.getName());
+        SysTag existing = sysTagRepository.findByName(trimmedName);
+        if (existing != null) {
+            return contentModelConvert.toTagVO(existing);
+        }
         SysTag tag = contentModelConvert.toTag(request);
         sysTagRepository.save(tag);
         return contentModelConvert.toTagVO(tag);

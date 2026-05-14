@@ -110,7 +110,6 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
      * 校验分类请求是否合法，目前仅允许维护文章分类，且分类编码需唯一。
      */
     private void validateRequest(CategorySaveRequest request, Long currentId) {
-        ExceptionThrowerCore.throwBusinessIf(!StrUtils.hasText(request.getType()) || !ARTICLE_TYPE.equals(StrUtils.trim(request.getType())), ResultErrorCode.ILLEGAL_ARGUMENT, "当前仅支持文章分类");
         boolean duplicated = sysCategoryRepository.existsByTypeAndCodeExcludingId(
                 StrUtils.trim(request.getType()),
                 StrUtils.trim(request.getCode()),

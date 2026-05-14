@@ -131,7 +131,6 @@ public class UserCollectionServiceImpl implements UserCollectionService {
     @Transactional(rollbackFor = Exception.class)
     public void createCollection(CollectionSaveRequest request) {
         Long userId = SecurityUtils.requireUserId();
-        ExceptionThrowerCore.throwBusinessIf(!ARTICLE_TYPE.equals(request.getTargetType()), ResultErrorCode.ILLEGAL_ARGUMENT, "当前仅支持文章收藏");
         BlogArticle article = articleContentFacadeService.requireInteractableArticle(request.getTargetId(), userId, "收藏");
         Long folderId = request.getFolderId();
         SysCollectionFolder folder = folderId == null ? getOrCreateDefaultFolder(userId, ARTICLE_TYPE) : getFolderOrThrow(folderId, userId);

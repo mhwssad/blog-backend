@@ -1,6 +1,7 @@
 package com.cybzacg.blogbackend.module.content.friendlink.model.admin;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -27,6 +28,7 @@ public class FriendLinkSaveRequest {
     @Schema(description = "站点描述")
     private String description;
 
+    @Min(value = 0, message = "排序值不能为负数")
     @Schema(description = "排序值")
     private Integer sortOrder;
 }

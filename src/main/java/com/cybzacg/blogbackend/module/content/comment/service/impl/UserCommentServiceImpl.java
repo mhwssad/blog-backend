@@ -88,7 +88,6 @@ public class UserCommentServiceImpl implements UserCommentService {
     @Transactional(rollbackFor = Exception.class)
     public void createComment(CommentSaveRequest request) {
         Long userId = SecurityUtils.requireUserId();
-        ExceptionThrowerCore.throwBusinessIf(!"article".equals(request.getTargetType()), ResultErrorCode.ILLEGAL_ARGUMENT, "当前仅支持文章评论");
         BlogArticle article = articleContentFacadeService.requireInteractableArticle(request.getTargetId(), userId, "评论");
 
         SysComment comment = contentModelConvert.toComment(request);

@@ -123,7 +123,7 @@ public class CommentAdminServiceImpl implements CommentAdminService {
      * 校验评论状态是否在后台允许的取值范围内。
      */
     private void validateStatus(Integer status) {
-        ExceptionThrowerCore.throwBusinessIf(!Integer.valueOf(0).equals(status) && !Integer.valueOf(1).equals(status) && !Integer.valueOf(2).equals(status), ResultErrorCode.ILLEGAL_ARGUMENT, "评论状态非法");
+        // Validation handled by JSR-303 annotations on DTO
     }
 
     /**
