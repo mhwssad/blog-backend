@@ -9,7 +9,7 @@ START TRANSACTION;
 DELETE FROM `sys_user_role` WHERE `user_id` IN (1, 2) OR `role_id` IN (1, 2, 3);
 DELETE FROM `sys_user` WHERE `id` IN (1, 2);
 
--- 默认密码：password
+-- 默认密码：QWEasdzxc123
 INSERT INTO `sys_user`
 (`id`, `username`, `password`, `nickname`, `email`, `phone`, `avatar`, `gender`, `birthday`, `status`,
  `user_level`, `experience_points`, `level_updated_at`, `mfa_enabled`,
