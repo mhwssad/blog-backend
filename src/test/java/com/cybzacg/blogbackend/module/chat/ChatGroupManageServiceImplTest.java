@@ -1,44 +1,43 @@
 package com.cybzacg.blogbackend.module.chat;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+import com.cybzacg.blogbackend.common.constant.ChatConstants;
 import com.cybzacg.blogbackend.common.constant.ConfigConstants;
 import com.cybzacg.blogbackend.dto.domain.auth.SysUser;
 import com.cybzacg.blogbackend.dto.domain.chat.ChatConversation;
 import com.cybzacg.blogbackend.dto.domain.chat.ChatConversationMember;
+import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
+import com.cybzacg.blogbackend.dto.repository.chat.conversation.ChatConversationRepository;
+import com.cybzacg.blogbackend.dto.repository.chat.member.ChatConversationMemberRepository;
 import com.cybzacg.blogbackend.dto.repository.chat.message.ChatMessageReadCursorRepository;
 import com.cybzacg.blogbackend.dto.repository.chat.message.ChatMessageRecipientRepository;
 import com.cybzacg.blogbackend.dto.repository.chat.message.ChatMessageRepository;
 import com.cybzacg.blogbackend.exception.BusinessException;
-import com.cybzacg.blogbackend.dto.repository.auth.account.SysUserRepository;
 import com.cybzacg.blogbackend.module.auth.config.service.SysConfigService;
 import com.cybzacg.blogbackend.module.auth.experience.service.UserExperienceService;
 import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatConversationVO;
 import com.cybzacg.blogbackend.module.chat.conversation.model.user.ChatCreateGroupRequest;
-import com.cybzacg.blogbackend.dto.repository.chat.conversation.ChatConversationRepository;
-import com.cybzacg.blogbackend.dto.repository.chat.member.ChatConversationMemberRepository;
 import com.cybzacg.blogbackend.module.chat.member.service.impl.ChatGroupManageServiceImpl;
 import com.cybzacg.blogbackend.module.chat.push.service.ChatNotificationService;
 import com.cybzacg.blogbackend.module.chat.push.service.ChatPushService;
-import com.cybzacg.blogbackend.common.constant.ChatConstants;
 import com.cybzacg.blogbackend.module.chat.shared.convert.ChatModelConvert;
 import com.cybzacg.blogbackend.module.chat.shared.model.data.ChatConversationListItem;
 import com.cybzacg.blogbackend.module.chat.shared.support.ChatMemberHelper;
 import com.cybzacg.blogbackend.module.chat.shared.support.ChatPushPayloadBuilder;
 import com.cybzacg.blogbackend.module.chat.shared.support.ChatServiceSupport;
 import com.cybzacg.blogbackend.support.SecurityTestUtils;
+import java.time.LocalDateTime;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDateTime;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
 /**
  * ChatGroupManageServiceImpl unit tests.
@@ -48,30 +47,43 @@ class ChatGroupManageServiceImplTest {
 
     @Mock
     private ChatConversationRepository chatConversationRepository;
+
     @Mock
     private ChatConversationMemberRepository chatConversationMemberRepository;
+
     @Mock
     private ChatMessageRepository chatMessageRepository;
+
     @Mock
     private ChatMessageRecipientRepository chatMessageRecipientRepository;
+
     @Mock
     private ChatMessageReadCursorRepository chatMessageReadCursorRepository;
+
     @Mock
     private SysUserRepository sysUserRepository;
+
     @Mock
     private ChatModelConvert chatModelConvert;
+
     @Mock
     private com.cybzacg.blogbackend.module.chat.shared.support.ChatPayloadHelper chatPayloadHelper;
+
     @Mock
     private ChatMemberHelper chatMemberHelper;
+
     @Mock
     private SysConfigService sysConfigService;
+
     @Mock
     private ChatPushService chatPushService;
+
     @Mock
     private ChatPushPayloadBuilder chatPushPayloadBuilder;
+
     @Mock
     private ChatNotificationService chatNotificationService;
+
     @Mock
     private UserExperienceService userExperienceService;
 
@@ -80,23 +92,23 @@ class ChatGroupManageServiceImplTest {
     @BeforeEach
     void setUp() {
         ChatServiceSupport support = new ChatServiceSupport(
-                chatConversationRepository,
-                chatConversationMemberRepository,
-                chatMessageRepository,
-                chatMessageRecipientRepository,
-                chatMessageReadCursorRepository,
-                sysUserRepository,
-                chatModelConvert,
-                chatPayloadHelper,
-                chatMemberHelper,
-                sysConfigService
+            chatConversationRepository,
+            chatConversationMemberRepository,
+            chatMessageRepository,
+            chatMessageRecipientRepository,
+            chatMessageReadCursorRepository,
+            sysUserRepository,
+            chatModelConvert,
+            chatPayloadHelper,
+            chatMemberHelper,
+            sysConfigService
         );
         chatGroupManageService = new ChatGroupManageServiceImpl(
-                support,
-                chatPushService,
-                chatPushPayloadBuilder,
-                chatNotificationService,
-                userExperienceService
+            support,
+            chatPushService,
+            chatPushPayloadBuilder,
+            chatNotificationService,
+            userExperienceService
         );
     }
 
@@ -105,20 +117,32 @@ class ChatGroupManageServiceImplTest {
     @Test
     void createGroupShouldSucceedWithValidMembers() {
         Long ownerId = 1L;
-        ChatCreateGroupRequest request = buildValidCreateGroupRequest(List.of(2L, 3L));
+        ChatCreateGroupRequest request = buildValidCreateGroupRequest(
+            List.of(2L, 3L)
+        );
 
         // Permission check: min level 1 means no level check needed
-        when(sysConfigService.getValueOrDefault(
+        when(
+            sysConfigService.getValueOrDefault(
                 ConfigConstants.CHAT_GROUP_CREATE_MIN_LEVEL_KEY,
-                String.valueOf(ConfigConstants.DEFAULT_CHAT_GROUP_CREATE_MIN_LEVEL)
-        )).thenReturn("1");
+                String.valueOf(
+                    ConfigConstants.DEFAULT_CHAT_GROUP_CREATE_MIN_LEVEL
+                )
+            )
+        ).thenReturn("1");
 
         // Count limit check: allow up to 20 groups
-        when(sysConfigService.getValueOrDefault(
+        when(
+            sysConfigService.getValueOrDefault(
                 ConfigConstants.CHAT_GROUP_CREATE_MAX_COUNT_KEY,
-                String.valueOf(ConfigConstants.DEFAULT_CHAT_GROUP_CREATE_MAX_COUNT)
-        )).thenReturn("20");
-        when(chatConversationRepository.countNormalGroupsByOwner(ownerId)).thenReturn(0L);
+                String.valueOf(
+                    ConfigConstants.DEFAULT_CHAT_GROUP_CREATE_MAX_COUNT
+                )
+            )
+        ).thenReturn("20");
+        when(
+            chatConversationRepository.countNormalGroupsByOwner(ownerId)
+        ).thenReturn(0L);
 
         // Active user check for memberUserIds (owner excluded by normalizeMemberIds)
         SysUser member2 = buildSysUser(2L, "user2");
@@ -128,8 +152,12 @@ class ChatGroupManageServiceImplTest {
 
         // Mapper
         ChatConversation mappedConversation = new ChatConversation();
-        mappedConversation.setConversationType(ChatConstants.CONVERSATION_TYPE_GROUP);
-        mappedConversation.setVisibilityScope(ChatConstants.VISIBILITY_SCOPE_PRIVATE);
+        mappedConversation.setConversationType(
+            ChatConstants.CONVERSATION_TYPE_GROUP
+        );
+        mappedConversation.setVisibilityScope(
+            ChatConstants.VISIBILITY_SCOPE_PRIVATE
+        );
         mappedConversation.setJoinRule(ChatConstants.JOIN_RULE_FREE);
         mappedConversation.setAllowGuestView(0);
         mappedConversation.setRequireJoinToSpeak(1);
@@ -137,50 +165,80 @@ class ChatGroupManageServiceImplTest {
         mappedConversation.setMemberLimit(0);
         mappedConversation.setSlowModeSeconds(0);
         mappedConversation.setDisplaySort(0);
-        when(chatModelConvert.toGroupConversation(request)).thenReturn(mappedConversation);
+        when(chatModelConvert.toGroupConversation(request)).thenReturn(
+            mappedConversation
+        );
 
         // Membership upsert - conversation.getId() is null after save in test context
-        when(chatConversationMemberRepository.findByConversationAndUser(any(), any())).thenReturn(null);
+        when(
+            chatConversationMemberRepository.findByConversationAndUser(
+                any(),
+                any()
+            )
+        ).thenReturn(null);
 
         // Mapper: toConversationMember returns a real member since chatModelConvert is a mock
         // (default methods on mock interfaces return null unless stubbed)
-        when(chatModelConvert.toConversationMember(any(), any(), any(), any(), any(), any()))
-                .thenAnswer(invocation -> {
-                    ChatConversationMember member = new ChatConversationMember();
-                    member.setConversationId(invocation.getArgument(0));
-                    member.setUserId(invocation.getArgument(1));
-                    member.setMemberRole(invocation.getArgument(2));
-                    member.setJoinSource(invocation.getArgument(3));
-                    member.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
-                    member.setJoinedAt(LocalDateTime.now());
-                    return member;
-                });
+        when(
+            chatModelConvert.toConversationMember(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        ).thenAnswer(invocation -> {
+            ChatConversationMember member = new ChatConversationMember();
+            member.setConversationId(invocation.getArgument(0));
+            member.setUserId(invocation.getArgument(1));
+            member.setMemberRole(invocation.getArgument(2));
+            member.setJoinSource(invocation.getArgument(3));
+            member.setStatus(ChatConstants.MEMBER_STATUS_NORMAL);
+            member.setJoinedAt(LocalDateTime.now());
+            return member;
+        });
 
         // Simulate auto-increment ID assignment on save
         doAnswer(invocation -> {
             ChatConversation c = invocation.getArgument(0);
             c.setId(1L);
             return true;
-        }).when(chatConversationRepository).save(any(ChatConversation.class));
+        })
+            .when(chatConversationRepository)
+            .save(any(ChatConversation.class));
 
         // Conversation VO
         ChatConversationListItem detailItem = new ChatConversationListItem();
         detailItem.setId(1L);
         detailItem.setConversationType(ChatConstants.CONVERSATION_TYPE_GROUP);
-        when(chatConversationRepository.selectConversationDetail(any(), eq(ownerId))).thenReturn(detailItem);
-        when(chatConversationMemberRepository.listActiveByConversationId(any())).thenReturn(List.of());
+        when(
+            chatConversationRepository.selectConversationDetail(
+                any(),
+                eq(ownerId),
+                any()
+            )
+        ).thenReturn(detailItem);
+        when(
+            chatConversationMemberRepository.listActiveByConversationId(any())
+        ).thenReturn(List.of());
         ChatConversationVO vo = new ChatConversationVO();
         vo.setId(1L);
         when(chatModelConvert.toConversationVO(detailItem)).thenReturn(vo);
 
         try (var ignored = SecurityTestUtils.mockUserId(ownerId)) {
-            ChatConversationVO result = chatGroupManageService.createGroup(ownerId, request);
+            ChatConversationVO result = chatGroupManageService.createGroup(
+                ownerId,
+                request
+            );
             assertNotNull(result);
         }
 
         verify(chatConversationRepository).save(any(ChatConversation.class));
         // Owner + 2 members = 3 saves
-        verify(chatConversationMemberRepository, times(3)).save(any(ChatConversationMember.class));
+        verify(chatConversationMemberRepository, times(3)).save(
+            any(ChatConversationMember.class)
+        );
     }
 
     // ==================== createGroupShouldRejectExceedMemberLimit ====================
@@ -189,21 +247,29 @@ class ChatGroupManageServiceImplTest {
     void createGroupShouldRejectExceedMemberLimit() {
         Long ownerId = 1L;
         // Request with memberLimit=2 but trying to add 3 members (owner + 3 = 4)
-        ChatCreateGroupRequest request = buildValidCreateGroupRequest(List.of(2L, 3L, 4L));
+        ChatCreateGroupRequest request = buildValidCreateGroupRequest(
+            List.of(2L, 3L, 4L)
+        );
         request.setMemberLimit(2);
 
-        when(sysConfigService.getValueOrDefault(
+        when(
+            sysConfigService.getValueOrDefault(
                 eq(ConfigConstants.CHAT_GROUP_CREATE_MIN_LEVEL_KEY),
                 anyString()
-        )).thenReturn("1");
-        when(sysConfigService.getValueOrDefault(
+            )
+        ).thenReturn("1");
+        when(
+            sysConfigService.getValueOrDefault(
                 eq(ConfigConstants.CHAT_GROUP_CREATE_MAX_COUNT_KEY),
                 anyString()
-        )).thenReturn("20");
-        when(chatConversationRepository.countNormalGroupsByOwner(ownerId)).thenReturn(0L);
+            )
+        ).thenReturn("20");
+        when(
+            chatConversationRepository.countNormalGroupsByOwner(ownerId)
+        ).thenReturn(0L);
 
         assertThrows(BusinessException.class, () ->
-                chatGroupManageService.createGroup(ownerId, request)
+            chatGroupManageService.createGroup(ownerId, request)
         );
 
         verify(chatConversationRepository, never()).save(any());
@@ -214,21 +280,29 @@ class ChatGroupManageServiceImplTest {
     @Test
     void createGroupShouldRejectExceedGroupLimit() {
         Long ownerId = 1L;
-        ChatCreateGroupRequest request = buildValidCreateGroupRequest(List.of(2L));
+        ChatCreateGroupRequest request = buildValidCreateGroupRequest(
+            List.of(2L)
+        );
 
-        when(sysConfigService.getValueOrDefault(
+        when(
+            sysConfigService.getValueOrDefault(
                 eq(ConfigConstants.CHAT_GROUP_CREATE_MIN_LEVEL_KEY),
                 anyString()
-        )).thenReturn("1");
-        when(sysConfigService.getValueOrDefault(
+            )
+        ).thenReturn("1");
+        when(
+            sysConfigService.getValueOrDefault(
                 eq(ConfigConstants.CHAT_GROUP_CREATE_MAX_COUNT_KEY),
                 anyString()
-        )).thenReturn("3");
+            )
+        ).thenReturn("3");
         // Owner already has 3 groups
-        when(chatConversationRepository.countNormalGroupsByOwner(ownerId)).thenReturn(3L);
+        when(
+            chatConversationRepository.countNormalGroupsByOwner(ownerId)
+        ).thenReturn(3L);
 
         assertThrows(BusinessException.class, () ->
-                chatGroupManageService.createGroup(ownerId, request)
+            chatGroupManageService.createGroup(ownerId, request)
         );
 
         verify(chatConversationRepository, never()).save(any());
@@ -241,16 +315,34 @@ class ChatGroupManageServiceImplTest {
         Long ownerId = 1L;
         Long conversationId = 10L;
 
-        ChatConversation conversation = buildGroupConversation(conversationId, ownerId);
-        ChatConversationMember ownerMember = buildMember(1L, conversationId, ownerId, ChatConstants.MEMBER_ROLE_OWNER);
+        ChatConversation conversation = buildGroupConversation(
+            conversationId,
+            ownerId
+        );
+        ChatConversationMember ownerMember = buildMember(
+            1L,
+            conversationId,
+            ownerId,
+            ChatConstants.MEMBER_ROLE_OWNER
+        );
 
-        when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
-        when(chatConversationMemberRepository.findByConversationAndUser(conversationId, ownerId)).thenReturn(ownerMember);
-        when(chatConversationMemberRepository.listActiveByConversationId(conversationId))
-                .thenReturn(List.of(ownerMember));
+        when(chatConversationRepository.getById(conversationId)).thenReturn(
+            conversation
+        );
+        when(
+            chatConversationMemberRepository.findByConversationAndUser(
+                conversationId,
+                ownerId
+            )
+        ).thenReturn(ownerMember);
+        when(
+            chatConversationMemberRepository.listActiveByConversationId(
+                conversationId
+            )
+        ).thenReturn(List.of(ownerMember));
 
         assertThrows(BusinessException.class, () ->
-                chatGroupManageService.leaveGroup(ownerId, conversationId)
+            chatGroupManageService.leaveGroup(ownerId, conversationId)
         );
 
         verify(chatConversationMemberRepository, never()).updateById(any());
@@ -263,28 +355,58 @@ class ChatGroupManageServiceImplTest {
         Long ownerId = 1L;
         Long conversationId = 10L;
 
-        ChatConversation conversation = buildGroupConversation(conversationId, ownerId);
-        ChatConversationMember ownerMember = buildMember(1L, conversationId, ownerId, ChatConstants.MEMBER_ROLE_OWNER);
-        ChatConversationMember otherMember = buildMember(2L, conversationId, 2L, ChatConstants.MEMBER_ROLE_MEMBER);
+        ChatConversation conversation = buildGroupConversation(
+            conversationId,
+            ownerId
+        );
+        ChatConversationMember ownerMember = buildMember(
+            1L,
+            conversationId,
+            ownerId,
+            ChatConstants.MEMBER_ROLE_OWNER
+        );
+        ChatConversationMember otherMember = buildMember(
+            2L,
+            conversationId,
+            2L,
+            ChatConstants.MEMBER_ROLE_MEMBER
+        );
 
-        when(chatConversationRepository.getById(conversationId)).thenReturn(conversation);
-        when(chatConversationMemberRepository.findByConversationAndUser(conversationId, ownerId)).thenReturn(ownerMember);
-        when(chatConversationMemberRepository.listActiveByConversationId(conversationId))
-                .thenReturn(List.of(ownerMember, otherMember));
+        when(chatConversationRepository.getById(conversationId)).thenReturn(
+            conversation
+        );
+        when(
+            chatConversationMemberRepository.findByConversationAndUser(
+                conversationId,
+                ownerId
+            )
+        ).thenReturn(ownerMember);
+        when(
+            chatConversationMemberRepository.listActiveByConversationId(
+                conversationId
+            )
+        ).thenReturn(List.of(ownerMember, otherMember));
 
         try (var ignored = SecurityTestUtils.mockUserId(ownerId)) {
             chatGroupManageService.dissolveGroup(ownerId, conversationId);
         }
 
-        assertEquals(ChatConstants.CONVERSATION_STATUS_DISSOLVED, conversation.getStatus());
+        assertEquals(
+            ChatConstants.CONVERSATION_STATUS_DISSOLVED,
+            conversation.getStatus()
+        );
         verify(chatConversationRepository).updateById(conversation);
-        verify(chatConversationMemberRepository).removeAllActiveMembers(conversationId);
+        verify(chatConversationMemberRepository).removeAllActiveMembers(
+            conversationId
+        );
         verify(chatPushService).pushConversationUpdated(any(), anyList());
     }
 
     // ==================== Helper methods ====================
 
-    private ChatCreateGroupRequest buildValidCreateGroupRequest(List<Long> memberUserIds) {
+    private ChatCreateGroupRequest buildValidCreateGroupRequest(
+        List<Long> memberUserIds
+    ) {
         ChatCreateGroupRequest request = new ChatCreateGroupRequest();
         request.setName("Test Group");
         request.setMemberUserIds(memberUserIds);
@@ -315,7 +437,12 @@ class ChatGroupManageServiceImplTest {
         return c;
     }
 
-    private ChatConversationMember buildMember(Long id, Long conversationId, Long userId, String role) {
+    private ChatConversationMember buildMember(
+        Long id,
+        Long conversationId,
+        Long userId,
+        String role
+    ) {
         ChatConversationMember m = new ChatConversationMember();
         m.setId(id);
         m.setConversationId(conversationId);
