@@ -19,7 +19,6 @@ import com.cybzacg.blogbackend.dto.repository.file.FileBusinessInfoRepository;
 import com.cybzacg.blogbackend.dto.repository.file.FileInfoRepository;
 import com.cybzacg.blogbackend.enums.ai.AiKnowledgeSourceTypeEnum;
 import com.cybzacg.blogbackend.enums.ai.ContentChangeAction;
-import com.cybzacg.blogbackend.enums.article.ArticleVisibilityScopeEnum;
 import com.cybzacg.blogbackend.enums.experience.ExperienceSourceTypeEnum;
 import com.cybzacg.blogbackend.module.ai.event.ContentChangeEvent;
 import com.cybzacg.blogbackend.module.article.convert.ArticleModelConvert;
@@ -30,7 +29,6 @@ import com.cybzacg.blogbackend.module.auth.config.service.SysConfigService;
 import com.cybzacg.blogbackend.module.auth.experience.event.XpAwardEvent;
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
-import com.cybzacg.blogbackend.utils.IdCollectionUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
@@ -104,6 +102,10 @@ public class ArticleAdminCrudServiceImpl implements ArticleAdminCrudService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ArticleDetailVO createArticle(ArticleSaveRequest request) {
+        Long currentUserId = SecurityUtils.requireUserId();
+        if (request.getAuthorId() == null) {
+            request.setAuthorId(currentUserId);
+        }
         validateSaveRequest(request);
         validateAuthorArticleQuota(request.getAuthorId());
         BlogArticle article = articleModelConvert.toArticle(request);
@@ -274,47 +276,15 @@ public class ArticleAdminCrudServiceImpl implements ArticleAdminCrudService {
     }
 
     private void validateSaveRequest(ArticleSaveRequest request) {
-        validateAuthor(request.getAuthorId());
         articleStatusMachine.validateSaveState(
                 com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(request.getStatus(), 0),
                 0,
                 request.getVisibilityScope(),
                 com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(request.getAccessLevel(), 0),
                 request.getScheduledPublishTime());
-
-        ExceptionThrowerCore.throwBusinessIf(
-                Integer.valueOf(0).equals(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(request.getIsOriginal(), 1))
-                        && !StrUtils.hasText(request.getSourceUrl()),
-                com.cybzacg.blogbackend.enums.error.ResultErrorCode.ILLEGAL_ARGUMENT,
-                "转载文章必须提供原文链接");
-
-        List<Long> categoryIds = IdCollectionUtils.requireUniqueNonNullIds(
-                request.getCategoryIds(),
-                com.cybzacg.blogbackend.enums.error.ResultErrorCode.ILLEGAL_ARGUMENT,
-                "分类ID不能为空",
-                "分类ID存在重复值");
-        List<Long> tagIds = IdCollectionUtils.requireUniqueNonNullIds(
-                request.getTagIds(),
-                com.cybzacg.blogbackend.enums.error.ResultErrorCode.ILLEGAL_ARGUMENT,
-                "标签ID不能为空",
-                "标签ID存在重复值");
-        request.setCategoryIds(categoryIds);
-        request.setTagIds(tagIds);
-        validateCategories(categoryIds);
-        validateTags(tagIds);
-        boolean requireAccessList = ArticleVisibilityScopeEnum.WHITELIST.getValue().equals(articleStatusMachine.normalizeVisibilityScope(request.getVisibilityScope()))
-                || Integer.valueOf(4).equals(com.cybzacg.blogbackend.utils.CollectionUtils.defaultIfNull(request.getAccessLevel(), 0));
-        ExceptionThrowerCore.throwBusinessIf(
-                requireAccessList && CollectionUtils.isEmpty(request.getAccessList()),
-                com.cybzacg.blogbackend.enums.error.ResultErrorCode.ILLEGAL_ARGUMENT,
-                "当前文章必须配置访问授权列表");
+        validateCategories(request.getCategoryIds());
+        validateTags(request.getTagIds());
         articleAccessManageService.validateAccessItems(request.getAccessList());
-    }
-
-    private void validateAuthor(Long authorId) {
-        SysUser author = sysUserRepository.getById(authorId);
-        ExceptionThrowerCore.throwBusinessIf(author == null || Integer.valueOf(1).equals(author.getDeletedFlag()),
-                com.cybzacg.blogbackend.enums.error.ResultErrorCode.USER_NOT_FOUND, "作者不存在");
     }
 
     private void validateCategories(List<Long> categoryIds) {

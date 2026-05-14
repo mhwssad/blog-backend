@@ -1,7 +1,10 @@
 
 package com.cybzacg.blogbackend.module.article.model.admin;
 
+import com.cybzacg.blogbackend.core.validation.ConditionalNotBlank;
+import com.cybzacg.blogbackend.core.validation.ConditionalNotEmpty;
 import com.cybzacg.blogbackend.core.validation.EnumValue;
+import com.cybzacg.blogbackend.core.validation.UniqueElements;
 import com.cybzacg.blogbackend.enums.article.ArticleVisibilityScopeEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
@@ -14,6 +17,9 @@ import java.util.List;
 
 @Data
 @Schema(description = "文章新增/修改请求")
+@ConditionalNotBlank(field = "sourceUrl", dependsOn = "isOriginal", values = {"0"}, message = "转载文章必须提供原文链接")
+@ConditionalNotEmpty(field = "accessList", dependsOn = "visibilityScope", values = {"2"}, message = "当前文章必须配置访问授权列表")
+@ConditionalNotEmpty(field = "accessList", dependsOn = "accessLevel", values = {"4"}, message = "当前文章必须配置访问授权列表")
 public class ArticleSaveRequest {
     @NotBlank(message = "文章标题不能为空")
     @Size(max = 128, message = "文章标题长度不能超过128")
@@ -31,8 +37,7 @@ public class ArticleSaveRequest {
     @Schema(description = "封面图地址")
     private String coverImage;
 
-    @NotNull(message = "作者不能为空")
-    @Schema(description = "作者ID")
+    @Schema(description = "作者ID（不传则使用当前登录用户）")
     private Long authorId;
 
     @Min(value = 0, message = "置顶标识必须为 0 或 1")
@@ -78,8 +83,10 @@ public class ArticleSaveRequest {
     @Schema(description = "备注")
     private String remark;
 
+    @UniqueElements(message = "分类ID不能包含空值或重复值")
     @Schema(description = "分类ID列表")
     private List<Long> categoryIds;
+    @UniqueElements(message = "标签ID不能包含空值或重复值")
     @Schema(description = "标签ID列表")
     private List<Long> tagIds;
     @Valid
