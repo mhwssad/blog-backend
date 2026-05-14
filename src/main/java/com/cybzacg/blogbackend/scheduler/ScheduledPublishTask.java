@@ -26,9 +26,18 @@ public class ScheduledPublishTask {
     private final ArticleStatusMachine articleStatusMachine;
     private final ApplicationEventPublisher eventPublisher;
 
+    /**
+     * 查询并发布已到定时发布时间的文章。
+     *
+     * <p>扫描状态为待定时发布且计划发布时间已到的文章，执行状态流转并发布内容变更事件。
+     * 每轮最多处理 100 篇，防止单次查询数据量过大。</p>
+     *
+     * @see ArticleStatusMachine#isAwaitingScheduledPublish(BlogArticle, LocalDateTime)
+     */
     @Scheduled(cron = "${article.scheduled-publish-cron:0 * * * * *}")
     public void publishReadyArticles() {
         LocalDateTime now = LocalDateTime.now();
+        // 按发布时间排序，限制单批次处理量，避免长时间占用调度窗口
         List<BlogArticle> articles = blogArticleRepository.listReadyForScheduledPublish(now, 100);
         if (articles.isEmpty()) {
             return;
@@ -37,13 +46,16 @@ public class ScheduledPublishTask {
         int publishedCount = 0;
         for (BlogArticle article : articles) {
             try {
+                // 双重校验：数据库中可能已有其他节点抢先处理，需确认仍处于待发布状态
                 if (!articleStatusMachine.isAwaitingScheduledPublish(article, now)) {
                     continue;
                 }
+                // 状态流转：待定时发布(3) -> 已发布(1)，并清除定时发布时间字段
                 article.setStatus(1);
                 article.setPublishTime(article.getScheduledPublishTime());
                 article.setScheduledPublishTime(null);
                 blogArticleRepository.updateById(article);
+                // 发布内容变更事件，触发 AI 知识库索引更新
                 eventPublisher.publishEvent(new ContentChangeEvent(
                         AiKnowledgeSourceTypeEnum.PUBLIC_ARTICLE.getCode(),
                         article.getId(), ContentChangeAction.PUBLISH, article.getAuthorId()));
