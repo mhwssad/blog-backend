@@ -101,20 +101,6 @@ public class FileAdminServiceImpl implements FileAdminService {
     @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, Integer status) {
         log.info("更新文件状态, fileId={}, newStatus={}", id, status);
-        ExceptionThrowerCore.throwBusinessIfNot(
-            FileStatusEnum.contains(status),
-            FileResultCode.FILE_STATUS_INVALID
-        ); // 状态值必须在枚举范围内
-        ExceptionThrowerCore.throwBusinessIf(
-            FileStatusEnum.DELETED.getValue().equals(status),
-            FileResultCode.FILE_STATUS_INVALID,
-            "文件删除请使用删除接口，状态更新接口不支持设置为已删除"
-        );
-        ExceptionThrowerCore.throwBusinessIf(
-            FileStatusEnum.PHYSICAL_DELETE_PENDING.getValue().equals(status),
-            FileResultCode.FILE_STATUS_INVALID,
-            "待物理删除状态由系统自动管理，不支持手动设置"
-        );
         FileInfo file = fileInfoRepository.getById(id);
         ExceptionThrowerCore.throwBusinessIfNull(
             file,

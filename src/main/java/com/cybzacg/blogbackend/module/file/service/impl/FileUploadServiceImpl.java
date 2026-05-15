@@ -11,7 +11,7 @@ import com.cybzacg.blogbackend.dto.repository.file.FileBusinessInfoRepository;
 import com.cybzacg.blogbackend.dto.repository.file.FileChunkRepository;
 import com.cybzacg.blogbackend.dto.repository.file.FileInfoRepository;
 import com.cybzacg.blogbackend.dto.repository.file.FileUploadTaskRepository;
-import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
+
 import com.cybzacg.blogbackend.enums.file.FileCategoryEnum;
 import com.cybzacg.blogbackend.enums.file.FileReferenceTypeEnum;
 import com.cybzacg.blogbackend.enums.file.FileResultCode;
@@ -44,7 +44,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
+
 import java.util.UUID;
 
 /**
@@ -78,8 +78,6 @@ public class FileUploadServiceImpl implements FileUploadService {
      */
     @Override
     public UserTaskVO initUploadTask(Long userId, UserUploadInitRequest request) {
-        // 参数合法性校验
-        validateInitRequest(request);
         // 规范化 MD5，去除空格和大小写差异
         String md5 = FileUtils.normalizeMd5(request.getFileMd5());
         Long fileSize = request.getFileSize();
@@ -681,65 +679,6 @@ public class FileUploadServiceImpl implements FileUploadService {
      */
     private String buildTempChunkObjectName(String uploadId, Integer chunkNumber) {
         return fileUploadProperties.getTempDirPrefix() + "/" + uploadId + "/chunk-" + chunkNumber + ".part";
-    }
-
-    /**
-     * 校验上传初始化请求的合法性。
-     * 检查请求对象、文件大小限制、扩展名、MD5、可见性、分片参数和引用类型。
-     */
-    private void validateInitRequest(UserUploadInitRequest request) {
-        ExceptionThrowerCore.throwBusinessIfNull(request, FileResultCode.INIT_REQUEST_EMPTY);
-        if (fileUploadProperties.getMaxFileSize() != null && request.getFileSize() > fileUploadProperties.getMaxFileSize()) {
-            ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.MAX_UPLOAD_SIZE_EXCEEDED);
-        }
-        String ext = FileUtils.getExtension(request.getOriginalName());
-        ExceptionThrowerCore.throwBusinessIfNot(isAllowedExtension(ext), FileResultCode.FILE_EXTENSION_NOT_ALLOWED);
-        ExceptionThrowerCore.throwBusinessIf(Boolean.TRUE.equals(fileUploadProperties.getEnableMd5Check()) && !StrUtils.hasText(request.getFileMd5()), FileResultCode.FILE_MD5_REQUIRED);
-        validateChunkRequest(request);
-    }
-
-    /**
-     * 检查文件扩展名是否在允许列表中。
-     * 若允许列表为空或扩展名为空，则默认允许。
-     */
-    private boolean isAllowedExtension(String ext) {
-        if (!StrUtils.hasText(ext)) {
-            return true;
-        }
-        List<String> allowed = fileUploadProperties.getAllowedExtensions();
-        if (allowed == null || allowed.isEmpty()) {
-            return true;
-        }
-        String normalized = ext.toLowerCase(Locale.ROOT);
-        for (String item : allowed) {
-            if (StrUtils.hasText(item) && normalized.equalsIgnoreCase(item.trim())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * 校验分片上传相关参数。
-     * 要求：总分片数 > 1、分片大小 > 0、若配置了分片参数则必须同时提供总数和大小。
-     */
-    private void validateChunkRequest(UserUploadInitRequest request) {
-        boolean hasExplicitChunkConfig = request.getTotalChunks() != null || request.getChunkSize() != null;
-        ExceptionThrowerCore.throwBusinessIf(
-                request.getTotalChunks() != null && request.getTotalChunks() <= 1,
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "分片总数必须大于1"
-        );
-        ExceptionThrowerCore.throwBusinessIf(
-                request.getChunkSize() != null && request.getChunkSize() <= 0,
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "分片大小必须大于0"
-        );
-        ExceptionThrowerCore.throwBusinessIf(
-                hasExplicitChunkConfig && (request.getTotalChunks() == null || request.getChunkSize() == null),
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "分片参数不完整"
-        );
     }
 
     /**
