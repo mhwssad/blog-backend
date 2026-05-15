@@ -72,3 +72,7 @@ application-local.properties
 
 ### Lombok ###
 lombok.config
+.codex/
+.claude/
+# 自定义
+cs/
