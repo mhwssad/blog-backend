@@ -10,6 +10,7 @@ import com.cybzacg.blogbackend.utils.FileUtils;
 import com.cybzacg.blogbackend.utils.JsonUtils;
 import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -19,7 +20,12 @@ import java.util.List;
 
 /**
  * AI 知识条目分块服务实现。
+ *
+ * <p>负责将知识条目的文本内容按字符数切分为固定大小的块（chunk），
+ * 为每个块生成向量嵌入并存储到向量数据库，用于 RAG 检索。
+ * 支持按条目重建（先删后插）和删除操作。
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AiKnowledgeChunkServiceImpl implements AiKnowledgeChunkService {
@@ -27,8 +33,16 @@ public class AiKnowledgeChunkServiceImpl implements AiKnowledgeChunkService {
     private final AiVectorStore aiVectorStore;
     private final AiRagProperties ragProperties;
 
+    /**
+     * 重建指定知识条目的所有分块：先将原始文本切分为片段，再为每个片段生成向量嵌入，
+     * 最后批量写入向量数据库（先删后插）。
+     *
+     * @param entry 知识条目，必须包含非空的 id 和 contentSnapshot
+     * @return 成功生成的分块数量
+     */
     @Override
     public int rebuildChunks(AiKnowledgeEntry entry) {
+        // 内容为空时清除已有分块并返回 0
         if (entry == null || entry.getId() == null || !StrUtils.hasText(entry.getContentSnapshot())) {
             if (entry != null && entry.getId() != null) {
                 aiVectorStore.deleteByEntryId(entry.getId());
@@ -40,6 +54,7 @@ public class AiKnowledgeChunkServiceImpl implements AiKnowledgeChunkService {
         for (int i = 0; i < texts.size(); i++) {
             String text = texts.get(i);
             List<Float> embedding = aiEmbeddingService.embed(text);
+            // 嵌入结果为空说明模型处理异常，跳过该片段
             if (embedding.isEmpty()) {
                 continue;
             }
@@ -60,9 +75,15 @@ public class AiKnowledgeChunkServiceImpl implements AiKnowledgeChunkService {
             chunks.add(chunk);
         }
         aiVectorStore.upsertChunks(entry.getId(), chunks);
+        log.info("知识条目分块重建完成: entryId={}, chunkCount={}", entry.getId(), chunks.size());
         return chunks.size();
     }
 
+    /**
+     * 删除指定知识条目的所有分块及其向量索引。
+     *
+     * @param entryId 知识条目 ID
+     */
     @Override
     public void deleteChunks(Long entryId) {
         aiVectorStore.deleteByEntryId(entryId);
@@ -94,6 +115,13 @@ public class AiKnowledgeChunkServiceImpl implements AiKnowledgeChunkService {
         return chunks.stream().filter(StrUtils::hasText).toList();
     }
 
+    /**
+     * 计算文本的 SHA-256 哈希值，用于分块内容去重和变更检测。
+     *
+     * @param text 原始文本
+     * @return 十六进制哈希字符串
+     * @throws IllegalStateException 哈希算法不可用时抛出
+     */
     private String sha256(String text) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");

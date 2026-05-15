@@ -31,6 +31,11 @@ public class AiKnowledgeSourceConfigAdminServiceImpl implements AiKnowledgeSourc
     private final AiKnowledgeSourceConfigRepository aiKnowledgeSourceConfigRepository;
     private final AiModelConvert aiModelConvert;
 
+    /**
+     * 查询所有知识源配置，按 ID 升序排列。
+     *
+     * @return 知识源配置 VO 列表
+     */
     @Override
     public List<AiKnowledgeSourceConfigVO> listConfigs() {
         List<AiKnowledgeSourceConfig> configs = aiKnowledgeSourceConfigRepository.list(
@@ -39,6 +44,13 @@ public class AiKnowledgeSourceConfigAdminServiceImpl implements AiKnowledgeSourc
         return configs.stream().map(aiModelConvert::toKnowledgeSourceConfigVO).toList();
     }
 
+    /**
+     * 获取指定知识源配置的详情。
+     *
+     * @param id 配置 ID
+     * @return 知识源配置 VO
+     * @throws com.cybzacg.blogbackend.exception.BusinessException 配置不存在时抛出
+     */
     @Override
     public AiKnowledgeSourceConfigVO getConfig(Long id) {
         AiKnowledgeSourceConfig config = ExceptionThrowerCore.requireNonNull(
@@ -47,6 +59,15 @@ public class AiKnowledgeSourceConfigAdminServiceImpl implements AiKnowledgeSourc
         return aiModelConvert.toKnowledgeSourceConfigVO(config);
     }
 
+    /**
+     * 更新知识源配置字段（同步间隔、过滤规则等）。
+     *
+     * @param id         配置 ID
+     * @param request    更新请求
+     * @param operatorId 操作人 ID
+     * @return 更新后的配置 VO
+     * @throws com.cybzacg.blogbackend.exception.BusinessException 配置不存在时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AiKnowledgeSourceConfigVO updateConfig(Long id, AiKnowledgeSourceConfigSaveRequest request, Long operatorId) {
@@ -57,10 +78,19 @@ public class AiKnowledgeSourceConfigAdminServiceImpl implements AiKnowledgeSourc
         aiModelConvert.updateKnowledgeSourceConfig(request, config);
         config.setUpdatedBy(operatorId);
         aiKnowledgeSourceConfigRepository.updateById(config);
+        log.info("更新知识源配置: id={}, operatorId={}", id, operatorId);
 
         return aiModelConvert.toKnowledgeSourceConfigVO(config);
     }
 
+    /**
+     * 切换知识源的启停状态。
+     *
+     * @param id         配置 ID
+     * @param enabled    目标状态，0=禁用，1=启用
+     * @param operatorId 操作人 ID
+     * @throws com.cybzacg.blogbackend.exception.BusinessException 状态值非法或配置不存在时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void toggleEnabled(Long id, Integer enabled, Long operatorId) {
@@ -75,8 +105,16 @@ public class AiKnowledgeSourceConfigAdminServiceImpl implements AiKnowledgeSourc
         config.setEnabled(enabled);
         config.setUpdatedBy(operatorId);
         aiKnowledgeSourceConfigRepository.updateById(config);
+        log.info("知识源配置启停状态变更: id={}, enabled={}, operatorId={}", id, enabled, operatorId);
     }
 
+    /**
+     * 初始化所有知识源类型的默认配置。
+     *
+     * <p>遍历 {@link AiKnowledgeSourceTypeEnum} 中的所有枚举值，
+     * 为尚未创建配置的类型创建默认记录（默认启用、使用默认同步间隔）。
+     * 通常在应用启动或首次部署时调用。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void initDefaultConfigs() {

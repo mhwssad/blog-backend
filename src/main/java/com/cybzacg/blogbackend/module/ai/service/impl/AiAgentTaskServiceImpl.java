@@ -58,6 +58,17 @@ public class AiAgentTaskServiceImpl implements AiAgentTaskService {
     private final NotificationDeliveryService notificationDeliveryService;
     private final AiModelConvert aiModelConvert;
 
+    /**
+     * 用户发起 Agent 任务。
+     *
+     * <p>校验 Agent 定义和渠道配置后，创建任务记录并同步执行。
+     * 执行完成后根据结果发送通知。
+     *
+     * @param userId  当前用户 ID
+     * @param request 任务创建请求，包含 agentId 和输入内容
+     * @return 任务 VO
+     * @throws com.cybzacg.blogbackend.exception.BusinessException Agent 不存在、已禁用或额度不足时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AiAgentTaskVO createTask(Long userId, AiAgentTaskCreateRequest request) {
@@ -75,6 +86,7 @@ public class AiAgentTaskServiceImpl implements AiAgentTaskService {
         task.setTokenCount(0);
         aiAgentTaskRepository.save(task);
 
+        log.info("创建 Agent 任务: taskId={}, userId={}, agentId={}", task.getId(), userId, request.getAgentId());
         executeTask(task, definition, channelConfig);
 
         AiAgentTaskVO vo = aiModelConvert.toAgentTaskVO(task);
@@ -82,6 +94,13 @@ public class AiAgentTaskServiceImpl implements AiAgentTaskService {
         return vo;
     }
 
+    /**
+     * 分页查询当前用户的 Agent 任务列表。
+     *
+     * @param userId 当前用户 ID
+     * @param query  分页查询参数，支持按状态过滤
+     * @return 分页结果
+     */
     @Override
     public PageResult<AiAgentTaskVO> pageMyTasks(Long userId, AiAgentTaskPageQuery query) {
         long current = PaginationUtils.normalizeCurrent(query.getCurrent());
@@ -101,6 +120,14 @@ public class AiAgentTaskServiceImpl implements AiAgentTaskService {
         return PageResult.of(result, voList);
     }
 
+    /**
+     * 获取指定任务的详情（仅任务所有者可查看）。
+     *
+     * @param userId  当前用户 ID
+     * @param taskId  任务 ID
+     * @return 任务 VO
+     * @throws com.cybzacg.blogbackend.exception.BusinessException 任务不存在或不属于当前用户时抛出
+     */
     @Override
     public AiAgentTaskVO getTask(Long userId, Long taskId) {
         AiAgentTask task = getAndValidateOwner(userId, taskId);
@@ -112,6 +139,13 @@ public class AiAgentTaskServiceImpl implements AiAgentTaskService {
         return vo;
     }
 
+    /**
+     * 取消指定任务（仅 PENDING 状态可取消）。
+     *
+     * @param userId  当前用户 ID
+     * @param taskId  任务 ID
+     * @throws com.cybzacg.blogbackend.exception.BusinessException 任务不存在、不属于当前用户或状态不允许取消时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void cancelTask(Long userId, Long taskId) {
@@ -123,8 +157,14 @@ public class AiAgentTaskServiceImpl implements AiAgentTaskService {
         task.setStatus(AiAgentTaskStatusEnum.CANCELLED.getValue());
         task.setCompletedAt(LocalDateTime.now());
         aiAgentTaskRepository.updateById(task);
+        log.info("Agent 任务已取消: taskId={}, userId={}", taskId, userId);
     }
 
+    /**
+     * 同步执行 Agent 任务：调用模型、记录日志、扣减额度并推送通知。
+     *
+     * <p>无论成功或失败均会更新任务状态和完成时间，异常不会向上层传播。
+     */
     private void executeTask(AiAgentTask task, AiAgentDefinition definition, AiChannelConfig channelConfig) {
         try {
             task.setStatus(AiAgentTaskStatusEnum.RUNNING.getValue());
@@ -146,9 +186,11 @@ public class AiAgentTaskServiceImpl implements AiAgentTaskService {
             task.setCompletedAt(LocalDateTime.now());
             aiAgentTaskRepository.updateById(task);
 
+            // 记录对话日志（用户输入 + 模型回复）
             recordLogs(task.getId(), task.getInputContent(), result);
 
             if (result.isSuccess()) {
+                // 成功时扣减额度并记录使用量
                 aiQuotaService.recordUsage(task.getUserId(), channelConfig.getId());
                 aiUsageLogService.logUsage(task.getUserId(), channelConfig.getId(),
                         null, "agent", result.getRequestTokens(),
@@ -163,6 +205,7 @@ public class AiAgentTaskServiceImpl implements AiAgentTaskService {
                         "ai_agent_task", task.getId(),
                         "/ai/agents/tasks/" + task.getId());
             } else {
+                // 失败时仅记录使用量，不扣减额度
                 aiUsageLogService.logUsage(task.getUserId(), channelConfig.getId(),
                         null, "agent", result.getRequestTokens(),
                         result.getResponseTokens(), result.getTotalTokens(), 0, "agent_call_failed");
@@ -194,6 +237,9 @@ public class AiAgentTaskServiceImpl implements AiAgentTaskService {
         }
     }
 
+    /**
+     * 将用户输入和模型回复记录为任务日志（一轮对话）。
+     */
     private void recordLogs(Long taskId, String inputContent, AiModelCallResult result) {
         AiAgentTaskLog userLog = new AiAgentTaskLog();
         userLog.setTaskId(taskId);
@@ -212,6 +258,13 @@ public class AiAgentTaskServiceImpl implements AiAgentTaskService {
         aiAgentTaskLogRepository.save(assistantLog);
     }
 
+    /**
+     * 校验 Agent 定义是否存在且已启用。
+     *
+     * @param agentId Agent 定义 ID
+     * @return Agent 定义实体
+     * @throws com.cybzacg.blogbackend.exception.BusinessException 不存在或已禁用时抛出
+     */
     private AiAgentDefinition validateAndGetDefinition(Long agentId) {
         AiAgentDefinition definition = ExceptionThrowerCore.requireNonNull(
                 aiAgentDefinitionRepository.getById(agentId),
@@ -222,6 +275,9 @@ public class AiAgentTaskServiceImpl implements AiAgentTaskService {
         return definition;
     }
 
+    /**
+     * 根据 Agent 定义获取关联的渠道配置。
+     */
     private AiChannelConfig getChannelConfig(AiAgentDefinition definition) {
         return ExceptionThrowerCore.requireNonNull(
                 aiChannelConfigRepository.getById(definition.getChannelConfigId()),
@@ -246,6 +302,13 @@ public class AiAgentTaskServiceImpl implements AiAgentTaskService {
         allowedToolCodes.forEach(toolCode -> aiToolExecutionService.validateAuthorized(toolCode, context));
     }
 
+    /**
+     * 从 Agent 扩展配置 JSON 中解析允许调用的工具编码列表。
+     *
+     * @param extraConfigJson JSON 字符串，预期包含 "allowedToolCodes" 数组
+     * @return 工具编码列表，解析失败或未配置时返回空列表
+     * @throws com.cybzacg.blogbackend.exception.BusinessException JSON 格式非法时抛出
+     */
     private List<String> parseAllowedToolCodes(String extraConfigJson) {
         if (extraConfigJson == null || extraConfigJson.isBlank()) {
             return List.of();
@@ -264,6 +327,14 @@ public class AiAgentTaskServiceImpl implements AiAgentTaskService {
         }
     }
 
+    /**
+     * 获取任务并验证是否属于指定用户。
+     *
+     * @param userId  当前用户 ID
+     * @param taskId  任务 ID
+     * @return 任务实体
+     * @throws com.cybzacg.blogbackend.exception.BusinessException 任务不存在或不属于当前用户时抛出
+     */
     private AiAgentTask getAndValidateOwner(Long userId, Long taskId) {
         AiAgentTask task = ExceptionThrowerCore.requireNonNull(
                 aiAgentTaskRepository.getById(taskId),

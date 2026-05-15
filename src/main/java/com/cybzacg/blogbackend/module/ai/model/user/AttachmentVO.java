@@ -3,6 +3,9 @@ package com.cybzacg.blogbackend.module.ai.model.user;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+/**
+ * AI 消息附件信息 VO。
+ */
 @Data
 @Schema(description = "AI消息附件信息")
 public class AttachmentVO {

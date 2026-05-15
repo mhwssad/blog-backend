@@ -16,6 +16,11 @@ public class KnowledgeSyncContentListener {
 
     private final AiKnowledgeEntryAdminService aiKnowledgeEntryAdminService;
 
+    /**
+     * 监听内容变更事件，委托知识条目管理服务执行同步。
+     *
+     * @param event 内容变更事件
+     */
     @EventListener
     @Transactional(rollbackFor = Exception.class)
     public void onContentChange(ContentChangeEvent event) {

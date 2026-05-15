@@ -14,16 +14,26 @@ public interface AiVectorStore {
 
     /**
      * 写入知识分块向量。
+     *
+     * @param entryId 知识条目ID
+     * @param chunks  待写入的知识分块列表（含向量）
      */
     void upsertChunks(Long entryId, List<AiKnowledgeChunk> chunks);
 
     /**
      * 删除指定知识条目的向量。
+     *
+     * @param entryId 知识条目ID
      */
     void deleteByEntryId(Long entryId);
 
     /**
      * 按查询向量检索相关分块。
+     *
+     * @param queryEmbedding 查询文本的向量表示
+     * @param topK           返回的最大结果数
+     * @param minScore       最低相似度阈值
+     * @return 命中的知识分块列表
      */
     List<AiRagHit> search(List<Float> queryEmbedding, int topK, double minScore);
 }

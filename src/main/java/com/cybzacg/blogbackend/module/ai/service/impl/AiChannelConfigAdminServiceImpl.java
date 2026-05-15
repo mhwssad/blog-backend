@@ -19,6 +19,7 @@ import com.cybzacg.blogbackend.module.auth.audit.service.SysAuditLogService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,7 @@ import java.util.List;
  *
  * <p>负责渠道配置的增删改查、API Key 脱敏、状态切换与审计日志记录。
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AiChannelConfigAdminServiceImpl implements AiChannelConfigAdminService {
@@ -79,6 +81,7 @@ public class AiChannelConfigAdminServiceImpl implements AiChannelConfigAdminServ
         config.setCreatedBy(operatorId);
         config.setUpdatedBy(operatorId);
         aiChannelConfigRepository.save(config);
+        log.info("创建 AI 渠道配置: id={}, channelCode={}, operatorId={}", config.getId(), config.getChannelCode(), operatorId);
 
         return toMaskedVO(config);
     }
@@ -104,6 +107,7 @@ public class AiChannelConfigAdminServiceImpl implements AiChannelConfigAdminServ
         aiModelConvert.updateChannelConfig(request, config);
         config.setUpdatedBy(operatorId);
         aiChannelConfigRepository.updateById(config);
+        log.info("更新 AI 渠道配置: id={}, channelCode={}, operatorId={}", id, config.getChannelCode(), operatorId);
 
         return toMaskedVO(config);
     }
@@ -120,6 +124,7 @@ public class AiChannelConfigAdminServiceImpl implements AiChannelConfigAdminServ
         config.setStatus(status);
         config.setUpdatedBy(operatorId);
         aiChannelConfigRepository.updateById(config);
+        log.info("切换 AI 渠道状态: id={}, status={}, operatorId={}", id, status, operatorId);
 
         // 审计
         recordAuditLog(operatorId, id, String.valueOf(config.getStatus()), String.valueOf(status));
@@ -138,6 +143,7 @@ public class AiChannelConfigAdminServiceImpl implements AiChannelConfigAdminServ
         config.setStatus(AiChannelStatusEnum.DISABLED.getValue());
         config.setUpdatedBy(operatorId);
         aiChannelConfigRepository.updateById(config);
+        log.info("软删除 AI 渠道配置: id={}, operatorId={}", id, operatorId);
 
         // 审计
         recordAuditLog(operatorId, id, String.valueOf(AiChannelStatusEnum.ENABLED.getValue()),
@@ -185,6 +191,8 @@ public class AiChannelConfigAdminServiceImpl implements AiChannelConfigAdminServ
             auditRequest.setAfterState("statusChanged=" + statusChanged
                     + ",privateChatEnabled=" + dataScopePrivateChat);
             sysAuditLogService.record(auditRequest);
+            log.info("记录 AI 渠道高风险变更审计: channelId={}, statusChanged={}, privateChatEnabled={}, operatorId={}",
+                    existing.getId(), statusChanged, dataScopePrivateChat, operatorId);
         }
     }
 

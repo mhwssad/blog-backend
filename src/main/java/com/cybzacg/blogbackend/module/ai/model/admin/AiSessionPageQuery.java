@@ -8,7 +8,8 @@ import lombok.EqualsAndHashCode;
 import java.time.LocalDateTime;
 
 /**
- * AI 会话后台分页查询条件�? */
+ * AI 会话后台分页查询条件。
+ */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Schema(description = "AI会话后台分页查询条件")
@@ -16,7 +17,7 @@ public class AiSessionPageQuery extends PageQuery {
     @Schema(description = "用户ID")
     private Long userId;
 
-    @Schema(description = "会话状态：0-关闭�?-正常")
+    @Schema(description = "会话状态：0-关闭，1-正常")
     private Integer status;
 
     @Schema(description = "渠道配置ID")

@@ -17,6 +17,12 @@ import java.util.List;
 public class AiEmbeddingServiceImpl implements AiEmbeddingService {
     private final EmbeddingModel embeddingModel = new AllMiniLmL6V2QuantizedEmbeddingModel();
 
+    /**
+     * 将文本转换为向量嵌入。
+     *
+     * @param text 待嵌入的文本内容，为空时返回空列表
+     * @return 向量嵌入列表
+     */
     @Override
     public List<Float> embed(String text) {
         if (!StrUtils.hasText(text)) {
@@ -27,6 +33,11 @@ public class AiEmbeddingServiceImpl implements AiEmbeddingService {
         return embedding == null ? List.of() : embedding.vectorAsList();
     }
 
+    /**
+     * 获取当前使用的嵌入模型名称。
+     *
+     * @return 模型名称，默认 all-minilm-l6-v2-q
+     */
     @Override
     public String modelName() {
         String modelName = embeddingModel.modelName();

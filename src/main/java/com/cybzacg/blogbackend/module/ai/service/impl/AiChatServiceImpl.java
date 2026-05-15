@@ -88,6 +88,7 @@ public class AiChatServiceImpl implements AiChatService {
         session.setStatus(AiChatSessionStatusEnum.NORMAL.getValue());
         session.setLastMessageAt(LocalDateTime.now());
         aiChatSessionRepository.save(session);
+        log.info("创建 AI 会话: sessionId={}, userId={}, channelConfigId={}", session.getId(), userId, config.getId());
 
         return aiModelConvert.toSessionVO(session);
     }
@@ -255,6 +256,8 @@ public class AiChatServiceImpl implements AiChatService {
         // 10. 更新会话最后消息时间
         session.setLastMessageAt(LocalDateTime.now());
         aiChatSessionRepository.updateById(session);
+        log.info("AI 消息发送完成: sessionId={}, userId={}, status={}, tokens={}",
+                sessionId, userId, responseStatus, callResult.getTotalTokens());
 
         AiMessageVO result = aiModelConvert.toMessageVO(assistantMessage);
         fillAttachments(List.of(result));
@@ -271,6 +274,7 @@ public class AiChatServiceImpl implements AiChatService {
         session.setStatus(AiChatSessionStatusEnum.CLOSED.getValue());
         session.setUpdatedAt(LocalDateTime.now());
         aiChatSessionRepository.updateById(session);
+        log.info("关闭 AI 会话: sessionId={}, userId={}", sessionId, userId);
     }
 
     /**
@@ -380,6 +384,7 @@ public class AiChatServiceImpl implements AiChatService {
         }
 
         List<FileInfo> files = fileInfoRepository.listByIds(attachmentFileIds);
+        // 过滤：文件必须属于当前用户、状态正常、类型允许，且每条消息附件数上限
         List<FileInfo> validFiles = files.stream()
                 .filter(f -> userId.equals(f.getUploadUserId()))
                 .filter(f -> f.getStatus() != null && f.getStatus() == 1)
@@ -420,7 +425,7 @@ public class AiChatServiceImpl implements AiChatService {
             return;
         }
 
-        // 批量查询文件信息以填充 fileUrl
+        // 批量查询文件信息，避免 N+1 问题
         List<Long> fileIds = allAttachments.stream().map(AiMessageAttachment::getFileId).distinct().toList();
         Map<Long, FileInfo> fileInfoMap = fileInfoRepository.listByIds(fileIds).stream()
                 .collect(java.util.stream.Collectors.toMap(FileInfo::getId, f -> f));

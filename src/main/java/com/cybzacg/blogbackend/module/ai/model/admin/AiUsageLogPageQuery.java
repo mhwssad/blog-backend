@@ -8,7 +8,8 @@ import lombok.EqualsAndHashCode;
 import java.time.LocalDateTime;
 
 /**
- * AI使用日志分页查询条件�? */
+ * AI使用日志分页查询条件。
+ */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Schema(description = "AI使用日志分页查询条件")

@@ -12,6 +12,7 @@ import com.cybzacg.blogbackend.module.ai.model.admin.AiUsageStatsVO;
 import com.cybzacg.blogbackend.module.ai.service.AiUsageLogService;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -22,6 +23,7 @@ import java.util.List;
  *
  * <p>负责调用日志的持久化记录、分页查询与统计聚合。
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AiUsageLogServiceImpl implements AiUsageLogService {
@@ -52,22 +54,23 @@ public class AiUsageLogServiceImpl implements AiUsageLogService {
                          Integer successStatus, String errorCode,
                          Integer ragEnabled, Integer ragHitCount,
                          Long ragDurationMs, String ragReferenceJson) {
-        AiUsageLog log = new AiUsageLog();
-        log.setUserId(userId);
-        log.setChannelConfigId(channelConfigId);
-        log.setSessionId(sessionId);
-        log.setRequestSceneType(requestSceneType);
-        log.setRequestTokens(requestTokens);
-        log.setResponseTokens(responseTokens);
-        log.setTotalTokens(totalTokens);
-        log.setQuotaCost(totalTokens != null ? totalTokens : 0);
-        log.setSuccessStatus(successStatus);
-        log.setErrorCode(errorCode);
-        log.setRagEnabled(ragEnabled != null ? ragEnabled : 0);
-        log.setRagHitCount(ragHitCount != null ? ragHitCount : 0);
-        log.setRagDurationMs(ragDurationMs != null ? ragDurationMs : 0L);
-        log.setRagReferenceJson(ragReferenceJson);
-        aiUsageLogRepository.save(log);
+        AiUsageLog usageLog = new AiUsageLog();
+        usageLog.setUserId(userId);
+        usageLog.setChannelConfigId(channelConfigId);
+        usageLog.setSessionId(sessionId);
+        usageLog.setRequestSceneType(requestSceneType);
+        usageLog.setRequestTokens(requestTokens);
+        usageLog.setResponseTokens(responseTokens);
+        usageLog.setTotalTokens(totalTokens);
+        usageLog.setQuotaCost(totalTokens != null ? totalTokens : 0);
+        usageLog.setSuccessStatus(successStatus);
+        usageLog.setErrorCode(errorCode);
+        usageLog.setRagEnabled(ragEnabled != null ? ragEnabled : 0);
+        usageLog.setRagHitCount(ragHitCount != null ? ragHitCount : 0);
+        usageLog.setRagDurationMs(ragDurationMs != null ? ragDurationMs : 0L);
+        usageLog.setRagReferenceJson(ragReferenceJson);
+        aiUsageLogRepository.save(usageLog);
+        log.debug("记录 AI 使用日志: userId={}, channelConfigId={}, successStatus={}", userId, channelConfigId, successStatus);
     }
 
     /**

@@ -43,6 +43,17 @@ public class AiKnowledgeSyncTaskAdminServiceImpl implements AiKnowledgeSyncTaskA
     private final AiKnowledgeChunkService aiKnowledgeChunkService;
     private final AiModelConvert aiModelConvert;
 
+    /**
+     * 手动触发知识同步任务。
+     *
+     * <p>同一来源类型不允许并发执行，若存在运行中的任务则抛出异常。
+     * 任务创建后立即同步执行（抽取条目 → 分块 → 向量索引重建）。
+     *
+     * @param request    触发请求，包含来源类型、任务类型等参数
+     * @param operatorId 操作人 ID
+     * @return 同步任务 VO
+     * @throws com.cybzacg.blogbackend.exception.BusinessException 存在运行中的任务时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AiKnowledgeSyncTaskVO triggerSync(AiKnowledgeSyncTriggerRequest request, Long operatorId) {
@@ -71,6 +82,15 @@ public class AiKnowledgeSyncTaskAdminServiceImpl implements AiKnowledgeSyncTaskA
         return aiModelConvert.toKnowledgeSyncTaskVO(task);
     }
 
+    /**
+     * 重试失败的同步任务。
+     *
+     * <p>仅允许重试状态为 FAILED 且重试次数未超过上限的任务。
+     *
+     * @param taskId     任务 ID
+     * @param operatorId 操作人 ID
+     * @throws com.cybzacg.blogbackend.exception.BusinessException 任务不存在、状态不允许或重试次数超限时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void retryTask(Long taskId, Long operatorId) {
@@ -99,6 +119,12 @@ public class AiKnowledgeSyncTaskAdminServiceImpl implements AiKnowledgeSyncTaskA
         executeSyncTask(task, null);
     }
 
+    /**
+     * 分页查询同步任务列表。
+     *
+     * @param query 分页查询参数，支持按来源类型和状态过滤
+     * @return 分页结果
+     */
     @Override
     public PageResult<AiKnowledgeSyncTaskVO> listTasks(AiKnowledgeSyncTaskPageQuery query) {
         long current = PaginationUtils.normalizeCurrent(query.getCurrent());
@@ -113,6 +139,13 @@ public class AiKnowledgeSyncTaskAdminServiceImpl implements AiKnowledgeSyncTaskA
         return PageResult.of(page, records);
     }
 
+    /**
+     * 获取指定同步任务的详情。
+     *
+     * @param taskId 任务 ID
+     * @return 同步任务 VO
+     * @throws com.cybzacg.blogbackend.exception.BusinessException 任务不存在时抛出
+     */
     @Override
     public AiKnowledgeSyncTaskVO getTask(Long taskId) {
         AiKnowledgeSyncTask task = ExceptionThrowerCore.requireNonNull(
@@ -142,6 +175,7 @@ public class AiKnowledgeSyncTaskAdminServiceImpl implements AiKnowledgeSyncTaskA
         try {
             List<AiKnowledgeEntry> entries = loadEntriesForTask(task, sourceId);
             total = entries.size();
+            // 逐条执行：upsert 条目 → 重建分块 → 更新状态
             for (AiKnowledgeEntry sourceEntry : entries) {
                 try {
                     AiKnowledgeEntry persisted = upsertEntry(sourceEntry);
@@ -158,6 +192,7 @@ public class AiKnowledgeSyncTaskAdminServiceImpl implements AiKnowledgeSyncTaskA
                             task.getId(), sourceEntry.getSourceType(), sourceEntry.getSourceId(), ex);
                 }
             }
+            // 全部成功标记 COMPLETED，部分失败标记 FAILED
             task.setStatus(fail > 0 ? AiKnowledgeSyncTaskStatusEnum.FAILED.getValue()
                     : AiKnowledgeSyncTaskStatusEnum.COMPLETED.getValue());
         } catch (Exception ex) {
@@ -175,6 +210,16 @@ public class AiKnowledgeSyncTaskAdminServiceImpl implements AiKnowledgeSyncTaskA
         aiKnowledgeSyncTaskRepository.updateById(task);
     }
 
+    /**
+     * 根据任务类型加载需要同步的知识条目列表。
+     *
+     * <p>支持三种任务类型：
+     * <ul>
+     *   <li>single_entry：仅抽取指定 sourceId 的单条条目</li>
+     *   <li>incremental：仅抽取状态为待同步的候选条目</li>
+     *   <li>full（默认）：全量抽取该来源类型的所有条目</li>
+     * </ul>
+     */
     private List<AiKnowledgeEntry> loadEntriesForTask(AiKnowledgeSyncTask task, Long sourceId) {
         if (AiConstants.SYNC_TASK_TYPE_SINGLE.equals(task.getTaskType())) {
             ExceptionThrowerCore.throwBusinessIf(sourceId == null,
@@ -192,6 +237,9 @@ public class AiKnowledgeSyncTaskAdminServiceImpl implements AiKnowledgeSyncTaskA
         return aiKnowledgeSourceExtractor.extractAll(task.getSourceType());
     }
 
+    /**
+     * 新增或更新知识条目。若来源已存在则合并字段并递增版本号，否则新建。
+     */
     private AiKnowledgeEntry upsertEntry(AiKnowledgeEntry sourceEntry) {
         AiKnowledgeEntry existing = aiKnowledgeEntryRepository.findBySource(
                 sourceEntry.getSourceType(), sourceEntry.getSourceId());
@@ -213,6 +261,7 @@ public class AiKnowledgeSyncTaskAdminServiceImpl implements AiKnowledgeSyncTaskA
         return existing;
     }
 
+    /** 截断错误信息，避免超长消息写入数据库。 */
     private String truncateError(String message) {
         if (message == null) {
             return null;

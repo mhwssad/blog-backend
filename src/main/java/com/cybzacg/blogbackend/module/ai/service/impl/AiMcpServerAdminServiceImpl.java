@@ -49,6 +49,12 @@ public class AiMcpServerAdminServiceImpl implements AiMcpServerAdminService {
     private final AiMcpClientFactory aiMcpClientFactory;
     private final SysAuditLogService sysAuditLogService;
 
+    /**
+     * 分页查询 MCP 服务配置，支持按名称、传输类型、启用状态过滤。
+     *
+     * @param query 分页查询参数
+     * @return 分页结果
+     */
     @Override
     public PageResult<AiMcpServerConfigVO> pageServers(AiMcpServerConfigPageQuery query) {
         long current = PaginationUtils.normalizeCurrent(query.getCurrent());
@@ -65,11 +71,25 @@ public class AiMcpServerAdminServiceImpl implements AiMcpServerAdminService {
         return PageResult.of(page, records);
     }
 
+    /**
+     * 根据 ID 获取 MCP 服务配置详情。
+     *
+     * @param id MCP 服务配置 ID
+     * @return 服务配置 VO
+     * @throws com.cybzacg.blogbackend.exception.BusinessException 服务不存在时抛出
+     */
     @Override
     public AiMcpServerConfigVO getServer(Long id) {
         return aiToolModelConvert.toMcpServerConfigVO(getServerOrThrow(id));
     }
 
+    /**
+     * 创建 MCP 服务配置，名称唯一性校验通过后持久化并记录审计日志。
+     *
+     * @param request    创建请求
+     * @param operatorId 操作人 ID
+     * @return 创建后的服务配置 VO
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AiMcpServerConfigVO createServer(AiMcpServerConfigSaveRequest request, Long operatorId) {
@@ -82,9 +102,18 @@ public class AiMcpServerAdminServiceImpl implements AiMcpServerAdminService {
         entity.setUpdatedBy(operatorId);
         aiMcpServerConfigRepository.save(entity);
         recordAudit(operatorId, entity.getId(), null, "create:" + entity.getServerName());
+        log.info("创建 MCP 服务配置: id={}, serverName={}, operatorId={}", entity.getId(), entity.getServerName(), operatorId);
         return aiToolModelConvert.toMcpServerConfigVO(entity);
     }
 
+    /**
+     * 更新 MCP 服务配置，变更名称时校验唯一性，更新前后均记录审计日志。
+     *
+     * @param id         服务配置 ID
+     * @param request    更新请求
+     * @param operatorId 操作人 ID
+     * @return 更新后的服务配置 VO
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AiMcpServerConfigVO updateServer(Long id, AiMcpServerConfigSaveRequest request, Long operatorId) {
@@ -101,6 +130,13 @@ public class AiMcpServerAdminServiceImpl implements AiMcpServerAdminService {
         return aiToolModelConvert.toMcpServerConfigVO(entity);
     }
 
+    /**
+     * 切换 MCP 服务的启用/停用状态。
+     *
+     * @param id         服务配置 ID
+     * @param enabled    目标状态（0=停用，1=启用）
+     * @param operatorId 操作人 ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateServerStatus(Long id, Integer enabled, Long operatorId) {
@@ -113,6 +149,12 @@ public class AiMcpServerAdminServiceImpl implements AiMcpServerAdminService {
         recordAudit(operatorId, id, String.valueOf(before), String.valueOf(enabled));
     }
 
+    /**
+     * 软删除 MCP 服务配置：将状态设为停用。
+     *
+     * @param id         服务配置 ID
+     * @param operatorId 操作人 ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteServer(Long id, Long operatorId) {
@@ -123,6 +165,14 @@ public class AiMcpServerAdminServiceImpl implements AiMcpServerAdminService {
         recordAudit(operatorId, id, "enabled=1", "enabled=0");
     }
 
+    /**
+     * 连接 MCP 服务并发现其提供的工具列表，同步到快照和工具定义表。
+     * 发现成功后更新服务健康状态为 healthy，失败则标记为 unhealthy。
+     *
+     * @param id         MCP 服务配置 ID
+     * @param operatorId 操作人 ID
+     * @return 发现结果，包含发现数量和同步数量
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AiMcpDiscoverResultVO discoverTools(Long id, Long operatorId) {
@@ -141,6 +191,7 @@ public class AiMcpServerAdminServiceImpl implements AiMcpServerAdminService {
             server.setLastErrorSummary(null);
             server.setUpdatedBy(operatorId);
             aiMcpServerConfigRepository.updateById(server);
+            log.info("MCP 工具发现成功: serverId={}, discoveredCount={}, syncedCount={}", id, tools.size(), synced);
 
             AiMcpDiscoverResultVO vo = new AiMcpDiscoverResultVO();
             vo.setDiscoveredCount(tools.size());
@@ -155,6 +206,12 @@ public class AiMcpServerAdminServiceImpl implements AiMcpServerAdminService {
         }
     }
 
+    /**
+     * 查询指定 MCP 服务下的工具快照列表。
+     *
+     * @param id MCP 服务配置 ID
+     * @return 工具快照 VO 列表
+     */
     @Override
     public List<AiMcpToolSnapshotVO> listTools(Long id) {
         getServerOrThrow(id);
@@ -163,6 +220,12 @@ public class AiMcpServerAdminServiceImpl implements AiMcpServerAdminService {
                 .toList();
     }
 
+    /**
+     * 检查 MCP 服务健康状态，更新 lastHealthStatus 并返回检查结果。
+     *
+     * @param id MCP 服务配置 ID
+     * @return 健康检查结果 VO
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AiMcpHealthVO checkHealth(Long id) {
@@ -193,6 +256,14 @@ public class AiMcpServerAdminServiceImpl implements AiMcpServerAdminService {
         }
     }
 
+    /**
+     * 将单个 MCP 工具同步到快照表和工具定义表：存在则更新，不存在则插入。
+     * 工具编码格式为 mcp.{serverId}.{sanitizedToolName}。
+     *
+     * @param server     MCP 服务配置
+     * @param tool       LangChain4j 工具规格
+     * @param operatorId 操作人 ID
+     */
     private void syncTool(AiMcpServerConfig server, ToolSpecification tool, Long operatorId) {
         String toolCode = buildToolCode(server.getId(), tool.name());
         String parametersSchema = tool.parameters() == null ? null : JsonUtils.toJson(tool.parameters());
@@ -246,6 +317,13 @@ public class AiMcpServerAdminServiceImpl implements AiMcpServerAdminService {
         }
     }
 
+    /**
+     * 按服务 ID 和工具名称查找快照记录。
+     *
+     * @param serverId MCP 服务 ID
+     * @param toolName 工具名称
+     * @return 快照记录，不存在时返回 null
+     */
     private AiMcpToolSnapshot findSnapshot(Long serverId, String toolName) {
         return aiMcpToolSnapshotRepository.getOne(new LambdaQueryWrapper<AiMcpToolSnapshot>()
                 .eq(AiMcpToolSnapshot::getMcpServerId, serverId)
@@ -253,17 +331,39 @@ public class AiMcpServerAdminServiceImpl implements AiMcpServerAdminService {
                 .last("limit 1"), false);
     }
 
+    /**
+     * 构建工具编码，将工具名称中的非字母数字字符替换为下划线。
+     * 格式：mcp.{serverId}.{sanitizedToolName}
+     *
+     * @param serverId MCP 服务 ID
+     * @param toolName 原始工具名称
+     * @return 规范化后的工具编码
+     */
     private String buildToolCode(Long serverId, String toolName) {
         String sanitized = toolName == null ? "unknown" : toolName.replaceAll("[^a-zA-Z0-9_\\-]", "_");
         return "mcp." + serverId + "." + sanitized;
     }
 
+    /**
+     * 按 ID 查询 MCP 服务配置，不存在时抛出业务异常。
+     *
+     * @param id MCP 服务配置 ID
+     * @return 服务配置实体
+     */
     private AiMcpServerConfig getServerOrThrow(Long id) {
         return ExceptionThrowerCore.requireNonNull(
                 aiMcpServerConfigRepository.getById(id),
                 ResultErrorCode.AI_MCP_SERVER_NOT_FOUND);
     }
 
+    /**
+     * 记录 MCP 服务配置变更审计日志。
+     *
+     * @param operatorId 操作人 ID
+     * @param targetId   目标 MCP 服务配置 ID
+     * @param before     变更前状态摘要
+     * @param after      变更后状态摘要
+     */
     private void recordAudit(Long operatorId, Long targetId, String before, String after) {
         SysAuditLogCreateRequest audit = new SysAuditLogCreateRequest();
         audit.setOperatorUserId(operatorId);

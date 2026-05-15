@@ -14,6 +14,7 @@ import com.cybzacg.blogbackend.module.auth.experience.level.LevelConfig;
 import com.cybzacg.blogbackend.module.auth.experience.service.UserExperienceService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -27,6 +28,7 @@ import java.util.List;
  *
  * <p>基于 Redis 计数器实现平台/用户每日额度校验与记录，自动处理 Key 过期。
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AiQuotaServiceImpl implements AiQuotaService {
@@ -46,6 +48,7 @@ public class AiQuotaServiceImpl implements AiQuotaService {
                 ConfigConstants.AI_GLOBAL_ENABLED_KEY, ConfigConstants.DEFAULT_AI_GLOBAL_ENABLED);
         ExceptionThrowerCore.throwBusinessIf(
                 !"true".equalsIgnoreCase(globalEnabled), ResultErrorCode.AI_GLOBAL_DISABLED);
+        log.debug("AI 全局开关校验通过, userId={}", userId);
 
         // 2. 平台每日额度
         int platformQuota = Integer.parseInt(sysConfigService.getValueOrDefault(
@@ -56,6 +59,7 @@ public class AiQuotaServiceImpl implements AiQuotaService {
             long platformUsed = getCountWithInit(platformKey);
             ExceptionThrowerCore.throwBusinessIf(
                     platformUsed >= platformQuota, ResultErrorCode.AI_QUOTA_PLATFORM_EXCEEDED);
+            log.debug("平台每日额度校验通过, platformUsed={}/{}", platformUsed, platformQuota);
         }
 
         // 3. 用户每日额度
@@ -64,6 +68,7 @@ public class AiQuotaServiceImpl implements AiQuotaService {
         long userUsed = getCountWithInit(userKey);
         ExceptionThrowerCore.throwBusinessIf(
                 userUsed >= effectiveLimit, ResultErrorCode.AI_QUOTA_EXCEEDED);
+        log.debug("用户每日额度校验通过, userId={}, used={}/{}", userId, userUsed, effectiveLimit);
     }
 
     /**

@@ -15,6 +15,7 @@ import com.cybzacg.blogbackend.module.ai.service.AiChatAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
  *
  * <p>提供管理员按条件查询用户 AI 会话、填充用户和渠道信息等能力。
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AiChatAdminServiceImpl implements AiChatAdminService {
@@ -68,9 +70,16 @@ public class AiChatAdminServiceImpl implements AiChatAdminService {
         AiSessionAdminVO vo = toAdminVO(session);
         fillUserInfo(List.of(vo));
         fillChannelInfo(List.of(vo));
+        log.debug("管理员查询 AI 会话详情: sessionId={}", sessionId);
         return vo;
     }
 
+    /**
+     * 将会话实体转换为后台管理 VO，填充基础字段。
+     *
+     * @param session 会话实体
+     * @return 后台管理 VO
+     */
     private AiSessionAdminVO toAdminVO(AiChatSession session) {
         AiSessionAdminVO vo = new AiSessionAdminVO();
         vo.setId(session.getId());
@@ -85,6 +94,11 @@ public class AiChatAdminServiceImpl implements AiChatAdminService {
         return vo;
     }
 
+    /**
+     * 批量填充用户名和昵称，避免 N+1 查询。
+     *
+     * @param records 会话 VO 列表
+     */
     private void fillUserInfo(List<AiSessionAdminVO> records) {
         Set<Long> userIds = records.stream()
                 .map(AiSessionAdminVO::getUserId)
@@ -104,6 +118,11 @@ public class AiChatAdminServiceImpl implements AiChatAdminService {
         }
     }
 
+    /**
+     * 批量填充渠道名称，避免 N+1 查询。
+     *
+     * @param records 会话 VO 列表
+     */
     private void fillChannelInfo(List<AiSessionAdminVO> records) {
         Set<Long> channelIds = records.stream()
                 .map(AiSessionAdminVO::getChannelConfigId)

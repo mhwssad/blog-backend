@@ -17,6 +17,11 @@ public class AiRagRetrievalResult {
     private String contextText;
     private String referenceJson;
 
+    /**
+     * 获取检索命中的分块数量。
+     *
+     * @return 命中数量
+     */
     public int hitCount() {
         return hits == null ? 0 : hits.size();
     }

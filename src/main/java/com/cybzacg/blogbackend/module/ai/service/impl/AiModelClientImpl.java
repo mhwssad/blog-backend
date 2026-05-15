@@ -41,12 +41,35 @@ public class AiModelClientImpl implements AiModelClient {
 
     private final AiAccountPoolService aiAccountPoolService;
 
+    /**
+     * 同步调用 AI 模型（无图片附件）。
+     *
+     * @param config          渠道配置
+     * @param systemPrompt    系统提示词
+     * @param contextMessages 历史对话消息列表
+     * @param userQuestion    当前用户提问
+     * @return 模型调用结果
+     */
     @Override
     public AiModelCallResult chat(AiChannelConfig config, String systemPrompt,
                                   List<AiChatMessage> contextMessages, String userQuestion) {
         return chat(config, systemPrompt, contextMessages, userQuestion, null);
     }
 
+    /**
+     * 同步调用 AI 模型（支持图片附件）。
+     *
+     * <p>从账号池选择可用账号构建模型实例，组装消息列表后发起调用。
+     * 调用成功上报健康状态，失败上报错误信息。
+     *
+     * @param config          渠道配置
+     * @param systemPrompt    系统提示词
+     * @param contextMessages 历史对话消息列表
+     * @param userQuestion    当前用户提问
+     * @param imageAttachments 图片附件列表，可为 null
+     * @return 模型调用结果，失败时 success=false 并包含错误信息
+     * @throws com.cybzacg.blogbackend.exception.BusinessException 账号池为空时抛出
+     */
     @Override
     public AiModelCallResult chat(AiChannelConfig config, String systemPrompt,
                                   List<AiChatMessage> contextMessages,
@@ -163,6 +186,9 @@ public class AiModelClientImpl implements AiModelClient {
         return trimmed;
     }
 
+    /**
+     * 估算消息列表的总 token 数（所有文本字符数 / 2）。
+     */
     private int estimateTokens(List<ChatMessage> messages) {
         int totalChars = 0;
         for (ChatMessage message : messages) {
@@ -171,6 +197,9 @@ public class AiModelClientImpl implements AiModelClient {
         return totalChars / 2;
     }
 
+    /**
+     * 从不同类型的 ChatMessage 中提取文本内容。
+     */
     private String extractText(ChatMessage message) {
         if (message instanceof UserMessage userMsg) {
             return userMsg.hasSingleText() ? userMsg.singleText() : "";
@@ -182,6 +211,9 @@ public class AiModelClientImpl implements AiModelClient {
         return "";
     }
 
+    /**
+     * 将 LangChain4j ChatResponse 映射为内部统一调用结果。
+     */
     private AiModelCallResult mapResponse(ChatResponse response) {
         AiModelCallResult result = new AiModelCallResult();
         result.setSuccess(true);
@@ -202,6 +234,7 @@ public class AiModelClientImpl implements AiModelClient {
         return result;
     }
 
+    /** 截断错误信息，避免超长消息写入数据库或日志。 */
     private String truncateErrorMessage(String message) {
         if (message == null) {
             return "未知错误";
@@ -209,6 +242,21 @@ public class AiModelClientImpl implements AiModelClient {
         return message.length() > 500 ? message.substring(0, 500) + "..." : message;
     }
 
+    /**
+     * 流式调用 AI 模型，通过回调逐片段推送结果。
+     *
+     * <p>使用 {@link StreamingChatModel} 异步生成，通过 {@link Consumer} 回调推送
+     * 增量文本、token 用量和完成/错误事件。设置默认超时时间防止永久阻塞。
+     *
+     * @param config          渠道配置
+     * @param systemPrompt    系统提示词
+     * @param contextMessages 历史对话消息列表
+     * @param userQuestion    当前用户提问
+     * @param imageAttachments 图片附件列表，可为 null
+     * @param eventConsumer   流式事件消费者，接收增量文本、用量统计和终止事件
+     * @return 完整的模型回复文本
+     * @throws com.cybzacg.blogbackend.exception.BusinessException 账号池为空时抛出
+     */
     @Override
     public String streamChat(AiChannelConfig config, String systemPrompt,
                              List<AiChatMessage> contextMessages,
@@ -229,12 +277,14 @@ public class AiModelClientImpl implements AiModelClient {
         streamingModel.chat(messages, new StreamingChatResponseHandler() {
             @Override
             public void onPartialResponse(String partialResponse) {
+                // 累积增量文本并推送 delta 事件
                 fullResponse.append(partialResponse);
                 eventConsumer.accept(AiStreamEvent.delta(partialResponse));
             }
 
             @Override
             public void onCompleteResponse(ChatResponse completeResponse) {
+                // 推送 token 用量统计
                 TokenUsage usage = completeResponse.tokenUsage();
                 if (usage != null) {
                     eventConsumer.accept(AiStreamEvent.usage(
@@ -251,6 +301,7 @@ public class AiModelClientImpl implements AiModelClient {
 
             @Override
             public void onError(Throwable error) {
+                // 上报账号失败并推送 error 事件
                 if (accountId != null) {
                     aiAccountPoolService.reportFailure(accountId, error.getMessage());
                 }
@@ -261,6 +312,7 @@ public class AiModelClientImpl implements AiModelClient {
             }
         });
 
+        // 阻塞等待流式响应完成或超时
         try {
             streamDone.get(AiConstants.DEFAULT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         } catch (TimeoutException e) {
