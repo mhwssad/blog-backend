@@ -48,7 +48,7 @@ public class ReportAdminController {
     )
     @PreAuthorize("@permission.hasPermission('sys:report:query')")
     public Result<PageResult<ReportAdminVO>> pageReports(
-        ReportAdminPageQuery query
+        @Valid ReportAdminPageQuery query
     ) {
         return Result.success(reportAdminService.pageReports(query));
     }

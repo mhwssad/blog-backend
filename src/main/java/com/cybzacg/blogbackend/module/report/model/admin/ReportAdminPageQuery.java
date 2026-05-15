@@ -1,9 +1,10 @@
 package com.cybzacg.blogbackend.module.report.model.admin;
 
+import com.cybzacg.blogbackend.core.validation.EnumValue;
 import com.cybzacg.blogbackend.core.web.PageQuery;
+import com.cybzacg.blogbackend.enums.report.ReportRecordStatusEnum;
+import com.cybzacg.blogbackend.enums.report.ReportTargetTypeEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -15,11 +16,11 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(callSuper = true)
 @Schema(description = "后台举报分页查询条件")
 public class ReportAdminPageQuery extends PageQuery {
-    @Min(value = 0, message = "举报状态不合法")
-    @Max(value = 3, message = "举报状态不合法")
+    @EnumValue(enumClass = ReportRecordStatusEnum.class, message = "举报状态不合法")
     @Schema(description = "状态：0-待处理，1-处理中，2-已处理，3-已驳回")
     private Integer status;
 
+    @EnumValue(enumClass = ReportTargetTypeEnum.class, method = "getCode", message = "举报对象类型不合法")
     @Schema(description = "举报对象类型：article/comment/chat_message")
     private String reportTargetType;
 

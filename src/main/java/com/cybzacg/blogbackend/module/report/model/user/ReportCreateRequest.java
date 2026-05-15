@@ -1,5 +1,7 @@
 package com.cybzacg.blogbackend.module.report.model.user;
 
+import com.cybzacg.blogbackend.core.validation.EnumValue;
+import com.cybzacg.blogbackend.enums.report.ReportTargetTypeEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -13,6 +15,7 @@ import lombok.Data;
 @Schema(description = "提交举报请求")
 public class ReportCreateRequest {
     @NotBlank(message = "举报对象类型不能为空")
+    @EnumValue(enumClass = ReportTargetTypeEnum.class, method = "getCode", message = "举报对象类型无效")
     @Schema(description = "举报对象类型：article/comment/chat_message", requiredMode = Schema.RequiredMode.REQUIRED)
     private String targetType;
 

@@ -6,7 +6,6 @@ import com.cybzacg.blogbackend.dto.domain.report.SysReportRecord;
 import com.cybzacg.blogbackend.dto.repository.report.SysReportRecordRepository;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.enums.report.ReportRecordStatusEnum;
-import com.cybzacg.blogbackend.enums.report.ReportTargetTypeEnum;
 import com.cybzacg.blogbackend.module.report.convert.ReportModelConvert;
 import com.cybzacg.blogbackend.module.report.model.user.ReportCreateRequest;
 import com.cybzacg.blogbackend.module.report.model.user.ReportVO;
@@ -31,11 +30,6 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public ReportVO submitReport(Long userId, ReportCreateRequest request) {
-        ExceptionThrowerCore.throwBusinessIfNot(
-            ReportTargetTypeEnum.contains(request.getTargetType()),
-            ResultErrorCode.REPORT_TARGET_TYPE_INVALID
-        );
-
         // 重复举报频率限制：同一用户同一对象24小时内只能举报一次
         boolean exists = sysReportRecordRepository.existsByReporterAndTarget(
             userId,
