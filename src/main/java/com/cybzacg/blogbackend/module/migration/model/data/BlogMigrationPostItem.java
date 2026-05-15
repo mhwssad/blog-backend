@@ -1,6 +1,7 @@
 package com.cybzacg.blogbackend.module.migration.model.data;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -11,7 +12,9 @@ import java.util.List;
  */
 @Data
 public class BlogMigrationPostItem {
+    @NotBlank(message = "外部文章ID不能为空")
     private String externalPostId;
+    @NotBlank(message = "文章标题不能为空")
     private String title;
     private String summary;
     private String content;

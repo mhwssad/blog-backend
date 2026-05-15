@@ -36,6 +36,8 @@ import com.cybzacg.blogbackend.module.migration.model.internal.BlogMigrationDown
 import com.cybzacg.blogbackend.module.migration.service.BlogMigrationAdminService;
 import com.cybzacg.blogbackend.module.migration.service.BlogMigrationAttachmentImportService;
 import com.cybzacg.blogbackend.utils.*;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -72,6 +74,7 @@ public class BlogMigrationAdminServiceImpl implements BlogMigrationAdminService 
     private final ArticleAdminService articleAdminService;
     private final BlogMigrationAttachmentImportService blogMigrationAttachmentImportService;
     private final BlogMigrationModelConvert blogMigrationModelConvert;
+    private final Validator validator;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -258,9 +261,6 @@ public class BlogMigrationAdminServiceImpl implements BlogMigrationAdminService 
     }
 
     private void validateCreateRequest(BlogMigrationCreateRequest request, MultipartFile file) {
-        ExceptionThrowerCore.throwBusinessIfNull(request, ResultErrorCode.ILLEGAL_ARGUMENT, "请求不能为空");
-        ExceptionThrowerCore.throwBusinessIfNull(file, ResultErrorCode.MIGRATION_FILE_INVALID, "迁移文件不能为空");
-        ExceptionThrowerCore.throwBusinessIf(file.isEmpty(), ResultErrorCode.MIGRATION_FILE_INVALID, "迁移文件不能为空");
         validateAuthor(request.getAuthorId());
     }
 
@@ -284,9 +284,13 @@ public class BlogMigrationAdminServiceImpl implements BlogMigrationAdminService 
 
     private void validateImportFile(BlogMigrationImportFile importFile) {
         ExceptionThrowerCore.throwBusinessIfNull(importFile, ResultErrorCode.MIGRATION_FILE_INVALID, "迁移文件内容不能为空");
-        normalizeSourcePlatform(importFile.getSourcePlatform());
-        ExceptionThrowerCore.throwBusinessIf(CollectionUtils.isEmpty(importFile.getPosts()),
-                ResultErrorCode.MIGRATION_FILE_INVALID, "迁移文件文章列表不能为空");
+        Set<ConstraintViolation<BlogMigrationImportFile>> violations = validator.validate(importFile);
+        if (!violations.isEmpty()) {
+            String message = violations.stream()
+                    .map(ConstraintViolation::getMessage)
+                    .collect(Collectors.joining("; "));
+            ExceptionThrowerCore.throwBusinessEx(ResultErrorCode.MIGRATION_FILE_INVALID, message);
+        }
     }
 
     private String readFileContent(MultipartFile file) {
@@ -322,7 +326,9 @@ public class BlogMigrationAdminServiceImpl implements BlogMigrationAdminService 
     }
 
     private String normalizeSourcePlatform(String sourcePlatform) {
-        ExceptionThrowerCore.throwBusinessIfBlank(sourcePlatform, ResultErrorCode.MIGRATION_FILE_INVALID, "来源平台不能为空");
+        if (!StrUtils.hasText(sourcePlatform)) {
+            return "";
+        }
         return sourcePlatform.trim().toLowerCase(Locale.ROOT);
     }
 
@@ -379,14 +385,8 @@ public class BlogMigrationAdminServiceImpl implements BlogMigrationAdminService 
         if (postItem == null) {
             return "文章数据为空";
         }
-        if (!StrUtils.hasText(postItem.getExternalPostId())) {
-            return "外部文章ID不能为空";
-        }
         if (duplicateMap.getOrDefault(buildIdempotentKey(sourcePlatform, postItem.getExternalPostId()), 0) > 1) {
             return "外部文章ID重复";
-        }
-        if (!StrUtils.hasText(postItem.getTitle())) {
-            return "文章标题不能为空";
         }
         String categoryError = validateCategories(postItem.getCategoryCodes());
         if (categoryError != null) {

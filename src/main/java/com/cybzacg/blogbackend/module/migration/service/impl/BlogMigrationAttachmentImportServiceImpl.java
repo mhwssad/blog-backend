@@ -47,10 +47,6 @@ public class BlogMigrationAttachmentImportServiceImpl implements BlogMigrationAt
 
     @Override
     public BlogMigrationDownloadedAttachment downloadAndSave(BlogMigrationTask task, BlogMigrationAttachmentItem attachmentItem) {
-        ExceptionThrowerCore.throwBusinessIfNull(task, ResultErrorCode.MIGRATION_TASK_NOT_FOUND);
-        ExceptionThrowerCore.throwBusinessIfNull(attachmentItem, ResultErrorCode.MIGRATION_ATTACHMENT_DOWNLOAD_FAILED, "附件不能为空");
-        ExceptionThrowerCore.throwBusinessIfBlank(attachmentItem.getUrl(), ResultErrorCode.MIGRATION_ATTACHMENT_DOWNLOAD_FAILED, "附件URL不能为空");
-
         try {
             byte[] bytes = downloadBytes(attachmentItem.getUrl());
             String md5 = FileUtils.toHex(MessageDigest.getInstance("MD5").digest(bytes));

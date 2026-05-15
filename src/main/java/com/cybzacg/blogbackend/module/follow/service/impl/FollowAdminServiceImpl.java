@@ -2,14 +2,12 @@ package com.cybzacg.blogbackend.module.follow.service.impl;
 
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.dto.repository.follow.SysUserFollowRepository;
-import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.follow.convert.FollowModelConvert;
 import com.cybzacg.blogbackend.module.follow.model.admin.FollowAdminPageQuery;
 import com.cybzacg.blogbackend.module.follow.model.admin.FollowAdminRelationVO;
 import com.cybzacg.blogbackend.module.follow.model.admin.FollowRelationCleanRequest;
 import com.cybzacg.blogbackend.module.follow.service.FollowAdminService;
 import com.cybzacg.blogbackend.utils.CollectionUtils;
-import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -54,7 +52,6 @@ public class FollowAdminServiceImpl implements FollowAdminService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public long cleanRelations(FollowRelationCleanRequest request) {
-        validateCleanRequest(request);
         long count = CollectionUtils.defaultLong(sysUserFollowRepository.countCleanableRelations(
                 isTrue(request.getCleanInactive()),
                 isTrue(request.getCleanDeletedUsers()),
@@ -69,17 +66,6 @@ public class FollowAdminServiceImpl implements FollowAdminService {
                 isTrue(request.getCleanDisabledUsers())
         );
         return count;
-    }
-
-    private void validateCleanRequest(FollowRelationCleanRequest request) {
-        ExceptionThrowerCore.throwBusinessIfNull(request, ResultErrorCode.ILLEGAL_ARGUMENT, "清理条件不能为空");
-        ExceptionThrowerCore.throwBusinessIf(
-                !isTrue(request.getCleanInactive())
-                        && !isTrue(request.getCleanDeletedUsers())
-                        && !isTrue(request.getCleanDisabledUsers()),
-                ResultErrorCode.ILLEGAL_ARGUMENT,
-                "清理关注关系必须至少指定一个条件"
-        );
     }
 
     private boolean isTrue(Boolean value) {
