@@ -100,4 +100,11 @@ public final class StrUtils {
     public static boolean contains(String source, String keyword) {
         return StringUtils.hasText(source) && source.contains(keyword);
     }
+
+    /**
+     * 将 null 转为空串，非 null 原样返回。
+     */
+    public static String nullToEmpty(String value) {
+        return value == null ? "" : value;
+    }
 }
