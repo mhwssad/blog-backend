@@ -90,7 +90,7 @@ public class ArticleReviewAdminServiceImpl implements ArticleReviewAdminService 
     @Transactional(rollbackFor = Exception.class)
     public void rejectReview(Long articleId, ArticleReviewDecisionRequest request) {
         ExceptionThrowerCore.throwBusinessIf(
-                !StrUtils.hasText(request.getReviewComment()),
+                request == null || !StrUtils.hasText(request.getReviewComment()),
                 ResultErrorCode.ILLEGAL_ARGUMENT,
                 "审核拒绝必须填写原因");
         reviewArticle(articleId, ArticleReviewActionEnum.REJECT, ArticleReviewStatusEnum.REJECTED, request);

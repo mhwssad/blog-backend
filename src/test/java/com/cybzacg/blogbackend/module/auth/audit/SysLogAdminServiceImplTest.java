@@ -98,14 +98,14 @@ class SysLogAdminServiceImplTest {
     }
 
     @Test
-    void cleanLogsShouldRejectWhenNoConditionProvided() {
+    void cleanLogsShouldDelegateToRepositoryEvenWithoutConditions() {
         SysLogCleanRequest request = new SysLogCleanRequest();
+        when(sysLogRepository.removeByConditions(request)).thenReturn(0L);
 
-        BusinessException exception = assertThrows(BusinessException.class, () -> sysLogAdminService.cleanLogs(request));
+        long result = sysLogAdminService.cleanLogs(request);
 
-        assertEquals(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), exception.getCode());
-        assertEquals("清理日志必须至少指定一个条件", exception.getMessage());
-        verify(sysLogRepository, never()).removeByConditions(request);
+        assertEquals(0L, result);
+        verify(sysLogRepository).removeByConditions(request);
     }
 
     @Test

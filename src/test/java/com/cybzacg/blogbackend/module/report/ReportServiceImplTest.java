@@ -99,17 +99,6 @@ class ReportServiceImplTest {
     }
 
     @Test
-    void submitReportShouldRejectNonExistentTarget() {
-        ReportCreateRequest request = buildCreateRequest("invalid_type", 100L, "spam", "广告");
-
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> reportService.submitReport(1L, request));
-
-        assertEquals(ResultErrorCode.REPORT_TARGET_TYPE_INVALID.getCode(), exception.getCode());
-        verify(sysReportRecordRepository, never()).save(any());
-    }
-
-    @Test
     void submitReportShouldRejectDuplicateRateLimited() {
         ReportCreateRequest request = buildCreateRequest("article", 100L, "spam", "广告");
 

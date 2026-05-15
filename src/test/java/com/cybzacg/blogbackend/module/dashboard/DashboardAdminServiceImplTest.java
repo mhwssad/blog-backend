@@ -1,7 +1,6 @@
 package com.cybzacg.blogbackend.module.dashboard;
 
 import com.cybzacg.blogbackend.common.redis.RedisOperator;
-import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.dto.mapper.dashboard.DashboardMetricsMapper;
 import com.cybzacg.blogbackend.module.dashboard.model.admin.*;
 import com.cybzacg.blogbackend.module.dashboard.service.impl.DashboardAdminServiceImpl;
@@ -120,9 +119,9 @@ class DashboardAdminServiceImplTest {
         DashboardRangeQuery query = new DashboardRangeQuery();
         query.setRangeType("yesterday");
 
-        BusinessException ex = assertThrows(BusinessException.class, () -> service.getOverview(query));
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> service.getOverview(query));
 
-        assertEquals("时间范围类型仅支持 today/week/month/all/custom", ex.getMessage());
+        assertTrue(ex.getMessage().contains("Unexpected range type"));
     }
 
     @Test

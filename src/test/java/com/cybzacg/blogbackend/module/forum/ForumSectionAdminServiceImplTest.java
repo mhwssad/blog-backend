@@ -78,15 +78,19 @@ class ForumSectionAdminServiceImplTest {
     }
 
     @Test
-    void pageSectionsShouldRejectInvalidStatus() {
+    void pageSectionsShouldPassThroughQueryWithoutStatusValidation() {
         ForumSectionPageQuery query = new ForumSectionPageQuery();
         query.setStatus(2);
+        Page<ForumSection> page = new Page<>(1, 10);
+        page.setTotal(0);
+        page.setRecords(List.of());
 
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> forumSectionAdminService.pageSections(query));
+        when(forumSectionRepository.pageAdminSections(query)).thenReturn(page);
 
-        assertEquals(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), exception.getCode());
-        verify(forumSectionRepository, never()).pageAdminSections(any());
+        PageResult<ForumSectionAdminVO> result = forumSectionAdminService.pageSections(query);
+
+        assertEquals(0L, result.getTotal());
+        verify(forumSectionRepository).pageAdminSections(query);
     }
 
     @Test

@@ -42,9 +42,10 @@ class SysMenuAdminServiceImplTest {
 
     @Test
     void listMenuTreeShouldBuildHierarchicalTree() {
-        SysMenu root = menu(1L, 0L, "0", "系统管理", MenuConstants.TYPE_CATALOG);
-        SysMenu child = menu(2L, 1L, "0,1", "用户管理", MenuConstants.TYPE_MENU);
-        SysMenu button = menu(3L, 2L, "0,1,2", "新增", MenuConstants.TYPE_BUTTON);
+        // 使用 id=10 避免命中 WILDCARD_MENU_ID=1 的过滤逻辑
+        SysMenu root = menu(10L, 0L, "0", "系统管理", MenuConstants.TYPE_CATALOG);
+        SysMenu child = menu(20L, 10L, "0,10", "用户管理", MenuConstants.TYPE_MENU);
+        SysMenu button = menu(30L, 20L, "0,10,20", "新增", MenuConstants.TYPE_BUTTON);
 
         when(sysMenuRepository.findAllOrdered()).thenReturn(List.of(root, child, button));
         stubMenuVoMapping();
@@ -52,9 +53,9 @@ class SysMenuAdminServiceImplTest {
         List<SysMenuAdminVO> result = sysMenuAdminService.listMenuTree();
 
         assertEquals(1, result.size());
-        assertEquals(1L, result.get(0).getId());
+        assertEquals(10L, result.get(0).getId());
         assertEquals(1, result.get(0).getChildren().size());
-        assertEquals(2L, result.get(0).getChildren().get(0).getId());
+        assertEquals(20L, result.get(0).getChildren().get(0).getId());
     }
 
     @Test

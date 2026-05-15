@@ -42,9 +42,9 @@ class AuthUserDetailsServiceImplTest {
         user.setPassword("secret");
         user.setStatus(1);
 
+        // "admin" 匹配超级管理员角色，走超级管理员分支，仅加载通配符权限
         when(sysUserRepository.findByUsername("demo")).thenReturn(user);
         when(sysRoleRepository.findRoleCodesByUserId(7L)).thenReturn(List.of("admin", "ROLE_root", " "));
-        when(sysMenuRepository.findPermissionsByUserId(7L)).thenReturn(List.of("sys:user:query", "sys:user:query"));
 
         AuthUserDetails details = service.loadAuthUserByUsername("demo");
 
@@ -54,7 +54,9 @@ class AuthUserDetailsServiceImplTest {
         assertTrue(details.isEnabled());
         assertTrue(details.getAuthorities().stream().anyMatch(item -> item.getAuthority().equals("ROLE_admin")));
         assertTrue(details.getAuthorities().stream().anyMatch(item -> item.getAuthority().equals("ROLE_root")));
-        assertTrue(details.getAuthorities().stream().anyMatch(item -> item.getAuthority().equals("sys:user:query")));
+        assertTrue(details.getAuthorities().stream().anyMatch(item -> item.getAuthority().equals("*:*:*")));
+        // 超级管理员不加载菜单权限
+        verify(sysMenuRepository, never()).findPermissionsByUserId(anyLong());
         verify(sysUserRepository).findByUsername("demo");
     }
 

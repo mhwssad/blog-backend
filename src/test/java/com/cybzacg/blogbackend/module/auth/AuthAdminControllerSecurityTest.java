@@ -806,7 +806,7 @@ class AuthAdminControllerSecurityTest {
     void cleanLogsShouldAllowAuthorizedUser() throws Exception {
         mockMvc.perform(post("/api/sys/logs/clean")
                         .contentType(APPLICATION_JSON)
-                        .content("{}"))
+                        .content("{\"module\":\"test\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()))
                 .andExpect(jsonPath("$.data").value(0));
@@ -819,7 +819,7 @@ class AuthAdminControllerSecurityTest {
     void cleanLogsShouldRejectUserWithoutCleanPermission() throws Exception {
         mockMvc.perform(post("/api/sys/logs/clean")
                         .contentType(APPLICATION_JSON)
-                        .content("{}"))
+                        .content("{\"module\":\"test\"}"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value(ResultErrorCode.FORBIDDEN.getCode()));
 
@@ -913,7 +913,7 @@ class AuthAdminControllerSecurityTest {
     void createMenuShouldAllowAuthorizedUser() throws Exception {
         mockMvc.perform(post("/api/sys/menus")
                         .contentType(APPLICATION_JSON)
-                        .content("{\"parentId\":0,\"name\":\"Dashboard\",\"type\":\"MENU\",\"routePath\":\"/dashboard\"}"))
+                        .content("{\"parentId\":0,\"name\":\"Dashboard\",\"type\":\"M\",\"routePath\":\"/dashboard\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()));
 
@@ -925,7 +925,7 @@ class AuthAdminControllerSecurityTest {
     void createMenuShouldRejectUserWithoutCreatePermission() throws Exception {
         mockMvc.perform(post("/api/sys/menus")
                         .contentType(APPLICATION_JSON)
-                        .content("{\"parentId\":0,\"name\":\"Dashboard\",\"type\":\"MENU\",\"routePath\":\"/dashboard\"}"))
+                        .content("{\"parentId\":0,\"name\":\"Dashboard\",\"type\":\"M\",\"routePath\":\"/dashboard\"}"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value(ResultErrorCode.FORBIDDEN.getCode()));
 
@@ -937,7 +937,7 @@ class AuthAdminControllerSecurityTest {
     void updateMenuShouldAllowAuthorizedUser() throws Exception {
         mockMvc.perform(put("/api/sys/menus/17")
                         .contentType(APPLICATION_JSON)
-                        .content("{\"parentId\":0,\"name\":\"Dashboard\",\"type\":\"MENU\",\"routePath\":\"/dashboard-home\"}"))
+                        .content("{\"parentId\":0,\"name\":\"Dashboard\",\"type\":\"M\",\"routePath\":\"/dashboard-home\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()));
 
@@ -950,7 +950,7 @@ class AuthAdminControllerSecurityTest {
     void updateMenuShouldRejectUserWithoutUpdatePermission() throws Exception {
         mockMvc.perform(put("/api/sys/menus/17")
                         .contentType(APPLICATION_JSON)
-                        .content("{\"parentId\":0,\"name\":\"Dashboard\",\"type\":\"MENU\",\"routePath\":\"/dashboard-home\"}"))
+                        .content("{\"parentId\":0,\"name\":\"Dashboard\",\"type\":\"M\",\"routePath\":\"/dashboard-home\"}"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value(ResultErrorCode.FORBIDDEN.getCode()));
 

@@ -1,20 +1,29 @@
 package com.cybzacg.blogbackend.module.file;
 
+import com.cybzacg.blogbackend.config.property.FileUploadProperties;
+import com.cybzacg.blogbackend.core.validation.AllowedFileExtensionValidator;
+import com.cybzacg.blogbackend.core.validation.MaxUploadFileSizeValidator;
+import com.cybzacg.blogbackend.core.validation.Md5RequiredValidator;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.module.file.controller.UserFileController;
 import com.cybzacg.blogbackend.module.file.model.user.FileUploadInitRequest;
 import com.cybzacg.blogbackend.module.file.model.user.FileUploadInitVO;
 import com.cybzacg.blogbackend.module.file.model.user.UserFileVO;
 import com.cybzacg.blogbackend.module.file.service.UserFileService;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorFactory;
+import org.hibernate.validator.internal.engine.constraintvalidation.ConstraintValidatorFactoryImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.nullable;
@@ -35,7 +44,34 @@ class UserFileControllerTest {
     @BeforeEach
     void setUp() {
         UserFileController controller = new UserFileController(userFileService);
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        FileUploadProperties fileUploadProperties = new FileUploadProperties();
+        MaxUploadFileSizeValidator maxUploadFileSizeValidator = new MaxUploadFileSizeValidator(fileUploadProperties);
+        Md5RequiredValidator md5RequiredValidator = new Md5RequiredValidator(fileUploadProperties);
+        AllowedFileExtensionValidator allowedFileExtensionValidator = new AllowedFileExtensionValidator(fileUploadProperties);
+        Map<Class<? extends ConstraintValidator<?, ?>>, ConstraintValidator<?, ?>> validatorMap = Map.of(
+                MaxUploadFileSizeValidator.class, maxUploadFileSizeValidator,
+                Md5RequiredValidator.class, md5RequiredValidator,
+                AllowedFileExtensionValidator.class, allowedFileExtensionValidator
+        );
+        ConstraintValidatorFactory defaultFactory = new ConstraintValidatorFactoryImpl();
+        ConstraintValidatorFactory customFactory = new ConstraintValidatorFactory() {
+            @Override
+            public <T extends ConstraintValidator<?, ?>> T getInstance(Class<T> key) {
+                @SuppressWarnings("unchecked")
+                T instance = (T) validatorMap.get(key);
+                return instance != null ? instance : defaultFactory.getInstance(key);
+            }
+            @Override
+            public void releaseInstance(ConstraintValidator<?, ?> instance) {
+                // no-op
+            }
+        };
+        LocalValidatorFactoryBean validatorFactoryBean = new LocalValidatorFactoryBean();
+        validatorFactoryBean.setConstraintValidatorFactory(customFactory);
+        validatorFactoryBean.afterPropertiesSet();
+        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setValidator(validatorFactoryBean)
+                .build();
     }
 
     @Test

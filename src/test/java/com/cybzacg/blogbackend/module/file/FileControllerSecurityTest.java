@@ -1,6 +1,10 @@
 package com.cybzacg.blogbackend.module.file;
 
+import com.cybzacg.blogbackend.config.property.FileUploadProperties;
 import com.cybzacg.blogbackend.core.security.SecurityPermissionChecker;
+import com.cybzacg.blogbackend.core.validation.AllowedFileExtensionValidator;
+import com.cybzacg.blogbackend.core.validation.MaxUploadFileSizeValidator;
+import com.cybzacg.blogbackend.core.validation.Md5RequiredValidator;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.module.file.controller.FileAdminController;
@@ -67,7 +71,7 @@ class FileControllerSecurityTest {
     void initUploadTaskShouldRequireLogin() throws Exception {
         mockMvc.perform(post("/api/user/files/upload-tasks/init")
                         .contentType(APPLICATION_JSON)
-                        .content("{\"originalName\":\"avatar.png\",\"fileSize\":1}"))
+                        .content("{\"originalName\":\"avatar.png\",\"fileSize\":1,\"fileMd5\":\"d41d8cd98f00b204e9800998ecf8427e\"}"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value(ResultErrorCode.LOGIN_REQUIRED.getCode()));
 
@@ -84,7 +88,7 @@ class FileControllerSecurityTest {
 
         mockMvc.perform(post("/api/user/files/upload-tasks/init")
                         .contentType(APPLICATION_JSON)
-                        .content("{\"originalName\":\"avatar.png\",\"fileSize\":1}"))
+                        .content("{\"originalName\":\"avatar.png\",\"fileSize\":1,\"fileMd5\":\"d41d8cd98f00b204e9800998ecf8427e\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()))
                 .andExpect(jsonPath("$.data.uploadId").value("upload-1"));
@@ -272,6 +276,26 @@ class FileControllerSecurityTest {
         @Bean("permission")
         SecurityPermissionChecker securityPermissionChecker() {
             return new SecurityPermissionChecker();
+        }
+
+        @Bean
+        FileUploadProperties fileUploadProperties() {
+            return new FileUploadProperties();
+        }
+
+        @Bean
+        MaxUploadFileSizeValidator maxUploadFileSizeValidator(FileUploadProperties fileUploadProperties) {
+            return new MaxUploadFileSizeValidator(fileUploadProperties);
+        }
+
+        @Bean
+        Md5RequiredValidator md5RequiredValidator(FileUploadProperties fileUploadProperties) {
+            return new Md5RequiredValidator(fileUploadProperties);
+        }
+
+        @Bean
+        AllowedFileExtensionValidator allowedFileExtensionValidator(FileUploadProperties fileUploadProperties) {
+            return new AllowedFileExtensionValidator(fileUploadProperties);
         }
 
         @Bean

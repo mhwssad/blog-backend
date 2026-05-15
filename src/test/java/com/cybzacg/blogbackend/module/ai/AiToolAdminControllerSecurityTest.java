@@ -107,7 +107,7 @@ class AiToolAdminControllerSecurityTest {
             securityUtils.when(SecurityUtils::requireUserId).thenReturn(99L);
             mockMvc.perform(post("/api/sys/ai/tools/1/execute")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"arguments\":\"{}\"}"))
+                            .content("{\"toolCode\":\"test_tool\",\"arguments\":\"{}\"}"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.code").value(ResultErrorCode.SUCCESS.getCode()));
         }

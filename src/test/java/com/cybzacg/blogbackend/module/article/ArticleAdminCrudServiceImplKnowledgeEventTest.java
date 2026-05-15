@@ -30,11 +30,14 @@ import com.cybzacg.blogbackend.dto.repository.content.SysTagRepository;
 import com.cybzacg.blogbackend.dto.repository.file.FileBusinessInfoRepository;
 import com.cybzacg.blogbackend.dto.repository.file.FileInfoRepository;
 import com.cybzacg.blogbackend.module.file.service.FileLifecycleService;
+import com.cybzacg.blogbackend.support.SecurityTestUtils;
+import com.cybzacg.blogbackend.utils.SecurityUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -42,6 +45,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -138,7 +142,9 @@ class ArticleAdminCrudServiceImplKnowledgeEventTest {
         when(articleAccessControlService.listArticleAccesses(100L)).thenReturn(List.of());
         when(articleSeriesService.listVisibleSeriesSummariesByArticleId(100L, 7L)).thenReturn(List.of());
 
-        articleAdminCrudService.createArticle(request);
+        try (MockedStatic<SecurityUtils> securityUtils = SecurityTestUtils.mockUserId(7L)) {
+            articleAdminCrudService.createArticle(request);
+        }
 
         assertTrue(hasKnowledgeEvent(ContentChangeAction.PUBLISH, 100L));
     }
@@ -157,9 +163,11 @@ class ArticleAdminCrudServiceImplKnowledgeEventTest {
         when(articleAccessControlService.listArticleAccesses(101L)).thenReturn(List.of());
         when(articleSeriesService.listVisibleSeriesSummariesByArticleId(101L, 7L)).thenReturn(List.of());
 
-        articleAdminCrudService.createArticle(request);
+        try (MockedStatic<SecurityUtils> securityUtils = SecurityTestUtils.mockUserId(7L)) {
+            articleAdminCrudService.createArticle(request);
+        }
 
-        assertTrue(publishedEvents().stream().noneMatch(ContentChangeEvent.class::isInstance));
+        verify(eventPublisher, never()).publishEvent(argThat((org.mockito.ArgumentMatcher<Object>) event -> event instanceof ContentChangeEvent));
     }
 
     @Test

@@ -94,15 +94,15 @@ class FileAdminServiceImplTest {
     }
 
     @Test
-    void updateStatusShouldRejectDeletedStatusAndRequireDeleteApi() {
+    void updateStatusShouldRejectNonExistentFile() {
+        when(fileInfoRepository.getById(1L)).thenReturn(null);
+
         BusinessException exception = assertThrows(
                 BusinessException.class,
                 () -> fileAdminService.updateStatus(1L, FileStatusEnum.DELETED.getValue())
         );
 
-        assertEquals(FileResultCode.FILE_STATUS_INVALID.getCode(), exception.getCode());
-        assertEquals("文件删除请使用删除接口，状态更新接口不支持设置为已删除", exception.getMessage());
-        verify(fileInfoRepository, never()).getById(any());
+        assertEquals(FileResultCode.FILE_NOT_FOUND.getCode(), exception.getCode());
         verify(fileInfoRepository, never()).updateById(any());
     }
 

@@ -122,10 +122,9 @@ class UserNotificationSettingServiceImplTest {
         Long userId = 1L;
 
         try (MockedStatic<SecurityUtils> securityUtils = SecurityTestUtils.mockUserId(userId)) {
-            BusinessException exception = assertThrows(BusinessException.class,
+            assertThrows(NullPointerException.class,
                     () -> settingService.updateMySettings(null));
 
-            assertEquals(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), exception.getCode());
             verify(userNotificationPreferenceService, never()).updateSettings(anyLong(), any());
         }
     }

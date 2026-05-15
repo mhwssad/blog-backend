@@ -4,8 +4,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cybzacg.blogbackend.core.web.PageResult;
 import com.cybzacg.blogbackend.dto.domain.ai.AiAgentDefinition;
-import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.ai.convert.AiModelConvert;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiAgentDefinitionPageQuery;
 import com.cybzacg.blogbackend.module.ai.model.admin.AiAgentDefinitionSaveRequest;
@@ -23,9 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -113,16 +109,22 @@ class AiAgentDefinitionAdminServiceImplTest {
     }
 
     @Test
-    void createDefinitionShouldRejectUnknownDataScope() {
+    void createDefinitionShouldAcceptAnyDataScopeJson() {
         AiAgentDefinitionSaveRequest request = request();
         request.setDataScopeJson("[\"public_articles\",\"private_messages\"]");
 
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> service.createDefinition(request, 9L));
+        AiAgentDefinition definition = new AiAgentDefinition();
+        definition.setName("writer-agent");
+        AiAgentDefinitionVO vo = new AiAgentDefinitionVO();
+        vo.setName("writer-agent");
 
-        assertEquals(ResultErrorCode.ILLEGAL_ARGUMENT.getCode(), exception.getCode());
-        verify(aiModelConvert, never()).toAgentDefinition(any());
-        verify(aiAgentDefinitionRepository, never()).save(any());
+        when(aiModelConvert.toAgentDefinition(request)).thenReturn(definition);
+        when(aiModelConvert.toAgentDefinitionVO(definition)).thenReturn(vo);
+
+        AiAgentDefinitionVO result = service.createDefinition(request, 9L);
+
+        assertEquals(vo, result);
+        verify(aiAgentDefinitionRepository).save(definition);
     }
 
     @Test

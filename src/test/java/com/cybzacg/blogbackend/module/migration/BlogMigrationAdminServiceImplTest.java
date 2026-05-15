@@ -35,6 +35,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import jakarta.validation.Validator;
 import org.springframework.mock.web.MockMultipartFile;
 
 import java.nio.charset.StandardCharsets;
@@ -73,6 +74,8 @@ class BlogMigrationAdminServiceImplTest {
     private BlogMigrationAttachmentImportService attachmentImportService;
     @Mock
     private BlogMigrationModelConvert convert;
+    @Mock
+    private Validator validator;
 
     private BlogMigrationAdminServiceImpl service;
 
@@ -88,7 +91,8 @@ class BlogMigrationAdminServiceImplTest {
                 sysTagRepository,
                 articleAdminService,
                 attachmentImportService,
-                convert
+                convert,
+                validator
         );
     }
 

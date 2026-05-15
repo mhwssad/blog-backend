@@ -1,8 +1,6 @@
 package com.cybzacg.blogbackend.module.content.taxonomy;
 
 import com.cybzacg.blogbackend.dto.domain.content.SysTag;
-import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
-import com.cybzacg.blogbackend.exception.BusinessException;
 import com.cybzacg.blogbackend.module.content.shared.convert.ContentModelConvert;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.admin.TagSaveRequest;
 import com.cybzacg.blogbackend.module.content.taxonomy.model.admin.TagVO;
@@ -75,7 +73,7 @@ class TagAdminServiceImplTest {
         SysTag tag = tag(null, "Java", "#f00");
         TagVO vo = tagVO(10L, "Java", "#f00");
 
-        when(sysTagRepository.existsByNameExcludingId("Java", null)).thenReturn(false);
+        when(sysTagRepository.findByName("Java")).thenReturn(null);
         when(contentModelConvert.toTag(request)).thenReturn(tag);
         when(sysTagRepository.save(tag)).thenAnswer(invocation -> {
             tag.setId(10L);
@@ -91,16 +89,19 @@ class TagAdminServiceImplTest {
     }
 
     @Test
-    void createTagShouldThrowWhenNameAlreadyExists() {
+    void createTagShouldReturnExistingTagWhenNameAlreadyExists() {
         TagSaveRequest request = new TagSaveRequest();
         request.setName("Java");
 
-        when(sysTagRepository.existsByNameExcludingId("Java", null)).thenReturn(true);
+        SysTag existing = tag(10L, "Java", "#000");
+        TagVO existingVo = tagVO(10L, "Java", "#000");
 
-        BusinessException exception = assertThrows(BusinessException.class, () -> tagAdminService.createTag(request));
+        when(sysTagRepository.findByName("Java")).thenReturn(existing);
+        when(contentModelConvert.toTagVO(existing)).thenReturn(existingVo);
 
-        assertEquals(ResultErrorCode.DATA_ALREADY_EXISTS.getCode(), exception.getCode());
-        assertEquals("标签名称已存在", exception.getMessage());
+        TagVO result = tagAdminService.createTag(request);
+
+        assertSame(existingVo, result);
         verify(sysTagRepository, never()).save(any(SysTag.class));
     }
 

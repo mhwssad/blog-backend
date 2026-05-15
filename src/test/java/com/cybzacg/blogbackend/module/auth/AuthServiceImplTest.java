@@ -372,7 +372,7 @@ class AuthServiceImplTest {
         SysMenu roleMenu = new SysMenu();
         roleMenu.setPerm("sys:role:assign-menu");
         menus.add(roleMenu);
-        List<String> permissions = List.of("sys:user:query", "sys:role:assign-menu", AuthConstants.ALL_PERMISSION);
+        List<String> permissions = List.of(AuthConstants.ALL_PERMISSION);
         AuthUserInfo expected = AuthUserInfo.builder()
                 .id(12L)
                 .username("demo")
@@ -382,7 +382,6 @@ class AuthServiceImplTest {
 
         when(sysUserRepository.getById(12L)).thenReturn(user);
         when(sysRoleRepository.findRoleCodesByUserId(12L)).thenReturn(roleCodes);
-        when(sysMenuRepository.findAllOrdered()).thenReturn(menus);
         when(authModelConvert.toAuthUserInfo(user, roleCodes, permissions)).thenReturn(expected);
 
         try (MockedStatic<?> securityUtils = SecurityTestUtils.mockAuthentication(authentication, 12L, null)) {
