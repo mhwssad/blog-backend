@@ -66,8 +66,8 @@ public class FollowNoticeServiceImpl implements FollowNoticeService {
             return;
         }
         LocalDateTime now = LocalDateTime.now();
-        String displayName = StrUtils.hasText(follower.getNickname()) ? follower.getNickname().trim()
-                : StrUtils.trimToDefault(follower.getUsername(), "有新用户");
+        String displayName = StrUtils.trimToDefault(follower.getNickname(),
+                StrUtils.trimToDefault(follower.getUsername(), "有新用户"));
 
         SysNotice notice = buildFollowNotice(targetUserId, followerUserId, displayName, now);
         try {

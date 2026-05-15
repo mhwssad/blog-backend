@@ -64,7 +64,7 @@ public final class TransmittableContextUtils {
      * 读取上下文字段。
      */
     public static Optional<Object> get(String key) {
-        if (key == null || key.isBlank()) {
+        if (StrUtils.isBlank(key)) {
             return Optional.empty();
         }
         return Optional.ofNullable(CONTEXT_HOLDER.get().get(key));
@@ -86,7 +86,7 @@ public final class TransmittableContextUtils {
         if (value instanceof Number number) {
             return number.longValue();
         }
-        if (value instanceof String stringValue && !stringValue.isBlank()) {
+        if (value instanceof String stringValue && StrUtils.hasText(stringValue)) {
             try {
                 return Long.parseLong(stringValue);
             } catch (NumberFormatException ignored) {
@@ -100,7 +100,7 @@ public final class TransmittableContextUtils {
      * 移除单个上下文字段。
      */
     public static void remove(String key) {
-        if (key == null || key.isBlank()) {
+        if (StrUtils.isBlank(key)) {
             return;
         }
         Map<String, Object> currentContext = CONTEXT_HOLDER.get();

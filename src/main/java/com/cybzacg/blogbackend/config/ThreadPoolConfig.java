@@ -1,6 +1,7 @@
 package com.cybzacg.blogbackend.config;
 
 import com.cybzacg.blogbackend.config.property.ThreadPoolProperties;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import com.cybzacg.blogbackend.utils.TransmittableContextUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
@@ -117,7 +118,7 @@ public class ThreadPoolConfig implements AsyncConfigurer {
      * @return 对应的 RejectedExecutionHandler 实例
      */
     private RejectedExecutionHandler resolveRejectedExecutionHandler(String rejectionPolicy) {
-        String normalizedPolicy = rejectionPolicy == null ? "" : rejectionPolicy.trim().toLowerCase();
+        String normalizedPolicy = StrUtils.nullToEmpty(StrUtils.trimToLowerCase(rejectionPolicy));
         return switch (normalizedPolicy) {
             case "caller-runs", "caller_runs", "callerruns" -> callerRunsPolicy();
             case "discard" -> discardPolicy();

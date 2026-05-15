@@ -66,7 +66,7 @@ public class ChatNotificationServiceImpl implements ChatNotificationService {
                 || !StrUtils.hasText(conversation.getAnnouncement())) {
             return;
         }
-        String conversationName = StrUtils.hasText(conversation.getName()) ? conversation.getName().trim() : "主题频道";
+        String conversationName = StrUtils.trimToDefault(conversation.getName(), "主题频道");
         String content = "「" + conversationName + "」发布了新的频道公告：" + preview(conversation.getAnnouncement());
         for (ChatConversationMember member : activeMembers) {
             Long targetUserId = member == null ? null : member.getUserId();
@@ -166,7 +166,7 @@ public class ChatNotificationServiceImpl implements ChatNotificationService {
     }
 
     private String buildMentionContent(ChatConversation conversation, String senderName, String textContent) {
-        String conversationName = StrUtils.hasText(conversation.getName()) ? conversation.getName().trim() : "群聊";
+        String conversationName = StrUtils.trimToDefault(conversation.getName(), "群聊");
         return senderName + " 在「" + conversationName + "」中@了你：" + preview(textContent);
     }
 

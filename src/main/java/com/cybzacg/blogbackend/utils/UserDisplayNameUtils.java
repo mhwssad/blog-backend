@@ -25,10 +25,10 @@ public final class UserDisplayNameUtils {
             return fallbackUserId == null ? null : "用户" + fallbackUserId;
         }
         if (StrUtils.hasText(user.getNickname())) {
-            return user.getNickname().trim();
+            return StrUtils.trim(user.getNickname());
         }
         if (StrUtils.hasText(user.getUsername())) {
-            return user.getUsername().trim();
+            return StrUtils.trim(user.getUsername());
         }
         return user.getId() == null ? null : "用户" + user.getId();
     }

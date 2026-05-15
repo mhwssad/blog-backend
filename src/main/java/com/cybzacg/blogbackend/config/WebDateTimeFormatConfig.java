@@ -1,5 +1,6 @@
 package com.cybzacg.blogbackend.config;
 
+import com.cybzacg.blogbackend.utils.StrUtils;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -34,10 +35,10 @@ public class WebDateTimeFormatConfig implements WebMvcConfigurer {
     private static class StringToLocalDateTimeConverter implements org.springframework.core.convert.converter.Converter<String, LocalDateTime> {
         @Override
         public LocalDateTime convert(String source) {
-            if (source == null || source.trim().isEmpty()) {
+            if (!StrUtils.hasText(source)) {
                 return null;
             }
-            String trimmed = source.trim();
+            String trimmed = StrUtils.trim(source);
             if (trimmed.contains(":")) {
                 return LocalDateTime.parse(trimmed, DATETIME_FORMATTER);
             } else {
@@ -54,10 +55,10 @@ public class WebDateTimeFormatConfig implements WebMvcConfigurer {
     private static class StringToLocalDateConverter implements org.springframework.core.convert.converter.Converter<String, LocalDate> {
         @Override
         public LocalDate convert(String source) {
-            if (source == null || source.trim().isEmpty()) {
+            if (!StrUtils.hasText(source)) {
                 return null;
             }
-            return LocalDate.parse(source.trim(), DATE_FORMATTER);
+            return LocalDate.parse(StrUtils.trim(source), DATE_FORMATTER);
         }
     }
 }

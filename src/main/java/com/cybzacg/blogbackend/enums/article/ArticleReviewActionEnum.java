@@ -1,5 +1,6 @@
 package com.cybzacg.blogbackend.enums.article;
 
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.Getter;
 
 /**
@@ -22,11 +23,11 @@ public enum ArticleReviewActionEnum {
     }
 
     public static ArticleReviewActionEnum fromCode(String code) {
-        if (code == null || code.isBlank()) {
+        if (StrUtils.isBlank(code)) {
             return null;
         }
         for (ArticleReviewActionEnum item : values()) {
-            if (item.code.equals(code.trim())) {
+            if (item.code.equals(StrUtils.trim(code))) {
                 return item;
             }
         }

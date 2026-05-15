@@ -22,7 +22,6 @@ import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * 后台数据看板服务实现。
@@ -277,7 +276,7 @@ public class DashboardAdminServiceImpl implements DashboardAdminService {
 
     private DashboardRange resolveRange(DashboardRangeQuery query) {
         DashboardRangeQuery safeQuery = query == null ? new DashboardRangeQuery() : query;
-        String rangeType = StrUtils.trimToDefault(safeQuery.getRangeType(), RANGE_TODAY).toLowerCase(Locale.ROOT);
+        String rangeType = StrUtils.trimToLowerCase(StrUtils.defaultIfBlank(safeQuery.getRangeType(), RANGE_TODAY));
         LocalDate today = LocalDate.now();
         return switch (rangeType) {
             case RANGE_TODAY -> new DashboardRange(RANGE_TODAY, today.atStartOfDay(), today.plusDays(1).atStartOfDay());

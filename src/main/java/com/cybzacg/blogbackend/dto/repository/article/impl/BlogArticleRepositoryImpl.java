@@ -76,7 +76,7 @@ public class BlogArticleRepositoryImpl extends ServiceImpl<BlogArticleMapper, Bl
                         .or()
                         .le("scheduled_publish_time", LocalDateTime.now()));
 
-        String sort = query.getSort() == null ? "latest" : query.getSort().trim().toLowerCase();
+        String sort = query.getSort() == null ? "latest" : StrUtils.trimToLowerCase(query.getSort());
         if ("hot".equals(sort)) {
             wrapper.last("order by (ifnull(view_count, 0) + ifnull(like_count, 0) + ifnull(comment_count, 0)) desc, id desc");
         } else if ("top".equals(sort)) {

@@ -141,7 +141,7 @@ public final class RequestContextUtils {
      * @return 非 null 字符串
      */
     private static String defaultString(String value) {
-        return value == null ? "" : value;
+        return StrUtils.nullToEmpty(value);
     }
 
     /**

@@ -6,7 +6,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -35,7 +34,7 @@ public class FileUtils {
      * @return true-存在，false-不存在
      */
     public static boolean exists(String filePath) {
-        if (filePath == null || filePath.isEmpty()) {
+        if (StrUtils.isEmpty(filePath)) {
             return false;
         }
         return new File(filePath).exists();
@@ -117,7 +116,7 @@ public class FileUtils {
      * @return true-删除成功，false-删除失败
      */
     public static boolean deleteFile(String filePath) {
-        if (filePath == null || filePath.isEmpty()) {
+        if (StrUtils.isEmpty(filePath)) {
             return false;
         }
         File file = new File(filePath);
@@ -527,7 +526,7 @@ public class FileUtils {
      * @return 文件扩展名，无扩展名返回空字符串
      */
     public static String getExtension(String filePath) {
-        if (filePath == null || filePath.isEmpty()) {
+        if (StrUtils.isEmpty(filePath)) {
             return "";
         }
         int lastDotIndex = filePath.lastIndexOf('.');
@@ -557,7 +556,7 @@ public class FileUtils {
      * @return 文件名
      */
     public static String getFileName(String filePath) {
-        if (filePath == null || filePath.isEmpty()) {
+        if (StrUtils.isEmpty(filePath)) {
             return "";
         }
         int lastSeparatorIndex = Math.max(
@@ -586,7 +585,7 @@ public class FileUtils {
      * @return 文件大小（字节），文件不存在返回0
      */
     public static long getSize(String filePath) {
-        if (filePath == null || filePath.isEmpty()) {
+        if (StrUtils.isEmpty(filePath)) {
             return 0;
         }
         File file = new File(filePath);
@@ -835,7 +834,7 @@ public class FileUtils {
         if (!StrUtils.hasText(md5)) {
             return null;
         }
-        return md5.trim().toLowerCase(Locale.ROOT);
+        return StrUtils.trimToLowerCase(md5);
     }
 
     /**
@@ -850,7 +849,7 @@ public class FileUtils {
         if (!StrUtils.hasText(ext)) {
             return "";
         }
-        return ext.trim().toLowerCase(Locale.ROOT);
+        return StrUtils.trimToLowerCase(ext);
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.cybzacg.blogbackend.common.redis;
 
 import com.cybzacg.blogbackend.common.constant.RedisConstants;
+import com.cybzacg.blogbackend.utils.StrUtils;
 
 import java.util.StringJoiner;
 
@@ -21,7 +22,7 @@ public final class RedisKeyUtils {
                 if (part == null) {
                     continue;
                 }
-                String value = String.valueOf(part).trim();
+                String value = StrUtils.trim(String.valueOf(part));
                 if (!value.isEmpty()) {
                     joiner.add(value);
                 }

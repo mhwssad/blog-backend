@@ -142,7 +142,7 @@ public class JsonUtils {
      * @throws RuntimeException 反序列化失败时抛出
      */
     public static <T> T fromJson(String json, Class<T> clazz) {
-        if (json == null || json.trim().isEmpty()) {
+        if (!StrUtils.hasText(json)) {
             return null;
         }
 
@@ -164,7 +164,7 @@ public class JsonUtils {
      * @throws RuntimeException 反序列化失败时抛出
      */
     public static <T> T fromJson(String json, TypeReference<T> typeReference) {
-        if (json == null || json.trim().isEmpty()) {
+        if (!StrUtils.hasText(json)) {
             return null;
         }
 
@@ -186,7 +186,7 @@ public class JsonUtils {
      * @throws RuntimeException 反序列化失败时抛出
      */
     public static <T> List<T> fromJsonToList(String json, Class<T> clazz) {
-        if (json == null || json.trim().isEmpty()) {
+        if (!StrUtils.hasText(json)) {
             return null;
         }
 
@@ -212,7 +212,7 @@ public class JsonUtils {
      * @throws RuntimeException 反序列化失败时抛出
      */
     public static Map<String, Object> fromJsonToMap(String json) {
-        if (json == null || json.trim().isEmpty()) {
+        if (!StrUtils.hasText(json)) {
             return null;
         }
 
@@ -274,7 +274,7 @@ public class JsonUtils {
      * @throws RuntimeException 解析失败时抛出
      */
     public static JsonNode parseJson(String json) {
-        if (json == null || json.trim().isEmpty()) {
+        if (!StrUtils.hasText(json)) {
             return null;
         }
 
@@ -319,7 +319,7 @@ public class JsonUtils {
      *         若字符串为 {@code null} 或空白也返回 {@code false}
      */
     public static boolean isValidJson(String json) {
-        if (json == null || json.trim().isEmpty()) {
+        if (!StrUtils.hasText(json)) {
             return false;
         }
 

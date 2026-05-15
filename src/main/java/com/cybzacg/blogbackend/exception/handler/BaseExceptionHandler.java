@@ -4,6 +4,7 @@ import com.cybzacg.blogbackend.core.web.Result;
 import com.cybzacg.blogbackend.enums.error.ResultCode;
 import com.cybzacg.blogbackend.enums.error.ResultErrorCode;
 import com.cybzacg.blogbackend.utils.JsonUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import com.cybzacg.blogbackend.utils.RequestContextUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -255,7 +256,7 @@ public abstract class BaseExceptionHandler {
         }
 
         String acceptHeader = request.getHeader("Accept");
-        if (acceptHeader == null || acceptHeader.isBlank()) {
+        if (StrUtils.isBlank(acceptHeader)) {
             return false;
         }
 

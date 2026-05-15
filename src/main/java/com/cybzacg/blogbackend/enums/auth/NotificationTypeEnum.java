@@ -1,6 +1,7 @@
 package com.cybzacg.blogbackend.enums.auth;
 
 import com.cybzacg.blogbackend.dto.domain.notice.SysUserNotificationSetting;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.Getter;
 
 /**
@@ -31,11 +32,11 @@ public enum NotificationTypeEnum {
     }
 
     public static NotificationTypeEnum fromCode(String code) {
-        if (code == null || code.isBlank()) {
+        if (StrUtils.isBlank(code)) {
             return null;
         }
         for (NotificationTypeEnum item : values()) {
-            if (item.code.equals(code.trim())) {
+            if (item.code.equals(StrUtils.trim(code))) {
                 return item;
             }
         }

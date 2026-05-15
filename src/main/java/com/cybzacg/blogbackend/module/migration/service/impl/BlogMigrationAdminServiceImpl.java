@@ -329,7 +329,7 @@ public class BlogMigrationAdminServiceImpl implements BlogMigrationAdminService 
         if (!StrUtils.hasText(sourcePlatform)) {
             return "";
         }
-        return sourcePlatform.trim().toLowerCase(Locale.ROOT);
+        return StrUtils.trimToLowerCase(sourcePlatform);
     }
 
     private void validateTaskPrecheckState(BlogMigrationTask task) {
@@ -568,12 +568,12 @@ public class BlogMigrationAdminServiceImpl implements BlogMigrationAdminService 
         Map<String, BlogMigrationAttachmentItem> items = new LinkedHashMap<>();
         for (BlogMigrationAttachmentItem item : safeAttachmentItems(postItem)) {
             if (item != null && StrUtils.hasText(item.getUrl())) {
-                items.putIfAbsent(item.getUrl().trim(), normalizeAttachmentItem(item));
+                items.putIfAbsent(StrUtils.trim(item.getUrl()), normalizeAttachmentItem(item));
             }
         }
         if (StrUtils.hasText(postItem.getCoverImageUrl())) {
             BlogMigrationAttachmentItem cover = new BlogMigrationAttachmentItem();
-            cover.setUrl(postItem.getCoverImageUrl().trim());
+            cover.setUrl(StrUtils.trim(postItem.getCoverImageUrl()));
             cover.setOriginalName("cover");
             items.putIfAbsent(cover.getUrl(), cover);
         }
@@ -586,7 +586,7 @@ public class BlogMigrationAdminServiceImpl implements BlogMigrationAdminService 
 
     private BlogMigrationAttachmentItem normalizeAttachmentItem(BlogMigrationAttachmentItem item) {
         BlogMigrationAttachmentItem normalized = new BlogMigrationAttachmentItem();
-        normalized.setUrl(item.getUrl().trim());
+        normalized.setUrl(StrUtils.trim(item.getUrl()));
         normalized.setOriginalName(item.getOriginalName());
         return normalized;
     }
@@ -622,7 +622,7 @@ public class BlogMigrationAdminServiceImpl implements BlogMigrationAdminService 
     }
 
     private String buildIdempotentKey(String sourcePlatform, String externalPostId) {
-        return normalizeSourcePlatform(sourcePlatform) + ":" + externalPostId.trim();
+        return normalizeSourcePlatform(sourcePlatform) + ":" + StrUtils.trim(externalPostId);
     }
 
     private String buildErrorSummary(List<BlogMigrationRecordVO> errors) {
@@ -634,6 +634,6 @@ public class BlogMigrationAdminServiceImpl implements BlogMigrationAdminService 
     }
 
     private String defaultString(String value) {
-        return value == null ? "" : value;
+        return StrUtils.nullToEmpty(value);
     }
 }

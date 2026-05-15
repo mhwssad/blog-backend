@@ -424,7 +424,7 @@ public class AuthServiceImpl implements AuthService {
             return defaultValue;
         }
         try {
-            return Math.max(Integer.parseInt(configuredValue.trim()), minValue);
+            return Math.max(Integer.parseInt(StrUtils.trim(configuredValue)), minValue);
         } catch (NumberFormatException ex) {
             return defaultValue;
         }

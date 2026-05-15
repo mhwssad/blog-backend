@@ -160,7 +160,7 @@ public class UserCommentServiceImpl implements UserCommentService {
     private String abbreviate(String value, int maxLength) {
         String text = StrUtils.trimToNull(value);
         if (text == null || text.length() <= maxLength) {
-            return text == null ? "" : text;
+            return StrUtils.nullToEmpty(text);
         }
         return text.substring(0, maxLength) + "...";
     }

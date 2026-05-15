@@ -106,7 +106,7 @@ public class ForumPostRepositoryImpl extends ServiceImpl<ForumPostMapper, ForumP
     }
 
     private void applyPublicSort(LambdaQueryWrapper<ForumPost> wrapper, String sort) {
-        String actualSort = sort == null ? "latest" : sort.trim().toLowerCase();
+        String actualSort = sort == null ? "latest" : StrUtils.trimToLowerCase(sort);
         if ("hot".equals(actualSort)) {
             wrapper.orderByDesc(ForumPost::getIsTop)
                     .orderByDesc(ForumPost::getIsEssence)

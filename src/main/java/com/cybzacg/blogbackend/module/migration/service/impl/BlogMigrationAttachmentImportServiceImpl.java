@@ -119,7 +119,7 @@ public class BlogMigrationAttachmentImportServiceImpl implements BlogMigrationAt
 
     private String resolveFileName(BlogMigrationAttachmentItem attachmentItem) {
         if (StrUtils.hasText(attachmentItem.getOriginalName())) {
-            return FileUtils.getFileName(attachmentItem.getOriginalName().trim());
+            return FileUtils.getFileName(StrUtils.trim(attachmentItem.getOriginalName()));
         }
         String path = URI.create(attachmentItem.getUrl()).getPath();
         String guessed = FileUtils.getFileName(path);

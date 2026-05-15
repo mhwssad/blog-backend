@@ -40,7 +40,7 @@ public class PathUtils {
      * @throws InvalidPathException 如果路径字符串无效
      */
     public static Path create(String path) {
-        if (path == null || path.isEmpty()) {
+        if (StrUtils.isEmpty(path)) {
             return null;
         }
         return Paths.get(path);
@@ -88,7 +88,7 @@ public class PathUtils {
      * @throws SecurityException           如果存在安全管理器且拒绝访问文件系统
      */
     public static Path fromUriString(String uriString) throws URISyntaxException {
-        if (uriString == null || uriString.isEmpty()) {
+        if (StrUtils.isEmpty(uriString)) {
             return null;
         }
         URI uri = new URI(uriString);

@@ -461,7 +461,7 @@ public class ArticleAdminCrudServiceImpl implements ArticleAdminCrudService {
     private void syncArticleAttachments(Long articleId, String content, String coverImage) {
         Set<String> imageUrls = extractImageUrls(content);
         if (StrUtils.hasText(coverImage)) {
-            imageUrls.add(coverImage.trim());
+            imageUrls.add(StrUtils.trim(coverImage));
         }
         Set<Long> newFileIds = imageUrls.isEmpty()
                 ? Set.of()
@@ -514,12 +514,12 @@ public class ArticleAdminCrudServiceImpl implements ArticleAdminCrudService {
         var mdPattern = java.util.regex.Pattern.compile("!\\[.*?\\]\\(([^)]+)\\)");
         var mdMatcher = mdPattern.matcher(content);
         while (mdMatcher.find()) {
-            urls.add(mdMatcher.group(1).trim());
+            urls.add(StrUtils.trim(mdMatcher.group(1)));
         }
         var htmlPattern = java.util.regex.Pattern.compile("<img[^>]+src=[\"']([^\"']+)[\"']");
         var htmlMatcher = htmlPattern.matcher(content);
         while (htmlMatcher.find()) {
-            urls.add(htmlMatcher.group(1).trim());
+            urls.add(StrUtils.trim(htmlMatcher.group(1)));
         }
         return urls;
     }

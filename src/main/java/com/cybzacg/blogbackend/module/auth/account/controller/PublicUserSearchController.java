@@ -28,7 +28,7 @@ public class PublicUserSearchController {
     @Operation(summary = "搜索用户")
     public Result<PageResult<PublicUserSearchVO>> searchUsers(PublicUserSearchQuery query) {
         String keyword = query.getKeyword();
-        if (!StrUtils.hasText(keyword) || keyword.trim().length() < 2) {
+        if (!StrUtils.hasText(keyword) || StrUtils.trim(keyword).length() < 2) {
             return Result.success(PageResult.empty());
         }
         return Result.success(publicUserSearchService.searchUsers(keyword, query.getCurrent(), query.getSize()));

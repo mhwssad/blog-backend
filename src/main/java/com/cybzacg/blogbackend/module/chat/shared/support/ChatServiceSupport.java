@@ -1184,10 +1184,10 @@ public class ChatServiceSupport {
             return null;
         }
         if (StrUtils.hasText(fileInfo.getOriginalName())) {
-            return fileInfo.getOriginalName().trim();
+            return StrUtils.trim(fileInfo.getOriginalName());
         }
         if (StrUtils.hasText(fileInfo.getFileName())) {
-            return fileInfo.getFileName().trim();
+            return StrUtils.trim(fileInfo.getFileName());
         }
         return null;
     }

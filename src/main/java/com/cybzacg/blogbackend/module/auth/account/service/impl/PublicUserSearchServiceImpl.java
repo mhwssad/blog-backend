@@ -8,6 +8,7 @@ import com.cybzacg.blogbackend.module.auth.account.convert.UserProfileModelConve
 import com.cybzacg.blogbackend.module.auth.account.model.user.PublicUserSearchVO;
 import com.cybzacg.blogbackend.module.auth.account.service.PublicUserSearchService;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +28,7 @@ public class PublicUserSearchServiceImpl implements PublicUserSearchService {
     public PageResult<PublicUserSearchVO> searchUsers(String keyword, long current, long size) {
         current = PaginationUtils.normalizeCurrent(current);
         size = PaginationUtils.normalizeSize(size, 20L, 50L);
-        Page<SysUser> result = sysUserRepository.searchByKeyword(keyword.trim(), current, size);
+        Page<SysUser> result = sysUserRepository.searchByKeyword(StrUtils.trim(keyword), current, size);
 
         List<PublicUserSearchVO> voList = result.getRecords().stream()
                 .map(userProfileModelConvert::toPublicUserSearchVO)

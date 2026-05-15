@@ -41,7 +41,7 @@ public class RequestContextFilter extends OncePerRequestFilter {
             return traceId;
         }
         Object requestAttribute = request.getAttribute(RequestContextUtils.TRACE_ID_ATTRIBUTE);
-        if (requestAttribute instanceof String attributeTraceId && !attributeTraceId.isBlank()) {
+        if (requestAttribute instanceof String attributeTraceId && StrUtils.hasText(attributeTraceId)) {
             return attributeTraceId;
         }
         return UUID.randomUUID().toString().replace("-", "");

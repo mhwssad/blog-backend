@@ -44,7 +44,7 @@ public interface FileUploadConvert {
         task.setReferenceId(request.getReferenceId() == null ? 0L : request.getReferenceId());
         task.setCategory(FileCategoryEnum.normalize(request.getCategory()));
         task.setIsPublic(CollectionUtils.defaultInt(request.getIsPublic(), 0));
-        task.setRemark(request.getRemark() != null && !request.getRemark().isBlank() ? request.getRemark().trim() : null);
+        task.setRemark(com.cybzacg.blogbackend.utils.StrUtils.trimToNull(request.getRemark()));
         task.setMimeType(request.getMimeType() != null && !request.getMimeType().isBlank() ? request.getMimeType() : null);
         if (Integer.valueOf(0).equals(task.getIsChunked())) {
             task.setChunkSize(null);

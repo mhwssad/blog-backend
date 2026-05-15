@@ -16,6 +16,7 @@ import com.cybzacg.blogbackend.module.auth.author.model.admin.SysAuthorApplicati
 import com.cybzacg.blogbackend.module.auth.author.service.AuthorPermissionService;
 import com.cybzacg.blogbackend.module.auth.author.service.SysAuthorApplicationAdminService;
 import com.cybzacg.blogbackend.utils.ExceptionThrowerCore;
+import com.cybzacg.blogbackend.utils.StrUtils;
 import com.cybzacg.blogbackend.utils.PaginationUtils;
 import com.cybzacg.blogbackend.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -159,7 +160,7 @@ public class SysAuthorApplicationAdminServiceImpl implements SysAuthorApplicatio
     }
 
     private String trimToNull(String value) {
-        return value == null || value.trim().isEmpty() ? null : value.trim();
+        return StrUtils.trimToNull(value);
     }
 
     private void syncAuthorRoleForStatus(Long userId, Integer applyStatus) {
